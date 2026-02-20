@@ -1286,11 +1286,12 @@ export const roomsService = {
             batch_code: code,
             initial_weight: finalWeight,
             current_weight: finalWeight,
-            quality_grade: 'Standard',
-            status: 'curing' as const, // Or 'available'
+            quality_grade: 'Standard', // Required by type, but maybe shouldn't be hardcoded
+            status: 'curing' as const, // Default to curing
             location: 'Depósito General',
             notes: `Finalizado desde Secado. ${notes}`,
-            created_at: new Date().toISOString()
+            created_at: new Date().toISOString(),
+            organization_id: batch.organization_id || getSelectedOrgId()
         };
 
         const { error: dispError } = await getClient()
