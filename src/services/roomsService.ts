@@ -573,7 +573,7 @@ export const roomsService = {
                 grid_position: pos,
                 parent_batch_id: sourceBatchId,
                 tracking_code: trackingCode,
-                organization_id: getSelectedOrgId()
+                organization_id: sourceBatch.organization_id || getSelectedOrgId()
             };
         });
 
@@ -707,7 +707,7 @@ export const roomsService = {
                 parent_batch_id: sourceBatch.parent_batch_id || sourceBatchId,
                 tracking_code: trackingCode,
                 notes: sourceBatch.notes?.match(/\[Grupo:.*?\]/)?.[0] || '',
-                organization_id: getSelectedOrgId()
+                organization_id: sourceBatch.organization_id || getSelectedOrgId()
             };
         });
 

@@ -566,12 +566,19 @@ const Clones: React.FC = () => {
             setClonesRoomId(clonesRoom.id);
         }
 
+        // Collect all rooms that are considered clone rooms
+        const cloneRoomTypes = ['clones', 'esquejes', 'esquejera'];
+        const allCloneRoomIds = allRooms.filter(r => cloneRoomTypes.includes(r.type?.toLowerCase() || '')).map(r => r.id);
+
         const allClones = batches.filter(b =>
-            (b.room && ['clones', 'esquejes', 'esquejera'].includes(b.room.type?.toLowerCase())) || // Explicitly include batches in clone rooms
+            (b.room && cloneRoomTypes.includes(b.room.type?.toLowerCase() || '')) || // Explicitly include batches in clone rooms
+            (b.current_room_id && allCloneRoomIds.includes(b.current_room_id)) || // Fallback explicitly by Room ID
             b.parent_batch_id ||
             (b.name && b.name.startsWith('CL-')) ||
             (b.stage === 'seedling') || // New batches are seedlings
-            /^[A-Z]{3}-\d{4}$/.test(b.name) // Match new sequential format
+            b.clone_map_id !== null || // Explicitly include if they are in a clone map
+            /^[A-Z]+-\d+$/.test(b.name) || // Match new sequential format
+            /^[A-Z]+ - .+$/.test(b.name) // Match things like PRUEBA - 20/02/2026
         );
 
         // Calculate Stats
