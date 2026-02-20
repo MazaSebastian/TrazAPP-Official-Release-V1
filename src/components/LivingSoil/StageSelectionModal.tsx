@@ -69,59 +69,59 @@ const Button = styled.button<{ $variant?: 'primary' | 'secondary' }>`
 `;
 
 interface Props {
-    isOpen: boolean;
-    onClose: () => void;
-    onConfirm: (stage: BatchStage) => void;
-    currentStage?: BatchStage;
-    count: number;
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: (stage: BatchStage) => void;
+  currentStage?: BatchStage;
+  count: number;
 }
 
 const STAGES: { id: BatchStage, label: string, color: string, icon: React.ReactNode }[] = [
-    { id: 'seedling', label: 'Plántula', color: '#3182ce', icon: <FaSeedling /> },
-    { id: 'vegetation', label: 'Vegetación', color: '#2f855a', icon: <FaLeaf /> },
-    { id: 'flowering', label: 'Floración', color: '#c53030', icon: <FaCannabis /> },
-    { id: 'drying', label: 'Secado', color: '#ed8936', icon: <FaExclamationTriangle /> }, // Use exclam/diff icon
-    { id: 'completed', label: 'Completado', color: '#4a5568', icon: <FaCheckCircle /> },
+  { id: 'seedling', label: 'Plántula', color: '#3182ce', icon: <FaSeedling /> },
+  { id: 'vegetation', label: 'Vegetación', color: '#2f855a', icon: <FaLeaf /> },
+  { id: 'flowering', label: 'Floración', color: '#c53030', icon: <FaCannabis /> },
+  { id: 'drying', label: 'Secado', color: '#ed8936', icon: <FaExclamationTriangle /> }, // Use exclam/diff icon
+  { id: 'completed', label: 'Corte', color: '#4a5568', icon: <FaCheckCircle /> },
 ];
 
 export const StageSelectionModal: React.FC<Props> = ({ isOpen, onClose, onConfirm, currentStage, count }) => {
-    const [selectedStage, setSelectedStage] = useState<BatchStage | null>(null);
+  const [selectedStage, setSelectedStage] = useState<BatchStage | null>(null);
 
-    if (!isOpen) return null;
+  if (!isOpen) return null;
 
-    const handleConfirm = () => {
-        if (selectedStage) {
-            onConfirm(selectedStage);
-        }
-    };
+  const handleConfirm = () => {
+    if (selectedStage) {
+      onConfirm(selectedStage);
+    }
+  };
 
-    return (
-        <ModalOverlay onClick={onClose}>
-            <ModalContent onClick={e => e.stopPropagation()}>
-                <Title>Cambiar Fase ({count} Lotes)</Title>
-                <StageGrid>
-                    {STAGES.map(s => (
-                        <StageOption
-                            key={s.id}
-                            $isActive={selectedStage === s.id}
-                            $color={s.color}
-                            onClick={() => setSelectedStage(s.id)}
-                            disabled={s.id === currentStage} // Optional: disable current stage?
-                            style={s.id === currentStage ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
-                        >
-                            <div style={{ fontSize: '1.5rem' }}>{s.icon}</div>
-                            {s.label}
-                        </StageOption>
-                    ))}
-                </StageGrid>
+  return (
+    <ModalOverlay onClick={onClose}>
+      <ModalContent onClick={e => e.stopPropagation()}>
+        <Title>Cambiar Fase ({count} Lotes)</Title>
+        <StageGrid>
+          {STAGES.map(s => (
+            <StageOption
+              key={s.id}
+              $isActive={selectedStage === s.id}
+              $color={s.color}
+              onClick={() => setSelectedStage(s.id)}
+              disabled={s.id === currentStage} // Optional: disable current stage?
+              style={s.id === currentStage ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
+            >
+              <div style={{ fontSize: '1.5rem' }}>{s.icon}</div>
+              {s.label}
+            </StageOption>
+          ))}
+        </StageGrid>
 
-                <Actions>
-                    <Button $variant="secondary" onClick={onClose}>Cancelar</Button>
-                    <Button onClick={handleConfirm} disabled={!selectedStage}>
-                        Confirmar Cambio
-                    </Button>
-                </Actions>
-            </ModalContent>
-        </ModalOverlay>
-    );
+        <Actions>
+          <Button $variant="secondary" onClick={onClose}>Cancelar</Button>
+          <Button onClick={handleConfirm} disabled={!selectedStage}>
+            Confirmar Cambio
+          </Button>
+        </Actions>
+      </ModalContent>
+    </ModalOverlay>
+  );
 };

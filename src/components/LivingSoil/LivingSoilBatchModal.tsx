@@ -134,7 +134,7 @@ export const LivingSoilBatchModal: React.FC<LivingSoilBatchModalProps> = ({
             case 'flowering': return "¿Cambiar a etapa de floración?";
             case 'vegetation': return "¿Cambiar a etapa de vegetación?";
             case 'seedling': return "¿Cambiar a etapa de plántula?";
-            case 'completed': return "¿Marcar como finalizado?";
+            case 'completed': return "¿Marcar como Corte?";
             default: return `¿Cambiar etapa a ${stage}?`;
         }
     };

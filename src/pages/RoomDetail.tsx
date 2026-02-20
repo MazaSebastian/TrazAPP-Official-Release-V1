@@ -4,7 +4,7 @@ import { createPortal } from 'react-dom';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';
 import { useAuth } from '../context/AuthContext';
-import { FaArrowLeft, FaThermometerHalf, FaPlus, FaCalendarAlt, FaSeedling, FaMapMarkedAlt, FaExchangeAlt, FaExpandArrowsAlt, FaStickyNote, FaTrash, FaHistory, FaDna, FaClock, FaCheck, FaExclamationTriangle, FaPrint, FaCut, FaPen, FaEdit, FaChevronDown, FaTasks, FaTimes, FaSpinner, FaChevronLeft, FaChevronRight, FaCircleNotch, FaLeaf, FaSpa } from 'react-icons/fa';
+import { FaArrowLeft, FaThermometerHalf, FaPlus, FaCalendarAlt, FaSeedling, FaMapMarkedAlt, FaExchangeAlt, FaExpandArrowsAlt, FaStickyNote, FaTrash, FaHistory, FaDna, FaClock, FaCheck, FaExclamationTriangle, FaPrint, FaCut, FaPen, FaEdit, FaChevronDown, FaTasks, FaTimes, FaSpinner, FaChevronLeft, FaChevronRight, FaCircleNotch, FaLeaf, FaSpa, FaLock } from 'react-icons/fa';
 // FaExclamationTriangle, FaTint, FaCut, FaSkull, FaLeaf, FaFlask, FaBroom
 import {
     format, startOfWeek, endOfWeek, startOfMonth, endOfMonth,
@@ -399,8 +399,9 @@ const StyledActionButton = styled.button<{ $variant?: 'primary' | 'secondary' | 
   }
   
   &:disabled {
-    opacity: 0.7;
+    opacity: 0.5;
     cursor: not-allowed;
+    filter: none;
     transform: none;
     box-shadow: none;
   }
@@ -3722,7 +3723,7 @@ const RoomDetail: React.FC = () => {
                                 >
                                     <FaHistory /> Historial
                                 </StyledActionButton>
-                                {room?.type !== 'living_soil' && (
+                                {room?.type !== 'living_soil' ? (
                                     <StyledActionButton
                                         onClick={(e) => {
                                             e.stopPropagation();
@@ -3739,6 +3740,18 @@ const RoomDetail: React.FC = () => {
                                     >
                                         {room?.type === 'flowering' ? <FaCut /> : <FaExchangeAlt />}
                                         {room?.type === 'flowering' ? 'Cosechar' : 'Transplantar'}
+                                    </StyledActionButton>
+                                ) : (
+                                    <StyledActionButton
+                                        disabled={!room?.batches?.some(b => b.stage === 'completed')}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setIsHarvestModalOpen(true);
+                                        }}
+                                        $variant="gold"
+                                        title={!room?.batches?.some(b => b.stage === 'completed') ? "No hay plantas listas para cosechar (Estado Corte)" : "Cosechar plantas finalizadas"}
+                                    >
+                                        {!room?.batches?.some(b => b.stage === 'completed') ? <FaLock /> : <FaCut />} Cosechar
                                     </StyledActionButton>
                                 )}
                                 <StyledActionButton
@@ -5997,7 +6010,7 @@ const RoomDetail: React.FC = () => {
                                     <option value="vegetation">Vegetativo</option>
                                     <option value="flowering">Floración</option>
                                     <option value="drying">Secado</option>
-                                    <option value="completed">Finalizado</option>
+                                    <option value="completed">Corte</option>
                                 </select>
                             </div>
 
@@ -6062,7 +6075,7 @@ const RoomDetail: React.FC = () => {
                                         { id: 'seedling', label: 'Plántula', icon: <FaSeedling /> },
                                         { id: 'vegetation', label: 'Vege', icon: <FaLeaf /> }, // Leaf/Cannabis
                                         { id: 'flowering', label: 'Flora', icon: <FaSpa /> }, // Flower
-                                        { id: 'completed', label: 'Fin', icon: <FaCheck /> }
+                                        { id: 'completed', label: 'Corte', icon: <FaCheck /> }
                                     ].map(option => (
                                         <StageButton
                                             key={option.id}
@@ -6246,8 +6259,8 @@ const RoomDetail: React.FC = () => {
                             setTimeout(() => setHarvestTargetMapId(null), 300); // Clear target after animation
                         }}
                         batches={harvestTargetMapId
-                            ? (room.batches?.filter(b => b.clone_map_id === harvestTargetMapId) || [])
-                            : (room.batches || [])}
+                            ? (room.batches?.filter(b => b.clone_map_id === harvestTargetMapId && (room.type !== 'living_soil' || b.stage === 'completed')) || [])
+                            : (room.batches?.filter(b => room.type !== 'living_soil' || b.stage === 'completed') || [])}
                         rooms={allRooms}
                         onConfirm={handleHarvestConfirm}
                         overrideGroupName={harvestTargetMapId ? (room.clone_maps?.find(m => m.id === harvestTargetMapId)?.name) : undefined}

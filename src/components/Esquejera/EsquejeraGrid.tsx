@@ -334,7 +334,7 @@ const BatchItem = ({ batch, onClick, cellSize }: { batch: Batch; onClick?: (e: R
                                     'flowering': 'Floración',
                                     'drying': 'Secado',
                                     'curing': 'Curado',
-                                    'completed': 'Finalizado',
+                                    'completed': 'Corte',
                                     'clones': 'Clones/Esquejes'
                                 };
                                 return stageMap[batch.stage] || (batch.stage.charAt(0).toUpperCase() + batch.stage.slice(1));

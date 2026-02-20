@@ -158,7 +158,7 @@ const getStageBorderColor = (stage: BatchStage | undefined) => {
 
 // --- Styled Components ---
 
-const CellStyled = styled.div<{ $isOver?: boolean; $isOccupied?: boolean; $stage?: BatchStage; $geneticColor?: string; $isSelected?: boolean; cellSize: number; $hasAlert?: boolean; $disableTransition?: boolean }>`
+const CellStyled = styled.div<{ $isOver?: boolean; $isOccupied?: boolean; $stage?: BatchStage; $geneticColor?: string; $isSelected?: boolean; cellSize: number; $hasAlert?: boolean; $isCompleted?: boolean; $disableTransition?: boolean }>`
   /* Background Logic */
   background: ${p => p.$isSelected ? 'rgba(74, 222, 128, 0.2)' : p.$isOccupied ? (p.$geneticColor || 'rgba(30, 41, 59, 0.8)') : p.$isOver ? 'rgba(56, 189, 248, 0.1)' : 'rgba(30, 41, 59, 0.3)'};
   backdrop-filter: ${p => p.$isOccupied ? 'none' : 'blur(4px)'};
@@ -180,7 +180,7 @@ const CellStyled = styled.div<{ $isOver?: boolean; $isOccupied?: boolean; $stage
   position: relative;
   transition: ${p => p.$disableTransition ? 'none' : 'transform 0.1s, box-shadow 0.1s'};
   cursor: ${p => p.$isOccupied ? 'pointer' : 'default'};
-  opacity: ${p => p.$stage === 'completed' ? 0.6 : 1};
+  opacity: 1; /* removed opacity reduction for completed to keep it bright */
   width: 100%;
   height: 100%;
   overflow: hidden; /* visual polish: clip overflow content */
@@ -199,6 +199,26 @@ const CellStyled = styled.div<{ $isOver?: boolean; $isOccupied?: boolean; $stage
       background: #ef4444; /* red-500 */
       box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.95);
       z-index: 5;
+    }
+  `}
+
+  /* Completed (FIN) Badge Logic */
+  ${p => p.$isCompleted && `
+    &::before {
+      content: '✓';
+      position: absolute;
+      top: 0px; left: 0px;
+      width: 14px; height: 14px;
+      border-radius: 0 0 4px 0;
+      background: #4ade80; /* green-400 */
+      color: #064e3b; /* very dark green for contrast */
+      font-size: 10px;
+      font-weight: 900;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+      z-index: 6;
     }
   `}
 
@@ -450,6 +470,7 @@ const GridCell = React.memo(({
             $geneticColor={batch ? getGeneticColor(batch.genetic?.name || batch.name).bg : undefined}
             $isSelected={isSelected}
             $hasAlert={!!batch?.notes}
+            $isCompleted={batch?.stage === 'completed'}
             $disableTransition={disableTransition}
             cellSize={cellSize}
             onClick={(e) => {
