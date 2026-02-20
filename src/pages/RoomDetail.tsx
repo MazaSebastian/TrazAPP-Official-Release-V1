@@ -3759,21 +3759,23 @@ const RoomDetail: React.FC = () => {
                                     justifyContent: 'space-between',
                                     alignItems: 'center',
                                     marginBottom: '1rem',
-                                    background: 'white',
+                                    background: 'rgba(15, 23, 42, 0.4)',
+                                    backdropFilter: 'blur(12px)',
+                                    WebkitBackdropFilter: 'blur(12px)',
                                     padding: '0.75rem 1rem',
                                     borderRadius: '0.75rem',
-                                    border: '1px solid #e2e8f0',
-                                    boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.3)',
                                     height: '80px',
                                     width: '100%',
                                     boxSizing: 'border-box'
                                 }}>
                                     {/* LEFT: Map Title & Info */}
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexShrink: 0, overflow: 'hidden' }}>
-                                        <h3 style={{ margin: 0, fontSize: '1.25rem', color: '#2d3748', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                        <h3 style={{ margin: 0, fontSize: '1.25rem', color: '#f8fafc', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                             {activeMap.name}
                                         </h3>
-                                        <span style={{ background: '#c6f6d5', color: '#2f855a', padding: '0.25rem 0.75rem', borderRadius: '999px', fontSize: '0.75rem', fontWeight: 700, whiteSpace: 'nowrap', flexShrink: 0 }}>
+                                        <span style={{ background: 'rgba(74, 222, 128, 0.1)', color: '#4ade80', border: '1px solid rgba(74, 222, 128, 0.2)', padding: '0.25rem 0.75rem', borderRadius: '999px', fontSize: '0.75rem', fontWeight: 700, whiteSpace: 'nowrap', flexShrink: 0 }}>
                                             {activeMap.grid_rows} x {activeMap.grid_columns}
                                         </span>
                                     </div>
@@ -3783,15 +3785,15 @@ const RoomDetail: React.FC = () => {
                                         {isSelectionMode && selectedBatchIds.size > 0 && (
                                             <span style={{
                                                 fontSize: '0.9rem',
-                                                color: '#2f855a', // Dark Green
+                                                color: '#4ade80',
                                                 fontWeight: 700,
                                                 whiteSpace: 'nowrap',
-                                                background: '#c6f6d5', // Light Green
+                                                background: 'rgba(74, 222, 128, 0.15)',
                                                 padding: '0.35rem 1rem',
                                                 borderRadius: '999px',
-                                                border: '1px solid #9ae6b4',
+                                                border: '1px solid rgba(74, 222, 128, 0.3)',
                                                 transition: 'all 0.2s',
-                                                boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
+                                                boxShadow: '0 0 10px rgba(74, 222, 128, 0.1)'
                                             }}>
                                                 {selectedBatchIds.size} seleccionados
                                             </span>
@@ -3812,17 +3814,22 @@ const RoomDetail: React.FC = () => {
                                                     <button
                                                         onClick={(e) => { e.stopPropagation(); setIsBulkActionsOpen(!isBulkActionsOpen); }}
                                                         style={{
-                                                            background: '#48bb78', // Green
-                                                            color: 'white',
-                                                            border: 'none',
+                                                            background: 'rgba(74, 222, 128, 0.2)',
+                                                            color: '#4ade80',
+                                                            border: '1px solid rgba(74, 222, 128, 0.4)',
                                                             borderRadius: '0.375rem',
                                                             padding: '0.5rem 1rem',
                                                             fontSize: '0.85rem',
                                                             fontWeight: 600,
                                                             cursor: 'pointer',
-                                                            boxShadow: '0 2px 4px rgba(72, 187, 120, 0.3)',
                                                             display: 'flex', alignItems: 'center', gap: '0.5rem',
-                                                            transition: 'background 0.2s'
+                                                            transition: 'all 0.2s'
+                                                        }}
+                                                        onMouseEnter={e => {
+                                                            e.currentTarget.style.background = 'rgba(74, 222, 128, 0.3)';
+                                                        }}
+                                                        onMouseLeave={e => {
+                                                            e.currentTarget.style.background = 'rgba(74, 222, 128, 0.2)';
                                                         }}
                                                     >
                                                         Acciones <FaChevronDown size={10} />
@@ -3833,17 +3840,19 @@ const RoomDetail: React.FC = () => {
                                                             position: 'absolute',
                                                             top: '120%',
                                                             right: 0,
-                                                            background: 'white',
-                                                            border: '1px solid #e2e8f0',
+                                                            background: 'rgba(15, 23, 42, 0.95)',
+                                                            backdropFilter: 'blur(16px)',
+                                                            WebkitBackdropFilter: 'blur(16px)',
+                                                            border: '1px solid rgba(255, 255, 255, 0.1)',
                                                             borderRadius: '0.5rem',
-                                                            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                                                            boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5)',
                                                             zIndex: 50,
                                                             minWidth: '220px',
                                                             overflow: 'hidden',
                                                             animation: 'fadeIn 0.1s ease-out'
                                                         }}>
-                                                            <div style={{ padding: '0.75rem 1rem', background: '#f7fafc', borderBottom: '1px solid #edf2f7' }}>
-                                                                <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#a0aec0', letterSpacing: '0.05em' }}>ACCIONES DE LOTE</div>
+                                                            <div style={{ padding: '0.75rem 1rem', background: 'rgba(255, 255, 255, 0.05)', borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
+                                                                <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#94a3b8', letterSpacing: '0.05em' }}>ACCIONES DE LOTE</div>
                                                             </div>
 
                                                             {/* 1. EDITAR */}
@@ -3860,11 +3869,11 @@ const RoomDetail: React.FC = () => {
                                                                         setIsBulkEditModalOpen(true);
                                                                     }
                                                                 }}
-                                                                style={{ width: '100%', textAlign: 'left', padding: '0.75rem 1rem', background: 'white', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.75rem', color: '#2d3748', fontSize: '0.9rem', transition: 'background 0.1s' }}
-                                                                onMouseEnter={e => e.currentTarget.style.background = '#f0fff4'}
-                                                                onMouseLeave={e => e.currentTarget.style.background = 'white'}
+                                                                style={{ width: '100%', textAlign: 'left', padding: '0.75rem 1rem', background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.75rem', color: '#cbd5e1', fontSize: '0.9rem', transition: 'background 0.1s' }}
+                                                                onMouseEnter={e => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'}
+                                                                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                                                             >
-                                                                <div style={{ background: '#c6f6d5', padding: '0.4rem', borderRadius: '0.375rem', color: '#2f855a', display: 'flex' }}><FaEdit size={12} /></div>
+                                                                <div style={{ background: 'rgba(74, 222, 128, 0.1)', padding: '0.4rem', borderRadius: '0.375rem', color: '#4ade80', display: 'flex' }}><FaEdit size={12} /></div>
                                                                 <span>Editar</span>
                                                             </button>
 
@@ -3886,11 +3895,11 @@ const RoomDetail: React.FC = () => {
                                                                     setChangePhaseForm({ stage: initialStage as BatchStage, notes: initialNotes });
                                                                     setIsChangePhaseModalOpen(true);
                                                                 }}
-                                                                style={{ width: '100%', textAlign: 'left', padding: '0.75rem 1rem', background: 'white', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.75rem', color: '#2d3748', fontSize: '0.9rem', transition: 'background 0.1s' }}
-                                                                onMouseEnter={e => e.currentTarget.style.background = '#f0fff4'}
-                                                                onMouseLeave={e => e.currentTarget.style.background = 'white'}
+                                                                style={{ width: '100%', textAlign: 'left', padding: '0.75rem 1rem', background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.75rem', color: '#cbd5e1', fontSize: '0.9rem', transition: 'background 0.1s' }}
+                                                                onMouseEnter={e => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'}
+                                                                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                                                             >
-                                                                <div style={{ background: '#c6f6d5', padding: '0.4rem', borderRadius: '0.375rem', color: '#2f855a', display: 'flex' }}><FaLeaf size={12} /></div>
+                                                                <div style={{ background: 'rgba(74, 222, 128, 0.1)', padding: '0.4rem', borderRadius: '0.375rem', color: '#4ade80', display: 'flex' }}><FaLeaf size={12} /></div>
                                                                 <span>Cambiar Fase de Cultivo</span>
                                                             </button>
 
@@ -3903,11 +3912,11 @@ const RoomDetail: React.FC = () => {
                                                                         setIsRelocatingSelection(true);
                                                                     }
                                                                 }}
-                                                                style={{ width: '100%', textAlign: 'left', padding: '0.75rem 1rem', background: 'white', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.75rem', color: '#2d3748', fontSize: '0.9rem', transition: 'background 0.1s' }}
-                                                                onMouseEnter={e => e.currentTarget.style.background = '#ebf8ff'}
-                                                                onMouseLeave={e => e.currentTarget.style.background = 'white'}
+                                                                style={{ width: '100%', textAlign: 'left', padding: '0.75rem 1rem', background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.75rem', color: '#cbd5e1', fontSize: '0.9rem', transition: 'background 0.1s' }}
+                                                                onMouseEnter={e => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'}
+                                                                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                                                             >
-                                                                <div style={{ background: '#bee3f8', padding: '0.4rem', borderRadius: '0.375rem', color: '#3182ce', display: 'flex' }}><FaExchangeAlt size={12} /></div>
+                                                                <div style={{ background: 'rgba(56, 189, 248, 0.1)', padding: '0.4rem', borderRadius: '0.375rem', color: '#38bdf8', display: 'flex' }}><FaExchangeAlt size={12} /></div>
                                                                 <span>Reubicar en Mapa</span>
                                                             </button>
 
@@ -3919,24 +3928,24 @@ const RoomDetail: React.FC = () => {
                                                                     setObservationText(firstSelectedBatch?.notes || '');
                                                                     setIsObservationModalOpen(true);
                                                                 }}
-                                                                style={{ width: '100%', textAlign: 'left', padding: '0.75rem 1rem', background: 'white', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.75rem', color: '#2d3748', fontSize: '0.9rem', transition: 'background 0.1s' }}
-                                                                onMouseEnter={e => e.currentTarget.style.background = '#fffaf0'}
-                                                                onMouseLeave={e => e.currentTarget.style.background = 'white'}
+                                                                style={{ width: '100%', textAlign: 'left', padding: '0.75rem 1rem', background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.75rem', color: '#cbd5e1', fontSize: '0.9rem', transition: 'background 0.1s' }}
+                                                                onMouseEnter={e => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'}
+                                                                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                                                             >
-                                                                <div style={{ background: '#fefcbf', padding: '0.4rem', borderRadius: '0.375rem', color: '#d69e2e', display: 'flex' }}><FaExclamationTriangle size={12} /></div>
+                                                                <div style={{ background: 'rgba(236, 201, 75, 0.1)', padding: '0.4rem', borderRadius: '0.375rem', color: '#facc15', display: 'flex' }}><FaExclamationTriangle size={12} /></div>
                                                                 <span>Observación</span>
                                                             </button>
 
-                                                            <div style={{ borderTop: '1px solid #edf2f7', margin: '0.25rem 0' }}></div>
+                                                            <div style={{ borderTop: '1px solid rgba(255, 255, 255, 0.1)', margin: '0.25rem 0' }}></div>
 
                                                             {/* 4. ELIMINAR */}
                                                             <button
                                                                 onClick={() => { setIsBulkActionsOpen(false); handleBulkDeleteFirstStep(); }}
-                                                                style={{ width: '100%', textAlign: 'left', padding: '0.75rem 1rem', background: 'white', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.75rem', color: '#e53e3e', fontSize: '0.9rem', transition: 'background 0.1s' }}
-                                                                onMouseEnter={e => e.currentTarget.style.background = '#fff5f5'}
-                                                                onMouseLeave={e => e.currentTarget.style.background = 'white'}
+                                                                style={{ width: '100%', textAlign: 'left', padding: '0.75rem 1rem', background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.75rem', color: '#f87171', fontSize: '0.9rem', transition: 'background 0.1s' }}
+                                                                onMouseEnter={e => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'}
+                                                                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                                                             >
-                                                                <div style={{ background: '#fed7d7', padding: '0.4rem', borderRadius: '0.375rem', color: '#e53e3e', display: 'flex' }}><FaTrash size={12} /></div>
+                                                                <div style={{ background: 'rgba(239, 68, 68, 0.1)', padding: '0.4rem', borderRadius: '0.375rem', color: '#f87171', display: 'flex' }}><FaTrash size={12} /></div>
                                                                 <span>Eliminar Selección</span>
                                                             </button>
                                                         </div>
@@ -3999,15 +4008,24 @@ const RoomDetail: React.FC = () => {
                                                 }}
                                                 title="Imprimir Mapa"
                                                 style={{
-                                                    background: 'white',
-                                                    border: '1px solid #e2e8f0',
+                                                    background: 'rgba(255, 255, 255, 0.05)',
+                                                    border: '1px solid rgba(255, 255, 255, 0.1)',
                                                     borderRadius: '0.375rem',
                                                     padding: '0.5rem 0.75rem',
                                                     fontSize: '0.85rem',
                                                     cursor: 'pointer',
-                                                    color: '#4a5568',
+                                                    color: '#cbd5e1',
                                                     fontWeight: 600,
                                                     display: 'flex', alignItems: 'center', gap: '0.5rem',
+                                                    transition: 'all 0.2s'
+                                                }}
+                                                onMouseEnter={e => {
+                                                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                                                    e.currentTarget.style.color = '#f8fafc';
+                                                }}
+                                                onMouseLeave={e => {
+                                                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                                                    e.currentTarget.style.color = '#cbd5e1';
                                                 }}
                                             >
                                                 <FaPrint />
@@ -4016,18 +4034,18 @@ const RoomDetail: React.FC = () => {
                                             <button
                                                 onClick={() => setActiveMapId(null)}
                                                 style={{
-                                                    background: '#edf2f7',
-                                                    border: 'none',
+                                                    background: 'rgba(255, 255, 255, 0.1)',
+                                                    border: '1px solid rgba(255, 255, 255, 0.1)',
                                                     padding: '0.5rem 0.75rem',
                                                     borderRadius: '0.5rem',
-                                                    color: '#4a5568',
+                                                    color: '#f8fafc',
                                                     fontWeight: 600,
                                                     cursor: 'pointer',
                                                     display: 'flex', alignItems: 'center', gap: '0.5rem',
-                                                    transition: 'background 0.2s'
+                                                    transition: 'all 0.2s'
                                                 }}
-                                                onMouseEnter={e => e.currentTarget.style.background = '#e2e8f0'}
-                                                onMouseLeave={e => e.currentTarget.style.background = '#edf2f7'}
+                                                onMouseEnter={e => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)'}
+                                                onMouseLeave={e => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'}
                                             >
                                                 <FaArrowLeft /> Volver
                                             </button>
@@ -4466,9 +4484,9 @@ const RoomDetail: React.FC = () => {
                                             <DraggableStockBatch batch={activeItem.batch} />
                                         </div>
                                     ) : activeItem.type === 'batch-group' ? (
-                                        <div style={{ background: 'white', padding: '0.5rem', borderRadius: '0.5rem', border: '1px solid #3182ce', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', width: '250px' }}>
+                                        <div style={{ background: 'rgba(56, 189, 248, 0.1)', backdropFilter: 'blur(8px)', padding: '0.5rem', borderRadius: '0.5rem', border: '1px solid rgba(56, 189, 248, 0.5)', boxShadow: '0 4px 6px rgba(0,0,0,0.3)', width: '250px', color: '#f8fafc' }}>
                                             <strong>{activeItem.group.root.name}</strong>
-                                            <div style={{ fontSize: '0.8rem' }}>Arrastrando grupo...</div>
+                                            <div style={{ fontSize: '0.8rem', color: '#cbd5e1' }}>Arrastrando grupo...</div>
                                         </div>
                                     ) : activeItem.type === 'genetic' ? (
                                         <div style={{ transform: 'none' }}>
@@ -5728,8 +5746,8 @@ const RoomDetail: React.FC = () => {
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                         <FaSeedling size={24} color="#48bb78" />
                                         <div>
-                                            <h3 style={{ margin: 0, color: '#2d3748' }}>{plantDetailModal.batch.tracking_code || 'Lote de Stock'}</h3>
-                                            <span style={{ fontSize: '0.9rem', color: '#718096' }}>
+                                            <h3 style={{ margin: 0, color: '#f8fafc' }}>{plantDetailModal.batch.tracking_code || 'Lote de Stock'}</h3>
+                                            <span style={{ fontSize: '0.9rem', color: '#94a3b8' }}>
                                                 {plantDetailModal.batch.clone_map_id
                                                     ? `Ubicación: ${plantDetailModal.batch.grid_position || 'N/A'} `
                                                     : `En Stock(Disponibles: ${(plantDetailModal.batch as any)._totalQuantity || plantDetailModal.batch.quantity})`
@@ -5744,32 +5762,33 @@ const RoomDetail: React.FC = () => {
                                     </div>
                                 </div>
 
-                                <div style={{ background: '#f7fafc', padding: '1rem', borderRadius: '0.5rem', marginBottom: '1.5rem' }}>
+                                <div style={{ background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', padding: '1rem', borderRadius: '0.5rem', marginBottom: '1.5rem' }}>
                                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                                         <div>
-                                            <label style={{ display: 'block', fontSize: '0.75rem', color: '#718096', marginBottom: '0.25rem' }}>Nombre / Genética</label>
-                                            <strong style={{ color: '#2d3748' }}>{plantDetailModal.batch.genetic?.name || plantDetailModal.batch.name || 'Desconocida'}</strong>
+                                            <label style={{ display: 'block', fontSize: '0.75rem', color: '#94a3b8', marginBottom: '0.25rem' }}>Nombre / Genética</label>
+                                            <strong style={{ color: '#f8fafc' }}>{plantDetailModal.batch.genetic?.name || plantDetailModal.batch.name || 'Desconocida'}</strong>
                                         </div>
                                         <div>
-                                            <label style={{ display: 'block', fontSize: '0.75rem', color: '#718096', marginBottom: '0.25rem' }}>Fase</label>
+                                            <label style={{ display: 'block', fontSize: '0.75rem', color: '#94a3b8', marginBottom: '0.25rem' }}>Fase</label>
                                             <span style={{
                                                 display: 'inline-block', padding: '0.1rem 0.5rem', borderRadius: '999px', fontSize: '0.75rem', fontWeight: 700,
-                                                background: plantDetailModal.batch.stage === 'vegetation' ? '#c6f6d5' : '#bee3f8',
-                                                color: plantDetailModal.batch.stage === 'vegetation' ? '#22543d' : '#2a4365'
+                                                background: plantDetailModal.batch.stage === 'vegetation' ? 'rgba(74, 222, 128, 0.15)' : 'rgba(56, 189, 248, 0.15)',
+                                                color: plantDetailModal.batch.stage === 'vegetation' ? '#4ade80' : '#38bdf8',
+                                                border: `1px solid ${plantDetailModal.batch.stage === 'vegetation' ? 'rgba(74, 222, 128, 0.3)' : 'rgba(56, 189, 248, 0.3)'}`
                                             }}>
                                                 {plantDetailModal.batch.stage === 'vegetation' ? 'Vegetativo' : 'Floración'}
                                             </span>
                                         </div>
                                         {plantDetailModal.batch.notes && (
                                             <div style={{ gridColumn: '1 / -1' }}>
-                                                <label style={{ display: 'block', fontSize: '0.75rem', color: '#718096', marginBottom: '0.25rem' }}>Notas</label>
-                                                <p style={{ margin: 0, fontSize: '0.9rem', color: '#4a5568' }}>{plantDetailModal.batch.notes}</p>
+                                                <label style={{ display: 'block', fontSize: '0.75rem', color: '#94a3b8', marginBottom: '0.25rem' }}>Notas</label>
+                                                <p style={{ margin: 0, fontSize: '0.9rem', color: '#cbd5e1' }}>{plantDetailModal.batch.notes}</p>
                                             </div>
                                         )}
                                     </div>
                                 </div>
 
-                                <h4 style={{ fontSize: '0.9rem', color: '#4a5568', marginBottom: '0.5rem', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.25rem' }}>
+                                <h4 style={{ fontSize: '0.9rem', color: '#cbd5e1', marginBottom: '0.5rem', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', paddingBottom: '0.25rem' }}>
                                     Acciones
                                 </h4>
 
@@ -5782,9 +5801,12 @@ const RoomDetail: React.FC = () => {
                                                 setPlantDetailModal({ ...plantDetailModal, isOpen: false });
                                             }}
                                             style={{
-                                                width: '100%', padding: '0.75rem', borderRadius: '0.375rem', border: '1px solid #e2e8f0', background: 'white',
-                                                color: '#3182ce', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', cursor: 'pointer', fontWeight: 600
+                                                width: '100%', padding: '0.75rem', borderRadius: '0.375rem', border: '1px solid rgba(56, 189, 248, 0.4)', background: 'rgba(56, 189, 248, 0.1)',
+                                                color: '#38bdf8', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', cursor: 'pointer', fontWeight: 600,
+                                                transition: 'all 0.2s'
                                             }}
+                                            onMouseEnter={e => e.currentTarget.style.background = 'rgba(56, 189, 248, 0.2)'}
+                                            onMouseLeave={e => e.currentTarget.style.background = 'rgba(56, 189, 248, 0.1)'}
                                         >
                                             <FaExpandArrowsAlt /> Reubicar en otro lugar
                                         </button>
@@ -5797,9 +5819,12 @@ const RoomDetail: React.FC = () => {
                                                 setPlantDetailModal({ ...plantDetailModal, isOpen: false });
                                             }}
                                             style={{
-                                                width: '100%', padding: '0.75rem', borderRadius: '0.375rem', border: '1px solid #e2e8f0', background: 'white',
-                                                color: '#38a169', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', cursor: 'pointer', fontWeight: 600
+                                                width: '100%', padding: '0.75rem', borderRadius: '0.375rem', border: '1px solid rgba(56, 189, 248, 0.4)', background: 'rgba(56, 189, 248, 0.1)',
+                                                color: '#38bdf8', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', cursor: 'pointer', fontWeight: 600,
+                                                transition: 'all 0.2s'
                                             }}
+                                            onMouseEnter={e => e.currentTarget.style.background = 'rgba(56, 189, 248, 0.2)'}
+                                            onMouseLeave={e => e.currentTarget.style.background = 'rgba(56, 189, 248, 0.1)'}
                                         >
                                             <FaArrowLeft /> Asignar al Mapa
                                         </button>
@@ -5811,11 +5836,20 @@ const RoomDetail: React.FC = () => {
                                                 if (plantDetailModal.batch) handleOpenEditBatch(plantDetailModal.batch);
                                             }}
                                             style={{
-                                                flex: 1, padding: '0.75rem', borderRadius: '0.375rem', border: '1px solid #e2e8f0', background: 'white',
-                                                color: '#d69e2e', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', cursor: 'pointer', fontWeight: 600
+                                                flex: 1, padding: '0.75rem', borderRadius: '0.375rem', border: '1px solid rgba(255, 255, 255, 0.1)', background: 'rgba(255, 255, 255, 0.05)',
+                                                color: '#cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', cursor: 'pointer', fontWeight: 600,
+                                                transition: 'all 0.2s'
+                                            }}
+                                            onMouseEnter={e => {
+                                                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                                                e.currentTarget.style.color = '#f8fafc';
+                                            }}
+                                            onMouseLeave={e => {
+                                                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                                                e.currentTarget.style.color = '#cbd5e1';
                                             }}
                                         >
-                                            Editar
+                                            <FaPen /> Editar
                                         </button>
 
                                         <button
@@ -5824,9 +5858,12 @@ const RoomDetail: React.FC = () => {
                                                 setPlantDetailModal({ ...plantDetailModal, isOpen: false });
                                             }}
                                             style={{
-                                                flex: 1, padding: '0.75rem', borderRadius: '0.375rem', border: '1px solid #fed7d7', background: '#fff5f5',
-                                                color: '#c53030', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', cursor: 'pointer', fontWeight: 600
+                                                flex: 1, padding: '0.75rem', borderRadius: '0.375rem', border: '1px solid rgba(239, 68, 68, 0.4)', background: 'rgba(239, 68, 68, 0.1)',
+                                                color: '#ef4444', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', cursor: 'pointer', fontWeight: 600,
+                                                transition: 'all 0.2s'
                                             }}
+                                            onMouseEnter={e => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.2)'}
+                                            onMouseLeave={e => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)'}
                                         >
                                             <FaTrash /> Eliminar
                                         </button>
