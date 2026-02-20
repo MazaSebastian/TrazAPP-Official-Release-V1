@@ -577,8 +577,8 @@ const RoomCardContainer = ({ room, children, isOver, $alertLevel }: { room: any,
         $type={room.type}
         $alertLevel={$alertLevel}
         style={{
-          borderColor: isOver ? '#3182ce' : undefined,
-          backgroundColor: isOver ? '#ebf8ff' : undefined,
+          borderColor: isOver ? 'rgba(56, 189, 248, 0.5)' : undefined,
+          backgroundColor: isOver ? 'rgba(56, 189, 248, 0.1)' : undefined,
           transition: 'background-color 0.2s, border-color 0.2s'
         }}
         onClick={(e) => {
@@ -1775,11 +1775,11 @@ const CropDetail: React.FC = () => {
 
                               {/* ESQUEJERA SUMMARY */}
                               {geneticBreakdown && room.type !== 'clones' && (
-                                <div style={{ marginTop: '0.5rem', padding: '0.5rem', background: '#ebf8ff', borderRadius: '0.5rem', border: '1px solid #bee3f8' }}>
-                                  <strong style={{ display: 'block', fontSize: '0.8rem', color: '#2b6cb0', marginBottom: '0.25rem' }}>Resumen por Genética:</strong>
+                                <div style={{ marginTop: '0.5rem', padding: '0.5rem', background: 'rgba(56, 189, 248, 0.05)', borderRadius: '0.5rem', border: '1px solid rgba(56, 189, 248, 0.2)' }}>
+                                  <strong style={{ display: 'block', fontSize: '0.8rem', color: '#38bdf8', marginBottom: '0.25rem' }}>Resumen por Genética:</strong>
                                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
                                     {Object.entries(geneticBreakdown as Record<string, number>).map(([name, count]) => (
-                                      <span key={name} style={{ fontSize: '0.8.5rem', background: 'white', padding: '0.1rem 0.4rem', borderRadius: '4px', border: '1px solid #e2e8f0', color: '#4a5568' }}>
+                                      <span key={name} style={{ fontSize: '0.8.5rem', background: 'rgba(255, 255, 255, 0.05)', padding: '0.1rem 0.4rem', borderRadius: '4px', border: '1px solid rgba(255, 255, 255, 0.1)', color: '#cbd5e1' }}>
                                         <strong>{count}</strong> {name}
                                       </span>
                                     ))}
@@ -1997,8 +1997,8 @@ const CropDetail: React.FC = () => {
                     </div>
                   ) : activeDragBatch ? (
                     <div style={{
-                      padding: '0.5rem', background: 'white', border: '1px solid #3182ce',
-                      borderRadius: '0.5rem', boxShadow: '0 5px 10px rgba(0,0,0,0.2)',
+                      padding: '0.5rem', background: 'rgba(56, 189, 248, 0.1)', backdropFilter: 'blur(8px)', border: '1px solid rgba(56, 189, 248, 0.5)',
+                      borderRadius: '0.5rem', boxShadow: '0 5px 10px rgba(0,0,0,0.3)', color: '#f8fafc',
                       width: '250px', display: 'flex', alignItems: 'center', gap: '0.5rem'
                     }}>
                       <span style={{ fontWeight: 'bold' }}>{activeDragBatch.name}</span>
