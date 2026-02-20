@@ -248,7 +248,6 @@ const Login: React.FC = () => {
           <div className="icon-wrapper">
             <img src="/logotrazappfix.png" alt="TrazApp Logo" style={{ filter: 'drop-shadow(0 6px 8px rgba(0,0,0,0.3))' }} />
           </div>
-          <h1>Bienvenido/a a APIDC</h1>
         </Logo>
 
 
