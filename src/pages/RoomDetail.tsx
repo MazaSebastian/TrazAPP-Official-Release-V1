@@ -4193,9 +4193,34 @@ const RoomDetail: React.FC = () => {
                                                 <div className="active-map-container" ref={mapContainerRef}>
 
                                                     {/* Print-only title since toolbar is hidden on print */}
-                                                    <div className="printable-map-details" style={{ marginBottom: '1rem', textAlign: 'center' }}>
-                                                        <h2>{activeMap?.name}</h2>
-                                                        <p>{activeMap?.grid_rows} x {activeMap?.grid_columns}</p>
+                                                    <div className="printable-map-details" style={{
+                                                        marginBottom: '1rem',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        gap: '1rem',
+                                                        background: 'rgba(15, 23, 42, 0.6)',
+                                                        backdropFilter: 'blur(12px)',
+                                                        WebkitBackdropFilter: 'blur(12px)',
+                                                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                                                        padding: '1rem 1.5rem',
+                                                        borderRadius: '0.75rem',
+                                                        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.3)'
+                                                    }}>
+                                                        <h2 style={{ margin: 0, fontSize: '1.25rem', color: '#f8fafc' }}>{activeMap?.name}</h2>
+                                                        <span style={{
+                                                            background: 'rgba(74, 222, 128, 0.1)',
+                                                            color: '#4ade80',
+                                                            border: '1px solid rgba(74, 222, 128, 0.2)',
+                                                            padding: '0.2rem 0.6rem',
+                                                            borderRadius: '9999px',
+                                                            fontSize: '0.85rem',
+                                                            fontWeight: 600
+                                                        }}>
+                                                            {activeMap?.grid_rows} x {activeMap?.grid_columns}
+                                                        </span>
+                                                        <div style={{ marginLeft: 'auto', display: 'flex', gap: '0.5rem' }}>
+                                                            {/* Actions can go here if needed in the future */}
+                                                        </div>
                                                     </div>
 
                                                     <div className={`printable-map-grid ${room?.type === 'living_soil' ? 'hide-on-map-print' : ''}`}>
