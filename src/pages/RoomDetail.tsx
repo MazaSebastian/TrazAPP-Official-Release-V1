@@ -3620,19 +3620,24 @@ const RoomDetail: React.FC = () => {
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
                         {stickies.map(s => (
                             <div key={s.id} style={{
-                                background: s.color === 'yellow' ? '#fefcbf' : s.color === 'blue' ? '#bee3f8' : s.color === 'pink' ? '#fed7d7' : '#c6f6d5',
-                                padding: '1rem', borderRadius: '0.5rem',
-                                boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+                                background: s.color === 'yellow' ? 'rgba(236, 201, 75, 0.1)' : s.color === 'blue' ? 'rgba(66, 153, 225, 0.1)' : s.color === 'pink' ? 'rgba(245, 101, 101, 0.1)' : 'rgba(72, 187, 120, 0.1)',
+                                backdropFilter: 'blur(12px)',
+                                WebkitBackdropFilter: 'blur(12px)',
+                                border: `1px solid ${s.color === 'yellow' ? 'rgba(236, 201, 75, 0.3)' : s.color === 'blue' ? 'rgba(66, 153, 225, 0.3)' : s.color === 'pink' ? 'rgba(245, 101, 101, 0.3)' : 'rgba(72, 187, 120, 0.3)'}`,
+                                padding: '1rem', borderRadius: '0.75rem',
+                                boxShadow: '0 4px 6px -1px rgba(0,0,0,0.3)',
                                 position: 'relative',
                                 display: 'flex', flexDirection: 'column', gap: '0.5rem'
                             }}>
-                                <p style={{ fontSize: '1rem', color: '#2d3748', whiteSpace: 'pre-wrap', lineHeight: '1.4' }}>{s.content}</p>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto', paddingTop: '0.5rem', borderTop: '1px solid rgba(0,0,0,0.05)' }}>
-                                    <span style={{ fontSize: '0.75rem', color: '#718096' }}>{format(new Date(s.created_at), 'd MMM', { locale: es })}</span>
+                                <p style={{ fontSize: '1rem', color: '#f8fafc', whiteSpace: 'pre-wrap', lineHeight: '1.4' }}>{s.content}</p>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto', paddingTop: '0.5rem', borderTop: '1px solid rgba(255, 255, 255, 0.1)' }}>
+                                    <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>{format(new Date(s.created_at), 'd MMM', { locale: es })}</span>
                                     <button
                                         onClick={() => handleDeleteSticky(s.id)}
-                                        style={{ background: 'none', border: 'none', color: '#e53e3e', cursor: 'pointer', opacity: 0.6, padding: '2px' }}
+                                        style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', opacity: 0.8, padding: '2px', transition: 'opacity 0.2s' }}
                                         title="Eliminar"
+                                        onMouseEnter={e => e.currentTarget.style.opacity = '1'}
+                                        onMouseLeave={e => e.currentTarget.style.opacity = '0.8'}
                                     >
                                         <FaTrash size={12} />
                                     </button>
@@ -3647,17 +3652,28 @@ const RoomDetail: React.FC = () => {
                                 setIsStickyModalOpen(true);
                             }}
                             style={{
-                                border: '2px dashed #cbd5e0',
-                                borderRadius: '0.5rem',
+                                border: '2px dashed rgba(255, 255, 255, 0.2)',
+                                borderRadius: '0.75rem',
                                 display: 'flex',
                                 flexDirection: 'column',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                color: '#a0aec0',
+                                color: '#94a3b8',
                                 cursor: 'pointer',
                                 minHeight: '120px',
                                 transition: 'all 0.2s ease',
-                                background: '#f7fafc'
+                                background: 'rgba(15, 23, 42, 0.4)',
+                                backdropFilter: 'blur(12px)'
+                            }}
+                            onMouseEnter={(e) => {
+                                e.currentTarget.style.borderColor = '#4ade80';
+                                e.currentTarget.style.color = '#4ade80';
+                                e.currentTarget.style.background = 'rgba(74, 222, 128, 0.1)';
+                            }}
+                            onMouseLeave={(e) => {
+                                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+                                e.currentTarget.style.color = '#94a3b8';
+                                e.currentTarget.style.background = 'rgba(15, 23, 42, 0.4)';
                             }}
                         >
                             <FaPlus size={24} style={{ marginBottom: '0.5rem' }} />
@@ -4083,7 +4099,7 @@ const RoomDetail: React.FC = () => {
                                                                 <DroppableMapCard key={map.id} map={map} onClick={() => setActiveMapId(map.id)}>
                                                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
                                                                         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                                                                            <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#2d3748' }}>{map.name}</h3>
+                                                                            <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#f8fafc' }}>{map.name}</h3>
                                                                             <div style={{ display: 'flex', gap: '0.5rem' }}>
                                                                                 {/* Selection buttons removed from Map List View */}
                                                                             </div>
@@ -4109,13 +4125,13 @@ const RoomDetail: React.FC = () => {
                                                                     </div>
 
                                                                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                                                                        <div style={{ background: '#ebf8ff', padding: '0.5rem', borderRadius: '0.5rem', textAlign: 'center' }}>
-                                                                            <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#2b6cb0' }}>{totalPlants}</div>
-                                                                            <div style={{ fontSize: '0.75rem', color: '#4a5568' }}>Plantas</div>
+                                                                        <div style={{ background: 'rgba(56, 189, 248, 0.1)', border: '1px solid rgba(56, 189, 248, 0.2)', padding: '0.5rem', borderRadius: '0.5rem', textAlign: 'center' }}>
+                                                                            <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#38bdf8' }}>{totalPlants}</div>
+                                                                            <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Plantas</div>
                                                                         </div>
-                                                                        <div style={{ background: '#f0fff4', padding: '0.5rem', borderRadius: '0.5rem', textAlign: 'center' }}>
-                                                                            <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#2f855a' }}>{uniqueGenetics}</div>
-                                                                            <div style={{ fontSize: '0.75rem', color: '#4a5568' }}>Variedades</div>
+                                                                        <div style={{ background: 'rgba(74, 222, 128, 0.1)', border: '1px solid rgba(74, 222, 128, 0.2)', padding: '0.5rem', borderRadius: '0.5rem', textAlign: 'center' }}>
+                                                                            <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#4ade80' }}>{uniqueGenetics}</div>
+                                                                            <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Variedades</div>
                                                                         </div>
                                                                     </div>
                                                                 </DroppableMapCard>
