@@ -21,94 +21,260 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Verificar sesión actual de Supabase
-    const checkSession = async () => {
-      if (!supabase) {
+    let mounted = true;
+
+    // FAILSAFE: Force stop loading after 3 seconds to prevent infinite "Iniciando..."
+    const safetyTimer = setTimeout(() => {
+      if (mounted) {
+        console.warn('AuthContext: Safety timer triggered. Forcing isLoading=false');
         setIsLoading(false);
+      }
+    }, 3000);
+
+    const fetchProfile = async (sessionUser: any) => {
+      try {
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', sessionUser.id)
+          .single();
+
+        if (!mounted) return null;
+
+        if (error) {
+          console.warn('AuthContext: Error fetching profile:', error);
+          return null;
+        }
+        return profile;
+      } catch (error) {
+        console.error('AuthContext: Unexpected error fetching profile:', error);
+        return null;
+      }
+    };
+
+    const handleUserUpdate = async (session: any) => {
+      if (!session?.user) {
+        if (mounted) {
+          setUser(null);
+          setIsLoading(false);
+        }
         return;
       }
 
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        const userData: User = {
-          id: session.user.id,
-          email: session.user.email || '',
-          name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'Usuario',
-          role: session.user.user_metadata?.role || 'partner',
+      // 1. Optimistic set - UNBLOCK UI IMMEDIATELY
+      const cachedRole = localStorage.getItem('userRole')?.toLowerCase();
+      const metaRole = session.user.user_metadata?.role?.toLowerCase();
+      // Priority: Cache (Correct/Latest) > Meta (Maybe Stale) > Default
+      const effectiveRole = cachedRole || metaRole || 'partner';
 
-          avatar: session.user.user_metadata?.avatar
-        };
-        setUser(userData);
+      const initialUser: User = {
+        id: session.user.id,
+        email: session.user.email || '',
+        name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'Usuario',
+        role: effectiveRole,
+        avatar: session.user.user_metadata?.avatar
+      };
+
+      if (mounted) {
+        setUser(initialUser);
+        setIsLoading(false);
       }
-      setIsLoading(false);
+
+      // 2. Background profile update
+      console.log('AuthContext: Fetching profile in background...');
+      fetchProfile(session.user).then(profile => {
+        if (mounted && profile) {
+          console.log('AuthContext: Profile fetched successfully', profile);
+          const dbName = profile?.full_name || profile?.name || profile?.nombre || profile?.username;
+          const rawDbRole = profile?.role;
+          const dbRole = rawDbRole ? rawDbRole.toLowerCase() : null;
+
+          // Always update cache if we get a valid role
+          if (dbRole) localStorage.setItem('userRole', dbRole);
+
+          setUser(prev => {
+            if (!prev || prev.id !== session.user.id) return prev;
+
+            // PROTECTION: Don't downgrade Super Admin to Partner based on ambiguous DB data
+            if (prev.role === 'super_admin' && dbRole && dbRole !== 'super_admin') {
+              console.warn('AuthContext: SAFETY BLOCKED - Prevented downgrading Super Admin to', dbRole);
+              // Update other fields but KEEP role as super_admin
+              return {
+                ...prev,
+                name: dbName || prev.name,
+                avatar: profile?.avatar_url || prev.avatar
+              };
+            }
+
+            return {
+              ...prev,
+              name: dbName || prev.name,
+              role: dbRole || prev.role,
+              avatar: profile?.avatar_url || prev.avatar
+            };
+          });
+        }
+      });
+
+      if (mounted) setIsLoading(false);
     };
 
-    checkSession();
+    // Initialize Auth Listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log(`AuthContext: Auth Event ${event}`, session?.user?.id);
 
-    // Escuchar cambios de autenticación
-    const { data: { subscription } } = supabase?.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' && session?.user) {
-        const userData: User = {
-          id: session.user.id,
-          email: session.user.email || '',
-          name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'Usuario',
-          role: session.user.user_metadata?.role || 'partner',
-
-          avatar: session.user.user_metadata?.avatar
-        };
-        setUser(userData);
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
+        await handleUserUpdate(session);
       } else if (event === 'SIGNED_OUT') {
-        setUser(null);
+        if (mounted) {
+          setUser(null);
+          setIsLoading(false);
+        }
       }
-    }) || { data: { subscription: null } };
+    });
 
-    return () => subscription?.unsubscribe();
+    // Check initial session manually in case event doesn't fire immediately
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!mounted) return; // Component unmounted while fetching session
+
+      if (!session) {
+        // If no session, ensure we stop loading, unless onAuthStateChange takes over
+        setIsLoading(false);
+      } else {
+        // If session exists, handle it (onAuthStateChange might also fire, but this ensures coverage)
+        // We use the same handler, it handles idempotency reasonably well by id check
+        handleUserUpdate(session);
+      }
+    });
+
+    return () => {
+      mounted = false;
+      clearTimeout(safetyTimer);
+      subscription.unsubscribe();
+    };
   }, []);
 
-  const login = async (credentials: LoginCredentials): Promise<boolean> => {
-    if (!supabase) return false;
+  const login = async (credentials: LoginCredentials): Promise<{ success: boolean; error?: string }> => {
+    console.log('AuthContext: login started');
+
+    if (!supabase) {
+      console.log('AuthContext: No supabase client');
+      return { success: false, error: 'Error interno: cliente de base de datos no disponible.' };
+    }
+
+    // FORCE CLEANUP: Ensure any previous session is cleared before attempting new login
+    // This fixes the "hanging" issue when switching accounts or after a bad state
+    try {
+      const signOutTimeout = new Promise((_, reject) => setTimeout(() => reject(new Error('SignOut Timeout')), 2000));
+      await Promise.race([
+        supabase.auth.signOut(),
+        signOutTimeout
+      ]);
+      console.log('AuthContext: Forced sign out before login');
+    } catch (e) {
+      console.warn('AuthContext: Error during forced sign out (ignoring):', e);
+    }
+
+    // Clear local state as well
+    setUser(null);
 
     setIsLoading(true);
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: credentials.email,
-        password: credentials.password
+      // Create a timeout promise that rejects after 10 seconds
+      const timeoutPromise = new Promise<{ data: any; error: any }>((_, reject) => {
+        setTimeout(() => reject(new Error('Login request timed out')), 10000);
       });
 
+      // Race between Supabase login and timeout
+      const { data, error } = await Promise.race([
+        supabase.auth.signInWithPassword({
+          email: credentials.email,
+          password: credentials.password
+        }),
+        timeoutPromise
+      ]);
+
       if (error) {
-        console.error('Error de login:', error);
-        setIsLoading(false);
-        return false;
+        console.error('AuthContext: Login error:', error);
+
+        let errorMessage = 'Credenciales inválidas. Intenta de nuevo.';
+        if (error.message.includes('Email not confirmed')) {
+          errorMessage = 'Debes confirmar tu email antes de iniciar sesión. Por favor revisa tu bandeja de entrada.';
+        } else if (error.message.includes('Invalid login credentials')) {
+          errorMessage = 'Credenciales inválidas. Intenta de nuevo.';
+        } else if (error.message.includes('timed out')) {
+          errorMessage = 'La solicitud tardó demasiado. Revisa tu conexión a internet.';
+        }
+
+        return { success: false, error: errorMessage };
       }
 
+      console.log('AuthContext: Login successful, user:', data.user?.id);
+
       if (data.user) {
+        // Fetch profile from DB with another race condition to prevent hanging
+        const profileTimeoutPromise = new Promise<{ data: any; error: any }>((resolve) => {
+          setTimeout(() => resolve({ data: null, error: new Error('Profile fetch timeout') }), 5000);
+        });
+
+        const { data: profile, error: profileError } = await Promise.race([
+          supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', data.user.id)
+            .single(),
+          profileTimeoutPromise
+        ]);
+
+        if (profileError) {
+          console.warn('AuthContext: Error fetching profile during login:', profileError);
+        } else {
+          console.log('AuthContext: Profile fetched during login', profile);
+        }
+
+        const dbName = profile?.full_name || profile?.name || profile?.nombre || profile?.username;
+        const dbRole = profile?.role;
+
         const userData: User = {
           id: data.user.id,
           email: data.user.email || '',
-          name: data.user.user_metadata?.name || data.user.email?.split('@')[0] || 'Usuario',
-          role: data.user.user_metadata?.role || 'partner',
-
-          avatar: data.user.user_metadata?.avatar
+          name: dbName || data.user.user_metadata?.name || data.user.email?.split('@')[0] || 'Usuario',
+          role: dbRole || data.user.user_metadata?.role || 'partner',
+          avatar: profile?.avatar_url || data.user.user_metadata?.avatar
         };
+
+        if (dbRole) localStorage.setItem('userRole', dbRole);
+
         setUser(userData);
-        setIsLoading(false);
-        return true;
+        console.log('AuthContext: User set after login');
+        return { success: true };
       }
 
+      return { success: false, error: 'No se pudo obtener la información del usuario.' };
+    } catch (error: any) {
+      console.error('AuthContext: Unexpected error in login:', error);
+      return { success: false, error: error.message || 'Error inesperado al intentar iniciar sesión.' };
+    } finally {
+      console.log('AuthContext: login finally block - setIsLoading(false)');
       setIsLoading(false);
-      return false;
-    } catch (error) {
-      console.error('Error en login:', error);
-      setIsLoading(false);
-      return false;
     }
   };
 
   const logout = async () => {
+    // 1. Try to tell the server we are leaving
     if (supabase) {
-      await supabase.auth.signOut();
+      try {
+        await supabase.auth.signOut();
+      } catch (e) {
+        console.error('Logout error:', e);
+      }
     }
+
+    // 2. NUKE LOCAL STATE - This prevents "zombie sessions" on refresh
+    localStorage.clear(); // Clear everything including 'userRole' and Supabase tokens
+
+    // 3. Update App State
     setUser(null);
   };
 

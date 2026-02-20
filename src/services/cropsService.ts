@@ -1,4 +1,4 @@
-import { supabase } from './supabaseClient';
+import { supabase, getSelectedOrgId } from './supabaseClient';
 import { Crop } from '../types';
 import { roomsService } from './roomsService';
 import { notificationService } from './notificationService';
@@ -10,6 +10,7 @@ export const cropsService = {
         const { data, error } = await supabase
             .from('chakra_crops')
             .select('*, rooms(*)')
+            .eq('organization_id', getSelectedOrgId())
             .order('start_date', { ascending: false });
 
         if (error) {
@@ -75,7 +76,8 @@ export const cropsService = {
                 start_date: crop.startDate,
                 estimated_harvest_date: crop.estimatedHarvestDate,
                 status: 'active',
-                color: crop.color || 'green'
+                color: crop.color || 'green',
+                organization_id: getSelectedOrgId()
             }])
             .select()
             .single();

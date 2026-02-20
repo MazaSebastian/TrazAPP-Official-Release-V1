@@ -2,7 +2,16 @@
 
 /* Prevent layout shift by forcing scrollbar presence */
 html {
-  overflow-y: scroll;
+  background-color: #020617 !important;
+}
+
+body {
+  margin: 0;
+  background-color: #020617 !important;
+}
+
+#root {
+  background-color: #020617 !important;
 }
 
 /* Calendar Hover Effect */

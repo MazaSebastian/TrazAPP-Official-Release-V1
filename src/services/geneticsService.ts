@@ -1,4 +1,4 @@
-import { supabase } from './supabaseClient';
+import { supabase, getSelectedOrgId } from './supabaseClient';
 import { Genetic } from '../types/genetics';
 
 const getClient = () => {
@@ -23,7 +23,7 @@ export const geneticsService = {
     async createGenetic(genetic: Omit<Genetic, 'id' | 'created_at'>): Promise<Genetic | null> {
         const { data, error } = await getClient()
             .from('genetics')
-            .insert([genetic])
+            .insert([{ ...genetic, organization_id: getSelectedOrgId() }])
             .select()
             .single();
 

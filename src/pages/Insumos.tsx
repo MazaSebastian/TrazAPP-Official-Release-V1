@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import styled from 'styled-components';
+import styled, { keyframes } from 'styled-components';
 import {
   FaPlus,
   FaEdit,
@@ -8,6 +8,7 @@ import {
   FaTimesCircle,
   FaDownload
 } from 'react-icons/fa';
+import { CustomSelect } from '../components/CustomSelect';
 import type { Insumo } from '../types';
 import {
   getInsumos,
@@ -17,11 +18,33 @@ import {
   getInsumosStats
 } from '../services/insumosService';
 
+const fadeIn = keyframes`
+  from { opacity: 0; }
+  to { opacity: 1; }
+`;
+
+const fadeOut = keyframes`
+  from { opacity: 1; }
+  to { opacity: 0; }
+`;
+
+const slideUp = keyframes`
+  from { opacity: 0; transform: translateY(20px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+`;
+
+const slideDown = keyframes`
+  from { opacity: 1; transform: translateY(0) scale(1); }
+  to { opacity: 0; transform: translateY(20px) scale(0.95); }
+`;
+
 const Page = styled.div`
   padding: 1rem;
   padding-top: 5rem;
   max-width: 1400px;
   margin: 0 auto;
+  min-height: 100vh;
+  color: #f8fafc;
 `;
 
 const Header = styled.div`
@@ -34,7 +57,7 @@ const Header = styled.div`
 
   h1 {
     font-size: 1.5rem;
-    color: #1e293b;
+    color: #f8fafc;
     margin: 0;
   }
 `;
@@ -47,35 +70,42 @@ const StatsGrid = styled.div`
 `;
 
 const StatCard = styled.div`
-  background: white;
-  border: 1px solid #e2e8f0;
-  border-radius: 0.75rem;
+  background: rgba(30, 41, 59, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 1rem;
   padding: 1.5rem;
   text-align: center;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(12px);
+  transition: transform 0.2s, box-shadow 0.2s;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+  }
 
   .stat-value {
     font-size: 2rem;
     font-weight: 700;
-    color: #1e293b;
+    color: #f8fafc;
     margin-bottom: 0.5rem;
   }
 
   .stat-label {
-    color: #64748b;
+    color: #94a3b8;
     font-size: 0.875rem;
   }
 
   &.warning .stat-value {
-    color: #f59e0b;
+    color: #facc15;
   }
 
   &.danger .stat-value {
-    color: #ef4444;
+    color: #f87171;
   }
 
   &.success .stat-value {
-    color: #10b981;
+    color: #4ade80;
   }
 `;
 
@@ -89,7 +119,6 @@ const Controls = styled.div`
 
 const Button = styled.button<{ variant?: 'primary' | 'secondary' | 'danger' | 'success' }>`
   padding: 0.75rem 1.5rem;
-  border: none;
   border-radius: 0.5rem;
   font-weight: 600;
   cursor: pointer;
@@ -98,21 +127,40 @@ const Button = styled.button<{ variant?: 'primary' | 'secondary' | 'danger' | 's
   gap: 0.5rem;
   transition: all 0.2s;
   font-size: 0.875rem;
+  backdrop-filter: blur(8px);
 
-  background: ${props => {
+  ${props => {
     switch (props.variant) {
-      case 'secondary': return '#64748b';
-      case 'danger': return '#ef4444';
-      case 'success': return '#10b981';
-      default: return 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)';
+      case 'secondary':
+        return `
+          background: rgba(30, 41, 59, 0.6);
+          color: #cbd5e1;
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          &:hover { background: rgba(255, 255, 255, 0.1); color: #f8fafc; }
+        `;
+      case 'danger':
+        return `
+          background: rgba(239, 68, 68, 0.1);
+          color: #f87171;
+          border: 1px solid rgba(239, 68, 68, 0.2);
+          &:hover { background: rgba(239, 68, 68, 0.2); }
+        `;
+      case 'success':
+        return `
+          background: rgba(74, 222, 128, 0.2);
+          color: #4ade80;
+          border: 1px solid rgba(74, 222, 128, 0.5);
+          &:hover { background: rgba(74, 222, 128, 0.3); }
+        `;
+      default:
+        return `
+          background: rgba(168, 85, 247, 0.2);
+          color: #d8b4fe;
+          border: 1px solid rgba(168, 85, 247, 0.5);
+          &:hover { background: rgba(168, 85, 247, 0.3); box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
+        `;
     }
-  }};
-  color: white;
-
-  &:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  }
+  }}
 
   &:disabled {
     opacity: 0.6;
@@ -123,38 +171,30 @@ const Button = styled.button<{ variant?: 'primary' | 'secondary' | 'danger' | 's
 
 const SearchInput = styled.input`
   padding: 0.75rem 1rem;
-  border: 1px solid #d1d5db;
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 0.5rem;
   font-size: 0.875rem;
   min-width: 250px;
+  background: rgba(30, 41, 59, 0.5);
+  color: #f8fafc;
+  backdrop-filter: blur(8px);
 
   &:focus {
     outline: none;
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    border-color: rgba(168, 85, 247, 0.5);
+    box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.1);
   }
 `;
 
-const Select = styled.select`
-  padding: 0.75rem 1rem;
-  border: 1px solid #d1d5db;
-  border-radius: 0.5rem;
-  font-size: 0.875rem;
-  background: white;
-  cursor: pointer;
 
-  &:focus {
-    outline: none;
-    border-color: #3b82f6;
-  }
-`;
 
 const Table = styled.div`
-  background: white;
-  border: 1px solid #e2e8f0;
-  border-radius: 0.75rem;
+  background: rgba(30, 41, 59, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 1rem;
   overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(12px);
 `;
 
 const TableHeader = styled.div`
@@ -162,10 +202,10 @@ const TableHeader = styled.div`
   grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr auto;
   gap: 1rem;
   padding: 1rem;
-  background: #f8fafc;
-  border-bottom: 1px solid #e2e8f0;
+  background: rgba(15, 23, 42, 0.4);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   font-weight: 600;
-  color: #374151;
+  color: #cbd5e1;
   font-size: 0.875rem;
 `;
 
@@ -174,18 +214,19 @@ const TableRow = styled.div<{ isSelected?: boolean }>`
   grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr auto;
   gap: 1rem;
   padding: 1rem;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   align-items: center;
   cursor: pointer;
   transition: background-color 0.2s;
+  color: #f8fafc;
 
   &:hover {
-    background: #f8fafc;
+    background: rgba(255, 255, 255, 0.05);
   }
 
   ${props => props.isSelected && `
-    background: #dbeafe;
-    border-left: 4px solid #3b82f6;
+    background: rgba(56, 189, 248, 0.1);
+    border-left: 4px solid #38bdf8;
   `}
 
   &:last-child {
@@ -199,20 +240,29 @@ const Badge = styled.span<{ variant?: 'green' | 'yellow' | 'red' | 'gray' }>`
   font-size: 0.75rem;
   border-radius: 9999px;
   font-weight: 600;
+  border: 1px solid transparent;
   background: ${props => {
     switch (props.variant) {
-      case 'green': return '#dcfce7';
-      case 'yellow': return '#fef3c7';
-      case 'red': return '#fee2e2';
-      default: return '#e5e7eb';
+      case 'green': return 'rgba(74, 222, 128, 0.2)';
+      case 'yellow': return 'rgba(250, 204, 21, 0.2)';
+      case 'red': return 'rgba(239, 68, 68, 0.2)';
+      default: return 'rgba(255, 255, 255, 0.1)';
+    }
+  }};
+  border-color: ${props => {
+    switch (props.variant) {
+      case 'green': return 'rgba(74, 222, 128, 0.5)';
+      case 'yellow': return 'rgba(250, 204, 21, 0.5)';
+      case 'red': return 'rgba(239, 68, 68, 0.5)';
+      default: return 'rgba(255, 255, 255, 0.2)';
     }
   }};
   color: ${props => {
     switch (props.variant) {
-      case 'green': return '#166534';
-      case 'yellow': return '#92400e';
-      case 'red': return '#991b1b';
-      default: return '#374151';
+      case 'green': return '#4ade80';
+      case 'yellow': return '#facc15';
+      case 'red': return '#f87171';
+      default: return '#cbd5e1';
     }
   }};
 `;
@@ -225,27 +275,34 @@ const PriceChange = styled.span<{ isPositive: boolean }>`
   gap: 0.25rem;
 `;
 
-const Modal = styled.div<{ isOpen: boolean }>`
+const Modal = styled.div<{ isOpen: boolean; $isClosing?: boolean }>`
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.7);
   display: ${props => props.isOpen ? 'flex' : 'none'};
   align-items: center;
   justify-content: center;
   z-index: 1000;
+  backdrop-filter: blur(4px);
+  animation: ${props => props.$isClosing ? fadeOut : fadeIn} 0.3s ease-out forwards;
 `;
 
-const ModalContent = styled.div`
-  background: white;
-  border-radius: 0.75rem;
+const ModalContent = styled.div<{ $isClosing?: boolean }>`
+  background: rgba(15, 23, 42, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 1rem;
   padding: 2rem;
   max-width: 600px;
   width: 90%;
   max-height: 90vh;
   overflow-y: auto;
+  box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5);
+  backdrop-filter: blur(16px);
+  color: #f8fafc;
+  animation: ${props => props.$isClosing ? slideDown : slideUp} 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 `;
 
 const ModalHeader = styled.div`
@@ -253,10 +310,12 @@ const ModalHeader = styled.div`
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 1rem;
 
   h2 {
     margin: 0;
-    color: #1e293b;
+    color: #f8fafc;
   }
 `;
 
@@ -271,20 +330,27 @@ const FormGroup = styled.div`
 
   label {
     font-weight: 600;
-    color: #374151;
+    color: #cbd5e1;
     font-size: 0.875rem;
   }
 
   input, select, textarea {
     padding: 0.75rem;
-    border: 1px solid #d1d5db;
+    border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 0.5rem;
     font-size: 0.875rem;
+    background: rgba(30, 41, 59, 0.5);
+    color: #f8fafc;
+    backdrop-filter: blur(8px);
 
     &:focus {
       outline: none;
-      border-color: #3b82f6;
-      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+      border-color: rgba(168, 85, 247, 0.5);
+      box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.1);
+    }
+    
+    &::placeholder {
+      color: #64748b;
     }
   }
 
@@ -310,6 +376,7 @@ const Insumos: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isClosingModal, setIsClosingModal] = useState(false);
   const [editingInsumo, setEditingInsumo] = useState<Insumo | null>(null);
   const [formData, setFormData] = useState({
     nombre: '',
@@ -381,6 +448,14 @@ const Insumos: React.FC = () => {
     loadStats();
   }, []);
 
+  const closeModal = () => {
+    setIsClosingModal(true);
+    setTimeout(() => {
+      setIsModalOpen(false);
+      setIsClosingModal(false);
+    }, 300);
+  };
+
   const handleOpenModal = (insumo?: Insumo) => {
     if (insumo) {
       setEditingInsumo(insumo);
@@ -443,7 +518,7 @@ const Insumos: React.FC = () => {
         }
       }
 
-      setIsModalOpen(false);
+      closeModal();
     } catch (error) {
       console.error('Error al guardar insumo:', error);
       alert('Error al guardar el insumo. Por favor, intenta de nuevo.');
@@ -529,18 +604,21 @@ const Insumos: React.FC = () => {
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
-        <Select
-          value={selectedCategory}
-          onChange={(e) => setSelectedCategory(e.target.value)}
-        >
-          <option value="">Todas las categorías</option>
-          <option value="semillas">Semillas</option>
-          <option value="fertilizantes">Fertilizantes</option>
-          <option value="sustratos">Sustratos</option>
-          <option value="herramientas">Herramientas</option>
-          <option value="pesticidas">Pesticidas</option>
-          <option value="otros">Otros</option>
-        </Select>
+        <div style={{ flex: 1, minWidth: '250px' }}>
+          <CustomSelect
+            value={selectedCategory}
+            onChange={(val: string) => setSelectedCategory(val)}
+            options={[
+              { value: '', label: 'Todas las categorías' },
+              { value: 'semillas', label: 'Semillas' },
+              { value: 'fertilizantes', label: 'Fertilizantes' },
+              { value: 'sustratos', label: 'Sustratos' },
+              { value: 'herramientas', label: 'Herramientas' },
+              { value: 'pesticidas', label: 'Pesticidas' },
+              { value: 'otros', label: 'Otros' }
+            ]}
+          />
+        </div>
         <Button variant="secondary" onClick={exportToCSV}>
           <FaDownload /> Exportar CSV
         </Button>
@@ -637,26 +715,28 @@ const Insumos: React.FC = () => {
         <div style={{
           textAlign: 'center',
           padding: '3rem',
-          color: '#64748b',
-          background: 'white',
-          border: '1px solid #e2e8f0',
+          color: '#94a3b8',
+          background: 'rgba(30, 41, 59, 0.6)',
+          border: '1px solid rgba(255, 255, 255, 0.05)',
           borderTop: 'none',
           borderBottomLeftRadius: '0.75rem',
-          borderBottomRightRadius: '0.75rem'
+          borderBottomRightRadius: '0.75rem',
+          backdropFilter: 'blur(12px)'
         }}>
-          <FaBoxes style={{ fontSize: '3rem', marginBottom: '1rem', opacity: 0.5 }} />
-          <h3>No hay insumos registrados</h3>
+          <FaBoxes style={{ fontSize: '3rem', marginBottom: '1rem', opacity: 0.5, color: '#f8fafc' }} />
+          <h3 style={{ color: '#f8fafc' }}>No hay insumos registrados</h3>
           <p>Comienza agregando tu primer insumo para monitorear precios y stock</p>
         </div>
       )}
 
-      <Modal isOpen={isModalOpen} onClick={() => setIsModalOpen(false)}>
-        <ModalContent onClick={(e) => e.stopPropagation()}>
+      <Modal isOpen={isModalOpen || isClosingModal} $isClosing={isClosingModal} onMouseDown={closeModal}>
+        <ModalContent $isClosing={isClosingModal} onMouseDown={(e) => e.stopPropagation()}>
           <ModalHeader>
             <h2>{editingInsumo ? 'Editar Insumo' : 'Nuevo Insumo'}</h2>
             <Button
+              type="button"
               variant="secondary"
-              onClick={() => setIsModalOpen(false)}
+              onClick={closeModal}
               style={{ padding: '0.5rem' }}
             >
               <FaTimesCircle />
@@ -677,18 +757,20 @@ const Insumos: React.FC = () => {
               </FormGroup>
               <FormGroup>
                 <label>Categoría *</label>
-                <Select
-                  value={formData.categoria}
-                  onChange={(e) => setFormData(prev => ({ ...prev, categoria: e.target.value as any }))}
-                  required
-                >
-                  <option value="semillas">Semillas</option>
-                  <option value="fertilizantes">Fertilizantes</option>
-                  <option value="sustratos">Sustratos</option>
-                  <option value="herramientas">Herramientas</option>
-                  <option value="pesticidas">Pesticidas</option>
-                  <option value="otros">Otros</option>
-                </Select>
+                <div style={{ position: 'relative', zIndex: 1001 }}>
+                  <CustomSelect
+                    value={formData.categoria}
+                    onChange={(val: string) => setFormData(prev => ({ ...prev, categoria: val as any }))}
+                    options={[
+                      { value: 'semillas', label: 'Semillas' },
+                      { value: 'fertilizantes', label: 'Fertilizantes' },
+                      { value: 'sustratos', label: 'Sustratos' },
+                      { value: 'herramientas', label: 'Herramientas' },
+                      { value: 'pesticidas', label: 'Pesticidas' },
+                      { value: 'otros', label: 'Otros' }
+                    ]}
+                  />
+                </div>
               </FormGroup>
             </FormRow>
 
@@ -763,11 +845,11 @@ const Insumos: React.FC = () => {
               />
             </FormGroup>
 
-            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end', position: 'relative', zIndex: 1 }}>
               <Button
                 type="button"
                 variant="secondary"
-                onClick={() => setIsModalOpen(false)}
+                onClick={closeModal}
               >
                 Cancelar
               </Button>

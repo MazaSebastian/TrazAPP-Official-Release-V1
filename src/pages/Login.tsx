@@ -10,29 +10,36 @@ import ParticleBackground from '../components/ParticleBackground';
 // Part 1: Imports
 
 
+
 const LoginContainer = styled.div`
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f0fdf4; /* Green-50 */
+  background: #020617; /* Very dark slate to make logo pop */
   padding: 1rem;
   position: relative;
   overflow: hidden;
+  animation: fadeIn 0.5s ease-out forwards;
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
 `;
 
 
 
 const LoginCard = styled.div`
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(10px);
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(12px);
   border-radius: 1.5rem;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
   padding: 3rem;
   width: 100%;
   max-width: 420px;
   position: relative;
-  border: 1px solid rgba(34, 197, 94, 0.1); /* Green-500 border tint */
+  border: 1px solid rgba(34, 197, 94, 0.2);
   z-index: 10;
 `;
 
@@ -41,8 +48,8 @@ const Logo = styled.div`
   margin-bottom: 2rem;
   
   .icon-wrapper {
-    width: 240px;
-    height: 240px;
+    width: 180px;
+    height: 180px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -58,13 +65,13 @@ const Logo = styled.div`
   h1 {
     font-size: 1.875rem;
     font-weight: 800;
-    color: #166534; /* Green-800 */
+    color: #4ade80; /* Bright Green */
     margin-bottom: 0.5rem;
     letter-spacing: -0.025em;
   }
   
   p {
-    color: #64748b;
+    color: #94a3b8;
     font-size: 0.95rem;
   }
 `;
@@ -83,24 +90,25 @@ const FormGroup = styled.div`
 
 const Label = styled.label`
   font-weight: 600;
-  color: #374151;
+  color: #cbd5e1;
   font-size: 0.875rem;
 `;
 
 const Input = styled.input`
   width: 100%;
   padding: 0.875rem 1rem;
-  border: 1px solid #cbd5e1;
+  border: 1px solid #334155;
   border-radius: 0.75rem;
   font-size: 1rem;
   transition: all 0.2s;
-  background: #f8fafc;
+  background: rgba(30, 41, 59, 0.5);
+  color: #f8fafc;
 
   &:focus {
     outline: none;
-    border-color: #22c55e; /* Green-500 */
-    background: white;
-    box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+    border-color: #22c55e;
+    background: rgba(30, 41, 59, 0.8);
+    box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.15);
   }
 `;
 
@@ -124,7 +132,7 @@ const ToggleButton = styled.button`
   padding: 0.25rem;
   
   &:hover {
-    color: #475569;
+    color: #f8fafc;
   }
 `;
 
@@ -161,23 +169,30 @@ const LoginButton = styled.button`
   }
 `;
 
+
 const ErrorMessage = styled.div`
-  background: #fef2f2;
+  background: rgba(127, 29, 29, 0.2);
   border-left: 4px solid #ef4444;
-  color: #b91c1c;
+  color: #fca5a5;
   padding: 0.75rem;
   border-radius: 0.25rem;
   font-size: 0.875rem;
+  animation: messageReveal 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+
+  @keyframes messageReveal {
+    from { opacity: 0; transform: translateY(-5px) scale(0.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
 `;
 
 const FooterLink = styled.div`
   margin-top: 1.5rem;
   text-align: center;
   font-size: 0.875rem;
-  color: #64748b;
+  color: #94a3b8;
   
   a {
-    color: #16a34a;
+    color: #4ade80;
     text-decoration: none;
     font-weight: 600;
     
@@ -209,12 +224,12 @@ const Login: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const success = await login({ email, password });
+      const result = await login({ email, password });
 
-      if (success) {
+      if (result.success) {
         navigate('/', { replace: true });
       } else {
-        setError('Credenciales inválidas. Intenta de nuevo.');
+        setError(result.error || 'Credenciales inválidas. Intenta de nuevo.');
       }
     } catch (err) {
       console.error('Error en login:', err);
@@ -231,7 +246,7 @@ const Login: React.FC = () => {
       <LoginCard>
         <Logo>
           <div className="icon-wrapper">
-            <img src="/LOGO APIDC.png" alt="Aurora Del Plata Logo" />
+            <img src="/logotrazappfix.png" alt="TrazApp Logo" style={{ filter: 'drop-shadow(0 6px 8px rgba(0,0,0,0.3))' }} />
           </div>
           <h1>Bienvenido/a a APIDC</h1>
         </Logo>
@@ -267,6 +282,15 @@ const Login: React.FC = () => {
                 {showPassword ? <FaEyeSlash /> : <FaEye />}
               </ToggleButton>
             </PasswordWrapper>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.25rem' }}>
+              <button
+                type="button"
+                onClick={() => navigate('/forgot-password')}
+                style={{ background: 'none', border: 'none', color: '#4ade80', fontSize: '0.8rem', cursor: 'pointer', padding: 0 }}
+              >
+                ¿Olvidaste tu contraseña?
+              </button>
+            </div>
           </FormGroup>
 
           <LoginButton type="submit" disabled={isLoading}>
@@ -277,6 +301,7 @@ const Login: React.FC = () => {
         <FooterLink>
           ¿No tienes acceso? <button onClick={() => alert('Contacta a Seba Maza o al administrador del sistema.')} style={{ background: 'none', border: 'none', color: '#16a34a', fontWeight: 600, cursor: 'pointer', padding: 0, fontSize: 'inherit' }}>Contacta al administrador</button>
         </FooterLink>
+
       </LoginCard>
     </LoginContainer>
   );

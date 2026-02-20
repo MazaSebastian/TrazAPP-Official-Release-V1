@@ -37,12 +37,14 @@ const Overlay = styled.div<{ isClosing: boolean }>`
 `;
 
 const Content = styled.div<{ isClosing: boolean }>`
-  background: white;
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   padding: 1.5rem;
   border-radius: 1rem;
   width: 90%;
   max-width: 320px;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
   animation: ${p => p.isClosing ? scaleOut : scaleIn} 0.2s ease-in-out forwards;
 `;
 
@@ -54,18 +56,19 @@ const Header = styled.div`
 
   h3 {
     margin: 0;
-    color: #2d3748;
+    color: #f8fafc;
     font-size: 1.1rem;
   }
 
   button {
     background: none;
     border: none;
-    font-size: 1.25rem;
-    color: #a0aec0;
+    font-size: 1.5rem;
+    color: #cbd5e1;
     cursor: pointer;
     padding: 0;
-    &:hover { color: #4a5568; }
+    line-height: 1;
+    &:hover { color: #f8fafc; }
   }
 `;
 
@@ -80,11 +83,11 @@ const ColorButton = styled.button<{ color: string; isSelected: boolean }>`
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  border: ${p => p.isSelected ? '3px solid #cbd5e0' : '2px solid transparent'};
+  border: ${p => p.isSelected ? '3px solid #f8fafc' : '2px solid transparent'};
   background-color: ${p => p.color};
   cursor: pointer;
   transition: transform 0.2s, box-shadow 0.2s;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: ${p => p.isSelected ? '0 0 10px rgba(255,255,255,0.3)' : '0 4px 6px rgba(0,0,0,0.3)'};
 
   &:hover {
     transform: scale(1.1);

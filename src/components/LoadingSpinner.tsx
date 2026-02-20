@@ -15,7 +15,7 @@ const Overlay = styled.div<{ $fullScreen?: boolean }>`
   left: 0;
   right: 0;
   bottom: 0;
-  background: #f8fafc; /* Match app background for seamless look */
+  background: #020617; /* Dark Neo-theme background */
   backdrop-filter: blur(2px);
   display: flex;
   flex-direction: column;
@@ -46,9 +46,7 @@ const BaseImage = styled.img`
   width: 100%;
   height: 100%;
   object-fit: contain;
-  opacity: 0.3;
-  filter: grayscale(100%);
-  mix-blend-mode: multiply; /* Ensure white bg is transparent */
+  opacity: 0.2;
 `;
 
 const FillImage = styled.img<{ $duration: number }>`
@@ -57,11 +55,10 @@ const FillImage = styled.img<{ $duration: number }>`
   height: 100%;
   object-fit: contain;
   animation: ${filling} ${p => p.$duration}ms linear forwards;
-  mix-blend-mode: multiply; /* Ensure white bg is transparent */
 `;
 
 const LoadingText = styled.h3`
-  color: #2d3748;
+  color: #4ade80; /* Neo green text */
   font-size: 1.2rem;
   font-weight: 600;
   margin: 0;
@@ -85,9 +82,9 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
     <Overlay $fullScreen={fullScreen}>
       <SpinnerContainer>
         {/* Base semi-transparent logo */}
-        <BaseImage src="/LOGOAPIDCARGA.png" alt="Cargando base" />
+        <BaseImage src="/carga.png" alt="Cargando base" />
         {/* Animated filling logo */}
-        <FillImage src="/LOGOAPIDCARGA.png" alt="Cargando fill" $duration={duration} />
+        <FillImage src="/carga.png" alt="Cargando fill" $duration={duration} />
       </SpinnerContainer>
       <LoadingText>{text}</LoadingText>
     </Overlay>

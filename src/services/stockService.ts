@@ -1,4 +1,4 @@
-import { supabase } from './supabaseClient';
+import { supabase, getSelectedOrgId } from './supabaseClient';
 
 export interface StockItem {
   id: string;
@@ -40,7 +40,8 @@ export async function createStockItemSupabase(item: Omit<StockItem, 'id' | 'crea
         unit: item.unit,
         category: item.category,
         location: item.location,
-        notes: item.notes
+        notes: item.notes,
+        organization_id: getSelectedOrgId()
         // created_at/updated_at handled by DB default
       }])
       .select()

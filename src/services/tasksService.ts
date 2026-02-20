@@ -1,4 +1,4 @@
-import { supabase } from './supabaseClient';
+import { supabase, getSelectedOrgId } from './supabaseClient';
 import { Task, CreateTaskInput } from '../types';
 import { notificationService } from './notificationService';
 import { addDays, addWeeks, addMonths, parseISO, format } from 'date-fns';
@@ -10,6 +10,7 @@ export const tasksService = {
         const { data, error } = await supabase
             .from('chakra_tasks')
             .select('*')
+            .eq('organization_id', getSelectedOrgId())
             .neq('status', 'dismissed')
             .neq('status', 'done')
             .order('created_at', { ascending: false });
@@ -38,7 +39,8 @@ export const tasksService = {
                 status: 'pending',
                 observations: task.observations,
                 photos: task.photos,
-                recurrence: task.recurrence
+                recurrence: task.recurrence,
+                organization_id: getSelectedOrgId()
             }])
             .select()
             .single();
@@ -154,6 +156,7 @@ export const tasksService = {
         const { data, error } = await supabase
             .from('chakra_tasks')
             .select('*')
+            .eq('organization_id', getSelectedOrgId())
             .eq('crop_id', cropId);
 
         if (error) {
@@ -170,6 +173,7 @@ export const tasksService = {
         const { data, error } = await supabase
             .from('chakra_tasks')
             .select('*')
+            .eq('organization_id', getSelectedOrgId())
             .eq('room_id', roomId)
             .neq('status', 'dismissed');
 

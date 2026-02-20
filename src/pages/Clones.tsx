@@ -48,23 +48,24 @@ const SummaryGrid = styled.div`
 `;
 
 const SummaryCard = styled.div<{ isTotal?: boolean }>`
-  background: white;
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(12px);
   padding: 1.25rem;
   border-radius: 1rem;
-  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
-  border: 1px solid ${p => p.isTotal ? '#b2f5ea' : '#edf2f7'};
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.3);
+  border: 1px solid ${p => p.isTotal ? 'rgba(74, 222, 128, 0.3)' : 'rgba(255, 255, 255, 0.05)'};
   position: relative;
   overflow: hidden;
-  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out, border-color 0.2s;
   cursor: default;
 
   &:hover {
     transform: translateY(-5px);
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
   }
 
   ${p => p.isTotal && `
-    background: linear-gradient(135deg, #e6fffa 0%, #ffffff 100%);
+    background: rgba(20, 83, 45, 0.3);
   `}
 
   h3 {
@@ -72,14 +73,14 @@ const SummaryCard = styled.div<{ isTotal?: boolean }>`
     font-size: 0.75rem;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: #718096;
+    color: #94a3b8;
     font-weight: 700;
   }
 
   .value {
     font-size: 1.5rem;
     font-weight: 800;
-    color: ${p => p.isTotal ? '#2c7a7b' : '#2d3748'};
+    color: ${p => p.isTotal ? '#4ade80' : '#f8fafc'};
     line-height: 1.2;
   }
 
@@ -89,8 +90,8 @@ const SummaryCard = styled.div<{ isTotal?: boolean }>`
     top: 50%;
     transform: translateY(-50%);
     font-size: 1.75rem;
-    opacity: 0.1;
-    color: ${p => p.isTotal ? '#319795' : '#4a5568'};
+    opacity: 0.15;
+    color: ${p => p.isTotal ? '#4ade80' : '#cbd5e1'};
   }
 `;
 
@@ -103,10 +104,7 @@ const Header = styled.div`
   h1 {
     font-size: 2rem;
     font-weight: 800;
-    color: #1a202c;
-    background: linear-gradient(135deg, #38b2ac 0%, #319795 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+    color: #e2e8f0;
     margin: 0;
     display: flex;
     align-items: center;
@@ -115,31 +113,34 @@ const Header = styled.div`
 `;
 
 const CreateButton = styled.button`
-  background: #38a169;
-  color: white;
+  background: rgba(74, 222, 128, 0.2);
+  color: #4ade80;
   padding: 0.75rem 1.5rem;
   border-radius: 0.75rem;
-  border: none;
+  border: 1px solid rgba(74, 222, 128, 0.5);
   font-weight: 600;
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 0.5rem;
   transition: all 0.2s;
-  box-shadow: 0 4px 6px rgba(56, 161, 105, 0.2);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(8px);
 
   &:hover {
-    background: #2f855a;
+    background: rgba(74, 222, 128, 0.3);
     transform: translateY(-2px);
-    box-shadow: 0 6px 8px rgba(56, 161, 105, 0.3);
+    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.3);
   }
 `;
 
 const HistorySection = styled.div`
-  background: white;
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
   border-radius: 1rem;
   padding: 1.5rem;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
 `;
 
 const DeleteAllButton = styled.button`
@@ -186,7 +187,7 @@ const ButtonSpinner = styled.div`
 
 const HistoryHeader = styled.div`
   font-size: 1.5rem;
-  color: #2d3748;
+  color: #f8fafc;
   margin-bottom: 1.5rem;
   display: flex;
   align-items: center;
@@ -200,22 +201,22 @@ const HistoryTable = styled.table`
   th {
     text-align: left;
     padding: 1rem;
-    background: #f7fafc;
-    color: #4a5568;
+    background: rgba(255, 255, 255, 0.05);
+    color: #94a3b8;
     font-weight: 600;
-    border-bottom: 2px solid #edf2f7;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.1);
   }
 
   td {
     padding: 1rem;
-    border-bottom: 1px solid #edf2f7;
-    color: #2d3748;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    color: #f8fafc;
     vertical-align: middle;
   }
 `;
 
 const ActionButton = styled.button<{ color: string }>`
-    background: white;
+    background: transparent;
     border: 1px solid transparent;
     color: ${p => p.color};
     width: 32px;
@@ -239,18 +240,18 @@ const ActionButton = styled.button<{ color: string }>`
 
 const FormGroup = styled.div`
   margin-bottom: 1rem;
-  label { display: block; margin-bottom: 0.5rem; font-weight: 600; color: #4a5568; }
-  input, select, textarea { width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; font-size: 0.95rem; }
+  label { display: block; margin-bottom: 0.5rem; font-weight: 600; color: #cbd5e1; }
+  input, select, textarea { width: 100%; padding: 0.75rem; background: rgba(30, 41, 59, 0.5); color: #f8fafc; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 0.5rem; font-size: 0.95rem; }
 `;
 
 
 
 const BarcodeDisplay = styled.div`
-    background: white;
+    background: rgba(15, 23, 42, 0.4);
     padding: 2rem;
     text-align: center;
     border-radius: 0.5rem;
-    border: 2px dashed #cbd5e0;
+    border: 2px dashed rgba(255, 255, 255, 0.1);
     margin: 1rem 0;
 
     .code {
@@ -258,14 +259,14 @@ const BarcodeDisplay = styled.div`
         font-size: 1.5rem;
         font-weight: 800;
         letter-spacing: 0.1em;
-        color: #2d3748;
+        color: #f8fafc;
         margin-top: 1rem;
         display: block;
     }
     
     .label {
         font-size: 0.85rem;
-        color: #718096;
+        color: #94a3b8;
         margin-top: 0.5rem;
     }
 `;
@@ -353,10 +354,10 @@ const BatchGroupRow = ({ group, onBarcodeClick, onMoveClick, onDiscardClick, onE
 
     const renderBatchRow = (batch: any, isRoot: boolean, isLast: boolean, isChild: boolean) => {
         const rowStyle: React.CSSProperties = {
-            borderBottom: isLast && !isExpanded ? '1px solid #edf2f7' : 'none', // Only show border if collapsed or last child
+            borderBottom: isLast && !isExpanded ? '1px solid rgba(255, 255, 255, 0.05)' : 'none', // Only show border if collapsed or last child
             fontSize: isChild ? '0.9rem' : undefined,
-            color: isChild ? '#4a5568' : undefined,
-            background: isChild ? '#f7fafc' : undefined
+            color: isChild ? '#94a3b8' : undefined,
+            background: isChild ? 'rgba(255, 255, 255, 0.02)' : undefined
         };
         const cellStyle = !isLast ? { borderBottom: 'none' } : undefined;
 
@@ -396,9 +397,9 @@ const BatchGroupRow = ({ group, onBarcodeClick, onMoveClick, onDiscardClick, onE
                         title="Sub-lote derivado"
                     />
                 )}
-                <FaBarcode style={{ color: isChild ? '#718096' : '#2d3748' }} />
+                <FaBarcode style={{ color: isChild ? '#94a3b8' : '#f8fafc' }} />
                 <strong>{displayName}</strong>
-                {isChild && <span style={{ fontSize: '0.7rem', color: '#a0aec0', border: '1px solid #e2e8f0', borderRadius: '4px', padding: '0 4px' }}>Sub-lote</span>}
+                {isChild && <span style={{ fontSize: '0.7rem', color: '#64748b', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '4px', padding: '0 4px' }}>Sub-lote</span>}
             </div>
         );
 
@@ -971,10 +972,10 @@ const Clones: React.FC = () => {
                     <div className="value">{stats.total}</div>
                     <div className="icon"><FaCut /></div>
                 </SummaryCard>
-                <SummaryCard isTotal onClick={() => setSelectedGeneticFilter(null)} style={{ cursor: 'pointer', background: 'linear-gradient(135deg, #f0fff4 0%, #ffffff 100%)', borderColor: '#c6f6d5' }}>
+                <SummaryCard isTotal onClick={() => setSelectedGeneticFilter(null)} style={{ cursor: 'pointer', background: 'rgba(56, 189, 248, 0.1)', borderColor: 'rgba(56, 189, 248, 0.3)' }}>
                     <h3>Variedades Totales</h3>
                     <div className="value">{Object.keys(stats.byGenetic).length}</div>
-                    <div className="icon"><FaDna style={{ color: '#48bb78' }} /></div>
+                    <div className="icon"><FaDna style={{ color: '#7dd3fc' }} /></div>
                 </SummaryCard>
                 {Object.entries(stats.byGenetic).map(([name, qty]) => (
                     <SummaryCard
@@ -982,8 +983,8 @@ const Clones: React.FC = () => {
                         onClick={() => setSelectedGeneticFilter(prev => prev === name ? null : name)}
                         style={{
                             cursor: 'pointer',
-                            border: selectedGeneticFilter === name ? '2px solid #319795' : '2px solid #edf2f7',
-                            background: selectedGeneticFilter === name ? '#e6fffa' : 'white'
+                            border: selectedGeneticFilter === name ? '2px solid #4ade80' : '1px solid rgba(255, 255, 255, 0.05)',
+                            background: selectedGeneticFilter === name ? 'rgba(20, 83, 45, 0.4)' : 'transparent'
                         }}
                     >
                         <h3>{name}</h3>
@@ -1087,7 +1088,7 @@ const Clones: React.FC = () => {
                                                         const rowStyle: React.CSSProperties = {
                                                             borderBottom: !isLast ? 'none' : undefined,
                                                             fontSize: !isRoot ? '0.9rem' : undefined,
-                                                            color: !isRoot ? '#4a5568' : undefined
+                                                            color: !isRoot ? '#94a3b8' : '#f8fafc'
                                                         };
                                                         const cellStyle = !isLast ? { borderBottom: 'none' } : undefined;
 
@@ -1097,11 +1098,11 @@ const Clones: React.FC = () => {
                                                                 <td style={cellStyle}>
                                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', paddingLeft: batch.parent_batch_id ? '1.5rem' : '0' }}>
                                                                         {batch.parent_batch_id && (
-                                                                            <FaLevelUpAlt style={{ transform: 'rotate(90deg)', color: '#a0aec0', fontSize: '1rem', minWidth: '1rem' }} />
+                                                                            <FaLevelUpAlt style={{ transform: 'rotate(90deg)', color: '#64748b', fontSize: '1rem', minWidth: '1rem' }} />
                                                                         )}
-                                                                        <FaBarcode style={{ color: batch.parent_batch_id ? '#718096' : '#2d3748' }} />
+                                                                        <FaBarcode style={{ color: batch.parent_batch_id ? '#94a3b8' : '#f8fafc' }} />
                                                                         <strong>{batch.name}</strong>
-                                                                        {batch.parent_batch_id && <span style={{ fontSize: '0.7rem', color: '#a0aec0', border: '1px solid #e2e8f0', borderRadius: '4px', padding: '0 4px' }}>Sub-lote</span>}
+                                                                        {batch.parent_batch_id && <span style={{ fontSize: '0.7rem', color: '#64748b', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '4px', padding: '0 4px' }}>Sub-lote</span>}
                                                                     </div>
                                                                 </td>
                                                                 <td style={cellStyle}>{batch.genetic?.name || 'Desconocida'}</td>
@@ -1144,9 +1145,9 @@ const Clones: React.FC = () => {
             }
 
             {/* Create Clone Batch Modal */}
-            <AnimatedModal isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)}>
+            <AnimatedModal isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} allowOverflow>
                 <CloseIcon onClick={() => setIsCreateModalOpen(false)}><FaTimes /></CloseIcon>
-                <h2 style={{ marginBottom: '1.5rem', color: '#2d3748', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <h2 style={{ marginBottom: '1.5rem', color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     <FaCut /> Nuevo Lote de Esquejes
                 </h2>
 
@@ -1187,7 +1188,18 @@ const Clones: React.FC = () => {
                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '2rem' }}>
                     <button
                         onClick={() => setIsCreateModalOpen(false)}
-                        style={{ padding: '0.75rem', background: 'none', border: '1px solid #e2e8f0', borderRadius: '0.5rem', cursor: 'pointer' }}
+                        style={{
+                            padding: '0.75rem 1.5rem',
+                            background: 'rgba(30, 41, 59, 0.6)',
+                            border: '1px solid rgba(255, 255, 255, 0.1)',
+                            borderRadius: '0.5rem',
+                            color: '#cbd5e1',
+                            cursor: 'pointer',
+                            fontWeight: 600,
+                            transition: 'all 0.2s',
+                        }}
+                        onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'; e.currentTarget.style.color = '#f8fafc'; }}
+                        onMouseLeave={e => { e.currentTarget.style.background = 'rgba(30, 41, 59, 0.6)'; e.currentTarget.style.color = '#cbd5e1'; }}
                     >
                         Cancelar
                     </button>
@@ -1196,16 +1208,20 @@ const Clones: React.FC = () => {
                         disabled={isCreating}
                         style={{
                             padding: '0.75rem 1.5rem',
-                            background: isCreating ? '#9ae6b4' : '#38a169',
-                            color: 'white',
-                            border: 'none',
+                            background: isCreating ? 'rgba(74, 222, 128, 0.1)' : 'rgba(74, 222, 128, 0.2)',
+                            color: '#4ade80',
+                            border: '1px solid rgba(74, 222, 128, 0.5)',
                             borderRadius: '0.5rem',
                             cursor: isCreating ? 'wait' : 'pointer',
-                            fontWeight: 'bold',
+                            fontWeight: 600,
                             display: 'flex',
                             alignItems: 'center',
-                            gap: '0.5rem'
+                            gap: '0.5rem',
+                            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.2)',
+                            transition: 'all 0.2s'
                         }}
+                        onMouseEnter={e => { if (!isCreating) { e.currentTarget.style.background = 'rgba(74, 222, 128, 0.3)'; e.currentTarget.style.transform = 'translateY(-1px)'; } }}
+                        onMouseLeave={e => { if (!isCreating) { e.currentTarget.style.background = 'rgba(74, 222, 128, 0.2)'; e.currentTarget.style.transform = 'none'; } }}
                     >
                         {isCreating ? (
                             <>
@@ -1378,12 +1394,12 @@ const Clones: React.FC = () => {
                                 Registrar baja de esquejes para el lote <strong>{batchToDiscard.name}</strong>.
                             </p>
 
-                            <div style={{ background: '#fff5f5', padding: '1rem', borderRadius: '0.5rem', marginBottom: '1.5rem', border: '1px solid #fed7d7' }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', fontSize: '0.9rem', color: '#c53030', fontWeight: 'bold' }}>
+                            <div style={{ background: 'rgba(239, 68, 68, 0.1)', padding: '1rem', borderRadius: '0.5rem', marginBottom: '1.5rem', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', fontSize: '0.9rem', color: '#ef4444', fontWeight: 'bold' }}>
                                     <span>Cantidad Actual:</span>
                                     <span>{batchToDiscard.quantity} u.</span>
                                 </div>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', color: '#2d3748' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', color: '#f8fafc' }}>
                                     <span>Nueva Cantidad:</span>
                                     <span>{Math.max(0, batchToDiscard.quantity - discardQuantity)} u.</span>
                                 </div>
@@ -1488,15 +1504,15 @@ const Clones: React.FC = () => {
 
                 <div style={{ maxHeight: '400px', overflowY: 'auto', paddingRight: '0.5rem' }}>
                     {breakdownData.map((item, index) => (
-                        <div key={index} style={{ marginBottom: '1rem', padding: '0.75rem', background: '#f7fafc', borderRadius: '0.5rem', border: '1px solid #edf2f7' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', fontSize: '0.95rem', color: '#2d3748', fontWeight: '600' }}>
+                        <div key={index} style={{ marginBottom: '1rem', padding: '0.75rem', background: 'rgba(15, 23, 42, 0.4)', borderRadius: '0.5rem', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', fontSize: '0.95rem', color: '#f8fafc', fontWeight: '600' }}>
                                 <span>{item.name}</span>
                                 <span>{item.quantity} u.</span>
                             </div>
-                            <div style={{ width: '100%', height: '8px', background: '#e2e8f0', borderRadius: '4px', overflow: 'hidden' }}>
+                            <div style={{ width: '100%', height: '8px', background: 'rgba(255, 255, 255, 0.1)', borderRadius: '4px', overflow: 'hidden' }}>
                                 <div style={{ height: '100%', width: `${item.percentage}%`, background: '#38b2ac', borderRadius: '4px' }}></div>
                             </div>
-                            <div style={{ textAlign: 'right', fontSize: '0.75rem', color: '#718096', marginTop: '0.25rem' }}>
+                            <div style={{ textAlign: 'right', fontSize: '0.75rem', color: '#94a3b8', marginTop: '0.25rem' }}>
                                 {item.percentage.toFixed(1)}%
                             </div>
                         </div>

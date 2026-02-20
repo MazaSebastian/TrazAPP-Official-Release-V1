@@ -29,24 +29,26 @@ const Overlay = styled.div<{ $animate: boolean; $isClosing?: boolean }>`
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.7);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 11000;
-  backdrop-filter: blur(4px);
+  backdrop-filter: blur(8px);
   animation: ${p => p.$isClosing
     ? css`${fadeOut} 0.2s ease-in forwards`
     : p.$animate ? css`${fadeIn} 0.2s ease-out` : 'none'};
 `;
 
 const Content = styled.div<{ $isClosing?: boolean }>`
-  background: white;
+  background: rgba(30, 41, 59, 0.6);
   padding: 1.5rem 2rem;
   border-radius: 1rem;
   width: 90%;
   max-width: 380px;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
   animation: ${p => p.$isClosing ? css`${scaleOut} 0.2s ease-in forwards` : css`${scaleIn} 0.2s ease-out`};
   text-align: center;
   display: flex;
@@ -59,11 +61,11 @@ const Content = styled.div<{ $isClosing?: boolean }>`
 const IconWrapper = styled.div<{ type: 'success' | 'error' | 'info' }>`
   font-size: 2.5rem;
   margin-bottom: 1rem;
-  color: ${p => p.type === 'success' ? '#48bb78' : p.type === 'error' ? '#e53e3e' : '#3182ce'};
+  color: ${p => p.type === 'success' ? '#4ade80' : p.type === 'error' ? '#f87171' : '#38bdf8'};
 `;
 
 const Message = styled.p`
-  color: #2d3748;
+  color: #f8fafc;
   font-size: 1.1rem;
   font-weight: 500;
   margin-bottom: 1.5rem;
@@ -71,9 +73,9 @@ const Message = styled.p`
 `;
 
 const Button = styled.button<{ type: 'success' | 'error' | 'info' }>`
-  background: ${p => p.type === 'success' ? '#48bb78' : p.type === 'error' ? '#e53e3e' : '#3182ce'};
-  color: white;
-  border: none;
+  background: ${p => p.type === 'success' ? 'rgba(74, 222, 128, 0.2)' : p.type === 'error' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(56, 189, 248, 0.2)'};
+  color: ${p => p.type === 'success' ? '#4ade80' : p.type === 'error' ? '#f87171' : '#38bdf8'};
+  border: 1px solid ${p => p.type === 'success' ? 'rgba(74, 222, 128, 0.5)' : p.type === 'error' ? 'rgba(239, 68, 68, 0.5)' : 'rgba(56, 189, 248, 0.5)'};
   padding: 0.6rem 2rem;
   border-radius: 0.5rem;
   font-weight: 600;
@@ -83,7 +85,8 @@ const Button = styled.button<{ type: 'success' | 'error' | 'info' }>`
 
   &:hover {
     transform: translateY(-1px);
-    filter: brightness(110%);
+    background: ${p => p.type === 'success' ? 'rgba(74, 222, 128, 0.3)' : p.type === 'error' ? 'rgba(239, 68, 68, 0.3)' : 'rgba(56, 189, 248, 0.3)'};
+    box-shadow: 0 4px 6px rgba(0,0,0,0.2);
   }
 `;
 

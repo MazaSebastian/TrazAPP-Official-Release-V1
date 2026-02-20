@@ -38,25 +38,27 @@ const Overlay = styled.div<{ isClosing: boolean }>`
 `;
 
 const Content = styled.div<{ isClosing: boolean }>`
-  background: white;
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   padding: 2rem;
   border-radius: 1rem;
   width: 90%;
   max-width: 450px;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
   animation: ${p => p.isClosing ? scaleOut : scaleIn} 0.2s ease-in-out forwards;
   text-align: center;
 
   h3 {
     margin-top: 1rem;
-    color: #c53030;
+    color: #f87171;
     margin-bottom: 0.5rem;
     font-size: 1.25rem;
     font-weight: 700;
   }
 
   p {
-    color: #4a5568;
+    color: #cbd5e1;
     margin-bottom: 1.5rem;
     line-height: 1.5;
   }
@@ -65,8 +67,8 @@ const Content = styled.div<{ isClosing: boolean }>`
 const IconWrapper = styled.div`
   width: 60px;
   height: 60px;
-  background: #fff5f5;
-  color: #c53030;
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -78,7 +80,9 @@ const IconWrapper = styled.div`
 const Input = styled.input`
   width: 100%;
   padding: 0.75rem;
-  border: 1px solid #cbd5e0;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(15, 23, 42, 0.6);
+  color: #f8fafc;
   border-radius: 0.5rem;
   font-size: 1rem;
   margin-bottom: 0.5rem;
@@ -87,22 +91,23 @@ const Input = styled.input`
 
   &:focus {
     outline: none;
-    border-color: #c53030;
-    box-shadow: 0 0 0 3px rgba(197, 48, 48, 0.1);
+    border-color: rgba(239, 68, 68, 0.5);
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
   }
 
   &::placeholder {
-    color: #a0aec0;
+    color: #64748b;
   }
 `;
 
 const VerificationText = styled.div`
-  background: #edf2f7;
+  background: rgba(30, 41, 59, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   padding: 0.5rem;
   border-radius: 0.5rem;
   font-family: monospace;
   font-weight: bold;
-  color: #2d3748;
+  color: #f8fafc;
   margin-bottom: 1rem;
   user-select: all;
 `;
@@ -117,16 +122,17 @@ const ButtonGroup = styled.div`
 const Button = styled.button<{ variant?: 'danger' | 'secondary' }>`
   padding: 0.75rem 1.5rem;
   border-radius: 0.5rem;
-  border: 1px solid ${p => p.variant === 'secondary' ? '#e2e8f0' : 'transparent'};
-  background: ${p => p.variant === 'secondary' ? 'white' : '#c53030'};
-  color: ${p => p.variant === 'secondary' ? '#4a5568' : 'white'};
+  border: ${p => p.variant === 'secondary' ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(239, 68, 68, 0.5)'};
+  background: ${p => p.variant === 'secondary' ? 'rgba(30, 41, 59, 0.6)' : 'rgba(239, 68, 68, 0.2)'};
+  color: ${p => p.variant === 'secondary' ? '#cbd5e1' : '#f87171'};
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
   min-width: 120px;
 
   &:hover {
-    background: ${p => p.variant === 'secondary' ? '#f7fafc' : '#9b2c2c'};
+    background: ${p => p.variant === 'secondary' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(239, 68, 68, 0.3)'};
+    color: ${p => p.variant === 'secondary' ? '#f8fafc' : '#f87171'};
     transform: translateY(-1px);
   }
 

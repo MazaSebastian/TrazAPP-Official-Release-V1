@@ -9,9 +9,8 @@ import { DeviceDetailModal } from './DeviceDetailModal';
 
 const Container = styled.div`
   padding: 1rem;
-  background: white;
+  background: transparent;
   border-radius: 0.5rem;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 `;
 
 const Header = styled.div`
@@ -19,16 +18,16 @@ const Header = styled.div`
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1rem;
-  h3 { margin: 0; color: #2d3748; display: flex; align-items: center; gap: 0.5rem; }
+  h3 { margin: 0; color: #f8fafc; display: flex; align-items: center; gap: 0.5rem; }
 `;
 
 const RefreshButton = styled.button`
   background: none;
   border: none;
   cursor: pointer;
-  color: #718096;
+  color: #cbd5e1;
   transition: color 0.2s;
-  &:hover { color: #3182ce; }
+  &:hover { color: #38bdf8; }
 `;
 
 const DeviceGrid = styled.div`
@@ -38,16 +37,17 @@ const DeviceGrid = styled.div`
 `;
 
 const DeviceCard = styled.div<{ $online: boolean }>`
-  border: 1px solid ${p => p.$online ? '#e2e8f0' : '#feb2b2'};
+  border: 1px solid ${p => p.$online ? 'rgba(255, 255, 255, 0.1)' : 'rgba(239, 68, 68, 0.5)'};
   border-radius: 0.5rem;
   padding: 1rem;
-  background: ${p => p.$online ? 'white' : '#fff5f5'};
+  background: ${p => p.$online ? 'rgba(30, 41, 59, 0.6)' : 'rgba(239, 68, 68, 0.1)'};
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
   position: relative;
   transition: all 0.2s;
-  &:hover { transform: translateY(-2px); box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+  backdrop-filter: blur(8px);
+  &:hover { transform: translateY(-2px); box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
 `;
 
 const StatusBadge = styled.span<{ $online: boolean }>`
@@ -62,13 +62,13 @@ const StatusBadge = styled.span<{ $online: boolean }>`
 
 const DeviceIcon = styled.div`
   font-size: 1.5rem;
-  color: #4a5568;
+  color: #94a3b8;
   margin-bottom: 0.25rem;
 `;
 
 const DeviceName = styled.div`
   font-weight: 600;
-  color: #2d3748;
+  color: #f8fafc;
   font-size: 0.9rem;
   white-space: nowrap;
   overflow: hidden;
@@ -77,13 +77,13 @@ const DeviceName = styled.div`
 
 const DeviceInfo = styled.div`
   font-size: 0.75rem;
-  color: #718096;
+  color: #94a3b8;
 `;
 
 const ControlButton = styled.button<{ $isOn: boolean }>`
-  background: ${p => p.$isOn ? '#48bb78' : '#cbd5e0'};
-  color: white;
-  border: none;
+  background: ${p => p.$isOn ? 'rgba(74, 222, 128, 0.2)' : 'rgba(255, 255, 255, 0.1)'};
+  color: ${p => p.$isOn ? '#4ade80' : '#cbd5e1'};
+  border: 1px solid ${p => p.$isOn ? 'rgba(74, 222, 128, 0.5)' : 'rgba(255, 255, 255, 0.2)'};
   padding: 0.4rem;
   border-radius: 0.25rem;
   font-size: 0.8rem;
@@ -94,10 +94,10 @@ const ControlButton = styled.button<{ $isOn: boolean }>`
   justify-content: center;
   gap: 0.25rem;
   margin-top: auto;
-  transition: background 0.2s;
+  transition: all 0.2s;
 
   &:hover {
-    background: ${p => p.$isOn ? '#38a169' : '#a0aec0'};
+    background: ${p => p.$isOn ? 'rgba(74, 222, 128, 0.3)' : 'rgba(255, 255, 255, 0.2)'};
   }
 `;
 
@@ -106,7 +106,7 @@ const SensorValue = styled.div`
   align-items: center;
   gap: 0.5rem;
   font-size: 0.85rem;
-  color: #2d3748;
+  color: #f8fafc;
   margin-top: 0.25rem;
 `;
 
@@ -287,8 +287,8 @@ export const TuyaManager: React.FC<TuyaManagerProps> = ({ mode = 'full', roomId,
                                 onClick={() => isSensor && setSelectedDevice(device)}
                                 style={{
                                     cursor: isSensor ? 'pointer' : 'default',
-                                    border: alert ? '1px solid #e53e3e' : '1px solid #e2e8f0',
-                                    background: alert ? '#fff5f5' : 'white',
+                                    border: alert ? '1px solid rgba(239, 68, 68, 0.5)' : '1px solid rgba(255, 255, 255, 0.1)',
+                                    background: alert ? 'rgba(239, 68, 68, 0.1)' : 'rgba(30, 41, 59, 0.6)',
                                     flexDirection: 'row',
                                     alignItems: 'center',
                                     padding: '0.75rem',
@@ -297,27 +297,27 @@ export const TuyaManager: React.FC<TuyaManagerProps> = ({ mode = 'full', roomId,
                                 }}
                             >
                                 <StatusBadge $online={device.online} style={{ top: '0.25rem', right: '0.25rem' }} />
-                                <div style={{ fontSize: '1.5rem', color: '#4a5568' }}>
+                                <div style={{ fontSize: '1.5rem', color: '#94a3b8' }}>
                                     {isSensor ? <FaThermometerHalf /> : isSwitch ? <FaPlug /> : <FaLightbulb />}
                                 </div>
                                 <div style={{ flex: 1 }}>
-                                    <div style={{ fontWeight: 'bold', fontSize: '0.9rem', color: '#2d3748', marginBottom: '0.25rem' }}>{device.name}</div>
+                                    <div style={{ fontWeight: 'bold', fontSize: '0.9rem', color: '#f8fafc', marginBottom: '0.25rem' }}>{device.name}</div>
                                     {isSensor && (
                                         <div style={{ display: 'flex', gap: '0.75rem', fontSize: '0.85rem' }}>
                                             {temp && (
-                                                <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: '#e53e3e', fontWeight: '600' }}>
+                                                <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: '#f87171', fontWeight: '600' }}>
                                                     <FaThermometerHalf /> {typeof temp.value === 'number' ? (temp.value / 10).toFixed(1) : temp.value}°C
                                                 </span>
                                             )}
                                             {hum && (
-                                                <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: '#3182ce', fontWeight: '600' }}>
+                                                <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: '#38bdf8', fontWeight: '600' }}>
                                                     <FaTint /> {hum.value}%
                                                 </span>
                                             )}
                                         </div>
                                     )}
                                 </div>
-                                {alert && <FaExclamationTriangle style={{ color: '#e53e3e' }} title={alert} />}
+                                {alert && <FaExclamationTriangle style={{ color: '#f87171' }} title={alert} />}
                             </DeviceCard>
                         );
                     }
@@ -330,8 +330,8 @@ export const TuyaManager: React.FC<TuyaManagerProps> = ({ mode = 'full', roomId,
                             onClick={() => isSensor && setSelectedDevice(device)}
                             style={{
                                 cursor: isSensor ? 'pointer' : 'default',
-                                border: alert ? '2px solid #e53e3e' : undefined,
-                                background: alert ? '#fff5f5' : undefined
+                                border: alert ? '1px solid rgba(239, 68, 68, 0.5)' : undefined,
+                                background: alert ? 'rgba(239, 68, 68, 0.1)' : undefined
                             }}
                         >
                             <StatusBadge $online={device.online} />
@@ -346,20 +346,20 @@ export const TuyaManager: React.FC<TuyaManagerProps> = ({ mode = 'full', roomId,
                                 <div style={{ marginTop: '0.5rem' }}>
                                     {temp && (
                                         <SensorValue>
-                                            <FaThermometerHalf color="#e53e3e" />
+                                            <FaThermometerHalf color="#f87171" />
                                             <span>{(typeof temp.value === 'number') ? (temp.value / 10).toFixed(1) : temp.value}°C</span>
                                         </SensorValue>
                                     )}
                                     {hum && (
                                         <SensorValue>
-                                            <FaTint color="#3182ce" />
+                                            <FaTint color="#38bdf8" />
                                             <span>{hum.value}%</span>
                                         </SensorValue>
                                     )}
                                     {alert && (
                                         <div style={{
                                             marginTop: '0.5rem',
-                                            color: '#e53e3e',
+                                            color: '#f87171',
                                             fontSize: '0.8rem',
                                             fontWeight: 'bold',
                                             display: 'flex',
@@ -386,7 +386,7 @@ export const TuyaManager: React.FC<TuyaManagerProps> = ({ mode = 'full', roomId,
                     );
                 })}
                 {filteredDevices.length === 0 && !loading && !error && (
-                    <div style={{ gridColumn: '1/-1', textAlign: 'center', color: '#a0aec0', padding: '1rem', border: '1px dashed #cbd5e0', borderRadius: '0.5rem' }}>
+                    <div style={{ gridColumn: '1/-1', textAlign: 'center', color: '#94a3b8', padding: '1rem', border: '1px dashed rgba(255, 255, 255, 0.2)', borderRadius: '0.5rem' }}>
                         {roomId
                             ? 'No hay sensor asignado a esta sala.'
                             : (mode === 'sensors' ? 'No hay sensores disponibles.' : 'No se encontraron dispositivos.')

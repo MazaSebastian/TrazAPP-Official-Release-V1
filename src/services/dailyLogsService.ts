@@ -1,4 +1,4 @@
-import { supabase } from './supabaseClient';
+import { supabase, getSelectedOrgId } from './supabaseClient';
 import { notificationService } from './notificationService';
 
 export interface DailyLog {
@@ -18,7 +18,7 @@ export const dailyLogsService = {
         // First check if exists to get ID (or use upsert with constraint)
         const { data, error } = await supabase
             .from('chakra_daily_logs')
-            .upsert(log, { onConflict: 'crop_id,date' })
+            .upsert({ ...log, organization_id: getSelectedOrgId() }, { onConflict: 'crop_id,date' })
             .select()
             .single();
 

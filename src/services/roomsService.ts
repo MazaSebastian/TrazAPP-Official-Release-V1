@@ -1,4 +1,4 @@
-import { supabase } from './supabaseClient';
+import { supabase, getSelectedOrgId } from './supabaseClient';
 import { Room, Batch, BatchStage, CloneMap } from '../types/rooms';
 
 const getClient = () => {
@@ -24,6 +24,7 @@ export const roomsService = {
         let query = getClient()
             .from('rooms')
             .select('*, batches:batches!current_room_id(*, genetic:genetics(*), parent_batch:batches!parent_batch_id(name)), spot:chakra_crops(name), clone_maps(*)')
+            .eq('organization_id', getSelectedOrgId())
             .order('order_index', { ascending: true })
             .order('name', { ascending: true });
 
@@ -74,7 +75,8 @@ export const roomsService = {
                 ...room,
                 start_date: room.start_date, // Ensure this is passed
                 grid_rows: room.grid_rows,
-                grid_columns: room.grid_columns
+                grid_columns: room.grid_columns,
+                organization_id: getSelectedOrgId()
             }])
             .select()
             .single();
@@ -171,6 +173,7 @@ export const roomsService = {
         const { data, error } = await getClient()
             .from('clone_maps')
             .select('*')
+            .eq('organization_id', getSelectedOrgId())
             .eq('room_id', roomId)
             .order('created_at', { ascending: true });
 
@@ -185,7 +188,7 @@ export const roomsService = {
     async createCloneMap(map: Omit<CloneMap, 'id' | 'created_at'>): Promise<CloneMap | null> {
         const { data, error } = await getClient()
             .from('clone_maps')
-            .insert([map])
+            .insert([{ ...map, organization_id: getSelectedOrgId() }])
             .select()
             .single();
 
@@ -251,6 +254,7 @@ export const roomsService = {
         const { data, error } = await getClient()
             .from('genetics')
             .select('*')
+            .eq('organization_id', getSelectedOrgId())
             .order('name', { ascending: true });
 
         if (error) {
@@ -265,6 +269,7 @@ export const roomsService = {
         const { data, error } = await getClient()
             .from('batches')
             .select('*, room:rooms(id, name, type), genetic:genetics(name, type)')
+            .eq('organization_id', getSelectedOrgId())
             .is('discarded_at', null) // Only active batches
             .order('created_at', { ascending: false });
 
@@ -279,6 +284,7 @@ export const roomsService = {
         const { data, error } = await getClient()
             .from('batches')
             .select('*')
+            .eq('organization_id', getSelectedOrgId())
             .eq('current_room_id', roomId)
             .is('discarded_at', null) // Only active batches
             .order('created_at', { ascending: false });
@@ -293,7 +299,7 @@ export const roomsService = {
     async createBatch(batch: Omit<Batch, 'id' | 'created_at'>, userId?: string): Promise<Batch | null> {
         const { data, error } = await getClient()
             .from('batches')
-            .insert([batch])
+            .insert([{ ...batch, organization_id: getSelectedOrgId() }])
             .select()
             .single();
 
@@ -566,7 +572,8 @@ export const roomsService = {
                 clone_map_id: mapId,
                 grid_position: pos,
                 parent_batch_id: sourceBatchId,
-                tracking_code: trackingCode
+                tracking_code: trackingCode,
+                organization_id: getSelectedOrgId()
             };
         });
 
@@ -699,7 +706,8 @@ export const roomsService = {
                 // If not, use source ID (we are the root).
                 parent_batch_id: sourceBatch.parent_batch_id || sourceBatchId,
                 tracking_code: trackingCode,
-                notes: sourceBatch.notes?.match(/\[Grupo:.*?\]/)?.[0] || ''
+                notes: sourceBatch.notes?.match(/\[Grupo:.*?\]/)?.[0] || '',
+                organization_id: getSelectedOrgId()
             };
         });
 
@@ -751,7 +759,8 @@ export const roomsService = {
                     current_room_id: toRoomId,
                     clone_map_id: cloneMapId,
                     grid_position: gridPosition,
-                    notes: notes
+                    notes: notes,
+                    organization_id: getSelectedOrgId()
                 }]).select().single();
 
                 if (createError) {

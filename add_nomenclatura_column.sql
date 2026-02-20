@@ -1,1 +1,1 @@
-ALTER TABLE genetics ADD COLUMN nomenclatura text;
+ALTER TABLE genetics ADD COLUMN IF NOT EXISTS nomenclatura text;

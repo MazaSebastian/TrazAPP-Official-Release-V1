@@ -1,4 +1,4 @@
-import { supabase } from './supabaseClient';
+import { supabase, getSelectedOrgId } from './supabaseClient';
 import { Extraction } from '../types/extractions';
 import { DispensaryBatch } from './dispensaryService';
 
@@ -8,7 +8,7 @@ export const extractionsService = {
         if (!supabase) return [];
 
         const { data, error } = await supabase
-            .from('extractions')
+            .from('chakra_extractions')
             .select(`
         *,
         source_batch:source_batch_id (
@@ -19,6 +19,7 @@ export const extractionsService = {
           photo_url
         )
       `)
+            .eq('organization_id', getSelectedOrgId())
             .order('date', { ascending: false });
 
         if (error) {
@@ -56,10 +57,11 @@ export const extractionsService = {
 
         // A. Create Extraction
         const { data, error } = await supabase
-            .from('extractions')
+            .from('chakra_extractions')
             .insert([{
                 ...extraction,
-                created_by: user?.id
+                created_by: user?.id,
+                organization_id: getSelectedOrgId()
             }])
             .select()
             .single();
@@ -98,6 +100,7 @@ export const extractionsService = {
         const { data, error } = await supabase
             .from('chakra_dispensary_batches')
             .select('*')
+            .eq('organization_id', getSelectedOrgId())
             .gt('current_weight', 0)
             .neq('status', 'depleted')
             .order('created_at', { ascending: false });
@@ -111,7 +114,7 @@ export const extractionsService = {
         try {
             // Optional: Revert stock deduction logic could go here if we wanted strict inventory tracking
             // For now, simpler delete.
-            const { error } = await supabase.from('extractions').delete().eq('id', id);
+            const { error } = await supabase.from('chakra_extractions').delete().eq('id', id);
             return !error;
         } catch (e) {
             console.error(e);
@@ -128,7 +131,7 @@ export const extractionsService = {
         // Given constraint/risk, we'll update the record directly.
 
         const { error } = await supabase
-            .from('extractions')
+            .from('chakra_extractions')
             .update(updates)
             .eq('id', id);
 

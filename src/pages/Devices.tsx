@@ -20,10 +20,7 @@ const Header = styled.div`
   h1 {
     font-size: 2rem;
     font-weight: 800;
-    color: #1a202c;
-    background: linear-gradient(135deg, #38b2ac 0%, #319795 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+    color: #f8fafc;
     margin: 0;
     display: flex;
     align-items: center;
@@ -32,20 +29,27 @@ const Header = styled.div`
 `;
 
 const Devices: React.FC = () => {
-    return (
-        <Container>
-            <Header>
-                <h1><FaPlug /> Dispositivos IoT</h1>
-            </Header>
+  return (
+    <Container>
+      <Header>
+        <h1><FaPlug /> Dispositivos IoT</h1>
+      </Header>
 
-            <div style={{ background: 'white', padding: '1.5rem', borderRadius: '1rem', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
-                <p style={{ marginBottom: '1.5rem', color: '#718096' }}>
-                    Gestión centralizada de dispositivos inteligentes Tuya. Controla luces, enchufes y monitorea sensores.
-                </p>
-                <TuyaManager mode="full" />
-            </div>
-        </Container>
-    );
+      <div style={{
+        background: 'rgba(15, 23, 42, 0.75)',
+        backdropFilter: 'blur(12px)',
+        border: '1px solid rgba(255, 255, 255, 0.05)',
+        padding: '1.5rem',
+        borderRadius: '1rem',
+        boxShadow: '0 4px 6px -1px rgba(0,0,0,0.2)'
+      }}>
+        <p style={{ marginBottom: '1.5rem', color: '#cbd5e1' }}>
+          Gestión centralizada de dispositivos inteligentes Tuya. Controla luces, enchufes y monitorea sensores.
+        </p>
+        <TuyaManager mode="full" />
+      </div>
+    </Container>
+  );
 };
 
 export default Devices;

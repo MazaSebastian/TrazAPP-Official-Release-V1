@@ -1,9 +1,11 @@
 // Auth & Users
+import { Room } from './rooms';
+
 export interface User {
   id: string;
   email: string;
   name: string;
-  role: 'admin' | 'technician' | 'partner';
+  role: 'super_admin' | 'admin' | 'technician' | 'partner';
   avatar?: string;
 }
 
@@ -14,9 +16,57 @@ export interface LoginCredentials {
 
 export interface AuthContextType {
   user: User | null;
-  login: (credentials: LoginCredentials) => Promise<boolean>;
+  login: (credentials: LoginCredentials) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
   isLoading: boolean;
+}
+
+// ==========================
+// Tipos para Gestión de Organizaciones (SaaS)
+// ==========================
+
+export interface Organization {
+  id: string;
+  name: string;
+  slug: string;
+  plan: string; // references plans.slug
+  status?: 'pending' | 'active' | 'suspended';
+  owner_email?: string;
+  stripe_customer_id?: string;
+  created_at: string;
+  subscription_status?: 'active' | 'trial' | 'past_due' | 'cancelled' | 'pending_validation';
+  valid_until?: string;
+  // Lead info
+  owner_name?: string;
+  phone?: string;
+  referral_source?: string;
+  // Deprecated hardcoded fields in favor of Plan limits
+  max_users?: number;
+  max_storage_gb?: number;
+}
+
+export interface Plan {
+  id: string;
+  name: string;
+  slug: string;
+  price: number;
+  limits: {
+    max_users: number;
+    max_storage_gb: number;
+    [key: string]: any;
+  };
+  features: string[];
+  active: boolean;
+  created_at: string;
+}
+
+export interface OrganizationMember {
+  id: string;
+  organization_id: string;
+  user_id: string;
+  role: 'owner' | 'admin' | 'staff' | 'viewer';
+  created_at: string;
+  organization?: Organization; // Joined
 }
 
 // ==========================
@@ -28,8 +78,6 @@ export interface CropPartner {
   name: string;
   email: string;
 }
-
-import { Room } from './rooms';
 
 export interface Crop {
   id: string;

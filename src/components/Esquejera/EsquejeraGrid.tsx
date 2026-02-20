@@ -16,10 +16,11 @@ const ControlsContainer = styled.div`
   align-items: center;
   gap: 0.5rem;
   margin-bottom: 0.5rem;
-  background: white;
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(12px);
   padding: 0.25rem 0.5rem;
   border-radius: 0.5rem;
-  border: 1px solid #e2e8f0;
+  border: 1px solid rgba(255, 255, 255, 0.1);
   width: fit-content;
 `;
 
@@ -27,21 +28,22 @@ const ZoomButton = styled.button`
   background: transparent;
   border: none;
   cursor: pointer;
-  color: #718096;
+  color: #94a3b8;
   padding: 0.25rem;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 0.25rem;
+  transition: all 0.2s;
   &:hover {
-    background: #edf2f7;
-    color: #2d3748;
+    background: rgba(255, 255, 255, 0.1);
+    color: #f8fafc;
   }
 `;
 
 const ZoomLabel = styled.span`
   font-size: 0.75rem;
-  color: #718096;
+  color: #cbd5e1;
   font-family: monospace;
   min-width: 3rem;
   text-align: center;
@@ -55,9 +57,10 @@ const GridContainer = styled.div<{ rows: number; cols: number; cellSize: number 
   overflow: auto;
   max-width: 100%;
   padding: 1rem;
-  background: #f8fafc;
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(12px);
   border-radius: 1rem;
-  border: 1px solid #e2e8f0;
+  border: 1px solid rgba(255, 255, 255, 0.1);
   
   /* Custom Scrollbar to match LivingSoilGrid */
   &::-webkit-scrollbar {
@@ -65,14 +68,14 @@ const GridContainer = styled.div<{ rows: number; cols: number; cellSize: number 
     height: 8px;
   }
   &::-webkit-scrollbar-track {
-    background: #edf2f7;
+    background: rgba(15, 23, 42, 0.5);
     border-radius: 4px;
   }
   &::-webkit-scrollbar-thumb {
-    background: #cbd5e0;
+    background: rgba(255, 255, 255, 0.2);
     border-radius: 4px;
     &:hover {
-      background: #a0aec0;
+      background: rgba(255, 255, 255, 0.3);
     }
   }
 
@@ -109,8 +112,8 @@ const HeaderCell = styled.div<{ cellSize: number }>`
   align-items: center;
   justify-content: center;
   font-weight: 700;
-  color: #718096;
-  background: #edf2f7;
+  color: #94a3b8;
+  background: rgba(255, 255, 255, 0.05);
   border-radius: ${p => p.cellSize < 40 ? '1px' : '0.375rem'};
   font-size: ${p => p.cellSize < 40 ? '0.6rem' : '0.85rem'};
   width: 100%;
@@ -126,14 +129,15 @@ const HeaderCell = styled.div<{ cellSize: number }>`
 `;
 
 const CellStyled = styled.div<{ $isOver?: boolean; $isOccupied?: boolean; $geneticColor?: string; $isPainting?: boolean; $isSelected?: boolean; cellSize: number }>`
-  background: ${p => p.$isSelected ? '#9ae6b4' : p.$isOccupied ? (p.$geneticColor || '#c6f6d5') : p.$isOver ? '#ebf8ff' : 'white'};
+  background: ${p => p.$isSelected ? 'rgba(74, 222, 128, 0.2)' : p.$isOccupied ? (p.$geneticColor || 'rgba(30, 41, 59, 0.8)') : p.$isOver ? 'rgba(56, 189, 248, 0.1)' : 'rgba(30, 41, 59, 0.3)'};
+  backdrop-filter: ${p => p.$isOccupied ? 'none' : 'blur(4px)'};
   
   /* Border Logic matching LivingSoilGrid */
   border: ${p => p.$isSelected
-        ? '2px solid #2f855a'
+        ? '2px solid rgba(74, 222, 128, 0.5)'
         : p.cellSize < 40
-            ? '1px solid ' + (p.$isOccupied ? 'rgba(0,0,0,0.1)' : '#e2e8f0')
-            : '2px ' + (p.$isOccupied ? 'solid rgba(0,0,0,0.1)' : 'dashed #e2e8f0')
+            ? '1px solid ' + (p.$isOccupied ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.05)')
+            : '2px ' + (p.$isOccupied ? 'solid rgba(255, 255, 255, 0.1)' : 'dashed rgba(255, 255, 255, 0.05)')
     };
 
   box-sizing: border-box;
@@ -166,11 +170,11 @@ const CellStyled = styled.div<{ $isOver?: boolean; $isOccupied?: boolean; $genet
   }
 
   &:hover {
-    border-color: ${p => p.$isPainting && !p.$isOccupied ? '#48bb78' : '#3182ce'};
-    background: ${p => p.$isPainting && !p.$isOccupied ? '#f0fff4' : p.$isOccupied ? (p.$geneticColor || '#c6f6d5') : p.$isOver ? '#ebf8ff' : 'white'};
+    border-color: ${p => p.$isPainting && !p.$isOccupied ? 'rgba(74, 222, 128, 0.5)' : 'rgba(56, 189, 248, 0.5)'};
+    background: ${p => p.$isPainting && !p.$isOccupied ? 'rgba(74, 222, 128, 0.1)' : p.$isOccupied ? (p.$geneticColor || 'rgba(30, 41, 59, 0.8)') : p.$isOver ? 'rgba(56, 189, 248, 0.1)' : 'rgba(30, 41, 59, 0.5)'};
     transform: ${p => p.$isOccupied || (p.$isPainting && !p.$isOccupied) ? 'scale(1.02)' : 'none'};
     z-index: 10;
-    box-shadow: ${p => p.$isOccupied ? '0 4px 6px rgba(0,0,0,0.1)' : 'none'};
+    box-shadow: ${p => p.$isOccupied ? '0 4px 6px rgba(0,0,0,0.3)' : 'none'};
   }
 `;
 
@@ -193,11 +197,12 @@ const TooltipContainer = styled.div<{ visible: boolean; x: number; y: number }>`
   top: ${p => p.y}px;
   left: ${p => p.x}px;
   transform: translate(-50%, -100%);
-  background: white;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
   padding: 0.5rem;
-  border-radius: 0.375rem;
+  border-radius: 0.5rem;
   z-index: 9999;
   pointer-events: none;
   opacity: ${p => p.visible ? 1 : 0};
@@ -205,6 +210,7 @@ const TooltipContainer = styled.div<{ visible: boolean; x: number; y: number }>`
   margin-top: -8px;
   min-width: 150px;
   text-align: center;
+  color: #f8fafc;
 
   &::after {
     content: '';
@@ -214,7 +220,7 @@ const TooltipContainer = styled.div<{ visible: boolean; x: number; y: number }>`
     margin-left: -5px;
     border-width: 5px;
     border-style: solid;
-    border-color: white transparent transparent transparent;
+    border-color: rgba(15, 23, 42, 0.95) transparent transparent transparent;
   }
 `;
 
@@ -266,8 +272,8 @@ const BatchItem = ({ batch, onClick, cellSize }: { batch: Batch; onClick?: (e: R
                 </BatchItemStyled>
                 {tooltip && createPortal(
                     <TooltipContainer visible={tooltip.visible} x={tooltip.x} y={tooltip.y}>
-                        <div style={{ fontWeight: 'bold', color: '#2f855a' }}>{batch.tracking_code}</div>
-                        <div style={{ fontSize: '0.8rem', color: '#718096' }}>{batch.genetic?.name}</div>
+                        <div style={{ fontWeight: 'bold', color: '#4ade80' }}>{batch.tracking_code}</div>
+                        <div style={{ fontSize: '0.8rem', color: '#94a3b8' }}>{batch.genetic?.name}</div>
                     </TooltipContainer>,
                     document.body
                 )}
@@ -287,26 +293,26 @@ const BatchItem = ({ batch, onClick, cellSize }: { batch: Batch; onClick?: (e: R
                 onMouseEnter={handleMouseEnter}
                 onMouseLeave={handleMouseLeave}
             >
-                <FaLeaf style={{ fontSize: cellSize < 70 ? '0.9rem' : '1.2rem', color: '#004c00', marginBottom: '0.2rem' }} />
-                <span style={{ fontSize: cellSize < 70 ? '0.6rem' : '0.7rem', fontWeight: 'bold', textAlign: 'center', lineHeight: 1.1 }}>
+                <FaLeaf style={{ fontSize: cellSize < 70 ? '0.9rem' : '1.2rem', color: 'rgba(0,0,0,0.6)', marginBottom: '0.2rem' }} />
+                <span style={{ fontSize: cellSize < 70 ? '0.6rem' : '0.7rem', fontWeight: 'bold', textAlign: 'center', lineHeight: 1.1, color: 'rgba(0,0,0,0.8)' }}>
                     {batch.tracking_code || batch.name}
                 </span>
                 {batch.tracking_code && cellSize >= 70 && (
-                    <span style={{ fontSize: '0.6rem', color: '#4a5568', background: 'rgba(255,255,255,0.7)', borderRadius: '4px', padding: '0 2px', marginTop: '2px' }}>
+                    <span style={{ fontSize: '0.6rem', color: '#1e293b', background: 'rgba(255,255,255,0.5)', backdropFilter: 'blur(4px)', borderRadius: '4px', padding: '0 2px', marginTop: '2px' }}>
                         {batch.genetic?.name?.substring(0, 10)}
                     </span>
                 )}
             </BatchItemStyled>
             {tooltip && createPortal(
                 <TooltipContainer visible={tooltip.visible} x={tooltip.x} y={tooltip.y}>
-                    <div style={{ fontWeight: 'bold', color: '#2f855a', marginBottom: '0.25rem' }}>{batch.tracking_code || batch.name}</div>
+                    <div style={{ fontWeight: 'bold', color: '#4ade80', marginBottom: '0.25rem' }}>{batch.tracking_code || batch.name}</div>
 
-                    <div style={{ fontSize: '0.8rem', color: '#4a5568', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.25rem', marginBottom: '0.25rem' }}>
-                        <FaLeaf size={10} color="#48bb78" /> {batch.genetic?.name}
+                    <div style={{ fontSize: '0.8rem', color: '#cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.25rem', marginBottom: '0.25rem' }}>
+                        <FaLeaf size={10} color="#38bdf8" /> {batch.genetic?.name}
                     </div>
 
-                    <div style={{ fontSize: '0.75rem', color: '#2d3748', marginBottom: '0.25rem' }}>
-                        Etapa: <strong>{
+                    <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginBottom: '0.25rem' }}>
+                        Etapa: <strong style={{ color: '#f8fafc' }}>{
                             (() => {
                                 const stageMap: Record<string, string> = {
                                     'seedling': 'Plántula',
@@ -329,7 +335,7 @@ const BatchItem = ({ batch, onClick, cellSize }: { batch: Batch; onClick?: (e: R
                     )}
 
                     {batch.start_date && (
-                        <div style={{ fontSize: '0.7rem', color: '#a0aec0', marginTop: '0.25rem', borderTop: '1px solid #edf2f7', paddingTop: '0.25rem' }}>
+                        <div style={{ fontSize: '0.7rem', color: '#64748b', marginTop: '0.25rem', borderTop: '1px solid rgba(255, 255, 255, 0.1)', paddingTop: '0.25rem' }}>
                             {new Date(batch.start_date).toLocaleDateString()}
                         </div>
                     )}
@@ -375,7 +381,7 @@ const GridCell = ({ row, col, batch, onClick, isPainting, isSelected, renderActi
                     textAlign: 'center',
                     fontSize: '0.8em',
                     fontWeight: '800',
-                    color: '#2d3748',
+                    color: '#94a3b8',
                     opacity: 0.9,
                     pointerEvents: 'none'
                 } : {
@@ -383,7 +389,7 @@ const GridCell = ({ row, col, batch, onClick, isPainting, isSelected, renderActi
                     top: 2,
                     left: 4,
                     fontSize: '0.6rem',
-                    color: '#718096',
+                    color: '#64748b',
                     fontWeight: 'bold',
                     opacity: 0.7
                 }}>

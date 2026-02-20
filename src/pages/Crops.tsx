@@ -48,7 +48,7 @@ const Container = styled.div`
   max-width: 1400px;
   margin: 0 auto;
   min-height: 100vh;
-  background-color: #f8fafc;
+  background-color: transparent; /* Inherit global dark */
   animation: ${fadeIn} 0.5s ease-in-out;
 `;
 
@@ -61,11 +61,8 @@ const Header = styled.div`
   h1 {
     font-size: 2rem;
     font-weight: 800;
-    color: #1a202c;
+    color: #e2e8f0; /* Softer premium white/slate */
     letter-spacing: -0.05rem;
-    background: linear-gradient(135deg, #2f855a 0%, #38b2ac 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
     margin: 0;
   }
 `;
@@ -78,11 +75,12 @@ const Grid = styled.div`
 `;
 
 const Card = styled.div<{ forceHover?: boolean }>`
-  background: white;
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(12px);
   border-radius: 1.25rem;
   overflow: hidden;
-  box-shadow: ${p => p.forceHover ? '0 20px 25px -5px rgba(0, 0, 0, 0.1)' : '0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025)'};
-  border: 1px solid #edf2f7;
+  box-shadow: ${p => p.forceHover ? '0 20px 25px -5px rgba(0, 0, 0, 0.4)' : '0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.15)'};
+  border: 1px solid rgba(255, 255, 255, 0.05);
   transition: transform 0.2s, box-shadow 0.2s;
   display: flex;
   flex-direction: column;
@@ -90,14 +88,14 @@ const Card = styled.div<{ forceHover?: boolean }>`
 
   &:hover {
     transform: translateY(-4px);
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.4);
   }
 `;
 
 const CardHeader = styled.div`
   padding: 1.25rem;
-  background: #f0fff4;
-  border-bottom: 1px solid #e2e8f0;
+  background: transparent;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   display: flex;
   align-items: center;
   gap: 0.75rem;
@@ -105,19 +103,18 @@ const CardHeader = styled.div`
   .icon {
     width: 40px;
     height: 40px;
-    background: white;
-    color: #38a169;
+    background: rgba(255, 255, 255, 0.1); /* Fallback */
     border-radius: 0.75rem;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 1.25rem;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
   }
 
   .title {
     font-weight: 700;
-    color: #2d3748;
+    color: #f8fafc;
     font-size: 1.1rem;
   }
 `;
@@ -134,10 +131,10 @@ const InfoRow = styled.div`
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  color: #4a5568;
+  color: #cbd5e1;
   font-size: 0.9rem;
 
-  svg { color: #a0aec0; }
+  svg { color: #94a3b8; }
 `;
 
 const Badge = styled.span<{ variant?: 'green' | 'yellow' | 'gray' }>`
@@ -146,8 +143,8 @@ const Badge = styled.span<{ variant?: 'green' | 'yellow' | 'gray' }>`
   font-size: 0.75rem;
   font-weight: 600;
   border-radius: 9999px;
-  background: ${p => p.variant === 'green' ? '#c6f6d5' : p.variant === 'yellow' ? '#fefcbf' : '#edf2f7'};
-  color: ${p => p.variant === 'green' ? '#22543d' : p.variant === 'yellow' ? '#744210' : '#4a5568'};
+  background: ${p => p.variant === 'green' ? 'rgba(34, 197, 94, 0.2)' : p.variant === 'yellow' ? 'rgba(234, 179, 8, 0.2)' : 'rgba(100, 116, 139, 0.2)'};
+  color: ${p => p.variant === 'green' ? '#4ade80' : p.variant === 'yellow' ? '#fde047' : '#94a3b8'};
   text-transform: uppercase;
   letter-spacing: 0.05em;
 `;
@@ -173,17 +170,19 @@ const ModalOverlay = styled.div<{ isClosing?: boolean }>`
 `;
 
 const ModalContent = styled.div<{ isClosing?: boolean }>`
-  background: white;
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(16px);
   padding: 2rem;
   border-radius: 1.5rem;
   width: 90%;
   max-width: 500px;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   animation: ${p => p.isClosing ? scaleOut : scaleIn} 0.2s ease-in-out forwards;
 
   h2 {
     margin-top: 0;
-    color: #2d3748;
+    color: #f8fafc;
     margin-bottom: 1.5rem;
   }
 `;
@@ -194,7 +193,7 @@ const FormGroup = styled.div`
   label {
     display: block;
     margin-bottom: 0.5rem;
-    color: #4a5568;
+    color: #cbd5e1;
     font-weight: 500;
     font-size: 0.9rem;
   }
@@ -202,15 +201,17 @@ const FormGroup = styled.div`
   input {
     width: 100%;
     padding: 0.75rem;
-    border: 1px solid #e2e8f0;
+    background: rgba(30, 41, 59, 0.5);
+    color: #f8fafc;
+    border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 0.5rem;
     font-size: 1rem;
     transition: border-color 0.2s;
 
     &:focus {
       outline: none;
-      border-color: #3182ce;
-      box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1);
+      border-color: #4ade80;
+      box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.1);
     }
   }
 `;
@@ -225,15 +226,15 @@ const ModalActions = styled.div`
 const Button = styled.button<{ variant?: 'primary' | 'secondary' }>`
   padding: 0.75rem 1.5rem;
   border-radius: 0.5rem;
-  border: 1px solid ${p => p.variant === 'secondary' ? '#e2e8f0' : 'transparent'};
-  background: ${p => p.variant === 'secondary' ? 'white' : '#38a169'};
-  color: ${p => p.variant === 'secondary' ? '#4a5568' : 'white'};
+  border: 1px solid transparent; /* We can refine borders later if needed */
+  background: ${p => p.variant === 'secondary' ? 'rgba(71, 85, 105, 0.5)' : '#4ade80'};
+  color: ${p => p.variant === 'secondary' ? '#f8fafc' : '#020617'};
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
 
   &:hover {
-    background: ${p => p.variant === 'secondary' ? '#f7fafc' : '#2f855a'};
+    background: ${p => p.variant === 'secondary' ? 'rgba(100, 116, 139, 0.8)' : '#22c55e'};
   }
 `;
 
@@ -261,9 +262,10 @@ const rotate = keyframes`
 `;
 
 const CreateCard = styled.div`
-  background: #f7fafc;
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(12px);
   border-radius: 1.25rem;
-  border: 2px dashed #cbd5e0;
+  border: 2px dashed rgba(255, 255, 255, 0.1);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -273,12 +275,12 @@ const CreateCard = styled.div`
   gap: 1rem;
   transition: all 0.2s ease;
   opacity: 0.8;
-  color: #a0aec0;
+  color: #64748b;
 
   &:hover {
-    border-color: #48bb78;
-    color: #48bb78;
-    background: #f0fff4;
+    border-color: #4ade80;
+    color: #4ade80;
+    background: rgba(20, 83, 45, 0.2);
     opacity: 1;
   }
 `;
@@ -627,33 +629,32 @@ const Crops: React.FC = () => {
                   <FaCalendarAlt /> Fin Previsto: {new Date(crop.estimatedHarvestDate).toLocaleDateString('es-AR')}
                 </InfoRow>
               )}
-              <InfoRow style={{ marginTop: '0.5rem', borderTop: '1px solid #edf2f7', paddingTop: '0.5rem' }}>
+              <InfoRow style={{ marginTop: '0.5rem', borderTop: '1px solid rgba(255, 255, 255, 0.05)', paddingTop: '0.5rem' }}>
                 <FaClock /> Última actividad: {lastActivityMap[crop.id] || '-'}
               </InfoRow>
 
               {/* Rooms Summary */}
               {crop.rooms && crop.rooms.length > 0 && (
-                <div style={{ marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid #edf2f7', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                <div style={{ marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid rgba(255, 255, 255, 0.05)', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                   {(() => {
                     const vegeCount = crop.rooms.filter(r => r.type === 'vegetation').length;
                     const floraCount = crop.rooms.filter(r => r.type === 'flowering').length;
                     const dryingCount = crop.rooms.filter(r => r.type === 'drying').length;
-                    // Using filter directly on type
 
                     return (
                       <>
                         {vegeCount > 0 && (
-                          <span style={{ fontSize: '0.75rem', background: '#f0fff4', color: '#2f855a', padding: '2px 6px', borderRadius: '4px', fontWeight: 600 }}>
+                          <span style={{ fontSize: '0.75rem', background: 'rgba(34, 197, 94, 0.2)', color: '#4ade80', padding: '2px 6px', borderRadius: '4px', fontWeight: 600 }}>
                             {vegeCount} Vege
                           </span>
                         )}
                         {floraCount > 0 && (
-                          <span style={{ fontSize: '0.75rem', background: '#fffaf0', color: '#dd6b20', padding: '2px 6px', borderRadius: '4px', fontWeight: 600 }}>
+                          <span style={{ fontSize: '0.75rem', background: 'rgba(234, 179, 8, 0.2)', color: '#fde047', padding: '2px 6px', borderRadius: '4px', fontWeight: 600 }}>
                             {floraCount} Flora
                           </span>
                         )}
                         {dryingCount > 0 && (
-                          <span style={{ fontSize: '0.75rem', background: '#e6fffa', color: '#38b2ac', padding: '2px 6px', borderRadius: '4px', fontWeight: 600 }}>
+                          <span style={{ fontSize: '0.75rem', background: 'rgba(56, 189, 248, 0.2)', color: '#7dd3fc', padding: '2px 6px', borderRadius: '4px', fontWeight: 600 }}>
                             {dryingCount} Secado
                           </span>
                         )}

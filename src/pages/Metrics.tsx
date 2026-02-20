@@ -11,12 +11,14 @@ const Container = styled.div`
   padding-top: 5rem;
   max-width: 1400px;
   margin: 0 auto;
+  min-height: 100vh;
+  color: #f8fafc;
 `;
 
 const Header = styled.div`
   margin-bottom: 2rem;
-  h1 { font-size: 2rem; color: #2d3748; }
-  p { color: #718096; }
+  h1 { font-size: 2rem; color: #f8fafc; }
+  p { color: #94a3b8; }
 `;
 
 const Grid = styled.div`
@@ -136,29 +138,29 @@ const Metrics: React.FC = () => {
             {/* Secondary Analysis */}
             <ChartsGrid>
                 {/* Top Genetics Table/List could go here */}
-                <div style={{ background: 'white', padding: '1.5rem', borderRadius: '1rem', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
-                    <h3 style={{ marginBottom: '1rem', color: '#2d3748' }}>Rendimiento por Genética</h3>
+                <div style={{ background: 'rgba(30, 41, 59, 0.6)', padding: '1.5rem', borderRadius: '1rem', border: '1px solid rgba(255, 255, 255, 0.05)', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.2)', backdropFilter: 'blur(12px)' }}>
+                    <h3 style={{ marginBottom: '1rem', color: '#f8fafc' }}>Rendimiento por Genética</h3>
                     <div style={{ overflowX: 'auto' }}>
                         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                             <thead>
-                                <tr style={{ borderBottom: '2px solid #e2e8f0', textAlign: 'left' }}>
-                                    <th style={{ padding: '0.5rem', color: '#718096' }}>Genética</th>
-                                    <th style={{ padding: '0.5rem', color: '#718096' }}>Total (g)</th>
-                                    <th style={{ padding: '0.5rem', color: '#718096' }}>Cosechas</th>
-                                    <th style={{ padding: '0.5rem', color: '#718096' }}>Promedio (g)</th>
+                                <tr style={{ borderBottom: '2px solid rgba(255, 255, 255, 0.1)', textAlign: 'left' }}>
+                                    <th style={{ padding: '0.5rem', color: '#94a3b8' }}>Genética</th>
+                                    <th style={{ padding: '0.5rem', color: '#94a3b8' }}>Total (g)</th>
+                                    <th style={{ padding: '0.5rem', color: '#94a3b8' }}>Cosechas</th>
+                                    <th style={{ padding: '0.5rem', color: '#94a3b8' }}>Promedio (g)</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {genetics.map((g, i) => (
-                                    <tr key={i} style={{ borderBottom: '1px solid #edf2f7' }}>
+                                    <tr key={i} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
                                         <td style={{ padding: '0.75rem', fontWeight: 600 }}>{g.genetic_name || 'Desconocida'}</td>
                                         <td style={{ padding: '0.75rem' }}>{Number(g.total_yield_g).toLocaleString()}</td>
                                         <td style={{ padding: '0.75rem' }}>{g.harvest_count}</td>
-                                        <td style={{ padding: '0.75rem', color: '#48bb78', fontWeight: 700 }}>{Number(g.avg_yield_per_harvest).toLocaleString()}</td>
+                                        <td style={{ padding: '0.75rem', color: '#4ade80', fontWeight: 700 }}>{Number(g.avg_yield_per_harvest).toLocaleString()}</td>
                                     </tr>
                                 ))}
                                 {genetics.length === 0 && (
-                                    <tr><td colSpan={4} style={{ padding: '2rem', textAlign: 'center', color: '#a0aec0' }}>Sin datos de cosecha</td></tr>
+                                    <tr><td colSpan={4} style={{ padding: '2rem', textAlign: 'center', color: '#64748b' }}>Sin datos de cosecha</td></tr>
                                 )}
                             </tbody>
                         </table>
@@ -166,21 +168,21 @@ const Metrics: React.FC = () => {
                 </div>
 
                 {/* Cost Breakdown */}
-                <div style={{ background: 'white', padding: '1.5rem', borderRadius: '1rem', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
-                    <h3 style={{ marginBottom: '1rem', color: '#2d3748' }}>Desglose de Gastos</h3>
+                <div style={{ background: 'rgba(30, 41, 59, 0.6)', padding: '1.5rem', borderRadius: '1rem', border: '1px solid rgba(255, 255, 255, 0.05)', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.2)', backdropFilter: 'blur(12px)' }}>
+                    <h3 style={{ marginBottom: '1rem', color: '#f8fafc' }}>Desglose de Gastos</h3>
                     {costs.map((c, i) => (
                         <div key={i} style={{ marginBottom: '0.75rem' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem', fontSize: '0.9rem' }}>
-                                <span style={{ textTransform: 'capitalize' }}>{c.category === 'electricity' ? 'Luz' : c.category === 'nutrients' ? 'Nutrientes' : c.category}</span>
+                                <span style={{ textTransform: 'capitalize', color: '#cbd5e1' }}>{c.category === 'electricity' ? 'Luz' : c.category === 'nutrients' ? 'Nutrientes' : c.category}</span>
                                 <span style={{ fontWeight: 600 }}>${Number(c.total_amount).toLocaleString()}</span>
                             </div>
-                            <div style={{ height: '8px', background: '#edf2f7', borderRadius: '4px', overflow: 'hidden' }}>
-                                <div style={{ width: `${c.percentage}%`, background: '#f56565', height: '100%' }}></div>
+                            <div style={{ height: '8px', background: 'rgba(255, 255, 255, 0.1)', borderRadius: '4px', overflow: 'hidden' }}>
+                                <div style={{ width: `${c.percentage}%`, background: '#c084fc', height: '100%' }}></div>
                             </div>
                         </div>
                     ))}
                     {costs.length === 0 && (
-                        <div style={{ padding: '2rem', textAlign: 'center', color: '#a0aec0' }}>No hay gastos registrados este año</div>
+                        <div style={{ padding: '2rem', textAlign: 'center', color: '#64748b' }}>No hay gastos registrados este año</div>
                     )}
                 </div>
             </ChartsGrid>

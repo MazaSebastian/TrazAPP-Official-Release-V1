@@ -1,4 +1,4 @@
-import { supabase } from './supabaseClient';
+import { supabase, getSelectedOrgId } from './supabaseClient';
 import { StickyNote } from '../types';
 
 export const stickiesService = {
@@ -8,6 +8,7 @@ export const stickiesService = {
         let query = supabase
             .from('chakra_stickies')
             .select('*')
+            .eq('organization_id', getSelectedOrgId())
             .order('created_at', { ascending: false });
 
         if (roomId) {
@@ -43,7 +44,8 @@ export const stickiesService = {
                     created_by: userName,
                     user_id: user?.id,
                     room_id: roomId || null,
-                    target_date: targetDate || null
+                    target_date: targetDate || null,
+                    organization_id: getSelectedOrgId()
                 }
             ])
             .select()
@@ -51,6 +53,7 @@ export const stickiesService = {
 
         if (error) {
             console.error('Error creating sticky:', error);
+            alert('Error creating sticky: ' + error.message + ' details: ' + error.details);
             return null;
         }
         return data;

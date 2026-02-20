@@ -10,7 +10,7 @@ export const GlobalStyles = createGlobalStyle`
   html {
     scroll-behavior: smooth;
     overflow-y: scroll; /* Force scrollbar track to stay visible */
-    background-color: #f8fafc; /* Match app background */
+    background-color: #020617; /* Match app background */
   }
 
   body {
@@ -19,8 +19,8 @@ export const GlobalStyles = createGlobalStyle`
       sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    background-color: #f8fafc;
-    color: #1e293b;
+    background-color: #020617;
+    color: #f8fafc;
     line-height: 1.6;
   }
 

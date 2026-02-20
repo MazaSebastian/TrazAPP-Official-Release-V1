@@ -10,14 +10,19 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #f8fafc;
-  color: #1e293b;
+  background-color: #020617;
+  color: #f8fafc;
   line-height: 1.6;
 }
 
 .App {
   min-height: 100vh;
-  background: #f8fafc;
+  background: #020617;
+}
+
+.App.public-theme {
+  background: #020617;
+  /* Slate 950 - Matches auth screens to prevent white flashes */
 }
 
 /* Scrollbar personalizado */
@@ -26,16 +31,16 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: #0f172a;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: #334155;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: #475569;
 }
 
 /* Animaciones */

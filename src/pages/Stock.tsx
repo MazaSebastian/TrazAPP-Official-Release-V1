@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import styled, { keyframes } from 'styled-components';
-import { FaBoxes, FaPlus, FaChevronDown, FaChevronUp, FaEdit, FaTrash, FaTimes, FaHistory, FaHandHoldingMedical, FaFlask, FaCheckSquare } from 'react-icons/fa';
+import styled from 'styled-components';
+import { FaBoxes, FaPlus, FaChevronDown, FaEdit, FaTrash, FaTimes, FaHistory, FaHandHoldingMedical, FaFlask, FaCheckSquare } from 'react-icons/fa';
 import { dispensaryService, DispensaryBatch, DispensaryMovement } from '../services/dispensaryService';
 import { geneticsService } from '../services/geneticsService';
 import { Genetic } from '../types/genetics';
@@ -62,7 +62,7 @@ const Header = styled.div`
   h1 {
     font-size: 1.875rem;
     font-weight: 700;
-    color: #1e293b;
+    color: #f8fafc;
     margin: 0;
     display: flex;
     align-items: center;
@@ -72,14 +72,20 @@ const Header = styled.div`
 
 const ActionButton = styled.button<{ variant?: 'primary' | 'danger' | 'secondary' | 'ghost' | 'info' }>`
   background: ${props =>
-    props.variant === 'primary' ? '#38a169' :
-      props.variant === 'danger' ? '#e53e3e' :
-        props.variant === 'info' ? '#3182ce' :
-          props.variant === 'secondary' ? 'white' : 'transparent'};
+    props.variant === 'primary' ? 'rgba(74, 222, 128, 0.2)' :
+      props.variant === 'danger' ? 'rgba(239, 68, 68, 0.2)' :
+        props.variant === 'info' ? 'rgba(56, 189, 248, 0.2)' :
+          props.variant === 'secondary' ? 'rgba(30, 41, 59, 0.6)' : 'transparent'};
   color: ${props =>
-    props.variant === 'primary' || props.variant === 'danger' || props.variant === 'info' ? 'white' :
-      props.variant === 'secondary' ? '#2d3748' : '#4a5568'};
-  border: ${props => props.variant === 'secondary' ? '1px solid #e2e8f0' : 'none'};
+    props.variant === 'primary' ? '#4ade80' :
+      props.variant === 'danger' ? '#f87171' :
+        props.variant === 'info' ? '#38bdf8' :
+          props.variant === 'secondary' ? '#cbd5e1' : '#cbd5e1'};
+  border: ${props =>
+    props.variant === 'primary' ? '1px solid rgba(74, 222, 128, 0.5)' :
+      props.variant === 'danger' ? '1px solid rgba(239, 68, 68, 0.5)' :
+        props.variant === 'info' ? '1px solid rgba(56, 189, 248, 0.5)' :
+          props.variant === 'secondary' ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid transparent'};
   padding: 0.5rem 1rem;
   border-radius: 0.5rem;
   font-weight: 600;
@@ -89,15 +95,20 @@ const ActionButton = styled.button<{ variant?: 'primary' | 'danger' | 'secondary
   gap: 0.5rem;
   transition: all 0.2s;
   font-size: 0.9rem;
-  box-shadow: ${props => props.variant === 'primary' ? '0 4px 6px rgba(56, 161, 105, 0.2)' : 'none'};
+  box-shadow: ${props => props.variant === 'primary' ? '0 4px 6px rgba(0, 0, 0, 0.2)' : 'none'};
+  backdrop-filter: blur(8px);
 
   &:hover {
     transform: translateY(-2px);
     opacity: 1;
     background: ${props =>
-    props.variant === 'primary' ? '#2f855a' :
-      props.variant === 'ghost' ? '#edf2f7' : undefined};
-    box-shadow: ${props => props.variant === 'primary' ? '0 6px 8px rgba(56, 161, 105, 0.3)' : '0 2px 4px rgba(0,0,0,0.1)'};
+    props.variant === 'primary' ? 'rgba(74, 222, 128, 0.3)' :
+      props.variant === 'danger' ? 'rgba(239, 68, 68, 0.3)' :
+        props.variant === 'info' ? 'rgba(56, 189, 248, 0.3)' :
+          props.variant === 'secondary' ? 'rgba(255, 255, 255, 0.1)' :
+            props.variant === 'ghost' ? 'rgba(255, 255, 255, 0.05)' : undefined};
+    color: ${props => props.variant === 'secondary' ? '#f8fafc' : undefined};
+    box-shadow: ${props => props.variant === 'primary' ? '0 6px 8px rgba(0, 0, 0, 0.3)' : '0 2px 4px rgba(0,0,0,0.2)'};
   }
 
   &:disabled {
@@ -107,11 +118,18 @@ const ActionButton = styled.button<{ variant?: 'primary' | 'danger' | 'secondary
     box-shadow: none;
   }
 `;
-
 const IconButton = styled.button<{ color: string }>`
-  background: white;
-  border: 1px solid transparent;
-  color: ${props => props.color};
+  background: rgba(30, 41, 59, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: ${props => {
+    switch (props.color) {
+      case '#38a169': return '#4ade80'; // Neon Green
+      case '#3182ce': return '#38bdf8'; // Light Blue
+      case '#805ad5': return '#a855f7'; // Purple
+      case '#e53e3e': return '#f87171'; // Red
+      default: return props.color;
+    }
+  }};
   width: 32px;
   height: 32px;
   border-radius: 0.5rem;
@@ -120,13 +138,14 @@ const IconButton = styled.button<{ color: string }>`
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+  backdrop-filter: blur(8px);
 
   &:hover {
-    background: ${props => props.color}15;
-    border-color: ${props => props.color}30;
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
     transform: translateY(-1px);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
   }
 
   &:disabled {
@@ -145,31 +164,32 @@ const StatsGrid = styled.div`
 `;
 
 const StatCard = styled.div`
-  background: white;
-  border: 1px solid #e2e8f0;
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
   border-radius: 1rem;
   padding: 1.5rem;
   text-align: left;
-  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2);
   position: relative;
   overflow: hidden;
   transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
 
   &:hover {
     transform: translateY(-5px);
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
   }
 
   .stat-value {
     font-size: 2rem;
     font-weight: 800;
-    color: #2d3748;
+    color: #f8fafc;
     margin-bottom: 0.25rem;
     line-height: 1.2;
   }
 
   .stat-label {
-    color: #718096;
+    color: #cbd5e1;
     font-size: 0.75rem;
     font-weight: 700;
     text-transform: uppercase;
@@ -178,11 +198,12 @@ const StatCard = styled.div`
 `;
 
 const TableContainer = styled.div`
-  background: white;
+  background: rgba(15, 23, 42, 0.75);
   border-radius: 0.75rem;
-  border: 1px solid #e2e8f0;
+  border: 1px solid rgba(255, 255, 255, 0.05);
   overflow: hidden;
-  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2);
+  backdrop-filter: blur(12px);
 `;
 
 const MainTable = styled.table`
@@ -192,17 +213,17 @@ const MainTable = styled.table`
   th {
     padding: 1rem;
     text-align: left;
-    background: #f8fafc;
-    color: #64748b;
+    background: rgba(30, 41, 59, 0.6);
+    color: #94a3b8;
     font-weight: 600;
     font-size: 0.85rem;
-    border-bottom: 1px solid #e2e8f0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   }
 
   td {
     padding: 1rem;
-    border-bottom: 1px solid #f1f5f9;
-    color: #334155;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    color: #cbd5e1;
     vertical-align: middle;
   }
   
@@ -212,24 +233,24 @@ const MainTable = styled.table`
 `;
 
 const ExpandedRow = styled.tr<{ $expanded?: boolean }>`
-  background: #f8fafc;
+  background: rgba(30, 41, 59, 0.4);
   
   td {
     padding: 0 !important;
-    border-bottom: ${props => props.$expanded ? '1px solid #e2e8f0' : 'none'};
+    border-bottom: ${props => props.$expanded ? '1px solid rgba(255, 255, 255, 0.05)' : 'none'};
     transition: border-bottom 0.3s ease;
   }
 `;
 
 const DetailTable = styled.table`
   width: 100%;
-  background: #f8fafc;
+  background: transparent;
   
   td {
     padding: 0.75rem 1rem;
     font-size: 0.9rem;
-    border-bottom: 1px solid #e2e8f0;
-    color: #475569;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    color: #e2e8f0;
   }
 
   tr:last-child td {
@@ -238,9 +259,45 @@ const DetailTable = styled.table`
 `;
 
 const FormGroup = styled.div`
-  margin-bottom: 1rem;
-  label { display: block; margin-bottom: 0.5rem; font-weight: 600; color: #4a5568; font-size: 0.9rem; }
-  input, select, textarea { width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; font-size: 0.95rem; }
+  margin-bottom: 1.5rem;
+  label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: #cbd5e1;
+    font-size: 0.9rem;
+  }
+  input, select, textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0.5rem;
+    font-size: 0.95rem;
+    color: #f8fafc;
+    background: rgba(30, 41, 59, 0.5);
+    backdrop-filter: blur(8px);
+    transition: all 0.2s;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+
+    &:focus {
+      outline: none;
+      border-color: rgba(56, 189, 248, 0.5);
+      box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.1);
+    }
+    &::placeholder {
+      color: #64748b;
+    }
+    
+    // Autofill Dark Mode override (Webkit specific)
+    &:-webkit-autofill,
+    &:-webkit-autofill:hover, 
+    &:-webkit-autofill:focus, 
+    &:-webkit-autofill:active {
+        -webkit-text-fill-color: #f8fafc !important;
+        -webkit-box-shadow: 0 0 0 9999px rgba(30,41,59,1) inset !important;
+        transition: background-color 5000s ease-in-out 0s;
+    }
+  }
 `;
 
 // --- Interfaces ---
@@ -554,11 +611,7 @@ const Stock: React.FC = () => {
   const [labTransferBatch, setLabTransferBatch] = useState<DispensaryBatch | null>(null);
   const [labTransferAmount, setLabTransferAmount] = useState('');
 
-  const openLabTransfer = (batch: DispensaryBatch) => {
-    setLabTransferBatch(batch);
-    setLabTransferAmount('');
-    setIsLabTransferOpen(true);
-  };
+
 
   const confirmLabTransfer = async () => {
     if (!labTransferBatch || !labTransferAmount) return;
@@ -700,10 +753,6 @@ const Stock: React.FC = () => {
   // The service default `getBatches` returns all except depleted.
   // Let's filter out 'Laboratorio' location from the main list so it doesn't double count if we have a Lab page.
 
-  const stockBatches = aggregatedStock.map(group => ({
-    ...group,
-    batches: group.batches.filter(b => b.location !== 'Laboratorio')
-  })).filter(group => group.batches.length > 0);
 
   // Re-calculate stats based on filtered list? Or Global?
   // Let's use the full list for "Total Assets" but maybe the table should show available?
@@ -780,21 +829,21 @@ const Stock: React.FC = () => {
                   <React.Fragment key={item.strain}>
                     <tr
                       onClick={() => toggleExpand(item.strain)}
-                      style={{ cursor: 'pointer', background: isExpanded ? '#edf2f7' : 'white', transition: 'background 0.2s' }}
+                      style={{ cursor: 'pointer', background: isExpanded ? 'rgba(30, 41, 59, 0.8)' : 'transparent', transition: 'background 0.2s' }}
                     >
-                      <td style={{ textAlign: 'center', color: '#a0aec0' }}>
+                      <td style={{ textAlign: 'center', color: '#94a3b8' }}>
                         <div style={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.3s ease' }}>
                           <FaChevronDown />
                         </div>
                       </td>
                       <td style={{ fontWeight: 'bold' }}>{item.strain}</td>
-                      <td style={{ textAlign: 'right', fontWeight: 'bold', color: '#2d3748' }}>{item.totalWeight.toFixed(1)}g</td>
+                      <td style={{ textAlign: 'right', fontWeight: 'bold', color: '#f8fafc' }}>{item.totalWeight.toFixed(1)}g</td>
                       <td style={{ textAlign: 'right' }}>
-                        <span style={{ background: '#e2e8f0', padding: '2px 8px', borderRadius: '12px', fontSize: '0.8rem', fontWeight: 'bold' }}>
+                        <span style={{ background: 'rgba(255, 255, 255, 0.1)', padding: '2px 8px', borderRadius: '12px', fontSize: '0.8rem', fontWeight: 'bold' }}>
                           {item.batchesCount}
                         </span>
                       </td>
-                      <td style={{ textAlign: 'center', fontSize: '0.85rem', color: '#718096' }}>{percent}%</td>
+                      <td style={{ textAlign: 'center', fontSize: '0.85rem', color: '#cbd5e1' }}>{percent}%</td>
                       <td style={{ textAlign: 'right' }}>
                         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
                           <IconButton color="#38a169" onClick={(e) => {
@@ -833,8 +882,8 @@ const Stock: React.FC = () => {
                           <div style={{ padding: '1rem 0' }}>
                             {/* Bulk Actions Toolbar for this strain if items selected */}
                             {item.batches.some(b => selectedBatches.has(b.id)) && (
-                              <div style={{ background: '#ebf8ff', padding: '0.5rem 1rem', marginBottom: '0.5rem', borderRadius: '0.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <span style={{ fontSize: '0.85rem', color: '#2b6cb0', fontWeight: 'bold' }}>
+                              <div style={{ background: 'rgba(56, 189, 248, 0.1)', padding: '0.5rem 1rem', marginBottom: '0.5rem', borderRadius: '0.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid rgba(56, 189, 248, 0.2)' }}>
+                                <span style={{ fontSize: '0.85rem', color: '#38bdf8', fontWeight: 'bold' }}>
                                   {item.batches.filter(b => selectedBatches.has(b.id)).length} seleccionados
                                 </span>
                                 <div style={{ display: 'flex', gap: '0.5rem' }}>
@@ -847,7 +896,7 @@ const Stock: React.FC = () => {
 
                             <DetailTable>
                               <thead>
-                                <tr style={{ color: '#718096', fontSize: '0.8rem', borderBottom: '1px solid #e2e8f0' }}>
+                                <tr style={{ color: '#cbd5e1', fontSize: '0.8rem', borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
                                   <th style={{ width: '40px', textAlign: 'center', padding: '0.5rem' }}>
                                     <input
                                       type="checkbox"
@@ -866,13 +915,13 @@ const Stock: React.FC = () => {
                                 {item.batches.map(batch => {
                                   // Color Logic
                                   let rowBg = 'transparent';
-                                  if (batch.current_weight === 0) rowBg = '#fed7d7'; // Depleted -> Red
-                                  else if (batch.status === 'available') rowBg = '#c6f6d5'; // Dispensing -> Green
+                                  if (batch.current_weight === 0) rowBg = 'rgba(239, 68, 68, 0.1)'; // Depleted -> Red
+                                  else if (batch.status === 'available') rowBg = 'rgba(74, 222, 128, 0.1)'; // Dispensing -> Green
 
                                   const isSelected = selectedBatches.has(batch.id);
 
                                   return (
-                                    <tr key={batch.id} style={{ background: isSelected ? '#ebf8ff' : rowBg }}>
+                                    <tr key={batch.id} style={{ background: isSelected ? 'rgba(56, 189, 248, 0.2)' : rowBg }}>
                                       <td style={{ textAlign: 'center' }}>
                                         <input
                                           type="checkbox"
@@ -881,9 +930,9 @@ const Stock: React.FC = () => {
                                           style={{ cursor: 'pointer' }}
                                         />
                                       </td>
-                                      <td style={{ width: '15%', color: '#718096' }}>{new Date(batch.created_at).toLocaleDateString()}</td>
+                                      <td style={{ width: '15%', color: '#94a3b8' }}>{new Date(batch.created_at).toLocaleDateString()}</td>
                                       <td style={{ width: '30%', fontWeight: '600' }}>{batch.batch_code}</td>
-                                      <td style={{ width: '25%', fontWeight: 'bold', color: '#2d3748' }}>{Number(batch.current_weight).toFixed(2)}g / {Number(batch.initial_weight).toFixed(2)}g</td>
+                                      <td style={{ width: '25%', fontWeight: 'bold', color: '#f8fafc' }}>{Number(batch.current_weight).toFixed(2)}g / {Number(batch.initial_weight).toFixed(2)}g</td>
                                       <td style={{ width: '25%', textAlign: 'right' }}>
                                         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
                                           <IconButton color="#3182ce" onClick={(e) => { e.stopPropagation(); openEdit(batch); }} title="Editar">
@@ -907,7 +956,7 @@ const Stock: React.FC = () => {
                 );
               })}
               {visibleStock.length === 0 && (
-                <tr><td colSpan={5} style={{ padding: '3rem', textAlign: 'center', color: '#a0aec0' }}>No hay stock disponible.</td></tr>
+                <tr><td colSpan={5} style={{ padding: '3rem', textAlign: 'center', color: '#94a3b8' }}>No hay stock disponible.</td></tr>
               )}
             </tbody>
           </MainTable>
@@ -917,7 +966,7 @@ const Stock: React.FC = () => {
       {/* CREATE MODAL */}
       <AnimatedModal isOpen={isCreateOpen} onClose={() => setIsCreateOpen(false)}>
         <CloseIcon onClick={() => setIsCreateOpen(false)}><FaTimes /></CloseIcon>
-        <h2 style={{ marginBottom: '1.5rem', color: '#2d3748', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        <h2 style={{ marginBottom: '1.5rem', color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <FaPlus /> Nuevo Lote Manual
         </h2>
         <FormGroup style={{ zIndex: 20 }}>
@@ -956,7 +1005,7 @@ const Stock: React.FC = () => {
         {editingBatch && (
           <>
             <CloseIcon onClick={() => setIsEditOpen(false)}><FaTimes /></CloseIcon>
-            <h2 style={{ marginBottom: '1rem', color: '#2d3748', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <h2 style={{ marginBottom: '1rem', color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <FaEdit /> Editar Lote: {editingBatch.batch_code}
             </h2>
 
@@ -1005,7 +1054,7 @@ const Stock: React.FC = () => {
         {deleteData && (
           <>
             <CloseIcon onClick={() => setIsDeleteOpen(false)}><FaTimes /></CloseIcon>
-            <h2 style={{ marginBottom: '1rem', color: '#e53e3e', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <h2 style={{ marginBottom: '1rem', color: '#f87171', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <FaTrash /> {deleteData.isBulk ? 'Eliminación Masiva' : 'Baja de Lote'}
             </h2>
             <p style={{ marginBottom: '1rem' }}>
@@ -1037,17 +1086,18 @@ const Stock: React.FC = () => {
       {confirmModal.isOpen && (
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          background: 'rgba(0,0,0,0.5)', zIndex: 9999,
+          background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)', zIndex: 9999,
           display: 'flex', alignItems: 'center', justifyContent: 'center'
         }}>
           <div style={{
-            background: 'white', padding: '2rem', borderRadius: '1rem',
-            width: '90%', maxWidth: '400px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+            background: 'rgba(15, 23, 42, 0.95)', padding: '2rem', borderRadius: '1rem',
+            width: '90%', maxWidth: '400px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.5)',
+            border: '1px solid rgba(255, 255, 255, 0.1)', backdropFilter: 'blur(16px)'
           }}>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '1rem', color: confirmModal.isDanger ? '#e53e3e' : '#2d3748' }}>
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '1rem', color: confirmModal.isDanger ? '#f87171' : '#f8fafc' }}>
               {confirmModal.title}
             </h3>
-            <p style={{ marginBottom: '1.5rem', color: '#4a5568' }}>{confirmModal.message}</p>
+            <p style={{ marginBottom: '1.5rem', color: '#cbd5e1' }}>{confirmModal.message}</p>
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
               <ActionButton variant="secondary" onClick={() => setConfirmModal({ ...confirmModal, isOpen: false })}>
                 Cancelar
@@ -1072,14 +1122,14 @@ const Stock: React.FC = () => {
       {/* HISTORY MODAL */}
       <AnimatedModal isOpen={isHistoryOpen} onClose={() => setIsHistoryOpen(false)} wide>
         <CloseIcon onClick={() => setIsHistoryOpen(false)}><FaTimes /></CloseIcon>
-        <h2 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#2d3748' }}>
+        <h2 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#f8fafc' }}>
           <FaHistory /> Historial de Movimientos
         </h2>
 
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
             <thead>
-              <tr style={{ background: '#f7fafc', borderBottom: '2px solid #edf2f7', textAlign: 'left' }}>
+              <tr style={{ background: 'rgba(30, 41, 59, 0.6)', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', textAlign: 'left', color: '#cbd5e1' }}>
                 <th style={{ padding: '0.75rem' }}>Fecha</th>
                 <th style={{ padding: '0.75rem' }}>Tipo</th>
                 <th style={{ padding: '0.75rem' }}>Lote / Genética</th>
@@ -1089,13 +1139,13 @@ const Stock: React.FC = () => {
             </thead>
             <tbody>
               {movements.map(mov => (
-                <tr key={mov.id} style={{ borderBottom: '1px solid #edf2f7' }}>
+                <tr key={mov.id} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.05)', color: '#e2e8f0' }}>
                   <td style={{ padding: '0.75rem' }}>{new Date(mov.created_at).toLocaleString()}</td>
                   <td style={{ padding: '0.75rem' }}>
                     <span style={{
                       padding: '2px 8px', borderRadius: '4px', fontSize: '0.8rem', fontWeight: 'bold',
-                      background: mov.type === 'dispense' ? '#c6f6d5' : mov.type === 'adjustment' ? '#feebc8' : mov.type === 'disposal' ? '#fed7d7' : '#edf2f7',
-                      color: mov.type === 'dispense' ? '#22543d' : mov.type === 'adjustment' ? '#744210' : mov.type === 'disposal' ? '#822727' : '#4a5568'
+                      background: mov.type === 'dispense' ? 'rgba(74, 222, 128, 0.2)' : mov.type === 'adjustment' ? 'rgba(250, 204, 21, 0.2)' : mov.type === 'disposal' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(255, 255, 255, 0.1)',
+                      color: mov.type === 'dispense' ? '#4ade80' : mov.type === 'adjustment' ? '#facc15' : mov.type === 'disposal' ? '#f87171' : '#cbd5e1'
                     }}>
                       {{
                         dispense: 'VENTA',
@@ -1109,16 +1159,16 @@ const Stock: React.FC = () => {
                   <td style={{ padding: '0.75rem' }}>
                     <strong>{mov.batch?.batch_code || '-'}</strong>
                     <br />
-                    <span style={{ color: '#718096', fontSize: '0.8rem' }}>{mov.batch?.strain_name}</span>
+                    <span style={{ color: '#94a3b8', fontSize: '0.8rem' }}>{mov.batch?.strain_name}</span>
                   </td>
-                  <td style={{ padding: '0.75rem', textAlign: 'right', fontWeight: 'bold', color: mov.amount > 0 ? 'green' : 'red' }}>
+                  <td style={{ padding: '0.75rem', textAlign: 'right', fontWeight: 'bold', color: mov.amount > 0 ? '#4ade80' : '#f87171' }}>
                     {mov.amount > 0 ? '+' : ''}{mov.amount}g
                   </td>
-                  <td style={{ padding: '0.75rem', color: '#4a5568' }}>{mov.reason || '-'}</td>
+                  <td style={{ padding: '0.75rem', color: '#cbd5e1' }}>{mov.reason || '-'}</td>
                 </tr>
               ))}
               {movements.length === 0 && (
-                <tr><td colSpan={5} style={{ textAlign: 'center', padding: '2rem', color: '#a0aec0' }}>No hay movimientos registrados.</td></tr>
+                <tr><td colSpan={5} style={{ textAlign: 'center', padding: '2rem', color: '#94a3b8' }}>No hay movimientos registrados.</td></tr>
               )}
             </tbody>
           </table>
@@ -1130,15 +1180,15 @@ const Stock: React.FC = () => {
         {groupDispenseStrain && (
           <>
             <CloseIcon onClick={() => setIsGroupDispenseOpen(false)}><FaTimes /></CloseIcon>
-            <h2 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#2d3748' }}>
+            <h2 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#f8fafc' }}>
               <FaHandHoldingMedical /> Dispensar: {groupDispenseStrain}
             </h2>
-            <p style={{ marginBottom: '1rem', color: '#718096' }}>Selecciona la unidad de la cual deseas dispensar:</p>
+            <p style={{ marginBottom: '1rem', color: '#cbd5e1' }}>Selecciona la unidad de la cual deseas dispensar:</p>
 
             <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
                 <thead>
-                  <tr style={{ textAlign: 'left', borderBottom: '2px solid #edf2f7', color: '#718096' }}>
+                  <tr style={{ textAlign: 'left', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', color: '#cbd5e1' }}>
                     <th style={{ padding: '0.75rem' }}>Fecha</th>
                     <th style={{ padding: '0.75rem' }}>Código</th>
                     <th style={{ padding: '0.75rem', textAlign: 'right' }}>Stock Actual</th>
@@ -1149,11 +1199,11 @@ const Stock: React.FC = () => {
                   {aggregatedStock.find(s => s.strain === groupDispenseStrain)?.batches
                     .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()) // FIFO display
                     .map(batch => (
-                      <tr key={batch.id} style={{ borderBottom: '1px solid #edf2f7' }}>
+                      <tr key={batch.id} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.05)', color: '#e2e8f0' }}>
                         <td style={{ padding: '0.75rem' }}>{new Date(batch.created_at).toLocaleDateString()}</td>
                         <td style={{ padding: '0.75rem', fontWeight: 'bold' }}>{batch.batch_code}</td>
                         <td style={{ padding: '0.75rem', textAlign: 'right' }}>
-                          <span style={{ fontWeight: 'bold', color: batch.current_weight > 0 ? '#38a169' : '#e53e3e' }}>
+                          <span style={{ fontWeight: 'bold', color: batch.current_weight > 0 ? '#4ade80' : '#f87171' }}>
                             {batch.current_weight}g
                           </span>
                         </td>
@@ -1181,11 +1231,11 @@ const Stock: React.FC = () => {
         {dispenseToShopBatch && (
           <>
             <CloseIcon onClick={() => setIsDispenseToShopOpen(false)}><FaTimes /></CloseIcon>
-            <h2 style={{ marginBottom: '1rem', color: '#319795', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <h2 style={{ marginBottom: '1rem', color: '#38bdf8', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <FaHandHoldingMedical /> Enviar al Dispensario
             </h2>
-            <p>Transferir stock de <strong>{dispenseToShopBatch.batch_code}</strong> al punto de venta.</p>
-            <p>Disponible: <strong>{dispenseToShopBatch.current_weight}g</strong></p>
+            <p style={{ color: '#cbd5e1' }}>Transferir stock de <strong style={{ color: '#f8fafc' }}>{dispenseToShopBatch.batch_code}</strong> al punto de venta.</p>
+            <p style={{ color: '#cbd5e1' }}>Disponible: <strong style={{ color: '#f8fafc' }}>{dispenseToShopBatch.current_weight}g</strong></p>
 
             <FormGroup style={{ marginTop: '1rem' }}>
               <label>Cantidad a Enviar (g)</label>
@@ -1212,28 +1262,28 @@ const Stock: React.FC = () => {
       {/* GROUP LAB TRANSFER MODAL */}
       <AnimatedModal isOpen={isGroupLabOpen} onClose={() => setIsGroupLabOpen(false)} wide>
         <CloseIcon onClick={() => setIsGroupLabOpen(false)}><FaTimes /></CloseIcon>
-        <h2 style={{ marginBottom: '1.5rem', color: '#38a169', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        <h2 style={{ marginBottom: '1.5rem', color: '#4ade80', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <FaFlask /> Enviar a Laboratorio: {groupLabStrain}
         </h2>
-        <p style={{ marginBottom: '1rem', color: '#718096', fontSize: '0.9rem' }}>
+        <p style={{ marginBottom: '1rem', color: '#cbd5e1', fontSize: '0.9rem' }}>
           Selecciona los lotes y cantidades que deseas enviar al laboratorio.
         </p>
 
-        <div style={{ maxHeight: '400px', overflowY: 'auto', border: '1px solid #e2e8f0', borderRadius: '0.5rem' }}>
+        <div style={{ maxHeight: '400px', overflowY: 'auto', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '0.5rem' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
-            <thead style={{ background: '#f7fafc', position: 'sticky', top: 0, zIndex: 10 }}>
+            <thead style={{ background: 'rgba(30, 41, 59, 0.6)', position: 'sticky', top: 0, zIndex: 10 }}>
               <tr>
-                <th style={{ padding: '0.75rem', textAlign: 'center', width: '50px', color: '#a0aec0' }}><FaCheckSquare /></th>
-                <th style={{ padding: '0.75rem', textAlign: 'left' }}>Lote</th>
-                <th style={{ padding: '0.75rem', textAlign: 'right' }}>Disp.</th>
-                <th style={{ padding: '0.75rem', textAlign: 'right' }}>Enviar (g)</th>
+                <th style={{ padding: '0.75rem', textAlign: 'center', width: '50px', color: '#cbd5e1' }}><FaCheckSquare /></th>
+                <th style={{ padding: '0.75rem', textAlign: 'left', color: '#cbd5e1' }}>Lote</th>
+                <th style={{ padding: '0.75rem', textAlign: 'right', color: '#cbd5e1' }}>Disp.</th>
+                <th style={{ padding: '0.75rem', textAlign: 'right', color: '#cbd5e1' }}>Enviar (g)</th>
               </tr>
             </thead>
             <tbody>
               {groupLabBatches.map(batch => {
                 const selection = groupLabSelections[batch.id] || { selected: false, amount: '' };
                 return (
-                  <tr key={batch.id} style={{ borderTop: '1px solid #e2e8f0', background: selection.selected ? '#f0fff4' : 'transparent' }}>
+                  <tr key={batch.id} style={{ borderTop: '1px solid rgba(255, 255, 255, 0.05)', background: selection.selected ? 'rgba(74, 222, 128, 0.1)' : 'transparent', color: '#f8fafc' }}>
                     <td style={{ padding: '0.75rem', textAlign: 'center' }}>
                       <input
                         type="checkbox"
@@ -1243,7 +1293,7 @@ const Stock: React.FC = () => {
                       />
                     </td>
                     <td style={{ padding: '0.75rem', fontWeight: 600 }}>{batch.batch_code}</td>
-                    <td style={{ padding: '0.75rem', textAlign: 'right', color: '#4a5568' }}>{Number(batch.current_weight).toFixed(2)}g</td>
+                    <td style={{ padding: '0.75rem', textAlign: 'right', color: '#94a3b8' }}>{Number(batch.current_weight).toFixed(2)}g</td>
                     <td style={{ padding: '0.75rem', textAlign: 'right' }}>
                       <input
                         type="number"
@@ -1254,9 +1304,10 @@ const Stock: React.FC = () => {
                           width: '80px',
                           padding: '0.25rem',
                           textAlign: 'right',
-                          border: '1px solid #cbd5e0',
+                          border: '1px solid rgba(255, 255, 255, 0.1)',
                           borderRadius: '0.25rem',
-                          background: selection.selected ? 'white' : '#edf2f7'
+                          background: selection.selected ? 'rgba(15, 23, 42, 0.5)' : 'rgba(30, 41, 59, 0.5)',
+                          color: '#f8fafc'
                         }}
                       />
                     </td>
@@ -1292,14 +1343,14 @@ const Stock: React.FC = () => {
       {/* LAB TRANSFER MODAL */}
       <AnimatedModal isOpen={isLabTransferOpen} onClose={() => setIsLabTransferOpen(false)}>
         <CloseIcon onClick={() => setIsLabTransferOpen(false)}><FaTimes /></CloseIcon>
-        <h2 style={{ marginBottom: '1.5rem', color: '#2d3748', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        <h2 style={{ marginBottom: '1.5rem', color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <FaFlask /> Enviar a Laboratorio
         </h2>
         {labTransferBatch && (
-          <div style={{ marginBottom: '1.5rem', background: '#f7fafc', padding: '1rem', borderRadius: '0.5rem' }}>
-            <p style={{ margin: 0, fontWeight: 'bold' }}>{labTransferBatch.strain_name}</p>
-            <p style={{ margin: 0, fontSize: '0.9rem', color: '#718096' }}>Lote: {labTransferBatch.batch_code}</p>
-            <p style={{ margin: 0, fontSize: '0.9rem', color: '#718096' }}>Disponible: {labTransferBatch.current_weight}g</p>
+          <div style={{ marginBottom: '1.5rem', background: 'rgba(30, 41, 59, 0.6)', padding: '1rem', borderRadius: '0.5rem', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
+            <p style={{ margin: 0, fontWeight: 'bold', color: '#f8fafc' }}>{labTransferBatch.strain_name}</p>
+            <p style={{ margin: 0, fontSize: '0.9rem', color: '#cbd5e1' }}>Lote: {labTransferBatch.batch_code}</p>
+            <p style={{ margin: 0, fontSize: '0.9rem', color: '#cbd5e1' }}>Disponible: {labTransferBatch.current_weight}g</p>
           </div>
         )}
         <FormGroup>

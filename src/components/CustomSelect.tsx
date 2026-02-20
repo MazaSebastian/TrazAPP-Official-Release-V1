@@ -12,20 +12,20 @@ const SelectTrigger = styled.div<{ $isOpen: boolean }>`
   width: 100%;
   padding: 0.75rem;
   padding-right: 2.5rem;
-  border: 1px solid ${p => p.$isOpen ? '#38b2ac' : '#e2e8f0'};
+  border: 1px solid ${p => p.$isOpen ? '#4ade80' : 'rgba(255, 255, 255, 0.1)'};
   border-radius: 0.5rem;
   font-size: 1rem;
-  color: #4a5568;
-  background-color: white;
+  color: #f8fafc;
+  background-color: rgba(30, 41, 59, 0.5);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  box-shadow: ${p => p.$isOpen ? '0 0 0 3px rgba(56, 178, 172, 0.1)' : 'none'};
+  box-shadow: ${p => p.$isOpen ? '0 0 0 3px rgba(74, 222, 128, 0.1)' : 'none'};
   transition: all 0.2s;
 
   &:hover {
-    border-color: #cbd5e0;
+    border-color: rgba(255, 255, 255, 0.2);
   }
 `;
 
@@ -35,10 +35,11 @@ const DropdownMenu = styled.div<{ $coords: { top: number; left: number; width: n
   left: ${p => p.$coords.left}px;
   width: ${p => p.$coords.width}px;
   margin-top: 0.5rem;
-  background: white;
-  border: 1px solid #e2e8f0;
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 0.5rem;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
   z-index: 10005; /* Higher z-index to sit on top of everything, including modals (10001) */
   max-height: 250px;
   overflow-y: auto;
@@ -53,14 +54,14 @@ const DropdownMenu = styled.div<{ $coords: { top: number; left: number; width: n
 const OptionItem = styled.div<{ $isSelected: boolean }>`
   padding: 0.75rem 1rem;
   cursor: pointer;
-  color: ${p => p.$isSelected ? '#2f855a' : '#4a5568'};
-  background-color: ${p => p.$isSelected ? '#f0fff4' : 'transparent'};
+  color: ${p => p.$isSelected ? '#4ade80' : '#f8fafc'};
+  background-color: ${p => p.$isSelected ? 'rgba(74, 222, 128, 0.1)' : 'transparent'};
   font-weight: ${p => p.$isSelected ? '600' : '400'};
   transition: background-color 0.1s;
 
   &:hover {
-    background-color: #ebf8ff;
-    color: #2c7a7b;
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #4ade80;
   }
 `;
 
@@ -155,7 +156,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({ value, onChange, opt
         <SelectContainer ref={containerRef}>
             <SelectTrigger $isOpen={isOpen} onClick={toggleOpen}>
                 <span>{selectedOption ? selectedOption.label : placeholder}</span>
-                <FaChevronDown size={12} color="#718096" style={{ transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }} />
+                <FaChevronDown size={12} color="#94a3b8" style={{ transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }} />
             </SelectTrigger>
 
             {isOpen && ReactDOM.createPortal(

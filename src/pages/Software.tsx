@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
-import { 
-  FaArrowLeft, 
-  FaDownload, 
+import {
+  FaArrowLeft,
+  FaDownload,
   FaDesktop,
   FaLaptop,
   FaCode,
@@ -672,7 +672,7 @@ const SoftwarePage: React.FC = () => {
                   <CategoryDescription>{getCategoryDescription(category)}</CategoryDescription>
                 </div>
               </CategoryHeader>
-              
+
               <SoftwareGrid>
                 {softwareItems
                   .filter(item => item.category === category)
@@ -718,9 +718,9 @@ const SoftwarePage: React.FC = () => {
                           )}
                         </SoftwareActions>
                       </SoftwareHeader>
-                      
+
                       <SoftwareDescription>{software.description}</SoftwareDescription>
-                      
+
                       {software.features && (
                         <SoftwareFeatures>
                           <FeaturesTitle>Características principales:</FeaturesTitle>
@@ -731,7 +731,7 @@ const SoftwarePage: React.FC = () => {
                           </FeaturesList>
                         </SoftwareFeatures>
                       )}
-                      
+
                       {software.requirements && (
                         <Requirements>
                           <RequirementsTitle>

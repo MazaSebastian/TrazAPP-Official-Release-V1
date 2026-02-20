@@ -14,19 +14,20 @@ import {
 } from 'react-icons/wi';
 
 const WidgetContainer = styled.div`
-  background: white; // linear-gradient(135deg, #4fd1c5 0%, #38b2ac 100%);
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(12px);
   border-radius: 1.5rem;
   padding: 1.5rem;
   margin-bottom: 2rem;
-  box-shadow: 0 4px 12px rgba(56, 178, 172, 0.15); // Soft teal shadow
-  border: 1px solid #e6fffa;
-  color: #2c7a7b;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  color: #f8fafc;
 `;
 
 const Title = styled.h3`
   margin: 0 0 1rem 0;
   font-size: 1.1rem;
-  color: #234e52; // Dark teal
+  color: #f8fafc;
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -51,8 +52,8 @@ const ForecastGrid = styled.div`
 `;
 
 const DayCard = styled.div<{ isRainy?: boolean }>`
-  background: ${props => props.isRainy ? '#ebf8ff' : 'rgba(255, 255, 255, 0.6)'};
-  border: ${props => props.isRainy ? '2px solid #4299e1' : '1px solid transparent'}; // Blue border for rain
+  background: ${props => props.isRainy ? 'rgba(56, 189, 248, 0.1)' : 'rgba(30, 41, 59, 0.5)'};
+  border: ${props => props.isRainy ? '1px solid rgba(56, 189, 248, 0.3)' : '1px solid transparent'};
   border-radius: 1rem;
   padding: 0.75rem 0.5rem;
   text-align: center;
@@ -66,14 +67,15 @@ const DayCard = styled.div<{ isRainy?: boolean }>`
 
   // Rain visual effect if needed
   ${props => props.isRainy && `
-    box-shadow: 0 0 15px rgba(66, 153, 225, 0.4);
+    box-shadow: 0 0 15px rgba(56, 189, 248, 0.1);
     transform: translateY(-4px);
   `}
 
   &:hover {
-    background: white;
+    background: rgba(15, 23, 42, 0.8);
     transform: translateY(-4px);
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
   }
 
   .day-name {
@@ -81,30 +83,30 @@ const DayCard = styled.div<{ isRainy?: boolean }>`
     font-weight: 700;
     text-transform: uppercase;
     margin-bottom: 0.25rem;
-    color: ${props => props.isRainy ? '#2c5282' : '#285e61'};
+    color: ${props => props.isRainy ? '#7dd3fc' : '#94a3b8'};
   }
 
   .icon {
     font-size: 2rem;
     margin: 0.25rem 0;
-    color: ${props => props.isRainy ? '#3182ce' : '#38b2ac'};
+    color: ${props => props.isRainy ? '#38bdf8' : '#2dd4bf'};
   }
 
   .temps {
     font-size: 0.85rem;
     font-weight: 600;
-    color: #2d3748;
+    color: #f8fafc;
     
-    .max { color: #e53e3e; margin-right: 4px; }
-    .min { color: #3182ce; }
+    .max { color: #fca5a5; margin-right: 4px; }
+    .min { color: #bae6fd; }
   }
 
   .precip {
     font-size: 0.75rem;
-    color: #2b6cb0;
+    color: #bae6fd;
     margin-top: 0.25rem;
     font-weight: 700;
-    background: #bee3f8;
+    background: rgba(56, 189, 248, 0.2);
     padding: 2px 6px;
     border-radius: 4px;
   }
@@ -154,7 +156,7 @@ export const WeatherWidget: React.FC = () => {
     <WidgetContainer>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
         <Title style={{ margin: 0 }}><WiDaySunny /> Pronóstico (Munro/Olivos)</Title>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#e6fffa', padding: '0.5rem 1rem', borderRadius: '999px', fontSize: '1.2rem', fontWeight: 'bold' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(20, 83, 45, 0.3)', color: '#4ade80', padding: '0.5rem 1rem', borderRadius: '999px', fontSize: '1.2rem', fontWeight: 'bold', border: '1px solid rgba(74, 222, 128, 0.2)' }}>
           {getWeatherIcon(weather.current.code)}
           <span>{Math.round(weather.current.temp)}°C Ahora</span>
         </div>

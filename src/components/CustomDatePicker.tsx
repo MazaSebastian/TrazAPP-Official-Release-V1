@@ -21,16 +21,17 @@ const Wrapper = styled.div`
     input {
       width: 100%;
       padding: 0.75rem;
-      border: 1px solid #e2e8f0;
+      background: rgba(30, 41, 59, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.1);
       border-radius: 0.5rem;
       font-size: 1rem;
-      color: #4a5568;
+      color: #f8fafc;
       transition: all 0.2s;
 
       &:focus {
         outline: none;
-        border-color: #38b2ac;
-        box-shadow: 0 0 0 3px rgba(56, 178, 172, 0.1);
+        border-color: #4ade80;
+        box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.1);
       }
     }
   }
@@ -38,28 +39,30 @@ const Wrapper = styled.div`
   /* Calendar Container */
   .react-datepicker {
     font-family: inherit;
-    border: 1px solid #e2e8f0;
+    background: rgba(15, 23, 42, 0.95);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 0.75rem;
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
     overflow: hidden;
   }
 
   /* Header */
   .react-datepicker__header {
-    background-color: #f7fafc;
-    border-bottom: 1px solid #e2e8f0;
+    background-color: transparent;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     padding-top: 1rem;
   }
 
   .react-datepicker__current-month {
-    color: #2d3748;
+    color: #f8fafc;
     font-weight: 700;
     font-size: 1rem;
     margin-bottom: 0.5rem;
   }
 
   .react-datepicker__day-name {
-    color: #718096;
+    color: #94a3b8;
     font-weight: 600;
     margin: 0.3rem;
   }
@@ -68,34 +71,34 @@ const Wrapper = styled.div`
   .react-datepicker__day {
     margin: 0.3rem;
     border-radius: 0.5rem;
-    color: #4a5568;
+    color: #cbd5e1;
     
     &:hover {
-      background-color: #e6fffa;
-      color: #2c7a7b;
+      background-color: rgba(255, 255, 255, 0.1);
+      color: #4ade80;
     }
   }
 
   .react-datepicker__day--selected, 
   .react-datepicker__day--keyboard-selected {
-    background: linear-gradient(135deg, #2f855a 0%, #38b2ac 100%);
-    color: white;
+    background: #4ade80;
+    color: #020617;
     font-weight: 600;
 
     &:hover {
-      background-color: #2c7a7b;
+      background-color: #22c55e;
     }
   }
 
   .react-datepicker__day--today {
     font-weight: 700;
-    border: 1px solid #38b2ac;
+    border: 1px solid #4ade80;
     background-color: transparent;
-    color: #38b2ac;
+    color: #4ade80;
 
     &.react-datepicker__day--selected {
-      background: linear-gradient(135deg, #2f855a 0%, #38b2ac 100%);
-      color: white;
+      background: #4ade80;
+      color: #020617;
       border: none;
     }
   }

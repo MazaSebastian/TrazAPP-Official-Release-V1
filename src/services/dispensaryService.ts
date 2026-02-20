@@ -1,4 +1,4 @@
-import { supabase } from './supabaseClient';
+import { supabase, getSelectedOrgId } from './supabaseClient';
 
 
 export interface DispensaryBatch {
@@ -39,6 +39,7 @@ export const dispensaryService = {
         const { data, error } = await supabase
             .from('chakra_dispensary_batches')
             .select('*')
+            .eq('organization_id', getSelectedOrgId())
             .neq('status', 'depleted')
             .order('created_at', { ascending: false });
 
@@ -56,11 +57,13 @@ export const dispensaryService = {
             .from('chakra_dispensary_movements')
             .select(`
                 *,
-                batch:batch_id (
+                batch:batch_id!inner (
                     batch_code,
-                    strain_name
+                    strain_name,
+                    organization_id
                 )
             `)
+            .eq('batch.organization_id', getSelectedOrgId())
             .order('created_at', { ascending: false })
             .limit(limit);
 
@@ -79,7 +82,8 @@ export const dispensaryService = {
             .from('chakra_dispensary_batches')
             .insert([{
                 ...batch,
-                current_weight: batch.initial_weight
+                current_weight: batch.initial_weight,
+                organization_id: getSelectedOrgId()
             }])
             .select()
             .single();
@@ -311,6 +315,7 @@ export const dispensaryService = {
         const { data, error } = await supabase
             .from('chakra_dispensary_batches')
             .select('*')
+            .eq('organization_id', getSelectedOrgId())
             .eq('status', 'available')
             .order('created_at', { ascending: false });
         if (error) return [];
@@ -343,7 +348,8 @@ export const dispensaryService = {
             status: 'available',
             location: 'Dispensario / Shop',
             notes: `Transferido desde stock: ${source.batch_code}`,
-            harvest_log_id: source.harvest_log_id
+            harvest_log_id: source.harvest_log_id,
+            organization_id: getSelectedOrgId()
         }]).select().single();
 
         // 4. Log Movements
@@ -404,7 +410,8 @@ export const dispensaryService = {
             status: 'curing', // Or 'processing'? 'curing' is safe for now as it's not 'available' in shop
             location: 'Laboratorio',
             notes: `Transferido a Laboratorio desde: ${source.batch_code}`,
-            harvest_log_id: source.harvest_log_id
+            harvest_log_id: source.harvest_log_id,
+            organization_id: getSelectedOrgId()
         }]).select().single();
 
         if (createError) {

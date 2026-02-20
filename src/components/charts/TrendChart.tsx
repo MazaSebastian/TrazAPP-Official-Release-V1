@@ -5,17 +5,18 @@ import {
 import styled from 'styled-components';
 
 const ChartContainer = styled.div`
-  background: white;
+  background: rgba(30, 41, 59, 0.6);
   padding: 1.5rem;
   border-radius: 1rem;
-  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
-  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
   height: 400px;
 `;
 
 const Title = styled.h3`
   font-size: 1.1rem;
-  color: #2d3748;
+  color: #f8fafc;
   margin-bottom: 1.5rem;
   font-weight: 700;
 `;
@@ -42,26 +43,27 @@ export const TrendChart: React.FC<TrendChartProps> = ({ title, data, dataKey1, n
             <Title>{title}</Title>
             <ResponsiveContainer width="100%" height="90%">
                 <ComposedChart data={data} margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255, 255, 255, 0.1)" />
                     <XAxis
                         dataKey="month"
                         tickFormatter={(val) => ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'][val - 1]}
                         axisLine={false}
                         tickLine={false}
-                        tick={{ fill: '#718096', fontSize: 12 }}
+                        tick={{ fill: '#94a3b8', fontSize: 12 }}
                         dy={10}
                     />
                     <YAxis
                         axisLine={false}
                         tickLine={false}
-                        tick={{ fill: '#718096', fontSize: 12 }}
+                        tick={{ fill: '#94a3b8', fontSize: 12 }}
                         tickFormatter={(val) => `${unit}${val}`}
                     />
                     <Tooltip
-                        contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}
+                        contentStyle={{ backgroundColor: 'rgba(15, 23, 42, 0.95)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.3)', color: '#f8fafc' }}
                         formatter={(value: any) => [`${unit}${Number(value).toLocaleString()}`, '']}
+                        itemStyle={{ color: '#f8fafc' }}
                     />
-                    <Legend />
+                    <Legend wrapperStyle={{ color: '#cbd5e1' }} />
 
                     {type1 === 'bar' && <Bar dataKey={dataKey1} name={name1} fill={color1} barSize={20} radius={[4, 4, 0, 0]} />}
                     {type1 === 'line' && <Line type="monotone" dataKey={dataKey1} name={name1} stroke={color1} strokeWidth={3} dot={{ r: 4 }} />}

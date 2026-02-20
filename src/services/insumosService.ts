@@ -1,4 +1,4 @@
-import { supabase } from './supabaseClient';
+import { supabase, getSelectedOrgId } from './supabaseClient';
 import type { Insumo, HistorialPrecio } from '../types';
 import { notificationService } from './notificationService';
 
@@ -8,8 +8,9 @@ export async function getInsumos(): Promise<Insumo[]> {
     if (!supabase) return [];
 
     const { data, error } = await supabase
-      .from('chakra_insumos')
+      .from('chakra_stock_items')
       .select('*')
+      .eq('organization_id', getSelectedOrgId())
       .eq('activo', true)
       .order('nombre');
 
@@ -31,7 +32,7 @@ export async function getInsumoById(id: string): Promise<Insumo | null> {
     if (!supabase) return null;
 
     const { data, error } = await supabase
-      .from('chakra_insumos')
+      .from('chakra_stock_items')
       .select('*')
       .eq('id', id)
       .single();
@@ -54,8 +55,8 @@ export async function createInsumo(insumo: Omit<Insumo, 'id' | 'created_at' | 'u
     if (!supabase) return null;
 
     const { data, error } = await supabase
-      .from('chakra_insumos')
-      .insert([insumo])
+      .from('chakra_stock_items')
+      .insert([{ ...insumo, organization_id: getSelectedOrgId() }])
       .select()
       .single();
 
@@ -77,7 +78,7 @@ export async function updateInsumo(id: string, updates: Partial<Insumo>): Promis
     if (!supabase) return null;
 
     const { data, error } = await supabase
-      .from('chakra_insumos')
+      .from('chakra_stock_items')
       .update(updates)
       .eq('id', id)
       .select()
@@ -101,7 +102,7 @@ export async function deleteInsumo(id: string): Promise<boolean> {
     if (!supabase) return false;
 
     const { error } = await supabase
-      .from('chakra_insumos')
+      .from('chakra_stock_items')
       .update({ activo: false })
       .eq('id', id);
 
@@ -156,7 +157,7 @@ export async function updateInsumoPrecio(
 
     // Actualizar insumo con nuevo precio
     const { error: updateError } = await supabase
-      .from('chakra_insumos')
+      .from('chakra_stock_items')
       .update({
         precio_anterior: insumoActual.precio_actual,
         precio_actual: nuevoPrecio,
@@ -217,8 +218,9 @@ export async function getInsumosStats() {
     if (!supabase) return null;
 
     const { data, error } = await supabase
-      .from('chakra_insumos')
+      .from('chakra_stock_items')
       .select('precio_actual, stock_actual, stock_minimo, precio_anterior')
+      .eq('organization_id', getSelectedOrgId())
       .eq('activo', true);
 
     if (error) {
@@ -248,8 +250,9 @@ export async function searchInsumos(searchTerm: string): Promise<Insumo[]> {
     if (!supabase) return [];
 
     const { data, error } = await supabase
-      .from('chakra_insumos')
+      .from('chakra_stock_items')
       .select('*')
+      .eq('organization_id', getSelectedOrgId())
       .eq('activo', true)
       .or(`nombre.ilike.%${searchTerm}%,proveedor.ilike.%${searchTerm}%`)
       .order('nombre');
@@ -272,8 +275,9 @@ export async function getInsumosByCategory(categoria: string): Promise<Insumo[]>
     if (!supabase) return [];
 
     const { data, error } = await supabase
-      .from('chakra_insumos')
+      .from('chakra_stock_items')
       .select('*')
+      .eq('organization_id', getSelectedOrgId())
       .eq('activo', true)
       .eq('categoria', categoria)
       .order('nombre');

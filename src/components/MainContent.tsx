@@ -4,7 +4,7 @@ export const MainContent = styled.main`
   margin-left: 260px;
   padding: 2rem;
   min-height: 100vh;
-  background-color: #f8fafc;
+  background-color: transparent; /* Inherits global dark theme #020617 */
   
   @media (max-width: 768px) {
     margin-left: 0;

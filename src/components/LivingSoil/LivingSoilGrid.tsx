@@ -32,10 +32,11 @@ const ControlsContainer = styled.div`
   align-items: center;
   gap: 0.5rem;
   margin-bottom: 0.5rem;
-  background: white;
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(12px);
   padding: 0.25rem 0.5rem;
   border-radius: 0.5rem;
-  border: 1px solid #e2e8f0;
+  border: 1px solid rgba(255, 255, 255, 0.1);
   width: fit-content;
 `;
 
@@ -43,21 +44,22 @@ const ZoomButton = styled.button`
   background: transparent;
   border: none;
   cursor: pointer;
-  color: #718096;
+  color: #94a3b8;
   padding: 0.25rem;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 0.25rem;
+  transition: all 0.2s;
   &:hover {
-    background: #edf2f7;
-    color: #2d3748;
+    background: rgba(255, 255, 255, 0.1);
+    color: #f8fafc;
   }
 `;
 
 const ZoomLabel = styled.span`
   font-size: 0.75rem;
-  color: #718096;
+  color: #cbd5e1;
   font-family: monospace;
   min-width: 3rem;
   text-align: center;
@@ -74,9 +76,10 @@ const GridContainer = styled.div<{ rows: number; cols: number; cellSize: number 
   max-width: 100%;
   max-height: 75vh; /* Restricted height for internal scrolling */
   padding: 1rem;
-  background: #f8fafc;
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(12px);
   border-radius: 1rem;
-  border: 1px solid #e2e8f0;
+  border: 1px solid rgba(255, 255, 255, 0.1);
   margin: 0 auto;
   
   /* Custom Scrollbar */
@@ -85,14 +88,14 @@ const GridContainer = styled.div<{ rows: number; cols: number; cellSize: number 
     height: 8px;
   }
   &::-webkit-scrollbar-track {
-    background: #edf2f7;
+    background: rgba(15, 23, 42, 0.5);
     border-radius: 4px;
   }
   &::-webkit-scrollbar-thumb {
-    background: #cbd5e0;
+    background: rgba(255, 255, 255, 0.2);
     border-radius: 4px;
     &:hover {
-      background: #a0aec0;
+      background: rgba(255, 255, 255, 0.3);
     }
   }
 
@@ -116,8 +119,8 @@ const HeaderCell = styled.div<{ cellSize: number }>`
   align-items: center;
   justify-content: center;
   font-weight: 700;
-  color: #718096;
-  background: #edf2f7;
+  color: #94a3b8;
+  background: rgba(255, 255, 255, 0.05);
   border-radius: ${p => p.cellSize < 40 ? '1px' : '0.375rem'};
   font-size: ${p => p.cellSize < 40 ? '0.6rem' : '0.85rem'};
   width: 100%;
@@ -135,23 +138,6 @@ const HeaderCell = styled.div<{ cellSize: number }>`
   }
 `;
 
-const RowHeaderCell = styled(HeaderCell)`
-  left: 0;
-  z-index: 20; /* Higher than content */
-`;
-
-const ColHeaderCell = styled(HeaderCell)`
-  top: 0;
-  z-index: 20;
-`;
-
-const CornerCell = styled(HeaderCell)`
-  position: sticky;
-  top: 0;
-  left: 0;
-  z-index: 30; /* Highest priority */
-  background: #e2e8f0;
-`;
 
 const getStageBorderColor = (stage: BatchStage | undefined) => {
     switch (stage) {
@@ -174,14 +160,15 @@ const getStageBorderColor = (stage: BatchStage | undefined) => {
 
 const CellStyled = styled.div<{ $isOver?: boolean; $isOccupied?: boolean; $stage?: BatchStage; $geneticColor?: string; $isSelected?: boolean; cellSize: number; $hasAlert?: boolean; $disableTransition?: boolean }>`
   /* Background Logic */
-  background: ${p => p.$isSelected ? '#48bb78' : p.$isOccupied ? (p.$geneticColor || '#ffffff') : p.$isOver ? '#ebf8ff' : 'white'};
+  background: ${p => p.$isSelected ? 'rgba(74, 222, 128, 0.2)' : p.$isOccupied ? (p.$geneticColor || 'rgba(30, 41, 59, 0.8)') : p.$isOver ? 'rgba(56, 189, 248, 0.1)' : 'rgba(30, 41, 59, 0.3)'};
+  backdrop-filter: ${p => p.$isOccupied ? 'none' : 'blur(4px)'};
   
   /* Border Logic - Simplified for cleaner look with gap */
   border: ${p => p.$isSelected
-        ? '2px solid #2f855a' // Darker green for selection
+        ? '2px solid rgba(74, 222, 128, 0.5)' // Green for selection
         : p.cellSize < 40
-            ? '1px solid ' + (p.$isOccupied ? getStageBorderColor(p.$stage) : '#e2e8f0')
-            : '2px ' + (p.$isOccupied ? 'solid ' + getStageBorderColor(p.$stage) : 'dashed #e2e8f0')
+            ? '1px solid ' + (p.$isOccupied ? getStageBorderColor(p.$stage) : 'rgba(255, 255, 255, 0.05)')
+            : '2px ' + (p.$isOccupied ? 'solid ' + getStageBorderColor(p.$stage) : 'dashed rgba(255, 255, 255, 0.05)')
     };
   
   box-sizing: border-box;
@@ -209,16 +196,16 @@ const CellStyled = styled.div<{ $isOver?: boolean; $isOccupied?: boolean; $stage
       top: 2px; right: 2px;
       width: 8px; height: 8px;
       border-radius: 50%;
-      background: #e53e3e;
-      box-shadow: 0 0 0 2px white;
+      background: #ef4444; /* red-500 */
+      box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.95);
       z-index: 5;
     }
   `}
 
   /* Drag Over State */
   ${p => p.$isOver && `
-    border: 2px dashed #48bb78;
-    background-color: #f0fff4;
+    border: 2px dashed rgba(74, 222, 128, 0.5);
+    background-color: rgba(74, 222, 128, 0.1);
     transform: scale(0.98);
     z-index: 20;
   `}
@@ -227,8 +214,8 @@ const CellStyled = styled.div<{ $isOver?: boolean; $isOccupied?: boolean; $stage
   &:hover {
     z-index: 10; 
     transform: ${p => p.cellSize < 40 ? 'none' : 'translateY(-2px)'};
-    box-shadow: ${p => p.cellSize < 40 ? 'none' : '0 4px 6px rgba(0,0,0,0.1)'};
-    border-color: ${p => p.$isSelected ? '#276749' : '#3182ce'};
+    box-shadow: ${p => p.cellSize < 40 ? 'none' : '0 4px 6px rgba(0,0,0,0.3)'};
+    border-color: ${p => p.$isSelected ? 'rgba(74, 222, 128, 0.5)' : 'rgba(56, 189, 248, 0.5)'};
   }
 
   @media print {
@@ -282,10 +269,10 @@ const BatchItem = ({ batch, cellSize }: { batch: Batch; cellSize: number }) => {
                 fontWeight: '700',
                 textAlign: 'center',
                 lineHeight: 1.1,
-                color: '#2d3748',
+                color: 'rgba(0,0,0,0.8)',
                 // Removed text-shadow for cleaner look
                 // Added background pill for better contrast against genetic colors
-                background: 'rgba(255,255,255,0.6)',
+                background: 'rgba(255,255,255,0.5)',
                 backdropFilter: 'blur(1px)',
                 padding: '1px 4px',
                 borderRadius: '4px',
@@ -306,8 +293,9 @@ const BatchItem = ({ batch, cellSize }: { batch: Batch; cellSize: number }) => {
                 <div style={{
                     fontSize: '0.4em',
                     fontWeight: '600',
-                    color: '#4a5568', // Darker text
-                    backgroundColor: 'rgba(255,255,255,0.85)', // Lighter bg
+                    color: '#1e293b', // Darker text
+                    backgroundColor: 'rgba(255,255,255,0.7)', // Lighter bg
+                    backdropFilter: 'blur(2px)',
                     border: '1px solid rgba(0,0,0,0.05)',
                     borderRadius: '999px',
                     padding: '2px 6px',
@@ -349,11 +337,13 @@ const FloatingTooltipContainer = styled.div<{ isVisible: boolean }>`
   position: fixed; /* Fixed to viewport */
   z-index: 9999; /* Highest priority */
   pointer-events: none; /* Do not block mouse events */
-  background: #2D3748;
-  color: white;
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #f8fafc;
   padding: 0.75rem;
   border-radius: 0.5rem;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
   width: max-content;
   max-width: 250px;
   font-size: 0.75rem;
@@ -392,23 +382,23 @@ const FloatingTooltip = ({ batch, x, y, isVisible }: { batch: Batch, x: number, 
 
     return createPortal(
         <FloatingTooltipContainer style={{ top: top, left: left }} isVisible={isVisible}>
-            <div style={{ fontWeight: 'bold', fontSize: '0.85rem', marginBottom: '0.25rem', borderBottom: '1px solid #4A5568', paddingBottom: '0.25rem', color: '#48bb78' }}>
+            <div style={{ fontWeight: 'bold', fontSize: '0.85rem', marginBottom: '0.25rem', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', paddingBottom: '0.25rem', color: '#4ade80' }}>
                 {batch.tracking_code || batch.name}
             </div>
             {batch.genetic?.name && (
-                <div style={{ marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.9rem', color: '#48bb78', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                <div style={{ marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.9rem', color: '#38bdf8', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                     🧬 {batch.genetic.name}
                 </div>
             )}
-            <div style={{ color: '#A0AEC0' }}>
+            <div style={{ color: '#94a3b8' }}>
                 📅 {batch.start_date ? new Date(batch.start_date).toLocaleDateString() : 'N/A'}
             </div>
-            <div style={{ color: '#A0AEC0', textTransform: 'capitalize' }}>
+            <div style={{ color: '#94a3b8', textTransform: 'capitalize' }}>
                 🌱 {batch.stage}
             </div>
             {/* Notes / Alerts */}
             {(batch.notes) && (
-                <div style={{ marginTop: '0.5rem', paddingTop: '0.25rem', borderTop: '1px dashed #4A5568', color: '#F6E05E', fontStyle: 'italic' }}>
+                <div style={{ marginTop: '0.5rem', paddingTop: '0.25rem', borderTop: '1px dashed rgba(255, 255, 255, 0.1)', color: '#fef3c7', fontStyle: 'italic' }}>
                     ⚠️ {batch.notes}
                 </div>
             )}
@@ -477,7 +467,7 @@ const GridCell = React.memo(({
                     textAlign: 'center',
                     fontSize: '0.8em',
                     fontWeight: '800',
-                    color: '#2d3748',
+                    color: '#94a3b8',
                     opacity: 0.9,
                     pointerEvents: 'none'
                 } : {
@@ -485,7 +475,7 @@ const GridCell = React.memo(({
                     top: 2,
                     left: 4,
                     fontSize: '0.6rem',
-                    color: '#718096',
+                    color: '#64748b',
                     fontWeight: 'bold',
                     opacity: 0.7
                 }}>

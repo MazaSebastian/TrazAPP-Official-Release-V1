@@ -1,4 +1,4 @@
-import { supabase } from './supabaseClient';
+import { supabase, getSelectedOrgId } from './supabaseClient';
 
 export interface MonthlyMetric {
     month: number;
@@ -68,6 +68,7 @@ export const metricsService = {
         const { data, error } = await supabase
             .from('chakra_expenses')
             .select('*')
+            .eq('organization_id', getSelectedOrgId())
             .order('date', { ascending: false })
             .limit(limit);
 
@@ -80,7 +81,7 @@ export const metricsService = {
 
     async createExpense(expense: Omit<Expense, 'id' | 'created_at'>): Promise<Expense | null> {
         if (!supabase) return null;
-        const { data, error } = await supabase.from('chakra_expenses').insert([expense]).select().single();
+        const { data, error } = await supabase.from('chakra_expenses').insert([{ ...expense, organization_id: getSelectedOrgId() }]).select().single();
         if (error) {
             console.error('Error creating expense:', error);
             return null;

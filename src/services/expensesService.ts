@@ -1,5 +1,5 @@
 
-import { supabase } from './supabaseClient';
+import { supabase, getSelectedOrgId } from './supabaseClient';
 import { notificationService } from './notificationService';
 
 export interface CashMovement {
@@ -20,8 +20,9 @@ export const expensesService = {
         if (!supabase) return [];
         console.log("Fetching movements...");
         const { data, error } = await supabase
-            .from('cash_movements')
+            .from('chakra_expenses')
             .select('*')
+            .eq('organization_id', getSelectedOrgId())
             .order('date', { ascending: false });
 
         if (error) {
@@ -34,13 +35,12 @@ export const expensesService = {
     async createMovement(movement: CashMovement) {
         if (!supabase) return { success: false, error: "No Supabase client" };
 
-        // Auto-generate ID if not present (legacy format)
-        const newId = movement.id || `mov-${Date.now()}`;
-
-        const payload = { ...movement, id: newId };
+        // Do not auto-generate string IDs, let Supabase generate the UUID
+        const payload = { ...movement, organization_id: getSelectedOrgId() };
+        delete payload.id; // Ensure we don't accidentally pass a blank ID
 
         const { data, error } = await supabase
-            .from('cash_movements')
+            .from('chakra_expenses')
             .insert([payload])
             .select();
 
@@ -67,7 +67,7 @@ export const expensesService = {
     async deleteMovement(id: string) {
         if (!supabase) return false;
         const { error } = await supabase
-            .from('cash_movements')
+            .from('chakra_expenses')
             .delete()
             .eq('id', id);
 

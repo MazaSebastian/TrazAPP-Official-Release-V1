@@ -1,4 +1,4 @@
-import { supabase } from './supabaseClient';
+import { supabase, getSelectedOrgId } from './supabaseClient';
 import { createClient } from '@supabase/supabase-js'; // Import createClient for temp instance
 import { Profile } from './usersService';
 
@@ -32,6 +32,7 @@ export const patientsService = {
         const { data, error } = await supabase
             .from('aurora_patients')
             .select('*, profile:profiles(*)')
+            .eq('organization_id', getSelectedOrgId())
             .order('created_at', { ascending: false });
 
         if (error) {
@@ -74,7 +75,8 @@ export const patientsService = {
         const payload: any = {
             ...patient,
             created_by: user?.id,
-            updated_at: new Date().toISOString()
+            updated_at: new Date().toISOString(),
+            organization_id: getSelectedOrgId()
         };
 
         // Remove joined profile object if present to avoid errors
@@ -131,6 +133,7 @@ export const patientsService = {
         const { data: patient } = await supabase
             .from('aurora_patients')
             .select('monthly_limit, profile_id')
+            .eq('organization_id', getSelectedOrgId())
             .eq('profile_id', patientId)
             .single();
 
@@ -269,6 +272,7 @@ export const patientsService = {
         const { data, error } = await supabase
             .from('clinical_admissions')
             .select('*')
+            .eq('organization_id', getSelectedOrgId())
             .eq('patient_id', patientId)
             .order('created_at', { ascending: false })
             .limit(1)
@@ -290,7 +294,7 @@ export const patientsService = {
 
         const { data, error } = await supabase
             .from('clinical_admissions')
-            .insert([{ ...admission, patient_hash: hash }])
+            .insert([{ ...admission, patient_hash: hash, organization_id: getSelectedOrgId() }])
             .select()
             .single();
 
@@ -307,6 +311,7 @@ export const patientsService = {
         const { data, error } = await supabase
             .from('clinical_evolutions')
             .select('*')
+            .eq('organization_id', getSelectedOrgId())
             .eq('admission_id', admissionId)
             .order('date', { ascending: false }); // Newest first
 
@@ -322,7 +327,7 @@ export const patientsService = {
 
         const { data, error } = await supabase
             .from('clinical_evolutions')
-            .insert([evolution])
+            .insert([{ ...evolution, organization_id: getSelectedOrgId() }])
             .select()
             .single();
 

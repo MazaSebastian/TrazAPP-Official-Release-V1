@@ -6,10 +6,31 @@ import { Genetic, GeneticType } from '../types/genetics';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ConfirmModal } from '../components/ConfirmModal';
 import { ToastModal } from '../components/ToastModal';
+import { CustomDatePicker } from '../components/CustomDatePicker';
 
 const fadeIn = keyframes`
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
+`;
+
+const overlayFadeIn = keyframes`
+  from { opacity: 0; }
+  to { opacity: 1; }
+`;
+
+const overlayFadeOut = keyframes`
+  from { opacity: 1; }
+  to { opacity: 0; }
+`;
+
+const modalSlideIn = keyframes`
+  from { opacity: 0; transform: translateY(20px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+`;
+
+const modalSlideOut = keyframes`
+  from { opacity: 1; transform: translateY(0) scale(1); }
+  to { opacity: 0; transform: translateY(20px) scale(0.95); }
 `;
 
 const Container = styled.div`
@@ -29,10 +50,7 @@ const Header = styled.div`
   h1 {
     font-size: 2rem;
     font-weight: 800;
-    color: #1a202c;
-    background: linear-gradient(135deg, #6b46c1 0%, #805ad5 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+    color: #f8fafc;
     margin: 0;
     display: flex;
     align-items: center;
@@ -40,24 +58,6 @@ const Header = styled.div`
   }
 `;
 
-const CreateButton = styled.button`
-  background: #805ad5;
-  color: white;
-  padding: 0.75rem 1.5rem;
-  border-radius: 0.75rem;
-  border: none;
-  font-weight: 600;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  transition: all 0.2s;
-
-  &:hover {
-    background: #6b46c1;
-    transform: translateY(-2px);
-  }
-`;
 
 const ContentGrid = styled.div`
   display: grid;
@@ -73,11 +73,12 @@ const StatsGrid = styled.div`
 `;
 
 const StatCard = styled.div`
-  background: white;
+  background: rgba(15, 23, 42, 0.75);
   padding: 1.5rem;
   border-radius: 1rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-  border: 1px solid #edf2f7;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -85,7 +86,7 @@ const StatCard = styled.div`
   h3 {
     margin: 0;
     font-size: 0.9rem;
-    color: #718096;
+    color: #cbd5e1;
     text-transform: uppercase;
     letter-spacing: 0.05em;
     font-weight: 700;
@@ -94,7 +95,7 @@ const StatCard = styled.div`
   .value {
     font-size: 2.5rem;
     font-weight: 800;
-    color: #2d3748;
+    color: #f8fafc;
     line-height: 1;
   }
 
@@ -103,29 +104,30 @@ const StatCard = styled.div`
     align-items: center;
     gap: 0.5rem;
     margin-bottom: 0.25rem;
-    color: #805ad5;
+    color: #a855f7;
   }
 `;
 
 const GeneticCard = styled.div`
-  background: white;
+  background: rgba(15, 23, 42, 0.75);
   border-radius: 1rem;
   overflow: hidden;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-  border: 1px solid #edf2f7;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
 `;
 
 const CardHeader = styled.div`
-  background: #f7fafc;
+  background: rgba(30, 41, 59, 0.5);
   padding: 1.25rem;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
   justify-content: space-between;
   align-items: center;
 
   h3 {
     margin: 0;
-    color: #2d3748;
+    color: #f8fafc;
     font-size: 1.1rem;
   }
 `;
@@ -139,34 +141,61 @@ const CardBody = styled.div`
   gap: 1rem;
 `;
 
-const Stat = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  color: #4a5568;
-  font-size: 0.95rem;
 
-  svg { color: #805ad5; }
-  strong { margin-right: 0.25rem; }
-`;
 
 // Simple Modal Components
-const ModalOverlay = styled.div`
+const ModalOverlay = styled.div<{ $isClosing?: boolean }>`
   position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.5); z-index: 1000;
+  background: rgba(0,0,0,0.7); z-index: 1000;
   display: flex; align-items: center; justify-content: center;
   backdrop-filter: blur(4px);
+  animation: ${props => props.$isClosing ? overlayFadeOut : overlayFadeIn} 0.3s ease-in-out forwards;
 `;
 
-const ModalContent = styled.div`
-  background: white; padding: 2rem; border-radius: 1rem; width: 90%; max-width: 500px;
+const ModalContent = styled.div<{ $isClosing?: boolean }>`
+  background: rgba(15, 23, 42, 0.95);
+  padding: 2rem;
+  border-radius: 1rem;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(16px);
+  color: #f8fafc;
+  animation: ${props => props.$isClosing ? modalSlideOut : modalSlideIn} 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 `;
 
 const FormGroup = styled.div`
-  margin-bottom: 1rem;
-  label { display: block; margin-bottom: 0.5rem; font-weight: 600; color: #4a5568; }
-  input, select, textarea { width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; font-size: 0.95rem; }
-  .hint { font-size: 0.8rem; color: #718096; margin-top: 0.25rem; }
+  margin-bottom: 1.5rem;
+  label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: #cbd5e1;
+    font-size: 0.9rem;
+  }
+  input, select, textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0.5rem;
+    font-size: 0.95rem;
+    color: #f8fafc;
+    background: rgba(30, 41, 59, 0.5);
+    backdrop-filter: blur(8px);
+    transition: all 0.2s;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+
+    &:focus {
+      outline: none;
+      border-color: rgba(56, 189, 248, 0.5);
+      box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.1);
+    }
+    &::placeholder {
+      color: #64748b;
+    }
+  }
+  .hint { font-size: 0.8rem; color: #94a3b8; margin-top: 0.25rem; }
 `;
 
 const rotate = keyframes`
@@ -175,9 +204,9 @@ const rotate = keyframes`
 `;
 
 const CreateCard = styled.div`
-  background: white;
+  background: rgba(15, 23, 42, 0.75);
   border-radius: 1rem;
-  border: 2px dashed #cbd5e0;
+  border: 2px dashed rgba(255, 255, 255, 0.2);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -188,12 +217,13 @@ const CreateCard = styled.div`
   transition: all 0.2s ease;
   opacity: 0.8;
   color: #a0aec0;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(12px);
 
   &:hover {
     border-color: #805ad5;
     color: #805ad5;
-    background: #faf5ff;
+    background: rgba(30, 41, 59, 0.75);
     opacity: 1;
     transform: translateY(-2px);
   }
@@ -228,6 +258,7 @@ const Genetics: React.FC = () => {
     const [genetics, setGenetics] = useState<Genetic[]>([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isClosingModal, setIsClosingModal] = useState(false);
     const [newGenetic, setNewGenetic] = useState<Partial<Genetic>>({
         name: '',
         nomenclatura: '',
@@ -332,19 +363,23 @@ const Genetics: React.FC = () => {
     };
 
     const closeModal = () => {
-        setIsModalOpen(false);
-        setEditingId(null);
-        setNewGenetic({
-            name: '',
-            type: 'photoperiodic',
-            vegetative_weeks: 4,
-            flowering_weeks: 9,
-            description: '',
-            acquisition_date: '',
-            thc_percent: 0,
-            cbd_percent: 0,
-            estimated_yield_g: 0
-        });
+        setIsClosingModal(true);
+        setTimeout(() => {
+            setIsModalOpen(false);
+            setIsClosingModal(false);
+            setEditingId(null);
+            setNewGenetic({
+                name: '',
+                type: 'photoperiodic',
+                vegetative_weeks: 4,
+                flowering_weeks: 9,
+                description: '',
+                acquisition_date: '',
+                thc_percent: 0,
+                cbd_percent: 0,
+                estimated_yield_g: 0
+            });
+        }, 300);
     };
 
     if (loading) return <LoadingSpinner text="Cargando madres..." fullScreen />;
@@ -353,9 +388,6 @@ const Genetics: React.FC = () => {
         <Container>
             <Header>
                 <h1><FaDna /> Gestión de Madres</h1>
-                <CreateButton onClick={() => setIsModalOpen(true)}>
-                    <FaPlus /> Nueva Madre
-                </CreateButton>
             </Header>
 
             <StatsGrid>
@@ -376,57 +408,61 @@ const Genetics: React.FC = () => {
                             <div style={{ display: 'flex', gap: '0.5rem' }}>
                                 <button
                                     onClick={() => handleEdit(gen)}
-                                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#4299e1', padding: '0.25rem' }}
+                                    style={{ background: 'rgba(56, 189, 248, 0.1)', border: '1px solid rgba(56, 189, 248, 0.2)', cursor: 'pointer', color: '#38bdf8', padding: '0.4rem', borderRadius: '0.25rem', transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                                     title="Editar"
+                                    onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(56, 189, 248, 0.2)'; }}
+                                    onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(56, 189, 248, 0.1)'; }}
                                 >
                                     <FaEdit />
                                 </button>
                                 <button
                                     onClick={() => handleDeleteClick(gen)}
-                                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#e53e3e', padding: '0.25rem' }}
+                                    style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)', cursor: 'pointer', color: '#f87171', padding: '0.4rem', borderRadius: '0.25rem', transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                                     title="Eliminar"
+                                    onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(239, 68, 68, 0.2)'; }}
+                                    onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)'; }}
                                 >
                                     <FaTrash />
                                 </button>
                             </div>
                         </CardHeader>
                         <CardBody>
-                            <Stat>
-                                <FaLeaf /> <strong>Vege:</strong> {gen.vegetative_weeks} semanas
-                            </Stat>
-                            <Stat>
-                                <FaClock /> <strong>Flora:</strong> {gen.flowering_weeks} semanas
-                            </Stat>
-                            <div style={{ marginTop: '0.5rem', paddingTop: '0.5rem', borderTop: '1px solid #edf2f7', fontSize: '0.85rem', color: '#718096' }}>
-                                <FaCalendarAlt style={{ marginRight: '0.5rem', color: '#a0aec0' }} />
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: '#cbd5e1', fontSize: '0.95rem' }}>
+                                <FaLeaf color="#a855f7" /> <strong>Vege:</strong> {gen.vegetative_weeks} semanas
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: '#cbd5e1', fontSize: '0.95rem' }}>
+                                <FaClock color="#a855f7" /> <strong>Flora:</strong> {gen.flowering_weeks} semanas
+                            </div>
+                            <div style={{ marginTop: '0.5rem', paddingTop: '0.5rem', borderTop: '1px solid rgba(255, 255, 255, 0.1)', fontSize: '0.85rem', color: '#94a3b8' }}>
+                                <FaCalendarAlt style={{ marginRight: '0.5rem', color: '#64748b' }} />
                                 Ciclo Total Est.: {gen.vegetative_weeks + gen.flowering_weeks} semanas
                             </div>
                             {gen.description && (
-                                <p style={{ fontSize: '0.85rem', color: '#718096', margin: 0 }}>{gen.description}</p>
+                                <p style={{ fontSize: '0.85rem', color: '#94a3b8', margin: 0 }}>{gen.description}</p>
                             )}
                             {gen.acquisition_date && (
-                                <div style={{ fontSize: '0.75rem', color: '#a0aec0', marginTop: '0.5rem', fontStyle: 'italic' }}>
+                                <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '0.5rem', fontStyle: 'italic' }}>
                                     Inicio: {gen.acquisition_date.split('-').reverse().join('/')}
                                 </div>
                             )}
                             <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem', flexWrap: 'wrap' }}>
                                 {(gen.thc_percent !== undefined) && (
-                                    <span style={{ fontSize: '0.7rem', background: '#f0fff4', color: '#276749', padding: '0.1rem 0.4rem', borderRadius: '4px', fontWeight: 'bold' }}>
+                                    <span style={{ fontSize: '0.7rem', background: 'rgba(74, 222, 128, 0.1)', color: '#4ade80', border: '1px solid rgba(74, 222, 128, 0.3)', padding: '0.1rem 0.4rem', borderRadius: '4px', fontWeight: 'bold' }}>
                                         THC: {gen.thc_percent}%
                                     </span>
                                 )}
                                 {(gen.cbd_percent !== undefined) && (
-                                    <span style={{ fontSize: '0.7rem', background: '#ebf8ff', color: '#2c5282', padding: '0.1rem 0.4rem', borderRadius: '4px', fontWeight: 'bold' }}>
+                                    <span style={{ fontSize: '0.7rem', background: 'rgba(56, 189, 248, 0.1)', color: '#38bdf8', border: '1px solid rgba(56, 189, 248, 0.3)', padding: '0.1rem 0.4rem', borderRadius: '4px', fontWeight: 'bold' }}>
                                         CBD: {gen.cbd_percent}%
                                     </span>
                                 )}
                                 {(gen.estimated_yield_g !== undefined) && (
-                                    <span style={{ fontSize: '0.7rem', background: '#fff5f5', color: '#9b2c2c', padding: '0.1rem 0.4rem', borderRadius: '4px', fontWeight: 'bold' }}>
+                                    <span style={{ fontSize: '0.7rem', background: 'rgba(239, 68, 68, 0.1)', color: '#f87171', border: '1px solid rgba(239, 68, 68, 0.3)', padding: '0.1rem 0.4rem', borderRadius: '4px', fontWeight: 'bold' }}>
                                         Prod: {gen.estimated_yield_g}g
                                     </span>
                                 )}
                                 {gen.default_price_per_gram && (
-                                    <span style={{ fontSize: '0.7rem', background: '#fffaf0', color: '#b7791f', padding: '0.1rem 0.4rem', borderRadius: '4px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                                    <span style={{ fontSize: '0.7rem', background: 'rgba(250, 204, 21, 0.1)', color: '#facc15', border: '1px solid rgba(250, 204, 21, 0.3)', padding: '0.1rem 0.4rem', borderRadius: '4px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
                                         <FaTag size={10} /> ${gen.default_price_per_gram}/g
                                     </span>
                                 )}
@@ -442,123 +478,148 @@ const Genetics: React.FC = () => {
                 </CreateCard>
             </ContentGrid>
 
-            {isModalOpen && (
-                <ModalOverlay>
-                    <ModalContent>
-                        <h2>{editingId ? 'Editar Madre' : 'Nueva Madre'}</h2>
+            {
+                isModalOpen && (
+                    <ModalOverlay $isClosing={isClosingModal}>
+                        <ModalContent $isClosing={isClosingModal}>
+                            <h2>{editingId ? 'Editar Madre' : 'Nueva Madre'}</h2>
 
-                        <FormGroup>
-                            <label>Nombre</label>
-                            <input
-                                type="text"
-                                value={newGenetic.name}
-                                onChange={e => setNewGenetic({ ...newGenetic, name: e.target.value })}
-                                placeholder="Ej: Gorilla Glue #4"
-                            />
-                        </FormGroup>
-
-                        <FormGroup>
-                            <label>Nomenclatura (Código)</label>
-                            <input
-                                type="text"
-                                value={newGenetic.nomenclatura || ''}
-                                onChange={e => setNewGenetic({ ...newGenetic, nomenclatura: e.target.value })}
-                                placeholder="Ej: GG4"
-                            />
-                        </FormGroup>
-
-                        <FormGroup>
-                            <label>Fecha de inicio</label>
-                            <input
-                                type="date"
-                                value={newGenetic.acquisition_date || ''}
-                                onChange={e => setNewGenetic({ ...newGenetic, acquisition_date: e.target.value })}
-                            />
-                        </FormGroup>
-
-                        <div style={{ display: 'flex', gap: '1rem' }}>
-                            <FormGroup style={{ flex: 1 }}>
-                                <label>Prod. Est. (g)</label>
+                            <FormGroup>
+                                <label>Nombre</label>
                                 <input
-                                    type="number"
-                                    value={newGenetic.estimated_yield_g || ''}
-                                    onChange={e => setNewGenetic({ ...newGenetic, estimated_yield_g: parseFloat(e.target.value) })}
-                                    placeholder="Ej: 500"
+                                    type="text"
+                                    value={newGenetic.name}
+                                    onChange={e => setNewGenetic({ ...newGenetic, name: e.target.value })}
+                                    placeholder="Ej: Gorilla Glue #4"
                                 />
                             </FormGroup>
-                        </div>
 
-                        <div style={{ display: 'flex', gap: '1rem' }}>
-                            <FormGroup style={{ flex: 1 }}>
-                                <label>% THC (Opcional)</label>
+                            <FormGroup>
+                                <label>Nomenclatura (Código)</label>
                                 <input
-                                    type="number"
-                                    step="0.1"
-                                    value={newGenetic.thc_percent || ''}
-                                    onChange={e => setNewGenetic({ ...newGenetic, thc_percent: parseFloat(e.target.value) })}
-                                    placeholder="Ej: 22.5"
+                                    type="text"
+                                    value={newGenetic.nomenclatura || ''}
+                                    onChange={e => setNewGenetic({ ...newGenetic, nomenclatura: e.target.value })}
+                                    placeholder="Ej: GG4"
                                 />
                             </FormGroup>
-                            <FormGroup style={{ flex: 1 }}>
-                                <label>% CBD (Opcional)</label>
-                                <input
-                                    type="number"
-                                    step="0.1"
-                                    value={newGenetic.cbd_percent || ''}
-                                    onChange={e => setNewGenetic({ ...newGenetic, cbd_percent: parseFloat(e.target.value) })}
-                                    placeholder="Ej: 0.5"
+
+                            <FormGroup>
+                                <label>Fecha de inicio</label>
+                                <CustomDatePicker
+                                    selected={newGenetic.acquisition_date ? new Date(newGenetic.acquisition_date + 'T12:00:00') : null}
+                                    onChange={(date: Date | null) => setNewGenetic({ ...newGenetic, acquisition_date: date ? date.toISOString().split('T')[0] : '' })}
+                                    placeholderText="Seleccionar fecha"
                                 />
                             </FormGroup>
-                        </div>
 
-                        <div style={{ display: 'flex', gap: '1rem' }}>
-                            <FormGroup style={{ flex: 1 }}>
-                                <label>Semanas Vege</label>
-                                <input
-                                    type="number"
-                                    value={newGenetic.vegetative_weeks}
-                                    onChange={e => setNewGenetic({ ...newGenetic, vegetative_weeks: parseInt(e.target.value) })}
+                            <div style={{ display: 'flex', gap: '1rem' }}>
+                                <FormGroup style={{ flex: 1 }}>
+                                    <label>Prod. Est. (g)</label>
+                                    <input
+                                        type="number"
+                                        value={newGenetic.estimated_yield_g || ''}
+                                        onChange={e => setNewGenetic({ ...newGenetic, estimated_yield_g: parseFloat(e.target.value) })}
+                                        placeholder="Ej: 500"
+                                    />
+                                </FormGroup>
+                            </div>
+
+                            <div style={{ display: 'flex', gap: '1rem' }}>
+                                <FormGroup style={{ flex: 1 }}>
+                                    <label>% THC (Opcional)</label>
+                                    <input
+                                        type="number"
+                                        step="0.1"
+                                        value={newGenetic.thc_percent || ''}
+                                        onChange={e => setNewGenetic({ ...newGenetic, thc_percent: parseFloat(e.target.value) })}
+                                        placeholder="Ej: 22.5"
+                                    />
+                                </FormGroup>
+                                <FormGroup style={{ flex: 1 }}>
+                                    <label>% CBD (Opcional)</label>
+                                    <input
+                                        type="number"
+                                        step="0.1"
+                                        value={newGenetic.cbd_percent || ''}
+                                        onChange={e => setNewGenetic({ ...newGenetic, cbd_percent: parseFloat(e.target.value) })}
+                                        placeholder="Ej: 0.5"
+                                    />
+                                </FormGroup>
+                            </div>
+
+                            <div style={{ display: 'flex', gap: '1rem' }}>
+                                <FormGroup style={{ flex: 1 }}>
+                                    <label>Semanas Vege</label>
+                                    <input
+                                        type="number"
+                                        value={newGenetic.vegetative_weeks}
+                                        onChange={e => setNewGenetic({ ...newGenetic, vegetative_weeks: parseInt(e.target.value) })}
+                                    />
+                                    <div className="hint">Desde semilla hasta cambio de ciclo</div>
+                                </FormGroup>
+                                <FormGroup style={{ flex: 1 }}>
+                                    <label>Semanas Flora</label>
+                                    <input
+                                        type="number"
+                                        value={newGenetic.flowering_weeks}
+                                        onChange={e => setNewGenetic({ ...newGenetic, flowering_weeks: parseInt(e.target.value) })}
+                                    />
+                                    <div className="hint">Duración de la fase de floración</div>
+                                </FormGroup>
+                            </div>
+
+                            <FormGroup>
+                                <label>Descripción / Notas</label>
+                                <textarea
+                                    rows={3}
+                                    value={newGenetic.description}
+                                    onChange={e => setNewGenetic({ ...newGenetic, description: e.target.value })}
+                                    placeholder="Información adicional..."
                                 />
-                                <div className="hint">Desde semilla hasta cambio de ciclo</div>
                             </FormGroup>
-                            <FormGroup style={{ flex: 1 }}>
-                                <label>Semanas Flora</label>
-                                <input
-                                    type="number"
-                                    value={newGenetic.flowering_weeks}
-                                    onChange={e => setNewGenetic({ ...newGenetic, flowering_weeks: parseInt(e.target.value) })}
-                                />
-                                <div className="hint">Duración de la fase de floración</div>
-                            </FormGroup>
-                        </div>
 
-                        <FormGroup>
-                            <label>Descripción / Notas</label>
-                            <textarea
-                                rows={3}
-                                value={newGenetic.description}
-                                onChange={e => setNewGenetic({ ...newGenetic, description: e.target.value })}
-                                placeholder="Información adicional..."
-                            />
-                        </FormGroup>
-
-                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1rem' }}>
-                            <button
-                                onClick={closeModal}
-                                style={{ padding: '0.75rem', background: 'none', border: '1px solid #e2e8f0', borderRadius: '0.5rem', cursor: 'pointer' }}
-                            >
-                                Cancelar
-                            </button>
-                            <button
-                                onClick={handleSave}
-                                style={{ padding: '0.75rem 1.5rem', background: '#805ad5', color: 'white', border: 'none', borderRadius: '0.5rem', cursor: 'pointer', fontWeight: 'bold' }}
-                            >
-                                {editingId ? 'Actualizar' : 'Guardar Madre'}
-                            </button>
-                        </div>
-                    </ModalContent>
-                </ModalOverlay>
-            )}
+                            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1rem' }}>
+                                <button
+                                    onClick={closeModal}
+                                    style={{
+                                        padding: '0.75rem 1.5rem',
+                                        background: 'rgba(30, 41, 59, 0.6)',
+                                        color: '#cbd5e1',
+                                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                                        borderRadius: '0.5rem',
+                                        cursor: 'pointer',
+                                        fontWeight: '600',
+                                        transition: 'all 0.2s',
+                                        backdropFilter: 'blur(8px)'
+                                    }}
+                                    onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'; e.currentTarget.style.color = '#f8fafc'; }}
+                                    onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(30, 41, 59, 0.6)'; e.currentTarget.style.color = '#cbd5e1'; }}
+                                >
+                                    Cancelar
+                                </button>
+                                <button
+                                    onClick={handleSave}
+                                    style={{
+                                        padding: '0.75rem 1.5rem',
+                                        background: 'rgba(168, 85, 247, 0.2)',
+                                        color: '#c084fc',
+                                        border: '1px solid rgba(168, 85, 247, 0.5)',
+                                        borderRadius: '0.5rem',
+                                        cursor: 'pointer',
+                                        fontWeight: 'bold',
+                                        transition: 'all 0.2s',
+                                        backdropFilter: 'blur(8px)'
+                                    }}
+                                    onMouseOver={(e) => e.currentTarget.style.background = 'rgba(168, 85, 247, 0.3)'}
+                                    onMouseOut={(e) => e.currentTarget.style.background = 'rgba(168, 85, 247, 0.2)'}
+                                >
+                                    {editingId ? 'Actualizar' : 'Guardar Madre'}
+                                </button>
+                            </div>
+                        </ModalContent>
+                    </ModalOverlay>
+                )}
 
             {/* Confirm Delete Modal */}
             <ConfirmModal
@@ -579,7 +640,7 @@ const Genetics: React.FC = () => {
                 onClose={() => setToastOpen(false)}
                 animateOverlay={toastAnimate}
             />
-        </Container>
+        </Container >
     );
 };
 

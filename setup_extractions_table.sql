@@ -1,5 +1,5 @@
 -- Create Extractions Table
-CREATE TABLE IF NOT EXISTS extractions (
+CREATE TABLE IF NOT EXISTS chakra_extractions (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   source_batch_id UUID REFERENCES chakra_dispensary_batches(id),
   date DATE NOT NULL,
@@ -15,10 +15,10 @@ CREATE TABLE IF NOT EXISTS extractions (
 );
 
 -- Enable Row Level Security
-ALTER TABLE extractions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE chakra_extractions ENABLE ROW LEVEL SECURITY;
 
 -- Create Policies (Assuming public access for authenticated users for now, similar to other tables)
-CREATE POLICY "Enable read access for all users" ON extractions FOR SELECT USING (true);
-CREATE POLICY "Enable insert for authenticated users only" ON extractions FOR INSERT WITH CHECK (auth.role() = 'authenticated');
-CREATE POLICY "Enable update for users based on email" ON extractions FOR UPDATE USING (auth.role() = 'authenticated');
-CREATE POLICY "Enable delete for users based on email" ON extractions FOR DELETE USING (auth.role() = 'authenticated');
+CREATE POLICY "Enable read access for all users" ON chakra_extractions FOR SELECT USING (true);
+CREATE POLICY "Enable insert for authenticated users only" ON chakra_extractions FOR INSERT WITH CHECK (auth.role() = 'authenticated');
+CREATE POLICY "Enable update for users based on email" ON chakra_extractions FOR UPDATE USING (auth.role() = 'authenticated');
+CREATE POLICY "Enable delete for users based on email" ON chakra_extractions FOR DELETE USING (auth.role() = 'authenticated');

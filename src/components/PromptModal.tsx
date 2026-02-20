@@ -37,17 +37,19 @@ const Overlay = styled.div<{ isClosing: boolean }>`
 `;
 
 const Content = styled.div<{ isClosing: boolean }>`
-  background: white;
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   padding: 2rem;
   border-radius: 1rem;
   width: 90%;
   max-width: 400px;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
   animation: ${p => p.isClosing ? scaleOut : scaleIn} 0.2s ease-in-out forwards;
 
   h3 {
     margin-top: 0;
-    color: #2d3748;
+    color: #f8fafc;
     margin-bottom: 1rem;
     font-size: 1.25rem;
   }
@@ -56,16 +58,21 @@ const Content = styled.div<{ isClosing: boolean }>`
 const Input = styled.input`
   width: 100%;
   padding: 0.75rem;
-  border: 1px solid #e2e8f0;
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 0.5rem;
   font-size: 1rem;
   margin-bottom: 1.5rem;
+  background: rgba(15, 23, 42, 0.6);
+  color: #f8fafc;
   transition: all 0.2s;
 
   &:focus {
     outline: none;
-    border-color: #38b2ac;
-    box-shadow: 0 0 0 3px rgba(56, 178, 172, 0.1);
+    border-color: rgba(56, 189, 248, 0.5);
+    box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.1);
+  }
+  &::placeholder {
+    color: #cbd5e1;
   }
 `;
 
@@ -78,23 +85,35 @@ const ButtonGroup = styled.div`
 const Button = styled.button<{ variant?: 'primary' | 'secondary' | 'green' }>`
   padding: 0.5rem 1rem;
   border-radius: 0.5rem;
-  border: 1px solid ${p => p.variant === 'secondary' ? '#e2e8f0' : 'transparent'};
-  background: ${p => {
-    if (p.variant === 'secondary') return 'white';
-    if (p.variant === 'green') return '#38a169';
-    return '#3182ce';
-  }};
-  color: ${p => p.variant === 'secondary' ? '#4a5568' : 'white'};
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
 
+  border: ${p => {
+    if (p.variant === 'secondary') return '1px solid rgba(255, 255, 255, 0.1)';
+    if (p.variant === 'green') return '1px solid rgba(74, 222, 128, 0.5)';
+    return '1px solid rgba(56, 189, 248, 0.5)'; // primary
+  }};
+  
+  background: ${p => {
+    if (p.variant === 'secondary') return 'rgba(30, 41, 59, 0.6)';
+    if (p.variant === 'green') return 'rgba(74, 222, 128, 0.2)';
+    return 'rgba(56, 189, 248, 0.2)'; // primary
+  }};
+  
+  color: ${p => {
+    if (p.variant === 'secondary') return '#cbd5e1';
+    if (p.variant === 'green') return '#4ade80';
+    return '#38bdf8'; // primary
+  }};
+
   &:hover {
     background: ${p => {
-    if (p.variant === 'secondary') return '#f7fafc';
-    if (p.variant === 'green') return '#2f855a';
-    return '#2b6cb0';
+    if (p.variant === 'secondary') return 'rgba(255, 255, 255, 0.1)';
+    if (p.variant === 'green') return 'rgba(74, 222, 128, 0.3)';
+    return 'rgba(56, 189, 248, 0.3)';
   }};
+  color: ${p => p.variant === 'secondary' ? '#f8fafc' : undefined};
   }
 `;
 

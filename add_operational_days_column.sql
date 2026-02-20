@@ -1,1 +1,1 @@
-ALTER TABLE rooms ADD COLUMN operational_days INTEGER;
+ALTER TABLE rooms ADD COLUMN IF NOT EXISTS operational_days INTEGER;

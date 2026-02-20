@@ -238,7 +238,7 @@ const Container = styled.div`
     max-width: 1400px;
     margin: 0 auto;
     min-height: 100vh;
-    color: #2d3748;
+    color: #f8fafc;
 
     @media (max-width: 768px) {
         padding: 0.5rem;
@@ -260,14 +260,14 @@ const Title = styled.h1`
     align-items: center;
     gap: 1rem;
     font-size: 1.8rem;
-    color: #2d3748;
+    color: #f8fafc;
     margin: 0;
 `;
 
 const TabButton = styled.button<{ $active: boolean }>`
-    background: ${props => props.$active ? '#805ad5' : 'white'};
-    color: ${props => props.$active ? 'white' : '#4a5568'};
-    border: 1px solid ${props => props.$active ? '#805ad5' : '#e2e8f0'};
+    background: ${props => props.$active ? 'rgba(168, 85, 247, 0.2)' : 'rgba(30, 41, 59, 0.6)'};
+    color: ${props => props.$active ? '#c084fc' : '#cbd5e1'};
+    border: 1px solid ${props => props.$active ? 'rgba(168, 85, 247, 0.5)' : 'rgba(255, 255, 255, 0.1)'};
     padding: 0.5rem 1rem;
     border-radius: 0.5rem;
     font-weight: 600;
@@ -276,17 +276,19 @@ const TabButton = styled.button<{ $active: boolean }>`
     align-items: center;
     gap: 0.5rem;
     transition: all 0.2s;
+    backdrop-filter: blur(8px);
     
     &:hover {
         transform: translateY(-1px);
-        background: ${props => props.$active ? '#6b46c1' : '#f7fafc'};
+        background: ${props => props.$active ? 'rgba(168, 85, 247, 0.3)' : 'rgba(255, 255, 255, 0.1)'};
+        color: ${props => props.$active ? '#d8b4fe' : '#f8fafc'};
     }
 `;
 
 const NewButton = styled.button`
-    background: #38a169;
-    color: white;
-    border: none;
+    background: rgba(74, 222, 128, 0.2);
+    color: #4ade80;
+    border: 1px solid rgba(74, 222, 128, 0.5);
     padding: 0.75rem 1.5rem;
     border-radius: 0.5rem;
     font-weight: 700;
@@ -294,9 +296,15 @@ const NewButton = styled.button`
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    transition: transform 0.1s;
-    box-shadow: 0 4px 6px rgba(56, 161, 105, 0.2);
-    &:hover { transform: translateY(-2px); background: #2f855a; }
+    transition: all 0.2s;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(8px);
+
+    &:hover { 
+        transform: translateY(-2px); 
+        background: rgba(74, 222, 128, 0.3); 
+        box-shadow: 0 6px 8px rgba(0, 0, 0, 0.3);
+    }
 `;
 
 const EmptyState = styled.div`
@@ -305,12 +313,13 @@ const EmptyState = styled.div`
     align-items: center;
     justify-content: center;
     padding: 4rem;
-    background: white;
+    background: rgba(15, 23, 42, 0.75);
     border-radius: 1rem;
-    border: 2px dashed #e2e8f0;
-    color: #a0aec0;
+    border: 2px dashed rgba(255, 255, 255, 0.2);
+    color: #94a3b8;
     gap: 1rem;
     grid-column: 1 / -1;
+    backdrop-filter: blur(12px);
 `;
 
 const Grid = styled.div`
@@ -320,16 +329,22 @@ const Grid = styled.div`
 `;
 
 const Card = styled.div`
-    background: white;
+    background: rgba(30, 41, 59, 0.6);
     border-radius: 1rem;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.05); /* Lighter shadow */
-    border: 1px solid #e2e8f0;
-    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
     overflow: hidden;
     cursor: pointer;
     display: flex;
     flex-direction: column;
-    &:hover { transform: translateY(-4px); box-shadow: 0 10px 15px rgba(0,0,0,0.1); }
+    backdrop-filter: blur(12px);
+
+    &:hover { 
+        transform: translateY(-4px); 
+        box-shadow: 0 10px 15px rgba(0, 0, 0, 0.3);
+        border-color: rgba(168, 85, 247, 0.5);
+    }
 `;
 
 const CardContent = styled.div`
@@ -350,12 +365,13 @@ const Badge = styled.span<{ $technique?: string }>`
     font-size: 0.75rem;
     font-weight: 700;
     text-transform: uppercase;
-    background: ${props => props.$technique === 'Rosin' ? '#f6e05e' : props.$technique === 'Ice' ? '#bee3f8' : props.$technique === 'BHO' ? '#feb2b2' : '#edf2f7'};
-    color: ${props => props.$technique === 'Rosin' ? '#744210' : props.$technique === 'Ice' ? '#2c5282' : props.$technique === 'BHO' ? '#9b2c2c' : '#4a5568'};
+    background: ${props => props.$technique === 'Rosin' ? 'rgba(250, 204, 21, 0.2)' : props.$technique === 'Ice' ? 'rgba(56, 189, 248, 0.2)' : props.$technique === 'BHO' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(255, 255, 255, 0.1)'};
+    color: ${props => props.$technique === 'Rosin' ? '#facc15' : props.$technique === 'Ice' ? '#38bdf8' : props.$technique === 'BHO' ? '#f87171' : '#cbd5e1'};
+    border: 1px solid ${props => props.$technique === 'Rosin' ? 'rgba(250, 204, 21, 0.5)' : props.$technique === 'Ice' ? 'rgba(56, 189, 248, 0.5)' : props.$technique === 'BHO' ? 'rgba(239, 68, 68, 0.5)' : 'rgba(255, 255, 255, 0.2)'};
 `;
 
 const DateText = styled.span`
-    color: #718096;
+    color: #94a3b8;
     font-size: 0.8rem;
     display: flex;
     align-items: center;
@@ -371,76 +387,87 @@ const MainInfo = styled.div`
     .source {
         display: flex;
         flex-direction: column;
-        strong { color: #2d3748; font-size: 1.1rem; }
-        small { color: #718096; font-size: 0.75rem; text-transform: uppercase; }
-        span { color: #cbd5e0; font-size: 0.85rem; font-family: monospace; }
+        strong { color: #f8fafc; font-size: 1.1rem; }
+        small { color: #94a3b8; font-size: 0.75rem; text-transform: uppercase; }
+        span { color: #cbd5e1; font-size: 0.85rem; font-family: monospace; }
     }
 
     .yield {
         text-align: right;
-        small { display: block; color: #718096; font-size: 0.75rem; }
+        small { display: block; color: #94a3b8; font-size: 0.75rem; }
     }
 `;
 
 const YieldValue = styled.div`
     font-size: 1.5rem;
     font-weight: 800;
-    color: #38a169;
+    color: #4ade80;
 `;
 
 const StatsGrid = styled.div`
     display: grid;
     grid-template-columns: 1fr 1fr;
-    background: #f7fafc;
+    background: rgba(15, 23, 42, 0.4);
     padding: 0.75rem;
     border-radius: 0.5rem;
     font-size: 0.85rem;
-    color: #4a5568;
+    color: #cbd5e1;
     margin-bottom: 1rem;
-    border: 1px solid #edf2f7;
+    border: 1px solid rgba(255, 255, 255, 0.05);
     div { display: flex; alignItems: center; gap: 0.5rem; }
 `;
 
 const CardFooter = styled.div`
     padding: 1rem 1.5rem;
-    background: #f8fafc;
-    border-top: 1px solid #e2e8f0;
+    background: rgba(15, 23, 42, 0.4);
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
     display: flex;
     justify-content: flex-end;
     gap: 0.5rem;
 `;
 
 const ActionButton = styled.button`
-    background: white;
-    border: 1px solid #cbd5e0;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
     padding: 0.4rem 0.75rem;
     border-radius: 0.35rem;
     font-size: 0.8rem;
     font-weight: 600;
-    color: #4a5568;
+    color: #f8fafc;
     cursor: pointer;
     display: flex;
     align-items: center;
     gap: 0.35rem;
     transition: all 0.2s;
+    backdrop-filter: blur(8px);
 
-    &:hover { background: #edf2f7; }
+    &:hover { background: rgba(255, 255, 255, 0.2); }
 
     &.delete {
-        color: #e53e3e;
-        border-color: #feb2b2;
-        &:hover { background: #fff5f5; border-color: #fc8181; }
+        color: #f87171;
+        background: rgba(239, 68, 68, 0.1);
+        border-color: rgba(239, 68, 68, 0.2);
+        &:hover { background: rgba(239, 68, 68, 0.2); }
     }
 
     &.view {
-        color: #3182ce;
-        border-color: #bee3f8;
-        &:hover { background: #ebf8ff; border-color: #63b3ed; }
+        color: #38bdf8;
+        background: rgba(56, 189, 248, 0.1);
+        border-color: rgba(56, 189, 248, 0.2);
+        &:hover { background: rgba(56, 189, 248, 0.2); }
     }
     
     &.edit {
-        color: #d69e2e;
-        border-color: #f6e05e;
-        &:hover { background: #fffff0; border-color: #d69e2e; }
+        color: #facc15;
+        background: rgba(250, 204, 21, 0.1);
+        border-color: rgba(250, 204, 21, 0.2);
+        &:hover { background: rgba(250, 204, 21, 0.2); }
+    }
+
+    &.process {
+        background: rgba(168, 85, 247, 0.2);
+        color: #d8b4fe;
+        border-color: rgba(168, 85, 247, 0.5);
+        &:hover { background: rgba(168, 85, 247, 0.3); box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
     }
 `;

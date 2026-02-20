@@ -11,6 +11,7 @@ const PageContainer = styled.div`
   max-width: 800px;
   margin: 0 auto;
   min-height: 100vh;
+  color: #f8fafc;
   
   @media (max-width: 768px) {
     padding: 0.5rem;
@@ -26,7 +27,7 @@ const Header = styled.div`
   h1 {
     font-size: 1.875rem;
     font-weight: 700;
-    color: #1e293b;
+    color: #f8fafc;
     margin: 0;
     display: flex;
     align-items: center;
@@ -35,47 +36,54 @@ const Header = styled.div`
 `;
 
 const Section = styled.div`
-  background: white;
+  background: rgba(30, 41, 59, 0.6);
   border-radius: 1rem;
   padding: 2rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
   margin-bottom: 2rem;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
 `;
 
 const SectionHeader = styled.h2`
   font-size: 1.25rem;
   font-weight: 600;
-  color: #2d3748;
+  color: #f8fafc;
   margin: 0 0 1.5rem 0;
   padding-bottom: 0.75rem;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
   align-items: center;
   gap: 0.5rem;
 `;
 
 const SaveButton = styled.button`
-background: #3182ce;
-color: white;
-border: none;
-padding: 0.75rem 1.5rem;
-border - radius: 0.5rem;
-font - weight: 600;
-cursor: pointer;
-display: flex;
-align - items: center;
-gap: 0.5rem;
-transition: all 0.2s;
+  background: rgba(168, 85, 247, 0.2);
+  color: #d8b4fe;
+  border: 1px solid rgba(168, 85, 247, 0.5);
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s;
+  backdrop-filter: blur(8px);
   
-  &:hover {
-  background: #2b6cb0;
-  transform: translateY(-1px);
-}
+  &:hover:not(:disabled) {
+    background: rgba(168, 85, 247, 0.3);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+  }
   
   &:disabled {
-  opacity: 0.5;
-  cursor: not - allowed;
-}
+    background: rgba(100, 116, 139, 0.2);
+    color: #94a3b8;
+    border-color: rgba(100, 116, 139, 0.5);
+    cursor: not-allowed;
+    box-shadow: none;
+  }
 `;
 
 const Settings: React.FC = () => {
@@ -143,20 +151,20 @@ const Settings: React.FC = () => {
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
           {genetics.map(gen => (
-            <div key={gen.id} style={{ border: '1px solid #e2e8f0', borderRadius: '0.5rem', padding: '1rem' }}>
-              <div style={{ fontWeight: 'bold', marginBottom: '0.5rem', color: '#2d3748' }}>{gen.name}</div>
+            <div key={gen.id} style={{ border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '0.5rem', padding: '1rem', background: 'rgba(30, 41, 59, 0.5)' }}>
+              <div style={{ fontWeight: 'bold', marginBottom: '0.5rem', color: '#f8fafc' }}>{gen.name}</div>
               <input
                 type="number"
                 placeholder="Precio ($)"
                 value={gen.default_price_per_gram || ''}
                 onChange={e => updateGeneticPrice(gen.id, e.target.value)}
-                style={{ width: '100%', padding: '0.5rem', border: '1px solid #cbd5e0', borderRadius: '0.25rem' }}
+                style={{ width: '100%', padding: '0.5rem', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '0.25rem', background: 'rgba(15, 23, 42, 0.5)', color: '#f8fafc', outline: 'none' }}
               />
             </div>
           ))}
         </div>
 
-        <SaveButton onClick={handleSaveGenetics} disabled={saving} style={{ background: '#805ad5' }}>
+        <SaveButton onClick={handleSaveGenetics} disabled={saving}>
           <FaSave /> {saving ? 'Guardando...' : 'Guardar Precios Genéticas'}
         </SaveButton>
       </Section>

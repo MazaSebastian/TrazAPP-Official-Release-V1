@@ -197,9 +197,10 @@ const SpinningIcon = styled(FaSpinner)`
 `;
 
 const CreateCard = styled.div`
-  background: #f7fafc;
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(12px);
   border-radius: 1.25rem;
-  border: 2px dashed #cbd5e0;
+  border: 2px dashed rgba(255, 255, 255, 0.2);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -209,14 +210,15 @@ const CreateCard = styled.div`
   gap: 1rem;
   transition: all 0.2s ease;
   opacity: 0.8;
-  color: #a0aec0;
+  color: #94a3b8;
   width: 100%;
 
   &:hover {
-    border-color: #48bb78;
-    color: #48bb78;
-    background: #f0fff4;
+    border-color: #4ade80;
+    color: #4ade80;
+    background: rgba(74, 222, 128, 0.1);
     opacity: 1;
+    box-shadow: 0 0 15px rgba(74, 222, 128, 0.2);
   }
 `;
 
@@ -246,25 +248,27 @@ const DashedCircle = styled.div`
 `;
 
 const EmptyStickyState = styled.div`
-background: #f7fafc;
-border-radius: 0.75rem;
-border: 2px dashed #cbd5e0;
-display: flex;
-align-items: center;
-justify-content: center;
-cursor: pointer;
-padding: 1.5rem;
-gap: 1.5rem;
-transition: all 0.2s ease;
-color: #a0aec0;
-width: 100%;
-margin-top: 1rem;
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(12px);
+  border-radius: 0.75rem;
+  border: 2px dashed rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 1.5rem;
+  gap: 1.5rem;
+  transition: all 0.2s ease;
+  color: #94a3b8;
+  width: 100%;
+  margin-top: 1rem;
 
   &:hover {
-    border-color: #ecc94b; /* Yellow/Gold */
-    color: #d69e2e;
-    background: #fffff0;
-}
+    border-color: #fde047; /* Yellow/Gold */
+    color: #facc15;
+    background: rgba(253, 224, 71, 0.1);
+    box-shadow: 0 0 15px rgba(253, 224, 71, 0.2);
+  }
 `;
 
 const DashedStickyCircle = styled.div`
@@ -295,20 +299,20 @@ transition: all 0.5s ease;
 // Helper for colors
 const getTaskStyles = (type: string) => {
     switch (type) {
-        case 'danger': return { bg: '#fed7d7', color: '#822727' };
-        case 'warning': return { bg: '#fefcbf', color: '#744210' };
+        case 'danger': return { bg: 'rgba(248, 113, 113, 0.1)', color: '#f87171', border: 'rgba(248, 113, 113, 0.2)' };
+        case 'warning': return { bg: 'rgba(250, 204, 21, 0.1)', color: '#facc15', border: 'rgba(250, 204, 21, 0.2)' };
         case 'fertilizar':
         case 'enmienda':
-        case 'te_compost': return { bg: '#c6f6d5', color: '#22543d' };
-        case 'riego': return { bg: '#bee3f8', color: '#2c5282' };
-        case 'poda_apical': return { bg: '#fc8181', color: '#742a2a' }; // Red
-        case 'defoliacion': return { bg: '#fbd38d', color: '#975a16' }; // Orange
+        case 'te_compost': return { bg: 'rgba(74, 222, 128, 0.1)', color: '#4ade80', border: 'rgba(74, 222, 128, 0.2)' };
+        case 'riego': return { bg: 'rgba(56, 189, 248, 0.1)', color: '#38bdf8', border: 'rgba(56, 189, 248, 0.2)' };
+        case 'poda_apical': return { bg: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: 'rgba(239, 68, 68, 0.2)' }; // Red
+        case 'defoliacion': return { bg: 'rgba(249, 115, 22, 0.1)', color: '#f97316', border: 'rgba(249, 115, 22, 0.2)' }; // Orange
         case 'hst':
         case 'lst':
-        case 'entrenamiento': return { bg: '#e9d8fd', color: '#44337a' };
-        case 'esquejes': return { bg: '#feebc8', color: '#7b341e' };
+        case 'entrenamiento': return { bg: 'rgba(168, 85, 247, 0.1)', color: '#a855f7', border: 'rgba(168, 85, 247, 0.2)' };
+        case 'esquejes': return { bg: 'rgba(217, 119, 6, 0.1)', color: '#d97706', border: 'rgba(217, 119, 6, 0.2)' };
         case 'info':
-        default: return { bg: '#edf2f7', color: '#4a5568' };
+        default: return { bg: 'rgba(148, 163, 184, 0.1)', color: '#cbd5e1', border: 'rgba(148, 163, 184, 0.2)' };
     }
 };
 
@@ -326,22 +330,23 @@ border: 1px solid transparent;
   ${p => {
         if (p.stage) {
             return `
-            background: ${p.stage === 'vegetation' ? '#c6f6d5' : p.stage === 'flowering' ? '#fed7d7' : (p.stage === 'drying' || p.stage === 'curing') ? '#fffaf0' : p.stage === 'living_soil' ? '#e6fffa' : '#f7fafc'};
-            color: ${p.stage === 'vegetation' ? '#22543d' : p.stage === 'flowering' ? '#822727' : (p.stage === 'drying' || p.stage === 'curing') ? '#c05621' : p.stage === 'living_soil' ? '#319795' : '#718096'};
-            ${(p.stage !== 'vegetation' && p.stage !== 'flowering') ? 'border-color: #e2e8f0;' : ''}
+            background: ${p.stage === 'vegetation' ? 'rgba(74, 222, 128, 0.1)' : p.stage === 'flowering' ? 'rgba(244, 114, 182, 0.1)' : (p.stage === 'drying' || p.stage === 'curing') ? 'rgba(251, 146, 60, 0.1)' : p.stage === 'living_soil' ? 'rgba(45, 212, 191, 0.1)' : 'rgba(148, 163, 184, 0.1)'};
+            color: ${p.stage === 'vegetation' ? '#4ade80' : p.stage === 'flowering' ? '#f472b6' : (p.stage === 'drying' || p.stage === 'curing') ? '#fb923c' : p.stage === 'living_soil' ? '#2dd4bf' : '#cbd5e1'};
+            border-color: ${p.stage === 'vegetation' ? 'rgba(74, 222, 128, 0.2)' : p.stage === 'flowering' ? 'rgba(244, 114, 182, 0.2)' : (p.stage === 'drying' || p.stage === 'curing') ? 'rgba(251, 146, 60, 0.2)' : p.stage === 'living_soil' ? 'rgba(45, 212, 191, 0.2)' : 'rgba(148, 163, 184, 0.2)'};
+            backdrop-filter: blur(4px);
           `;
         }
         if (p.taskType) {
             const s = getTaskStyles(p.taskType || '');
-            return `background: ${s.bg}; color: ${s.color};`;
+            return `background: ${s.bg}; color: ${s.color}; border-color: ${s.border || 'transparent'}; backdrop-filter: blur(4px);`;
         }
-        return `background: #f7fafc; color: #718096; border-color: #e2e8f0;`;
+        return `background: rgba(148, 163, 184, 0.1); color: #cbd5e1; border-color: rgba(148, 163, 184, 0.2); backdrop-filter: blur(4px);`;
     }
     }
 `;
 
 
-const Title = styled.h1` font-size: 1.8rem; color: #2d3748; margin: 1rem 0 0.5rem; display: flex; align-items: center; gap: 0.75rem; `; // Repair corrupted title
+const Title = styled.h1` font-size: 1.8rem; color: #f8fafc; margin: 1rem 0 0.5rem; display: flex; align-items: center; gap: 0.75rem; `;
 
 const StyledActionButton = styled.button<{ $variant?: 'primary' | 'secondary' | 'gold' | 'success' | 'danger' }>`
   display: flex;
@@ -352,23 +357,40 @@ const StyledActionButton = styled.button<{ $variant?: 'primary' | 'secondary' | 
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease-in-out;
-  border: ${p => p.$variant === 'secondary' ? '1px solid #e2e8f0' : 'none'};
+  border: ${p => p.$variant === 'secondary' ? '1px solid rgba(255, 255, 255, 0.1)' : 'none'};
+  backdrop-filter: blur(8px);
   background: ${p => {
         switch (p.$variant) {
-            case 'gold': return '#d69e2e';
-            case 'primary': return '#48bb78';
-            case 'success': return '#48bb78'; // Map success to green
-            case 'danger': return '#e53e3e';
-            default: return 'white';
+            case 'gold': return 'rgba(214, 158, 46, 0.2)';
+            case 'primary': return 'rgba(74, 222, 128, 0.2)';
+            case 'success': return 'rgba(74, 222, 128, 0.2)'; // Map success to green
+            case 'danger': return 'rgba(239, 68, 68, 0.2)';
+            default: return 'rgba(15, 23, 42, 0.4)';
         }
     }};
-  color: ${p => p.$variant === 'secondary' ? '#4a5568' : 'white'};
+  color: ${p => {
+        switch (p.$variant) {
+            case 'gold': return '#fcd34d';
+            case 'primary': return '#4ade80';
+            case 'success': return '#4ade80';
+            case 'danger': return '#f87171';
+            default: return '#f8fafc';
+        }
+    }};
 
   &:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    filter: brightness(1.05);
-    background: ${p => p.$variant === 'secondary' ? '#f7fafc' : undefined};
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+    filter: brightness(1.1);
+    background: ${p => {
+        switch (p.$variant) {
+            case 'gold': return 'rgba(214, 158, 46, 0.3)';
+            case 'primary': return 'rgba(74, 222, 128, 0.3)';
+            case 'success': return 'rgba(74, 222, 128, 0.3)';
+            case 'danger': return 'rgba(239, 68, 68, 0.3)';
+            default: return 'rgba(255, 255, 255, 0.1)';
+        }
+    }};
   }
   
   &:active {
@@ -400,21 +422,35 @@ const PortalModalOverlay = ({ children, isClosing }: { children: React.ReactNode
     );
 };
 const ModalContent = styled.div<{ isClosing?: boolean }>`
-background: white; padding: 2rem; border-radius: 1rem; width: 90%; max-width: 500px; max-height: 90vh; overflow-y: auto;
-animation: ${p => p.isClosing ? scaleOut : scaleIn} 0.2s ease-in-out forwards;
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 2rem;
+  border-radius: 1rem;
+  width: 90%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5);
+  color: #f8fafc;
+  animation: ${p => p.isClosing ? scaleOut : scaleIn} 0.2s ease-in-out forwards;
 `;
 
 const TaskModalContent = styled.div<{ isClosing?: boolean }>`
   animation: ${p => p.isClosing ? scaleOut : scaleIn} 0.2s ease-in-out forwards;
-background: white;
-padding: 2rem;
-border-radius: 1.5rem;
-width: 95%;
-max-width: 1000px; /* Wider for 2 columns */
-max-height: 90vh;
-overflow-y: auto;
-display: flex;
-flex-direction: column;
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 2rem;
+  border-radius: 1.5rem;
+  width: 95%;
+  max-width: 1000px;
+  max-height: 90vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5);
+  color: #f8fafc;
 
 @media(max-width: 768px) {
     padding: 1rem;
@@ -423,27 +459,29 @@ flex-direction: column;
 
 // New Styled Components for Interactive Elements
 const StageButton = styled.button<{ isActive: boolean }>`
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    padding: 1rem 0.5rem;
-    background: ${p => p.isActive ? '#48bb78' : 'white'};
-    color: ${p => p.isActive ? 'white' : '#718096'};
-    border: ${p => p.isActive ? '1px solid #48bb78' : '1px solid #e2e8f0'};
-    border-radius: 0.5rem;
-    cursor: pointer;
-    transition: all 0.2s;
-    font-weight: 600;
-    font-size: 0.9rem;
-    box-shadow: ${p => p.isActive ? '0 4px 6px rgba(72, 187, 120, 0.2)' : 'none'};
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1rem 0.5rem;
+  background: ${p => p.isActive ? 'rgba(74, 222, 128, 0.2)' : 'rgba(15, 23, 42, 0.4)'};
+  backdrop-filter: blur(8px);
+  color: ${p => p.isActive ? '#4ade80' : '#94a3b8'};
+  border: 1px solid ${p => p.isActive ? 'rgba(74, 222, 128, 0.5)' : 'rgba(255, 255, 255, 0.1)'};
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-weight: 600;
+  font-size: 0.9rem;
+  box-shadow: ${p => p.isActive ? '0 4px 6px rgba(74, 222, 128, 0.2)' : 'none'};
 
-    &:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        border-color: ${p => p.isActive ? '#48bb78' : '#cbd5e0'};
-    }
+  &:hover {
+    transform: translateY(-2px);
+    background: ${p => p.isActive ? 'rgba(74, 222, 128, 0.3)' : 'rgba(255, 255, 255, 0.05)'};
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    border-color: ${p => p.isActive ? 'rgba(74, 222, 128, 0.6)' : 'rgba(255, 255, 255, 0.2)'};
+  }
 `;
 
 const spin = keyframes`
@@ -461,24 +499,25 @@ const ButtonSpinner = styled.div`
 `;
 
 const ModalActionButton = styled.button<{ variant?: 'primary' | 'danger' | 'secondary', disabled?: boolean }>`
-    background: ${p => p.variant === 'primary' ? '#48bb78' : p.variant === 'danger' ? 'white' : 'white'};
-    color: ${p => p.variant === 'primary' ? 'white' : p.variant === 'danger' ? '#e53e3e' : '#4a5568'};
-    border: ${p => p.variant === 'danger' ? '1px solid #feb2b2' : p.variant === 'secondary' ? '1px solid #e2e8f0' : 'none'};
-    padding: 0.5rem 1.5rem;
-    border-radius: 0.5rem;
-    font-weight: 600;
-    cursor: ${p => p.disabled ? 'not-allowed' : 'pointer'};
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    transition: all 0.2s;
-    opacity: ${p => p.disabled ? 0.7 : 1};
+  background: ${p => p.variant === 'primary' ? 'rgba(74, 222, 128, 0.2)' : p.variant === 'danger' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(255, 255, 255, 0.05)'};
+  backdrop-filter: blur(8px);
+  color: ${p => p.variant === 'primary' ? '#4ade80' : p.variant === 'danger' ? '#f87171' : '#f8fafc'};
+  border: 1px solid ${p => p.variant === 'danger' ? 'rgba(239, 68, 68, 0.5)' : p.variant === 'secondary' ? 'rgba(255, 255, 255, 0.1)' : p.variant === 'primary' ? 'rgba(74, 222, 128, 0.5)' : 'none'};
+  padding: 0.5rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  cursor: ${p => p.disabled ? 'not-allowed' : 'pointer'};
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s;
+  opacity: ${p => p.disabled ? 0.5 : 1};
 
-    &:hover {
-        background: ${p => p.disabled ? (p.variant === 'primary' ? '#48bb78' : 'white') : p.variant === 'primary' ? '#38a169' : p.variant === 'danger' ? '#fff5f5' : '#f7fafc'};
-        transform: ${p => p.disabled ? 'none' : 'translateY(-1px)'};
-        box-shadow: ${p => p.disabled ? 'none' : '0 2px 4px rgba(0,0,0,0.1)'};
-    }
+  &:hover {
+    background: ${p => p.disabled ? 'none' : (p.variant === 'primary' ? 'rgba(74, 222, 128, 0.3)' : p.variant === 'danger' ? 'rgba(239, 68, 68, 0.3)' : 'rgba(255, 255, 255, 0.1)')};
+    transform: ${p => p.disabled ? 'none' : 'translateY(-1px)'};
+    box-shadow: ${p => p.disabled ? 'none' : '0 4px 6px rgba(0,0,0,0.3)'};
+  }
 `;
 
 
@@ -526,13 +565,14 @@ const DroppableMapCard = ({ map, children, onClick }: { map: CloneMap, children:
             ref={setNodeRef}
             onClick={onClick}
             style={{
-                border: isOver ? '2px solid #3182ce' : '1px solid #e2e8f0',
+                border: isOver ? '2px solid rgba(56, 189, 248, 0.5)' : '1px solid rgba(255, 255, 255, 0.1)',
                 borderRadius: '0.5rem',
                 padding: '1.5rem',
-                background: isOver ? '#ebf8ff' : 'white',
+                background: isOver ? 'rgba(56, 189, 248, 0.1)' : 'rgba(15, 23, 42, 0.4)',
+                backdropFilter: 'blur(12px)',
                 cursor: 'pointer',
                 transition: 'all 0.2s',
-                boxShadow: isOver ? '0 4px 6px -1px rgba(0, 0, 0, 0.1)' : '0 1px 3px 0 rgba(0, 0, 0, 0.1)'
+                boxShadow: isOver ? '0 0 15px rgba(56, 189, 248, 0.2)' : '0 4px 6px -1px rgba(0, 0, 0, 0.3)'
             }}
         >
             {children}
@@ -544,55 +584,59 @@ const DroppableMapCard = ({ map, children, onClick }: { map: CloneMap, children:
 
 
 const CancelButton = styled.button`
-flex: 1;
-padding: 0.6rem;
-border: 1px solid #e2e8f0;
-border-radius: 0.5rem;
-background: white;
-color: #4a5568;
-cursor: pointer;
-font-weight: 600;
-transition: all 0.2s;
-  &:hover { background: #f7fafc; }
+  flex: 1;
+  padding: 0.6rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.5rem;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(12px);
+  color: #94a3b8;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s;
+  &:hover { background: rgba(255, 255, 255, 0.1); color: #f8fafc; }
   &:disabled { opacity: 0.6; cursor: not-allowed; }
 `;
 
 const ActionButton = styled.button<{ $variant?: 'primary' | 'danger' | 'success' }>`
-
-padding: 0.75rem 1rem;
-border: none;
-border-radius: 0.5rem;
-background: ${p => p.$variant === 'danger' ? '#fc8181' : p.$variant === 'success' ? '#48bb78' : '#3182ce'};
-color: white;
-cursor: pointer;
-font-weight: 600;
-font-size: 0.9rem;
-box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-transition: all 0.2s;
-display: flex;
-align-items: center;
-justify-content: center;
-gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid ${p => p.$variant === 'danger' ? 'rgba(239, 68, 68, 0.5)' : p.$variant === 'success' ? 'rgba(74, 222, 128, 0.5)' : 'rgba(56, 189, 248, 0.5)'};
+  border-radius: 0.5rem;
+  background: ${p => p.$variant === 'danger' ? 'rgba(239, 68, 68, 0.2)' : p.$variant === 'success' ? 'rgba(74, 222, 128, 0.2)' : 'rgba(56, 189, 248, 0.2)'};
+  backdrop-filter: blur(8px);
+  color: ${p => p.$variant === 'danger' ? '#f87171' : p.$variant === 'success' ? '#4ade80' : '#38bdf8'};
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
 
   &:hover {
-    filter: brightness(1.1);
+    background: ${p => p.$variant === 'danger' ? 'rgba(239, 68, 68, 0.3)' : p.$variant === 'success' ? 'rgba(74, 222, 128, 0.3)' : 'rgba(56, 189, 248, 0.3)'};
     transform: translateY(-1px);
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
+    box-shadow: 0 6px 8px -2px rgba(0, 0, 0, 0.3);
+  }
   &:disabled {
-    background: #a0aec0;
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.1);
+    color: #64748b;
     cursor: not-allowed;
     transform: none;
     box-shadow: none;
-}
+  }
 `;
 
 
 
 const HoverButton = styled.button`
-  background: #ed8936;
-  color: white;
-  border: none;
+  background: rgba(249, 115, 22, 0.2);
+  color: #fb923c;
+  border: 1px solid rgba(249, 115, 22, 0.5);
+  backdrop-filter: blur(8px);
   padding: 0.25rem 0.5rem;
   border-radius: 0.3rem;
   cursor: pointer;
@@ -603,12 +647,12 @@ const HoverButton = styled.button`
   align-items: center;
   gap: 0.25rem;
   transition: all 0.2s ease;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 
   &:hover {
     transform: scale(1.05);
-    background: #dd6b20;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+    background: rgba(249, 115, 22, 0.3);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
   }
 
   &:active {
@@ -617,55 +661,66 @@ const HoverButton = styled.button`
 `;
 
 const BackButton = styled.button`
-display: flex;
-align-items: center;
-gap: 0.5rem;
-background: white;
-border: 1px solid #e2e8f0;
-border-radius: 0.5rem;
-color: #4a5568;
-font-weight: 600;
-cursor: pointer;
-padding: 0.5rem 1rem;
-font-size: 0.95rem;
-transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.5rem;
+  color: #f8fafc;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.5rem 1rem;
+  font-size: 0.95rem;
+  transition: all 0.2s;
 
   &:hover {
-    background: #f7fafc;
-    color: #2d3748;
-    border-color: #cbd5e0;
-}
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+  }
 `;
 
 const FormGroup = styled.div`
-margin-bottom: 1.5rem;
+  margin-bottom: 1.5rem;
   label {
     display: block;
     margin-bottom: 0.5rem;
     font-weight: 600;
-    color: #4a5568;
+    color: #cbd5e1;
     font-size: 0.9rem;
-}
-input, select, textarea {
+  }
+  input, select, textarea {
     width: 100%;
     padding: 0.75rem;
-    border: 1px solid #e2e8f0;
+    border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 0.5rem;
     font-size: 0.95rem;
-    color: #2d3748;
-    background: #fff;
+    color: #f8fafc;
+    background: rgba(30, 41, 59, 0.5);
+    backdrop-filter: blur(8px);
     transition: all 0.2s;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 
     &:focus {
-        outline: none;
-        border-color: #3182ce;
-        box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1);
+      outline: none;
+      border-color: rgba(56, 189, 248, 0.5);
+      box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.1);
     }
     &::placeholder {
-        color: #a0aec0;
+      color: #64748b;
     }
-}
+    
+    // Autofill Dark Mode override (Webkit specific)
+    &:-webkit-autofill,
+    &:-webkit-autofill:hover, 
+    &:-webkit-autofill:focus, 
+    &:-webkit-autofill:active{
+        -webkit-box-shadow: 0 0 0 30px #0f172a inset !important;
+        -webkit-text-fill-color: #f8fafc !important;
+        transition: background-color 5000s ease-in-out 0s;
+    }
+  }
   textarea { min-height: 100px; resize: vertical; font-family: inherit; }
 `;
 
@@ -680,25 +735,27 @@ margin-bottom: 2rem;
 `;
 
 const StatCard = styled.div`
-background: white;
-padding: 1.5rem;
-border-radius: 1rem;
-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-display: flex;
-flex-direction: column;
-justify-content: center;
-align-items: flex-start;
-border: 1px solid #e2e8f0;
-transition: transform 0.2s, box-shadow 0.2s;
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(12px);
+  padding: 1.5rem;
+  border-radius: 1rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: transform 0.2s, box-shadow 0.2s;
 
   &:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 6px - 1px rgba(0, 0, 0, 0.1);
-}
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
+    border-color: rgba(255, 255, 255, 0.2);
+  }
   
   h3 {
     font-size: 0.75rem;
-    color: #718096;
+    color: #94a3b8;
     text-transform: uppercase;
     letter-spacing: 0.05em;
     margin-bottom: 0.5rem;
@@ -706,18 +763,18 @@ transition: transform 0.2s, box-shadow 0.2s;
     align-items: center;
     gap: 0.5rem;
     font-weight: 600;
-}
+  }
   .value {
     font-size: 2rem;
     font-weight: 700;
-    color: #2d3748;
+    color: #f8fafc;
     line-height: 1.2;
-}
+  }
   .sub {
     font-size: 0.875rem;
-    color: #a0aec0;
+    color: #64748b;
     margin-top: 0.25rem;
-}
+  }
 `;
 
 
@@ -739,32 +796,33 @@ const DraggableStockBatch = ({ batch, onClick }: { batch: Batch, onClick?: () =>
             style={{
                 transform: isDragging ? 'translate3d(0,0,0)' : undefined,
                 opacity: isDragging ? 0.5 : 1,
-                background: 'white',
+                background: 'rgba(30, 41, 59, 0.5)',
+                backdropFilter: 'blur(8px)',
                 padding: '0.5rem',
                 marginBottom: '0',
                 borderRadius: '0.5rem',
-                border: `1px solid ${colors.border} `,
-                borderLeft: `4px solid ${colors.border} `,
+                border: `1px solid ${colors.border}`,
+                borderLeft: `4px solid ${colors.border}`,
                 cursor: 'grab',
-                boxShadow: '0 1px 1px rgba(0,0,0,0.05)',
+                boxShadow: '0 4px 6px -1px rgba(0,0,0,0.3)',
                 display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                 gap: '1rem'
             }}
         >
             <div>
-                <div style={{ fontWeight: 'bold', fontSize: '0.8rem', color: '#2d3748' }}>{geneticName}</div>
+                <div style={{ fontWeight: 'bold', fontSize: '0.8rem', color: '#f8fafc' }}>{geneticName}</div>
                 {batch.tracking_code && (
-                    <div style={{ fontSize: '0.85rem', fontWeight: 'bold', color: '#2f855a' }}>
+                    <div style={{ fontSize: '0.85rem', fontWeight: 'bold', color: '#4ade80' }}>
                         {batch.tracking_code}
                     </div>
                 )}
-                <div style={{ fontSize: '0.7rem', color: '#718096' }}>
+                <div style={{ fontSize: '0.7rem', color: '#94a3b8' }}>
                     {/* Prefer batch.name as it contains the "burned" date string which is correct, avoiding timezone shifts */}
                     {batch.name || (batch.start_date ? format(new Date(batch.start_date), 'dd/MM/yy HH:mm') : '')}
                 </div>
             </div>
             <div style={{
-                background: '#ebf8ff', color: '#2b6cb0', fontWeight: 'bold',
+                background: 'rgba(56, 189, 248, 0.1)', color: '#38bdf8', fontWeight: 'bold', border: '1px solid rgba(56, 189, 248, 0.2)',
                 padding: '0.15rem 0.4rem', borderRadius: '4px', fontSize: '0.75rem'
             }}>
                 x{batch.quantity}
@@ -785,18 +843,19 @@ const DraggableGenetic = ({ genetic }: { genetic: Genetic }) => {
             style={{
                 transform: isDragging ? 'translate3d(0,0,0)' : undefined,
                 opacity: isDragging ? 0.5 : 1,
-                background: 'white', padding: '0.75rem', marginBottom: '0.5rem',
-                borderRadius: '0.5rem', border: '1px solid #e2e8f0',
-                cursor: 'grab', boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                background: 'rgba(30, 41, 59, 0.5)', padding: '0.75rem', marginBottom: '0.5rem',
+                backdropFilter: 'blur(8px)',
+                borderRadius: '0.5rem', border: '1px solid rgba(255, 255, 255, 0.05)',
+                cursor: 'grab', boxShadow: '0 4px 6px rgba(0,0,0,0.3)',
                 display: 'flex', justifyContent: 'space-between', alignItems: 'center'
             }}
         >
             <div>
-                <div style={{ fontWeight: 'bold', fontSize: '0.9rem', color: '#2d3748' }}>{genetic.name}</div>
-                <div style={{ fontSize: '0.75rem', color: '#718096' }}>{genetic.type === 'photoperiodic' ? 'Fotoperiódica' : 'Automática'}</div>
+                <div style={{ fontWeight: 'bold', fontSize: '0.9rem', color: '#f8fafc' }}>{genetic.name}</div>
+                <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>{genetic.type === 'photoperiodic' ? 'Fotoperiódica' : 'Automática'}</div>
             </div>
             <div style={{
-                background: '#ebf8ff', color: '#2b6cb0', fontWeight: 'bold',
+                background: 'rgba(56, 189, 248, 0.1)', color: '#38bdf8', fontWeight: 'bold',
                 padding: '0.25rem 0.5rem', borderRadius: '999px', fontSize: '0.8rem'
             }}>
                 <FaDna />
@@ -954,9 +1013,10 @@ const SidebarBatchGroup = ({ group, expanded, onToggleExpand, childrenRender, on
             ref={setNodeRef} {...listeners} {...attributes}
             style={{
                 marginBottom: '0.25rem',
-                background: '#fff',
+                background: 'rgba(30, 41, 59, 0.5)',
+                backdropFilter: 'blur(8px)',
                 borderRadius: '0.5rem',
-                border: '1px solid #e2e8f0',
+                border: '1px solid rgba(255, 255, 255, 0.05)',
                 overflow: 'hidden',
                 transform: isDragging ? 'translate3d(0,0,0)' : undefined,
                 opacity: isDragging ? 0.3 : 1,
@@ -979,8 +1039,8 @@ const SidebarBatchGroup = ({ group, expanded, onToggleExpand, childrenRender, on
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
-                    background: expanded ? '#ebf8ff' : 'white',
-                    borderBottom: expanded ? '1px solid #bee3f8' : 'none',
+                    background: expanded ? 'rgba(56, 189, 248, 0.1)' : 'rgba(15, 23, 42, 0.6)',
+                    borderBottom: expanded ? '1px solid rgba(56, 189, 248, 0.2)' : 'none',
                     gap: '1rem'
                 }}
             >
@@ -990,13 +1050,13 @@ const SidebarBatchGroup = ({ group, expanded, onToggleExpand, childrenRender, on
                             e.stopPropagation();
                             onToggleExpand();
                         }}
-                        style={{ color: '#3182ce', fontSize: '0.65rem', padding: '0.25rem', cursor: 'pointer' }}
+                        style={{ color: '#38bdf8', fontSize: '0.65rem', padding: '0.25rem', cursor: 'pointer' }}
                     >
                         {expanded ? '▼' : '▶'}
                     </span>
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
-                        <strong style={{ fontSize: '0.8rem', color: '#2d3748' }}>{displayName}</strong>
-                        <span style={{ fontSize: '0.75rem', color: '#718096' }}>Total: {totalQty} u.</span>
+                        <strong style={{ fontSize: '0.8rem', color: '#f8fafc' }}>{displayName}</strong>
+                        <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Total: {totalQty} u.</span>
                     </div>
                 </div>
                 {/* Header Actions for Groups or Single Batches */}
@@ -1015,7 +1075,7 @@ const SidebarBatchGroup = ({ group, expanded, onToggleExpand, childrenRender, on
                         onPointerDown={(e) => e.stopPropagation()}
                         style={{
                             padding: '0.25rem',
-                            background: '#f7fafc',
+                            background: 'rgba(30, 41, 59, 0.5)',
                             display: 'flex',
                             flexDirection: 'column',
                             gap: '0.25rem',
@@ -1054,10 +1114,7 @@ const RoomDetail: React.FC = () => {
         }, 200);
     };
 
-    const handleToggleSelectionMode = () => {
-        setIsSelectionMode(!isSelectionMode);
-        setSelectedBatchIds(new Set()); // Clear on toggle
-    };
+
 
 
 
@@ -1549,7 +1606,7 @@ const RoomDetail: React.FC = () => {
     const [isUpdatingBatch, setIsUpdatingBatch] = useState(false);
 
     // Print State Control
-    const [isPrintingMap, setIsPrintingMap] = useState(false);
+
 
     // Ref for detecting clicks outside map for deselection
     const mapContainerRef = useRef<HTMLDivElement>(null);
@@ -4107,16 +4164,17 @@ const RoomDetail: React.FC = () => {
                                             if (!activeMap) return (
                                                 <div style={{
                                                     display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                                                    padding: '4rem 2rem', background: '#f8fafc', borderRadius: '1rem', border: '1px dashed #cbd5e0',
-                                                    color: '#718096', textAlign: 'center'
+                                                    padding: '4rem 2rem', background: 'rgba(15, 23, 42, 0.4)', backdropFilter: 'blur(12px)', borderRadius: '1rem', border: '1px dashed rgba(255, 255, 255, 0.2)',
+                                                    color: '#94a3b8', textAlign: 'center'
                                                 }}>
-                                                    <h3 style={{ fontSize: '1.25rem', color: '#4a5568', marginBottom: '0.5rem' }}>Mapa No Encontrado</h3>
+                                                    <h3 style={{ fontSize: '1.25rem', color: '#f8fafc', marginBottom: '0.5rem' }}>Mapa No Encontrado</h3>
                                                     <p style={{ marginBottom: '1.5rem' }}>El mapa que intentas ver no existe o ha sido eliminado.</p>
                                                     <button
                                                         onClick={() => setActiveMapId(null)}
                                                         style={{
-                                                            background: '#3182ce', color: 'white', padding: '0.5rem 1rem', borderRadius: '0.5rem',
-                                                            border: 'none', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem'
+                                                            background: 'rgba(56, 189, 248, 0.2)', color: '#38bdf8', padding: '0.5rem 1rem', borderRadius: '0.5rem',
+                                                            border: '1px solid rgba(56, 189, 248, 0.5)', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem',
+                                                            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.2)'
                                                         }}
                                                     >
                                                         <FaArrowLeft /> Volver a la Lista
@@ -4146,28 +4204,29 @@ const RoomDetail: React.FC = () => {
                                                         </div>
                                                         {isRelocatingSelection && (
                                                             <div style={{
-                                                                background: '#ebf8ff',
-                                                                border: '2px dashed #4299e1',
+                                                                background: 'rgba(56, 189, 248, 0.1)',
+                                                                backdropFilter: 'blur(8px)',
+                                                                border: '2px dashed rgba(56, 189, 248, 0.5)',
                                                                 borderRadius: '0.5rem',
                                                                 padding: '1rem',
                                                                 marginBottom: '1rem',
                                                                 textAlign: 'center',
-                                                                color: '#2b6cb0',
+                                                                color: '#38bdf8',
                                                                 fontWeight: 'bold',
                                                                 display: 'flex',
                                                                 justifyContent: 'center',
                                                                 alignItems: 'center',
                                                                 gap: '1rem',
-                                                                boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+                                                                boxShadow: '0 4px 6px rgba(0,0,0,0.3)'
                                                             }}>
                                                                 <FaExchangeAlt />
                                                                 <span>MODO REUBICACIÓN: Selecciona la nueva posición (celda vacía) para los {selectedBatchIds.size} lotes seleccionados.</span>
                                                                 <button
                                                                     onClick={() => setIsRelocatingSelection(false)}
                                                                     style={{
-                                                                        background: 'white',
-                                                                        border: '1px solid #4299e1',
-                                                                        color: '#4299e1',
+                                                                        background: 'rgba(56, 189, 248, 0.2)',
+                                                                        border: '1px solid rgba(56, 189, 248, 0.5)',
+                                                                        color: '#38bdf8',
                                                                         padding: '0.25rem 0.75rem',
                                                                         borderRadius: '0.25rem',
                                                                         cursor: 'pointer',
@@ -4255,30 +4314,29 @@ const RoomDetail: React.FC = () => {
                                                         )}
                                                     </div>
 
-                                                    {/* PRINTABLE DETAIL TABLE */}
                                                     <div className="printable-map-details">
-                                                        <h4 style={{ margin: '2rem 0 1rem 0', borderBottom: '2px solid #000', paddingBottom: '0.5rem' }}>Detalle de Lotes</h4>
-                                                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}>
+                                                        <h4 style={{ margin: '2rem 0 1rem 0', borderBottom: '2px solid rgba(255, 255, 255, 0.2)', paddingBottom: '0.5rem', color: '#f8fafc' }}>Detalle de Lotes</h4>
+                                                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem', color: '#94a3b8' }}>
                                                             <thead>
-                                                                <tr style={{ background: '#f0f0f0', borderBottom: '1px solid #000' }}>
-                                                                    <th style={{ padding: '0.5rem', textAlign: 'left', border: '1px solid #ccc' }}>Posición</th>
-                                                                    <th style={{ padding: '0.5rem', textAlign: 'left', border: '1px solid #ccc' }}>Genética / Nombre</th>
-                                                                    <th style={{ padding: '0.5rem', textAlign: 'left', border: '1px solid #ccc' }}>Código (ID)</th>
-                                                                    <th style={{ padding: '0.5rem', textAlign: 'left', border: '1px solid #ccc' }}>Fecha Ingreso</th>
+                                                                <tr style={{ background: 'rgba(15, 23, 42, 0.6)', textAlign: 'left' }}>
+                                                                    <th style={{ padding: '0.5rem', borderBottom: '2px solid rgba(255, 255, 255, 0.1)' }}>Posición</th>
+                                                                    <th style={{ padding: '0.5rem', borderBottom: '2px solid rgba(255, 255, 255, 0.1)' }}>Genética / Nombre</th>
+                                                                    <th style={{ padding: '0.5rem', borderBottom: '2px solid rgba(255, 255, 255, 0.1)' }}>Código (ID)</th>
+                                                                    <th style={{ padding: '0.5rem', borderBottom: '2px solid rgba(255, 255, 255, 0.1)' }}>Fecha Ingreso</th>
                                                                 </tr>
                                                             </thead>
                                                             <tbody>
-                                                                {(room?.batches?.filter(b => b.clone_map_id === activeMap.id) || [])
+                                                                {(room?.batches?.filter(b => b.clone_map_id === activeMapId) || [])
                                                                     .sort((a, b) => {
                                                                         // Simple alphanumeric sort for positions like A1, A2, B1
                                                                         return (a.grid_position || '').localeCompare(b.grid_position || '', undefined, { numeric: true, sensitivity: 'base' });
                                                                     })
                                                                     .map(batch => (
-                                                                        <tr key={batch.id} style={{ borderBottom: '1px solid #eee' }}>
-                                                                            <td style={{ padding: '0.4rem', border: '1px solid #ccc', fontWeight: 'bold', textAlign: 'center' }}>{batch.grid_position || '-'}</td>
-                                                                            <td style={{ padding: '0.4rem', border: '1px solid #ccc' }}>{batch.genetic?.name || batch.name}</td>
-                                                                            <td style={{ padding: '0.4rem', border: '1px solid #ccc', fontFamily: 'monospace' }}>{batch.tracking_code || '-'}</td>
-                                                                            <td style={{ padding: '0.4rem', border: '1px solid #ccc' }}>
+                                                                        <tr key={batch.id} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                                                                            <td style={{ padding: '0.4rem', borderRight: '1px solid rgba(255, 255, 255, 0.05)', fontWeight: 'bold', textAlign: 'center', color: '#f8fafc' }}>{batch.grid_position || '-'}</td>
+                                                                            <td style={{ padding: '0.4rem', borderRight: '1px solid rgba(255, 255, 255, 0.05)', color: '#cbd5e1' }}>{batch.genetic?.name || batch.name}</td>
+                                                                            <td style={{ padding: '0.4rem', borderRight: '1px solid rgba(255, 255, 255, 0.05)', fontFamily: 'monospace', color: '#cbd5e1' }}>{batch.tracking_code || '-'}</td>
+                                                                            <td style={{ padding: '0.4rem', color: '#cbd5e1' }}>
                                                                                 {batch.created_at ? format(new Date(batch.created_at), 'dd/MM/yyyy', { locale: es }) : '-'}
                                                                             </td>
                                                                         </tr>
@@ -4297,18 +4355,20 @@ const RoomDetail: React.FC = () => {
                                 <div className="no-print" style={{
                                     flex: 1,
                                     minWidth: '250px',
-                                    background: '#f7fafc',
+                                    background: 'rgba(15, 23, 42, 0.4)',
+                                    backdropFilter: 'blur(12px)',
                                     padding: '0.75rem',
                                     borderRadius: '0.5rem',
-                                    border: '1px solid #e2e8f0',
+                                    border: '1px solid rgba(255, 255, 255, 0.1)',
                                     display: 'flex',
                                     flexDirection: 'column',
                                     maxHeight: 'calc(100vh - 160px)',
                                     position: 'sticky',
-                                    top: '1rem'
+                                    top: '1rem',
+                                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.3)'
                                 }}>
                                     <div style={{ flexShrink: 0 }}>
-                                        <h4 style={{ margin: '0 0 1rem 0', color: '#4a5568', fontSize: '1rem' }}>Lotes Disponibles</h4>
+                                        <h4 style={{ margin: '0 0 1rem 0', color: '#f8fafc', fontSize: '1rem' }}>Lotes Disponibles</h4>
                                         <ActionButton onClick={() => {
                                             setNewBatch({
                                                 geneticId: '',
@@ -4521,13 +4581,13 @@ const RoomDetail: React.FC = () => {
             {/* Calendar Section (Hidden for Clones/Germination) */}
             {
                 !['clones', 'esquejes', 'esquejera', 'drying', 'secado', 'curing', 'curado', 'germination'].includes((room?.type as string)?.toLowerCase()) && (
-                    <div className="no-print" style={{ background: 'white', borderRadius: '1rem', padding: '1.5rem', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
+                    <div className="no-print" style={{ background: 'rgba(15, 23, 42, 0.4)', backdropFilter: 'blur(12px)', borderRadius: '1rem', padding: '1.5rem', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.3)', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
                         {/* Calendar Header */}
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                             <StyledActionButton onClick={() => setCurrentDate(subMonths(currentDate, 1))} $variant="secondary" style={{ padding: '0.5rem 1rem' }}>
                                 <FaChevronLeft /> Anterior
                             </StyledActionButton>
-                            <h2 style={{ fontSize: '1.5rem', color: '#2d3748', textTransform: 'capitalize', margin: 0 }}>
+                            <h2 style={{ fontSize: '1.5rem', color: '#f8fafc', textTransform: 'capitalize', margin: 0 }}>
                                 {format(currentDate, 'MMMM yyyy', { locale: es })}
                             </h2>
                             <StyledActionButton onClick={() => setCurrentDate(addMonths(currentDate, 1))} $variant="secondary" style={{ padding: '0.5rem 1rem' }}>
@@ -4536,9 +4596,9 @@ const RoomDetail: React.FC = () => {
                         </div>
 
                         {/* Calendar Grid */}
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '1px', background: '#e2e8f0', border: '1px solid #e2e8f0', borderRadius: '0.5rem', overflow: 'hidden' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '1px', background: 'rgba(255, 255, 255, 0.1)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '0.5rem', overflow: 'hidden' }}>
                             {['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'].map(d => (
-                                <div key={d} style={{ background: '#f7fafc', padding: '0.75rem', textAlign: 'center', fontWeight: 'bold', color: '#718096', fontSize: '0.85rem' }}>{d}</div>
+                                <div key={d} style={{ background: 'rgba(15, 23, 42, 0.6)', padding: '0.75rem', textAlign: 'center', fontWeight: 'bold', color: '#94a3b8', fontSize: '0.85rem' }}>{d}</div>
                             ))}
 
                             {(() => {
@@ -4613,25 +4673,25 @@ const RoomDetail: React.FC = () => {
                                     const dayTasks = allTasksForView.filter(t => t.due_date && t.due_date.split('T')[0] === dateStr);
 
                                     // Determine Background Gradient based on Task Distribution
-                                    let dayBg = 'white';
+                                    let dayBg = 'transparent';
 
                                     if (dayTasks.length > 0) {
                                         // Helper to get pastel color by task type
                                         const getTaskColor = (t: Task) => {
                                             switch (t.type) {
-                                                case 'danger': return '#fed7d7'; // Red
-                                                case 'warning': return '#fefcbf'; // Yellow
+                                                case 'danger': return 'rgba(239, 68, 68, 0.2)'; // Red
+                                                case 'warning': return 'rgba(234, 179, 8, 0.2)'; // Yellow
                                                 case 'fertilizar':
                                                 case 'enmienda':
-                                                case 'te_compost': return '#c6f6d5'; // Green
-                                                case 'riego': return '#bee3f8'; // Blue
-                                                case 'poda_apical': return '#fed7d7'; // Light Red
-                                                case 'defoliacion': return '#fbd38d'; // Orange
+                                                case 'te_compost': return 'rgba(74, 222, 128, 0.2)'; // Green
+                                                case 'riego': return 'rgba(56, 189, 248, 0.2)'; // Blue
+                                                case 'poda_apical': return 'rgba(239, 68, 68, 0.2)'; // Light Red
+                                                case 'defoliacion': return 'rgba(249, 115, 22, 0.2)'; // Orange
                                                 case 'hst':
                                                 case 'lst':
-                                                case 'entrenamiento': return '#e9d8fd'; // Purple
-                                                case 'esquejes': return '#feebc8'; // Orange
-                                                default: return '#edf2f7'; // Gray (Info)
+                                                case 'entrenamiento': return 'rgba(168, 85, 247, 0.2)'; // Purple
+                                                case 'esquejes': return 'rgba(249, 115, 22, 0.2)'; // Orange
+                                                default: return 'rgba(148, 163, 184, 0.2)'; // Gray (Info)
                                             }
                                         };
 
@@ -4672,7 +4732,7 @@ const RoomDetail: React.FC = () => {
                                                 isFloweringPhase = true;
                                             }
 
-                                            const color = isFloweringPhase ? '#fbd38d' : '#9ae6b4';
+                                            const color = isFloweringPhase ? '#fcd34d' : '#4ade80';
                                             const showLabel = dayItem.getDay() === 1 || dayItem.getDate() === 1 || dayTime === startTime;
 
                                             phaseBar = (
@@ -4684,8 +4744,8 @@ const RoomDetail: React.FC = () => {
                                                     {showLabel && (
                                                         <div style={{
                                                             position: 'absolute', bottom: '8px', right: '2px',
-                                                            fontSize: '0.65rem', fontWeight: 'bold', color: isFloweringPhase ? '#c05621' : '#276749',
-                                                            background: 'rgba(255,255,255,0.8)', padding: '0 2px', borderRadius: '2px'
+                                                            fontSize: '0.65rem', fontWeight: 'bold', color: isFloweringPhase ? '#fef3c7' : '#f0fdf4',
+                                                            background: 'rgba(15, 23, 42, 0.8)', padding: '0 4px', borderRadius: '4px', border: `1px solid ${color}`
                                                         }}>Sem {weekNum}</div>
                                                     )}
                                                 </>
@@ -4705,12 +4765,12 @@ const RoomDetail: React.FC = () => {
                                                 opacity: isCurrentMonth ? 1 : 0.4,
                                                 cursor: user && (user.role === 'admin' || user.role === 'partner') ? 'pointer' : 'default',
                                                 transition: 'all 0.2s',
-                                                border: isSameDay(dayItem, new Date()) ? '2px solid #3182ce' : '1px solid transparent'
+                                                border: isSameDay(dayItem, new Date()) ? '2px solid #38bdf8' : '1px solid transparent'
                                             }}
                                             onClick={() => handleDayDetails(dayItem)}
                                         >
                                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                <span style={{ fontWeight: isSameDay(dayItem, new Date()) ? 'bold' : 'normal', color: isSameDay(dayItem, new Date()) ? '#2c5282' : '#2d3748' }}>
+                                                <span style={{ fontWeight: isSameDay(dayItem, new Date()) ? 'bold' : 'normal', color: isSameDay(dayItem, new Date()) ? '#7dd3fc' : '#f8fafc' }}>
                                                     {format(dayItem, dateFormat)}
                                                 </span>
                                                 {/* Actions: Add Task / Sticky */}
@@ -4718,7 +4778,7 @@ const RoomDetail: React.FC = () => {
                                                     <div style={{ display: 'flex', gap: '4px' }}>
 
                                                         <span
-                                                            style={{ color: '#4a5568', fontSize: '0.8rem', opacity: 0.8, cursor: 'pointer', padding: '2px' }}
+                                                            style={{ color: '#94a3b8', fontSize: '0.8rem', opacity: 0.8, cursor: 'pointer', padding: '2px' }}
                                                             title="Agregar Tarea"
                                                             onClick={(e) => { e.stopPropagation(); handleAddTask(dayItem); }}
                                                         >
@@ -5197,19 +5257,19 @@ const RoomDetail: React.FC = () => {
                 isStickyModalOpen && (
                     <PortalModalOverlay isClosing={isStickyModalClosing}>
                         <ModalContent isClosing={isStickyModalClosing} style={{
-                            background: 'white',
-                            borderTop: `8px solid ${stickyColor === 'yellow' ? '#ecc94b' :
-                                stickyColor === 'blue' ? '#4299e1' :
-                                    stickyColor === 'pink' ? '#ed64a6' :
-                                        '#48bb78' // green
+                            background: 'rgba(15, 23, 42, 0.95)',
+                            borderTop: `8px solid ${stickyColor === 'yellow' ? '#facc15' :
+                                stickyColor === 'blue' ? '#38bdf8' :
+                                    stickyColor === 'pink' ? '#f472b6' :
+                                        '#4ade80' // green
                                 }`
                         }}>
-                            <h3 style={{ color: '#2d3748', marginBottom: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+                            <h3 style={{ color: '#f8fafc', marginBottom: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
                                 <FaStickyNote color={
-                                    stickyColor === 'yellow' ? '#ecc94b' :
-                                        stickyColor === 'blue' ? '#4299e1' :
-                                            stickyColor === 'pink' ? '#ed64a6' :
-                                                '#48bb78'
+                                    stickyColor === 'yellow' ? '#facc15' :
+                                        stickyColor === 'blue' ? '#38bdf8' :
+                                            stickyColor === 'pink' ? '#f472b6' :
+                                                '#4ade80'
                                 } /> Nueva Nota
                             </h3>
 
@@ -5223,8 +5283,9 @@ const RoomDetail: React.FC = () => {
                                     disabled={isSavingSticky}
                                     style={{
                                         width: '100%',
-                                        background: isSavingSticky ? '#f7fafc' : '#fff',
-                                        border: '1px solid #e2e8f0',
+                                        background: isSavingSticky ? 'rgba(30, 41, 59, 0.5)' : 'rgba(15, 23, 42, 0.6)',
+                                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                                        color: '#f8fafc',
                                         minHeight: '120px',
                                         fontSize: '1rem',
                                         borderRadius: '0.5rem',
@@ -5242,8 +5303,8 @@ const RoomDetail: React.FC = () => {
                                         disabled={isSavingSticky}
                                         style={{
                                             width: '30px', height: '30px', borderRadius: '50%',
-                                            background: c === 'yellow' ? '#fefcbf' : c === 'blue' ? '#bee3f8' : c === 'pink' ? '#fed7d7' : '#c6f6d5',
-                                            border: stickyColor === c ? '2px solid #4a5568' : '1px solid rgba(0,0,0,0.1)',
+                                            background: c === 'yellow' ? 'rgba(250, 204, 21, 0.3)' : c === 'blue' ? 'rgba(56, 189, 248, 0.3)' : c === 'pink' ? 'rgba(244, 114, 182, 0.3)' : 'rgba(74, 222, 128, 0.3)',
+                                            border: stickyColor === c ? '2px solid rgba(255, 255, 255, 0.8)' : '1px solid rgba(255, 255, 255, 0.1)',
                                             cursor: isSavingSticky ? 'not-allowed' : 'pointer',
                                             opacity: isSavingSticky ? 0.7 : 1
                                         }}
@@ -5259,7 +5320,13 @@ const RoomDetail: React.FC = () => {
                                     onClick={handleSaveSticky}
                                     $variant="success"
                                     disabled={isSavingSticky || !stickyContent.trim()}
-                                    style={{ background: '#d69e2e', color: 'white', opacity: (isSavingSticky || !stickyContent.trim()) ? 0.7 : 1 }}
+                                    style={{
+                                        flex: 1,
+                                        background: isSavingSticky ? 'rgba(74, 222, 128, 0.5)' : 'rgba(250, 204, 21, 0.2)', // Use yellow as default variant for notes
+                                        color: '#fcd34d',
+                                        border: '1px solid rgba(250, 204, 21, 0.5)',
+                                        opacity: (isSavingSticky || !stickyContent.trim()) ? 0.7 : 1
+                                    }}
                                 >
                                     {isSavingSticky ? 'Guardando...' : 'Pegar Nota'}
                                 </ActionButton>
@@ -5408,40 +5475,37 @@ const RoomDetail: React.FC = () => {
                 (isMapModalOpen || isClosingMapModal) && (
                     <PortalModalOverlay isClosing={isClosingMapModal}>
                         <ModalContent style={{ maxWidth: '400px' }} isClosing={isClosingMapModal}>
-                            <h3 style={{ marginBottom: '1.5rem' }}>{room?.type === 'living_soil' ? 'Nueva Cama/Cultivo' : 'Nuevo Mapa de Esquejes'}</h3>
-                            <div style={{ marginBottom: '1rem' }}>
-                                <label style={{ display: 'block', marginBottom: '0.5rem' }}>{room?.type === 'living_soil' ? 'Nombre (ej: Cama 1)' : 'Nombre (ej: Bandeja 1)'}</label>
+                            <h3 style={{ marginBottom: '1.5rem', color: '#f8fafc' }}>{room?.type === 'living_soil' ? 'Nueva Cama/Cultivo' : 'Nuevo Mapa de Esquejes'}</h3>
+                            <FormGroup>
+                                <label>{room?.type === 'living_soil' ? 'Nombre (ej: Cama 1)' : 'Nombre (ej: Bandeja 1)'}</label>
                                 <input
                                     autoFocus
                                     value={newMapName}
                                     onChange={e => setNewMapName(e.target.value)}
-                                    style={{ width: '100%', padding: '0.5rem', border: '1px solid #e2e8f0', borderRadius: '0.5rem' }}
                                     placeholder="Nombre del mapa..."
                                 />
-                            </div>
+                            </FormGroup>
                             <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem' }}>
-                                <div style={{ flex: 1 }}>
-                                    <label style={{ display: 'block', marginBottom: '0.5rem' }}>Filas</label>
+                                <FormGroup style={{ flex: 1, marginBottom: 0 }}>
+                                    <label>Filas</label>
                                     <input
                                         type="number"
                                         min="1"
                                         max="26"
                                         value={newMapRows}
                                         onChange={e => setNewMapRows(e.target.value === '' ? '' : Number(e.target.value))}
-                                        style={{ width: '100%', padding: '0.5rem', border: '1px solid #e2e8f0', borderRadius: '0.5rem' }}
                                     />
-                                </div>
-                                <div style={{ flex: 1 }}>
-                                    <label style={{ display: 'block', marginBottom: '0.5rem' }}>Columnas</label>
+                                </FormGroup>
+                                <FormGroup style={{ flex: 1, marginBottom: 0 }}>
+                                    <label>Columnas</label>
                                     <input
                                         type="number"
                                         min="1"
                                         max="50"
                                         value={newMapCols}
                                         onChange={e => setNewMapCols(e.target.value === '' ? '' : Number(e.target.value))}
-                                        style={{ width: '100%', padding: '0.5rem', border: '1px solid #e2e8f0', borderRadius: '0.5rem' }}
                                     />
-                                </div>
+                                </FormGroup>
                             </div>
                             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
                                 <CancelButton onClick={closeMapModal} disabled={isCreatingMap}>Cancelar</CancelButton>
@@ -5465,13 +5529,13 @@ const RoomDetail: React.FC = () => {
                 (isEditMapModalOpen || isClosingEditMap) && (
                     <PortalModalOverlay isClosing={isClosingEditMap}>
                         <ModalContent onClick={e => e.stopPropagation()} isClosing={isClosingEditMap}>
-                            <h3>Editar Mapa</h3>
+                            <h3 style={{ marginBottom: '1.5rem', color: '#f8fafc' }}>Editar Mapa</h3>
                             <FormGroup>
                                 <label>Nombre</label>
                                 <input autoFocus value={editMapName} onChange={e => setEditMapName(e.target.value)} placeholder="Nombre del mapa..." />
                             </FormGroup>
                             <div style={{ display: 'flex', gap: '1rem' }}>
-                                <FormGroup style={{ flex: 1 }}>
+                                <FormGroup style={{ flex: 1, marginBottom: 0 }}>
                                     <label>Filas</label>
                                     <input
                                         type="number"
@@ -5481,7 +5545,7 @@ const RoomDetail: React.FC = () => {
                                         onChange={e => setEditMapRows(e.target.value === '' ? '' : Number(e.target.value))}
                                     />
                                 </FormGroup>
-                                <FormGroup style={{ flex: 1 }}>
+                                <FormGroup style={{ flex: 1, marginBottom: 0 }}>
                                     <label>Columnas</label>
                                     <input
                                         type="number"
@@ -6002,8 +6066,8 @@ const RoomDetail: React.FC = () => {
                     <PortalModalOverlay isClosing={isClosingHistory}>
                         <ModalContent style={{ maxWidth: '1000px', width: '90%' }} isClosing={isClosingHistory}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                                <h2 style={{ fontSize: '1.5rem', margin: 0, color: '#2d3748', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                    <FaHistory color="#48bb78" /> Historial de Movimientos
+                                <h2 style={{ fontSize: '1.5rem', margin: 0, color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                    <FaHistory color="#4ade80" /> Historial de Movimientos
                                 </h2>
                                 <button onClick={closeHistoryModal} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.5rem', color: '#a0aec0' }}>
                                     ✕
@@ -6012,19 +6076,19 @@ const RoomDetail: React.FC = () => {
 
                             <div style={{ maxHeight: '60vh', overflowY: 'auto' }}>
                                 {historyLoading ? (
-                                    <p style={{ textAlign: 'center', padding: '2rem', color: '#718096' }}>Cargando historial...</p>
+                                    <p style={{ textAlign: 'center', padding: '2rem', color: '#94a3b8' }}>Cargando historial...</p>
                                 ) : roomHistory.length === 0 ? (
-                                    <p style={{ textAlign: 'center', padding: '2rem', color: '#718096', background: '#f7fafc', borderRadius: '0.5rem' }}>
+                                    <p style={{ textAlign: 'center', padding: '2rem', color: '#94a3b8', background: 'rgba(255, 255, 255, 0.05)', borderRadius: '0.5rem', border: '1px dashed rgba(255, 255, 255, 0.2)' }}>
                                         No hay movimientos registrados recientemente.
                                     </p>
                                 ) : (
-                                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                    <table style={{ width: '100%', borderCollapse: 'collapse', color: '#f8fafc' }}>
                                         <thead>
-                                            <tr style={{ borderBottom: '2px solid #e2e8f0', textAlign: 'left' }}>
-                                                <th style={{ padding: '0.75rem', color: '#4a5568', fontSize: '0.85rem' }}>Fecha</th>
-                                                <th style={{ padding: '0.75rem', color: '#4a5568', fontSize: '0.85rem' }}>Usuario</th>
-                                                <th style={{ padding: '0.75rem', color: '#4a5568', fontSize: '0.85rem' }}>Código</th>
-                                                <th style={{ padding: '0.75rem', color: '#4a5568', fontSize: '0.85rem' }}>Acción/Notas</th>
+                                            <tr style={{ borderBottom: '2px solid rgba(255, 255, 255, 0.1)', textAlign: 'left' }}>
+                                                <th style={{ padding: '0.75rem', color: '#94a3b8', fontSize: '0.85rem' }}>Fecha</th>
+                                                <th style={{ padding: '0.75rem', color: '#94a3b8', fontSize: '0.85rem' }}>Usuario</th>
+                                                <th style={{ padding: '0.75rem', color: '#94a3b8', fontSize: '0.85rem' }}>Código</th>
+                                                <th style={{ padding: '0.75rem', color: '#94a3b8', fontSize: '0.85rem' }}>Acción/Notas</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -6037,38 +6101,38 @@ const RoomDetail: React.FC = () => {
 
                                                 // Color Coding Logic
                                                 let rowBg = 'transparent';
-                                                let noteColor = '#4a5568';
-                                                let borderColor = '#edf2f7';
+                                                let noteColor = '#94a3b8';
+                                                let borderColor = 'rgba(255, 255, 255, 0.05)';
 
                                                 const noteLower = (move.notes || '').toLowerCase();
 
                                                 if (noteLower.includes('observación') || noteLower.includes('alerta')) {
-                                                    rowBg = '#fffff0'; // Light Yellow
-                                                    noteColor = '#d69e2e'; // Dark Yellow
-                                                    borderColor = '#f6e05e';
+                                                    rowBg = 'rgba(253, 224, 71, 0.1)'; // Light Yellow
+                                                    noteColor = '#fde047'; // Dark Yellow
+                                                    borderColor = 'rgba(253, 224, 71, 0.2)';
                                                 } else if (noteLower.includes('etapa') || noteLower.includes('transplante') || noteLower.includes('siembra')) {
-                                                    rowBg = '#f0fff4'; // Light Green
-                                                    noteColor = '#38a169'; // Dark Green
-                                                    borderColor = '#68d391';
+                                                    rowBg = 'rgba(74, 222, 128, 0.1)'; // Light Green
+                                                    noteColor = '#4ade80'; // Dark Green
+                                                    borderColor = 'rgba(74, 222, 128, 0.2)';
                                                 } else if (noteLower.includes('eliminado') || noteLower.includes('baja') || noteLower.includes('descartad')) {
-                                                    rowBg = '#fff5f5'; // Light Red
-                                                    noteColor = '#e53e3e'; // Dark Red
-                                                    borderColor = '#fc8181';
+                                                    rowBg = 'rgba(248, 113, 113, 0.1)'; // Light Red
+                                                    noteColor = '#f87171'; // Dark Red
+                                                    borderColor = 'rgba(248, 113, 113, 0.2)';
                                                 } else if (noteLower.includes('nota') || noteLower.includes('edición')) {
-                                                    rowBg = '#ebf8ff'; // Light Blue
-                                                    noteColor = '#3182ce'; // Dark Blue
-                                                    borderColor = '#63b3ed';
+                                                    rowBg = 'rgba(56, 189, 248, 0.1)'; // Light Blue
+                                                    noteColor = '#38bdf8'; // Dark Blue
+                                                    borderColor = 'rgba(56, 189, 248, 0.2)';
                                                 }
 
                                                 return (
-                                                    <tr key={move.id} style={{ borderBottom: `1px solid ${borderColor} `, background: rowBg }}>
-                                                        <td style={{ padding: '0.75rem', color: '#2d3748', fontSize: '0.9rem', whiteSpace: 'nowrap' }}>
+                                                    <tr key={move.id} style={{ borderBottom: `1px solid ${borderColor}`, background: rowBg }}>
+                                                        <td style={{ padding: '0.75rem', color: '#f8fafc', fontSize: '0.9rem', whiteSpace: 'nowrap' }}>
                                                             {fullDate}
                                                         </td>
-                                                        <td style={{ padding: '0.75rem', color: '#4a5568', fontSize: '0.9rem' }}>
+                                                        <td style={{ padding: '0.75rem', color: '#cbd5e1', fontSize: '0.9rem' }}>
                                                             {move.user?.full_name || move.user?.email || 'Sistema'}
                                                         </td>
-                                                        <td style={{ padding: '0.75rem', fontWeight: 600, color: '#2d3748', fontSize: '0.9rem' }}>
+                                                        <td style={{ padding: '0.75rem', fontWeight: 600, color: '#f8fafc', fontSize: '0.9rem' }}>
                                                             {move.batch?.tracking_code || move.batch?.name || 'Desconocido'}
                                                         </td>
                                                         <td style={{ padding: '0.75rem', color: noteColor, fontSize: '0.9rem', fontWeight: 500 }}>
@@ -6284,27 +6348,27 @@ const RoomDetail: React.FC = () => {
                     <PortalModalOverlay isClosing={isClosingEditRoom}>
                         <ModalContent isClosing={isClosingEditRoom}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                                <h2 style={{ fontSize: '1.5rem', margin: 0, color: '#2d3748' }}>Editar Sala</h2>
+                                <h2 style={{ fontSize: '1.5rem', margin: 0, color: '#f8fafc' }}>Editar Sala</h2>
                                 <button
                                     onClick={closeEditRoomModal}
-                                    style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.5rem', color: '#a0aec0' }}
+                                    style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.5rem', color: '#94a3b8' }}
                                 >
                                     ✕
                                 </button>
                             </div>
 
                             <div style={{ marginBottom: '1rem' }}>
-                                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Nombre</label>
+                                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#f8fafc' }}>Nombre</label>
                                 <input
                                     type="text"
                                     value={editRoomName}
                                     onChange={e => setEditRoomName(e.target.value)}
-                                    style={{ width: '100%', padding: '0.5rem', border: '1px solid #e2e8f0', borderRadius: '0.5rem' }}
+                                    style={{ width: '100%', padding: '0.75rem', background: 'rgba(15, 23, 42, 0.6)', border: '1px solid rgba(255, 255, 255, 0.1)', color: '#f8fafc', borderRadius: '0.5rem' }}
                                 />
                             </div>
 
                             <div style={{ marginBottom: '1rem' }}>
-                                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Etapa de cultivo</label>
+                                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#f8fafc' }}>Etapa de cultivo</label>
                                 <CustomSelect
                                     value={editRoomType}
                                     onChange={(val) => setEditRoomType(val)}
@@ -6318,7 +6382,7 @@ const RoomDetail: React.FC = () => {
                             </div>
 
                             <div style={{ marginBottom: '1.5rem' }}>
-                                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Fecha de Inicio</label>
+                                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#f8fafc' }}>Fecha de Inicio</label>
                                 <CustomDatePicker
                                     selected={editRoomStartDate ? new Date(editRoomStartDate) : new Date()}
                                     onChange={(date) => {
@@ -6329,27 +6393,18 @@ const RoomDetail: React.FC = () => {
                                 />
                             </div>
 
-                            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
-                                <button
+                            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1rem' }}>
+                                <CancelButton
                                     onClick={closeEditRoomModal}
-                                    style={{ background: 'white', border: '1px solid #e2e8f0', padding: '0.5rem 1rem', borderRadius: '0.5rem', cursor: 'pointer' }}
                                 >
                                     Cancelar
-                                </button>
-                                <button
+                                </CancelButton>
+                                <ActionButton
                                     onClick={handleUpdateRoom}
                                     disabled={isUpdatingRoom}
+                                    $variant="success"
                                     style={{
-                                        background: isUpdatingRoom ? '#a0aec0' : '#48bb78',
-                                        color: 'white',
-                                        border: 'none',
-                                        padding: '0.5rem 1rem',
-                                        borderRadius: '0.5rem',
                                         cursor: isUpdatingRoom ? 'not-allowed' : 'pointer',
-                                        fontWeight: 600,
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '0.5rem'
                                     }}
                                 >
                                     {isUpdatingRoom ? (
@@ -6359,7 +6414,7 @@ const RoomDetail: React.FC = () => {
                                     ) : (
                                         'Guardar Cambios'
                                     )}
-                                </button>
+                                </ActionButton>
                             </div>
                         </ModalContent>
                     </PortalModalOverlay >
@@ -6617,12 +6672,12 @@ const RoomDetail: React.FC = () => {
                     <PortalModalOverlay isClosing={isClosingCreateBatch}>
                         <ModalContent isClosing={isClosingCreateBatch}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                                <h3 style={{ margin: 0, fontSize: '1.25rem', color: '#2d3748' }}>
+                                <h3 style={{ margin: 0, fontSize: '1.25rem', color: '#f8fafc' }}>
                                     {['germinacion', 'germinación', 'germination', 'semillero'].includes((room?.type || '').toLowerCase()) ? 'Nuevo Lote de Semillas' : 'Nuevo Lote'}
                                 </h3>
                                 <button
                                     onClick={closeCreateBatchModal}
-                                    style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.5rem', color: '#a0aec0' }}
+                                    style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.5rem', color: '#94a3b8' }}
                                 >
                                     ✕
                                 </button>
@@ -6641,12 +6696,12 @@ const RoomDetail: React.FC = () => {
                                 />
                             </div>
                             <div style={{ marginBottom: '1rem' }}>
-                                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Cantidad</label>
+                                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#f8fafc' }}>Cantidad</label>
                                 <input
                                     type="number"
                                     value={newBatch.quantity}
                                     onChange={e => setNewBatch({ ...newBatch, quantity: e.target.value })}
-                                    style={{ width: '100%', padding: '0.5rem', border: '1px solid #e2e8f0', borderRadius: '0.5rem' }}
+                                    style={{ width: '100%', padding: '0.75rem', background: 'rgba(15, 23, 42, 0.6)', border: '1px solid rgba(255, 255, 255, 0.1)', color: '#f8fafc', borderRadius: '0.5rem' }}
                                     placeholder="0"
                                 />
                             </div>
@@ -6664,32 +6719,23 @@ const RoomDetail: React.FC = () => {
                                     }}
                                 />
                             </div>
-                            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
-                                <button
+                            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1rem' }}>
+                                <CancelButton
                                     onClick={closeCreateBatchModal}
-                                    style={{ background: 'white', border: '1px solid #e2e8f0', padding: '0.5rem 1rem', borderRadius: '0.5rem', cursor: 'pointer' }}
                                 >
                                     Cancelar
-                                </button>
-                                <button
+                                </CancelButton>
+                                <ActionButton
                                     onClick={handleCreateBatch}
                                     disabled={isCreatingBatch}
+                                    $variant="success"
                                     style={{
-                                        background: isCreatingBatch ? '#9ae6b4' : '#48bb78',
-                                        color: 'white',
-                                        border: 'none',
-                                        padding: '0.5rem 1rem',
-                                        borderRadius: '0.5rem',
                                         cursor: isCreatingBatch ? 'not-allowed' : 'pointer',
-                                        fontWeight: 600,
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '0.5rem'
                                     }}
                                 >
                                     {isCreatingBatch && <FaCircleNotch className="spin" />}
                                     {isCreatingBatch ? 'Creando...' : 'Crear'}
-                                </button>
+                                </ActionButton>
                             </div>
                         </ModalContent>
                     </PortalModalOverlay>
@@ -6704,15 +6750,14 @@ const RoomDetail: React.FC = () => {
                 count={selectedBatchIds.size}
             />
             {/* REPLACE INLINE PRINT LOGIC WITH ROBUST COMPONENT */}
-            {!isPrintingMap && (
-                <PrintableMapReport
-                    roomName={room?.name || 'Sala'}
-                    mapName={activeMapId ? (cloneMaps.find(m => m.id === activeMapId)?.name || 'Mapa') : 'General'}
-                    rows={activeMapId ? (cloneMaps.find(m => m.id === activeMapId)?.grid_rows || 0) : (room?.grid_rows || 0)}
-                    cols={activeMapId ? (cloneMaps.find(m => m.id === activeMapId)?.grid_columns || 0) : (room?.grid_columns || 0)}
-                    batches={(room?.batches || []).filter(b => b.quantity > 0 && (!activeMapId || b.clone_map_id === activeMapId))}
-                />
-            )}
+            {/* REPLACE INLINE PRINT LOGIC WITH ROBUST COMPONENT */}
+            <PrintableMapReport
+                roomName={room?.name || 'Sala'}
+                mapName={activeMapId ? (cloneMaps.find(m => m.id === activeMapId)?.name || 'Mapa') : 'General'}
+                rows={activeMapId ? (cloneMaps.find(m => m.id === activeMapId)?.grid_rows || 0) : (room?.grid_rows || 0)}
+                cols={activeMapId ? (cloneMaps.find(m => m.id === activeMapId)?.grid_columns || 0) : (room?.grid_columns || 0)}
+                batches={(room?.batches || []).filter(b => b.quantity > 0 && (!activeMapId || b.clone_map_id === activeMapId))}
+            />
 
         </Container >
     );

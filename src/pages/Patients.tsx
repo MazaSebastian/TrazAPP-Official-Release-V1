@@ -1,17 +1,41 @@
 import React, { useState, useEffect } from 'react';
-import styled from 'styled-components';
+import styled, { keyframes } from 'styled-components';
 import { patientsService, Patient } from '../services/patientsService';
 
 import { ConfirmModal } from '../components/ConfirmModal';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ToastModal } from '../components/ToastModal';
 import { FaUserPlus, FaIdCard, FaFileUpload, FaCheckCircle, FaFileAlt } from 'react-icons/fa';
+import { CustomSelect } from '../components/CustomSelect';
+import { CustomDatePicker } from '../components/CustomDatePicker';
+
+const fadeIn = keyframes`
+  from { opacity: 0; }
+  to { opacity: 1; }
+`;
+
+const fadeOut = keyframes`
+  from { opacity: 1; }
+  to { opacity: 0; }
+`;
+
+const slideUp = keyframes`
+  from { opacity: 0; transform: translateY(20px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+`;
+
+const slideDown = keyframes`
+  from { opacity: 1; transform: translateY(0) scale(1); }
+  to { opacity: 0; transform: translateY(20px) scale(0.95); }
+`;
 
 // Styled Components
 const PageContainer = styled.div`
   padding: 1rem;
   max-width: 1400px; 
   margin: 0 auto;
+  min-height: 100vh;
+  color: #f8fafc;
 `;
 
 const Header = styled.div`
@@ -23,16 +47,16 @@ const Header = styled.div`
 
 const Title = styled.h1`
   font-size: 1.8rem;
-  color: #2d3748;
+  color: #f8fafc;
   display: flex;
   align-items: center;
   gap: 0.5rem;
 `;
 
 const ActionButton = styled.button`
-  background: #319795;
-  color: white;
-  border: none;
+  background: rgba(168, 85, 247, 0.2);
+  color: #d8b4fe;
+  border: 1px solid rgba(168, 85, 247, 0.5);
   padding: 0.75rem 1.5rem;
   border-radius: 0.5rem;
   cursor: pointer;
@@ -41,16 +65,21 @@ const ActionButton = styled.button`
   align-items: center;
   gap: 0.5rem;
   transition: all 0.2s;
+  backdrop-filter: blur(8px);
 
   &:hover {
-    background: #2c7a7b;
+    background: rgba(168, 85, 247, 0.3);
     transform: translateY(-1px);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.2);
   }
 
   &:disabled {
-      background: #a0aec0;
+      background: rgba(100, 116, 139, 0.2);
+      color: #94a3b8;
+      border-color: rgba(100, 116, 139, 0.5);
       cursor: not-allowed;
       transform: none;
+      box-shadow: none;
   }
 `;
 
@@ -61,29 +90,35 @@ const CardGrid = styled.div`
 `;
 
 const PatientCard = styled.div`
-  background: white;
+  background: rgba(30, 41, 59, 0.6);
   border-radius: 12px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid rgba(255, 255, 255, 0.05);
   padding: 1.5rem;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-  transition: all 0.2s;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s;
   cursor: pointer;
+  backdrop-filter: blur(12px);
 
   &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    transform: translateY(-4px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+    border-color: rgba(168, 85, 247, 0.3);
   }
 `;
 
 const StatusBadge = styled.span<{ status: string }>`
   background: ${props =>
-        props.status === 'active' ? '#c6f6d5' :
-            props.status === 'expired' ? '#fed7d7' :
-                props.status === 'pending' ? '#ffebee' : '#edf2f7'};
+        props.status === 'active' ? 'rgba(74, 222, 128, 0.2)' :
+            props.status === 'expired' ? 'rgba(239, 68, 68, 0.2)' :
+                props.status === 'pending' ? 'rgba(234, 179, 8, 0.2)' : 'rgba(148, 163, 184, 0.2)'};
   color: ${props =>
-        props.status === 'active' ? '#22543d' :
-            props.status === 'expired' ? '#822727' :
-                props.status === 'pending' ? '#c53030' : '#4a5568'};
+        props.status === 'active' ? '#4ade80' :
+            props.status === 'expired' ? '#f87171' :
+                props.status === 'pending' ? '#facc15' : '#cbd5e1'};
+  border: 1px solid ${props =>
+        props.status === 'active' ? 'rgba(74, 222, 128, 0.5)' :
+            props.status === 'expired' ? 'rgba(239, 68, 68, 0.5)' :
+                props.status === 'pending' ? 'rgba(234, 179, 8, 0.5)' : 'rgba(148, 163, 184, 0.5)'};
   padding: 0.25rem 0.5rem;
   border-radius: 999px;
   font-size: 0.75rem;
@@ -95,27 +130,42 @@ const SearchInput = styled.input`
   width: 100%;
   padding: 0.75rem;
   border-radius: 0.5rem;
-  border: 1px solid #e2e8f0;
+  border: 1px solid rgba(255, 255, 255, 0.1);
   margin-bottom: 1.5rem;
+  background: rgba(30, 41, 59, 0.5);
+  color: #f8fafc;
+  backdrop-filter: blur(8px);
+
+  &:focus {
+    outline: none;
+    border-color: rgba(168, 85, 247, 0.5);
+    box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.1);
+  }
+
+  &::placeholder {
+    color: #64748b;
+  }
 `;
 
 // Modal Styles
-const Modal = styled.div<{ isOpen: boolean }>`
+const Modal = styled.div<{ isOpen: boolean; $isClosing?: boolean }>`
   display: ${props => props.isOpen ? 'flex' : 'none'};
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.7);
   justify-content: center;
   align-items: center;
   z-index: 1000;
   padding: 1rem;
+  backdrop-filter: blur(4px);
+  animation: ${props => props.$isClosing ? fadeOut : fadeIn} 0.3s ease-out forwards;
 `;
 
-const ModalContent = styled.div`
-  background: white;
+const ModalContent = styled.div<{ $isClosing?: boolean }>`
+  background: rgba(15, 23, 42, 0.95);
   padding: 2rem;
   border-radius: 1rem;
   width: 100%;
@@ -123,6 +173,11 @@ const ModalContent = styled.div`
   max-height: 90vh;
   overflow-y: auto;
   position: relative;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5);
+  backdrop-filter: blur(16px);
+  color: #f8fafc;
+  animation: ${props => props.$isClosing ? slideDown : slideUp} 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 `;
 
 const FormGroup = styled.div`
@@ -132,16 +187,28 @@ const FormGroup = styled.div`
     display: block;
     margin-bottom: 0.5rem;
     font-weight: 500;
-    color: #4a5568;
+    color: #94a3b8;
     font-size: 0.9rem;
   }
   
   input, select, textarea {
     width: 100%;
     padding: 0.6rem;
-    border: 1px solid #e2e8f0;
+    border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 0.375rem;
     font-size: 0.95rem;
+    background: rgba(30, 41, 59, 0.5);
+    color: #f8fafc;
+
+    &:focus {
+      outline: none;
+      border-color: rgba(168, 85, 247, 0.5);
+      box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.1);
+    }
+    
+    &::placeholder {
+      color: #64748b;
+    }
   }
 `;
 
@@ -157,25 +224,25 @@ const FormRow = styled.div`
 
 const SectionHeader = styled.h3`
     font-size: 1.1rem;
-    color: #2d3748;
+    color: #f8fafc;
     margin-top: 1.5rem;
     margin-bottom: 1rem;
-    border-bottom: 1px solid #e2e8f0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     padding-bottom: 0.5rem;
 `;
 
 const FileUploadBox = styled.div`
-    border: 2px dashed #cbd5e0;
+    border: 2px dashed rgba(255, 255, 255, 0.2);
     border-radius: 0.5rem;
     padding: 1.5rem;
     text-align: center;
     cursor: pointer;
     transition: all 0.2s;
-    background: #f7fafc;
+    background: rgba(30, 41, 59, 0.5);
 
     &:hover {
-        border-color: #319795;
-        background: #e6fffa;
+        border-color: rgba(168, 85, 247, 0.5);
+        background: rgba(168, 85, 247, 0.1);
     }
 
     input {
@@ -190,7 +257,9 @@ const Patients: React.FC = () => {
 
     // Modal States
     const [isAddOpen, setIsAddOpen] = useState(false);
+    const [isClosingAdd, setIsClosingAdd] = useState(false);
     const [isEditOpen, setIsEditOpen] = useState(false);
+    const [isClosingEdit, setIsClosingEdit] = useState(false);
 
     // Edit Patient State
     const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
@@ -293,8 +362,8 @@ const Patients: React.FC = () => {
             const initialPatientData: Partial<Patient> = {
                 reprocann_number: regForm.reprocannNumber,
                 reprocann_status: 'pending',
-                expiration_date: regForm.expirationDate,
-                reprocann_issue_date: regForm.issueDate,
+                expiration_date: regForm.expirationDate || undefined,
+                reprocann_issue_date: regForm.issueDate || undefined,
                 document_number: regForm.documentNumber,
                 phone: regForm.phone,
                 address: regForm.address,
@@ -336,7 +405,7 @@ const Patients: React.FC = () => {
                 });
             }
 
-            setIsAddOpen(false);
+            closeAddModal();
             resetForm();
             loadData();
             showToast("Socio registrado exitosamente.", 'success');
@@ -370,6 +439,22 @@ const Patients: React.FC = () => {
         setIsEditOpen(true);
     };
 
+    const closeAddModal = () => {
+        setIsClosingAdd(true);
+        setTimeout(() => {
+            setIsAddOpen(false);
+            setIsClosingAdd(false);
+        }, 300);
+    };
+
+    const closeEditModal = () => {
+        setIsClosingEdit(true);
+        setTimeout(() => {
+            setIsEditOpen(false);
+            setIsClosingEdit(false);
+        }, 300);
+    };
+
     const handleUpdatePatient = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!selectedPatient) return;
@@ -377,7 +462,7 @@ const Patients: React.FC = () => {
         try {
             await patientsService.upsertPatient(selectedPatient);
             showToast("Socio actualizado exitosamente.", 'success');
-            setIsEditOpen(false);
+            closeEditModal();
             loadData();
         } catch (error) {
             console.error("Error updating patient:", error);
@@ -423,17 +508,17 @@ const Patients: React.FC = () => {
                                 {patient.reprocann_number || 'Sin Reprocann'}
                             </p>
                             {/* Show extra info if available */}
-                            {patient.document_number && <p style={{ fontSize: '0.8rem', color: '#a0aec0' }}>DNI: {patient.document_number}</p>}
+                            {patient.document_number && <p style={{ fontSize: '0.8rem', color: '#94a3b8' }}>DNI: {patient.document_number}</p>}
                             {(patient as any).expiration_date && (
-                                <small style={{ color: new Date((patient as any).expiration_date!) < new Date() ? 'red' : 'green', display: 'block', marginTop: '0.5rem' }}>
+                                <small style={{ color: new Date((patient as any).expiration_date!) < new Date() ? '#f87171' : '#4ade80', display: 'block', marginTop: '0.5rem' }}>
                                     Vence: {(patient as any).expiration_date}
                                 </small>
                             )}
 
-                            <div style={{ marginTop: '1rem', borderTop: '1px solid #e2e8f0', paddingTop: '1rem' }}>
+                            <div style={{ marginTop: '1rem', borderTop: '1px solid rgba(255, 255, 255, 0.1)', paddingTop: '1rem' }}>
                                 <ActionButton
-                                    as="button"
-                                    style={{ width: '100%', justifyContent: 'center', background: '#4299E1', fontSize: '0.9rem' }}
+                                    type="button"
+                                    style={{ width: '100%', justifyContent: 'center' }}
                                     onClick={(e) => {
                                         e.stopPropagation();
                                         window.location.href = `/patients/${patient.id || patient.profile_id}/clinical`; // Using href for now to ensure clean load, or use navigate
@@ -449,9 +534,9 @@ const Patients: React.FC = () => {
             )}
 
             {/* Modal: Add Patient (Registration) */}
-            <Modal isOpen={isAddOpen}>
-                <ModalContent>
-                    <h2 style={{ marginBottom: '1.5rem' }}>📄 Vinculación de Nuevo Socio</h2>
+            <Modal isOpen={isAddOpen || isClosingAdd} $isClosing={isClosingAdd} onMouseDown={closeAddModal}>
+                <ModalContent $isClosing={isClosingAdd} onMouseDown={(e) => e.stopPropagation()}>
+                    <h2 style={{ marginBottom: '1.5rem', color: '#f8fafc' }}>📄 Vinculación de Nuevo Socio</h2>
                     <form onSubmit={handleRegister}>
 
                         <SectionHeader>Datos Personales</SectionHeader>
@@ -516,22 +601,20 @@ const Patients: React.FC = () => {
                             />
                         </FormGroup>
                         <FormRow>
-                            <FormGroup>
+                            <FormGroup style={{ position: 'relative', zIndex: 1001 }}>
                                 <label>Fecha Emisión</label>
-                                <input
-                                    type="date"
-                                    value={regForm.issueDate}
-                                    onChange={e => setRegForm({ ...regForm, issueDate: e.target.value })}
-                                    required
+                                <CustomDatePicker
+                                    selected={regForm.issueDate ? new Date(regForm.issueDate) : null}
+                                    onChange={(val) => setRegForm({ ...regForm, issueDate: val ? val.toISOString().split('T')[0] : '' })}
+                                    placeholderText="Seleccionar Fecha"
                                 />
                             </FormGroup>
-                            <FormGroup>
+                            <FormGroup style={{ position: 'relative', zIndex: 1001 }}>
                                 <label>Fecha Vencimiento</label>
-                                <input
-                                    type="date"
-                                    value={regForm.expirationDate}
-                                    onChange={e => setRegForm({ ...regForm, expirationDate: e.target.value })}
-                                    required
+                                <CustomDatePicker
+                                    selected={regForm.expirationDate ? new Date(regForm.expirationDate) : null}
+                                    onChange={(val) => setRegForm({ ...regForm, expirationDate: val ? val.toISOString().split('T')[0] : '' })}
+                                    placeholderText="Seleccionar Fecha"
                                 />
                             </FormGroup>
                         </FormRow>
@@ -583,7 +666,7 @@ const Patients: React.FC = () => {
                         </FormGroup>
 
                         <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem', justifyContent: 'flex-end' }}>
-                            <ActionButton type="button" style={{ background: '#718096' }} onClick={() => { setIsAddOpen(false); resetForm(); }}>Cancelar</ActionButton>
+                            <ActionButton type="button" style={{ background: 'rgba(100, 116, 139, 0.2)', color: '#cbd5e1', borderColor: 'transparent' }} onClick={() => { closeAddModal(); resetForm(); }}>Cancelar</ActionButton>
                             <ActionButton type="submit" disabled={isSubmitting}>
                                 {isSubmitting ? 'Guardando...' : 'Registrar Socio'}
                             </ActionButton>
@@ -593,14 +676,14 @@ const Patients: React.FC = () => {
             </Modal>
 
             {/* Modal: View/Edit Patient Details */}
-            <Modal isOpen={isEditOpen}>
-                <ModalContent>
+            <Modal isOpen={isEditOpen || isClosingEdit} $isClosing={isClosingEdit} onMouseDown={closeEditModal}>
+                <ModalContent $isClosing={isClosingEdit} onMouseDown={(e) => e.stopPropagation()}>
                     {selectedPatient && (
                         <>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid #e2e8f0', paddingBottom: '1rem' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', paddingBottom: '1rem' }}>
                                 <div>
-                                    <h2 style={{ margin: 0 }}>{selectedPatient.profile?.full_name}</h2>
-                                    <span style={{ fontSize: '0.9rem', color: '#718096' }}>{selectedPatient.profile?.email}</span>
+                                    <h2 style={{ margin: 0, color: '#f8fafc' }}>{selectedPatient.profile?.full_name}</h2>
+                                    <span style={{ fontSize: '0.9rem', color: '#94a3b8' }}>{selectedPatient.profile?.email}</span>
                                 </div>
                                 <StatusBadge status={selectedPatient.reprocann_status} style={{ fontSize: '1rem', padding: '0.5rem 1rem' }}>
                                     {selectedPatient.reprocann_status.toUpperCase()}
@@ -626,35 +709,35 @@ const Patients: React.FC = () => {
                             <SectionHeader>Documentación</SectionHeader>
                             <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
                                 {selectedPatient.file_reprocann_url ? (
-                                    <ActionButton as="a" href={selectedPatient.file_reprocann_url} target="_blank" style={{ background: '#4299e1', fontSize: '0.9rem' }}>
+                                    <ActionButton as="a" href={selectedPatient.file_reprocann_url} target="_blank" style={{ fontSize: '0.9rem' }}>
                                         <FaFileAlt /> Ver Credencial
                                     </ActionButton>
-                                ) : <span style={{ color: '#a0aec0' }}>Sin Credencial</span>}
+                                ) : <span style={{ color: '#64748b' }}>Sin Credencial</span>}
 
                                 {selectedPatient.file_affidavit_url ? (
-                                    <ActionButton as="a" href={selectedPatient.file_affidavit_url} target="_blank" style={{ background: '#4299e1', fontSize: '0.9rem' }}>
+                                    <ActionButton as="a" href={selectedPatient.file_affidavit_url} target="_blank" style={{ fontSize: '0.9rem' }}>
                                         <FaFileAlt /> Ver DDJJ
                                     </ActionButton>
-                                ) : <span style={{ color: '#a0aec0' }}>Sin DDJJ</span>}
+                                ) : <span style={{ color: '#64748b' }}>Sin DDJJ</span>}
 
                                 {selectedPatient.file_consent_url ? (
-                                    <ActionButton as="a" href={selectedPatient.file_consent_url} target="_blank" style={{ background: '#4299e1', fontSize: '0.9rem' }}>
+                                    <ActionButton as="a" href={selectedPatient.file_consent_url} target="_blank" style={{ fontSize: '0.9rem' }}>
                                         <FaFileAlt /> Ver Consentimiento
                                     </ActionButton>
-                                ) : <span style={{ color: '#a0aec0' }}>Sin Consentimiento</span>}
+                                ) : <span style={{ color: '#64748b' }}>Sin Consentimiento</span>}
                             </div>
 
                             <SectionHeader>Gestión de Estado</SectionHeader>
 
                             {selectedPatient.reprocann_status === 'pending' && (
-                                <div style={{ background: '#ebf8ff', border: '1px solid #bee3f8', borderRadius: '0.5rem', padding: '1rem', marginBottom: '1.5rem' }}>
-                                    <h4 style={{ margin: '0 0 0.5rem 0', color: '#2c5282' }}>ℹ️ Acción Requerida</h4>
-                                    <p style={{ margin: '0 0 1rem 0', fontSize: '0.9rem', color: '#4a5568' }}>
+                                <div style={{ background: 'rgba(56, 189, 248, 0.1)', border: '1px solid rgba(56, 189, 248, 0.3)', borderRadius: '0.5rem', padding: '1rem', marginBottom: '1.5rem' }}>
+                                    <h4 style={{ margin: '0 0 0.5rem 0', color: '#38bdf8' }}>ℹ️ Acción Requerida</h4>
+                                    <p style={{ margin: '0 0 1rem 0', fontSize: '0.9rem', color: '#bae6fd' }}>
                                         Este socio está pendiente. Si la documentación es correcta, apruébalo para habilitar su cuenta.
                                     </p>
                                     <ActionButton
                                         type="button"
-                                        style={{ width: '100%', justifyContent: 'center', background: '#48bb78' }}
+                                        style={{ width: '100%', justifyContent: 'center', background: 'rgba(74, 222, 128, 0.2)', color: '#4ade80', borderColor: 'rgba(74, 222, 128, 0.5)' }}
                                         onClick={() => {
                                             setConfirmModal({
                                                 isOpen: true,
@@ -683,17 +766,18 @@ const Patients: React.FC = () => {
 
                             <SectionHeader>Edición Manual</SectionHeader>
                             <form onSubmit={handleUpdatePatient}>
-                                <FormGroup>
+                                <FormGroup style={{ position: 'relative', zIndex: 1002 }}>
                                     <label>Cambiar Estado</label>
-                                    <select
+                                    <CustomSelect
                                         value={selectedPatient.reprocann_status}
-                                        onChange={e => setSelectedPatient({ ...selectedPatient, reprocann_status: e.target.value as any })}
-                                    >
-                                        <option value="pending">Pendiente de Revisión</option>
-                                        <option value="active">Activo (Habilitado)</option>
-                                        <option value="expired">Vencido</option>
-                                        <option value="rejected">Rechazado</option>
-                                    </select>
+                                        onChange={val => setSelectedPatient({ ...selectedPatient, reprocann_status: val as any })}
+                                        options={[
+                                            { value: 'pending', label: 'Pendiente de Revisión' },
+                                            { value: 'active', label: 'Activo (Habilitado)' },
+                                            { value: 'expired', label: 'Vencido' },
+                                            { value: 'rejected', label: 'Rechazado' }
+                                        ]}
+                                    />
                                 </FormGroup>
                                 <FormGroup>
                                     <label>Actualizar Límite (g)</label>
@@ -715,7 +799,7 @@ const Patients: React.FC = () => {
                                 <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <ActionButton
                                         type="button"
-                                        style={{ background: '#e53e3e', fontSize: '0.85rem' }}
+                                        style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#f87171', borderColor: 'rgba(239, 68, 68, 0.5)', fontSize: '0.85rem' }}
                                         onClick={() => {
                                             setConfirmModal({
                                                 isOpen: true,
@@ -725,7 +809,7 @@ const Patients: React.FC = () => {
                                                     try {
                                                         await patientsService.deletePatient(selectedPatient.id);
                                                         setConfirmModal(prev => ({ ...prev, isOpen: false }));
-                                                        setIsEditOpen(false);
+                                                        closeEditModal();
                                                         loadData();
                                                         showToast("Socio eliminado correctamente.", 'success');
                                                     } catch (error) {
@@ -741,7 +825,7 @@ const Patients: React.FC = () => {
                                     </ActionButton>
 
                                     <div style={{ display: 'flex', gap: '1rem' }}>
-                                        <ActionButton type="button" style={{ background: '#718096' }} onClick={() => setIsEditOpen(false)}>Cerrar</ActionButton>
+                                        <ActionButton type="button" style={{ background: 'rgba(100, 116, 139, 0.2)', color: '#cbd5e1', borderColor: 'transparent' }} onClick={closeEditModal}>Cerrar</ActionButton>
                                         <ActionButton type="submit">Guardar Cambios</ActionButton>
                                     </div>
                                 </div>
