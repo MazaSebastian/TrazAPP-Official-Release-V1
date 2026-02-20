@@ -9,6 +9,8 @@ import {
   FaDownload
 } from 'react-icons/fa';
 import { CustomSelect } from '../components/CustomSelect';
+import { useOrganization } from '../context/OrganizationContext';
+import UpgradeOverlay from '../components/common/UpgradeOverlay';
 import type { Insumo } from '../types';
 import {
   getInsumos,
@@ -371,6 +373,11 @@ const FormRow = styled.div`
 `;
 
 const Insumos: React.FC = () => {
+  const { currentOrganization } = useOrganization();
+  const plan = currentOrganization?.plan || 'individual';
+  const planLevel = ['ong', 'enterprise'].includes(plan) ? 3 :
+    ['equipo', 'pro'].includes(plan) ? 2 : 1;
+
   const [insumos, setInsumos] = useState<Insumo[]>([]);
   const [filteredInsumos, setFilteredInsumos] = useState<Insumo[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -571,295 +578,299 @@ const Insumos: React.FC = () => {
   };
 
   return (
-    <Page>
-      <Header>
-        <h1>Gestión de Insumos</h1>
-        <Button onClick={() => handleOpenModal()}>
-          <FaPlus /> Nuevo Insumo
-        </Button>
-      </Header>
+    <Page style={{ position: 'relative', overflow: 'hidden' }}>
+      {planLevel < 2 && <UpgradeOverlay requiredPlanName="Equipo o superior" />}
 
-      <StatsGrid>
-        <StatCard>
-          <div className="stat-value">{stats.totalInsumos}</div>
-          <div className="stat-label">Total Insumos</div>
-        </StatCard>
-        <StatCard className={stats.stockBajo > 0 ? 'warning' : 'success'}>
-          <div className="stat-value">{stats.stockBajo}</div>
-          <div className="stat-label">Stock Bajo</div>
-        </StatCard>
-        <StatCard className={stats.conVariacionPrecio > 0 ? 'warning' : 'success'}>
-          <div className="stat-value">{stats.conVariacionPrecio}</div>
-          <div className="stat-label">Con Variación</div>
-        </StatCard>
-        <StatCard>
-          <div className="stat-value">${stats.totalValor.toFixed(2)}</div>
-          <div className="stat-label">Valor Total</div>
-        </StatCard>
-      </StatsGrid>
+      <div style={{ filter: planLevel < 2 ? 'blur(4px)' : 'none', pointerEvents: planLevel < 2 ? 'none' : 'auto', userSelect: planLevel < 2 ? 'none' : 'auto', opacity: planLevel < 2 ? 0.5 : 1 }}>
+        <Header>
+          <h1>Gestión de Insumos</h1>
+          <Button onClick={() => handleOpenModal()}>
+            <FaPlus /> Nuevo Insumo
+          </Button>
+        </Header>
 
-      <Controls>
-        <SearchInput
-          placeholder="Buscar por nombre o proveedor..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-        <div style={{ flex: 1, minWidth: '250px' }}>
-          <CustomSelect
-            value={selectedCategory}
-            onChange={(val: string) => setSelectedCategory(val)}
-            options={[
-              { value: '', label: 'Todas las categorías' },
-              { value: 'semillas', label: 'Semillas' },
-              { value: 'fertilizantes', label: 'Fertilizantes' },
-              { value: 'sustratos', label: 'Sustratos' },
-              { value: 'herramientas', label: 'Herramientas' },
-              { value: 'pesticidas', label: 'Pesticidas' },
-              { value: 'otros', label: 'Otros' }
-            ]}
+        <StatsGrid>
+          <StatCard>
+            <div className="stat-value">{stats.totalInsumos}</div>
+            <div className="stat-label">Total Insumos</div>
+          </StatCard>
+          <StatCard className={stats.stockBajo > 0 ? 'warning' : 'success'}>
+            <div className="stat-value">{stats.stockBajo}</div>
+            <div className="stat-label">Stock Bajo</div>
+          </StatCard>
+          <StatCard className={stats.conVariacionPrecio > 0 ? 'warning' : 'success'}>
+            <div className="stat-value">{stats.conVariacionPrecio}</div>
+            <div className="stat-label">Con Variación</div>
+          </StatCard>
+          <StatCard>
+            <div className="stat-value">${stats.totalValor.toFixed(2)}</div>
+            <div className="stat-label">Valor Total</div>
+          </StatCard>
+        </StatsGrid>
+
+        <Controls>
+          <SearchInput
+            placeholder="Buscar por nombre o proveedor..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
           />
-        </div>
-        <Button variant="secondary" onClick={exportToCSV}>
-          <FaDownload /> Exportar CSV
-        </Button>
-      </Controls>
+          <div style={{ flex: 1, minWidth: '250px' }}>
+            <CustomSelect
+              value={selectedCategory}
+              onChange={(val: string) => setSelectedCategory(val)}
+              options={[
+                { value: '', label: 'Todas las categorías' },
+                { value: 'semillas', label: 'Semillas' },
+                { value: 'fertilizantes', label: 'Fertilizantes' },
+                { value: 'sustratos', label: 'Sustratos' },
+                { value: 'herramientas', label: 'Herramientas' },
+                { value: 'pesticidas', label: 'Pesticidas' },
+                { value: 'otros', label: 'Otros' }
+              ]}
+            />
+          </div>
+          <Button variant="secondary" onClick={exportToCSV}>
+            <FaDownload /> Exportar CSV
+          </Button>
+        </Controls>
 
-      <Table>
-        <TableHeader>
-          <div>Nombre</div>
-          <div>Categoría</div>
-          <div>Precio</div>
-          <div>Variación</div>
-          <div>Stock</div>
-          <div>Proveedor</div>
-          <div>Última Compra</div>
-          <div>Acciones</div>
-        </TableHeader>
+        <Table>
+          <TableHeader>
+            <div>Nombre</div>
+            <div>Categoría</div>
+            <div>Precio</div>
+            <div>Variación</div>
+            <div>Stock</div>
+            <div>Proveedor</div>
+            <div>Última Compra</div>
+            <div>Acciones</div>
+          </TableHeader>
 
-        {filteredInsumos.map(insumo => {
-          const priceChange = getPriceChange(insumo);
-          const isStockLow = insumo.stock_actual <= insumo.stock_minimo;
+          {filteredInsumos.map(insumo => {
+            const priceChange = getPriceChange(insumo);
+            const isStockLow = insumo.stock_actual <= insumo.stock_minimo;
 
-          return (
-            <TableRow key={insumo.id}>
-              <div>
-                <div style={{ fontWeight: 600 }}>{insumo.nombre}</div>
-                <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
-                  {insumo.unidad_medida}
-                </div>
-              </div>
-              <div>
-                <Badge variant="gray">{insumo.categoria}</Badge>
-              </div>
-              <div>
-                <div style={{ fontWeight: 600 }}>${insumo.precio_actual}</div>
-                {insumo.precio_anterior && (
+            return (
+              <TableRow key={insumo.id}>
+                <div>
+                  <div style={{ fontWeight: 600 }}>{insumo.nombre}</div>
                   <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
-                    Antes: ${insumo.precio_anterior}
+                    {insumo.unidad_medida}
                   </div>
-                )}
-              </div>
-              <div>
-                {priceChange ? (
-                  <PriceChange isPositive={priceChange.change >= 0}>
-                    {priceChange.change >= 0 ? '+' : ''}${priceChange.change.toFixed(2)}
-                    <span style={{ fontSize: '0.75rem' }}>
-                      ({priceChange.percentage >= 0 ? '+' : ''}{priceChange.percentage.toFixed(1)}%)
-                    </span>
-                  </PriceChange>
-                ) : (
-                  <span style={{ color: '#64748b' }}>—</span>
-                )}
-              </div>
-              <div>
-                <div style={{ fontWeight: 600 }}>
-                  {insumo.stock_actual} {insumo.unidad_medida}
                 </div>
-                {isStockLow && (
-                  <div style={{ fontSize: '0.75rem', color: '#ef4444' }}>
-                    Stock bajo
+                <div>
+                  <Badge variant="gray">{insumo.categoria}</Badge>
+                </div>
+                <div>
+                  <div style={{ fontWeight: 600 }}>${insumo.precio_actual}</div>
+                  {insumo.precio_anterior && (
+                    <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
+                      Antes: ${insumo.precio_anterior}
+                    </div>
+                  )}
+                </div>
+                <div>
+                  {priceChange ? (
+                    <PriceChange isPositive={priceChange.change >= 0}>
+                      {priceChange.change >= 0 ? '+' : ''}${priceChange.change.toFixed(2)}
+                      <span style={{ fontSize: '0.75rem' }}>
+                        ({priceChange.percentage >= 0 ? '+' : ''}{priceChange.percentage.toFixed(1)}%)
+                      </span>
+                    </PriceChange>
+                  ) : (
+                    <span style={{ color: '#64748b' }}>—</span>
+                  )}
+                </div>
+                <div>
+                  <div style={{ fontWeight: 600 }}>
+                    {insumo.stock_actual} {insumo.unidad_medida}
                   </div>
-                )}
-              </div>
-              <div>
-                {insumo.proveedor || '—'}
-              </div>
-              <div>
-                {insumo.fecha_ultima_compra ?
-                  new Date(insumo.fecha_ultima_compra).toLocaleDateString('es-AR') :
-                  '—'
-                }
-              </div>
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
-                <Button
-                  variant="secondary"
-                  onClick={() => handleOpenModal(insumo)}
-                  style={{ padding: '0.5rem' }}
-                >
-                  <FaEdit />
-                </Button>
-                <Button
-                  variant="danger"
-                  onClick={() => handleDelete(insumo.id)}
-                  style={{ padding: '0.5rem' }}
-                >
-                  <FaTrash />
-                </Button>
-              </div>
-            </TableRow>
-          );
-        })}
-      </Table>
-
-      {filteredInsumos.length === 0 && (
-        <div style={{
-          textAlign: 'center',
-          padding: '3rem',
-          color: '#94a3b8',
-          background: 'rgba(30, 41, 59, 0.6)',
-          border: '1px solid rgba(255, 255, 255, 0.05)',
-          borderTop: 'none',
-          borderBottomLeftRadius: '0.75rem',
-          borderBottomRightRadius: '0.75rem',
-          backdropFilter: 'blur(12px)'
-        }}>
-          <FaBoxes style={{ fontSize: '3rem', marginBottom: '1rem', opacity: 0.5, color: '#f8fafc' }} />
-          <h3 style={{ color: '#f8fafc' }}>No hay insumos registrados</h3>
-          <p>Comienza agregando tu primer insumo para monitorear precios y stock</p>
-        </div>
-      )}
-
-      <Modal isOpen={isModalOpen || isClosingModal} $isClosing={isClosingModal} onMouseDown={closeModal}>
-        <ModalContent $isClosing={isClosingModal} onMouseDown={(e) => e.stopPropagation()}>
-          <ModalHeader>
-            <h2>{editingInsumo ? 'Editar Insumo' : 'Nuevo Insumo'}</h2>
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={closeModal}
-              style={{ padding: '0.5rem' }}
-            >
-              <FaTimesCircle />
-            </Button>
-          </ModalHeader>
-
-          <Form onSubmit={handleSubmit}>
-            <FormRow>
-              <FormGroup>
-                <label>Nombre del Insumo *</label>
-                <input
-                  type="text"
-                  value={formData.nombre}
-                  onChange={(e) => setFormData(prev => ({ ...prev, nombre: e.target.value }))}
-                  required
-                  placeholder="Ej: Semillas Tomate Cherry"
-                />
-              </FormGroup>
-              <FormGroup>
-                <label>Categoría *</label>
-                <div style={{ position: 'relative', zIndex: 1001 }}>
-                  <CustomSelect
-                    value={formData.categoria}
-                    onChange={(val: string) => setFormData(prev => ({ ...prev, categoria: val as any }))}
-                    options={[
-                      { value: 'semillas', label: 'Semillas' },
-                      { value: 'fertilizantes', label: 'Fertilizantes' },
-                      { value: 'sustratos', label: 'Sustratos' },
-                      { value: 'herramientas', label: 'Herramientas' },
-                      { value: 'pesticidas', label: 'Pesticidas' },
-                      { value: 'otros', label: 'Otros' }
-                    ]}
-                  />
+                  {isStockLow && (
+                    <div style={{ fontSize: '0.75rem', color: '#ef4444' }}>
+                      Stock bajo
+                    </div>
+                  )}
                 </div>
-              </FormGroup>
-            </FormRow>
+                <div>
+                  {insumo.proveedor || '—'}
+                </div>
+                <div>
+                  {insumo.fecha_ultima_compra ?
+                    new Date(insumo.fecha_ultima_compra).toLocaleDateString('es-AR') :
+                    '—'
+                  }
+                </div>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <Button
+                    variant="secondary"
+                    onClick={() => handleOpenModal(insumo)}
+                    style={{ padding: '0.5rem' }}
+                  >
+                    <FaEdit />
+                  </Button>
+                  <Button
+                    variant="danger"
+                    onClick={() => handleDelete(insumo.id)}
+                    style={{ padding: '0.5rem' }}
+                  >
+                    <FaTrash />
+                  </Button>
+                </div>
+              </TableRow>
+            );
+          })}
+        </Table>
 
-            <FormRow>
-              <FormGroup>
-                <label>Unidad de Medida *</label>
-                <input
-                  type="text"
-                  value={formData.unidad_medida}
-                  onChange={(e) => setFormData(prev => ({ ...prev, unidad_medida: e.target.value }))}
-                  required
-                  placeholder="Ej: kg, litros, unidades"
-                />
-              </FormGroup>
-              <FormGroup>
-                <label>Precio Actual *</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={formData.precio_actual}
-                  onChange={(e) => setFormData(prev => ({ ...prev, precio_actual: e.target.value }))}
-                  required
-                  placeholder="0.00"
-                />
-              </FormGroup>
-            </FormRow>
+        {filteredInsumos.length === 0 && (
+          <div style={{
+            textAlign: 'center',
+            padding: '3rem',
+            color: '#94a3b8',
+            background: 'rgba(30, 41, 59, 0.6)',
+            border: '1px solid rgba(255, 255, 255, 0.05)',
+            borderTop: 'none',
+            borderBottomLeftRadius: '0.75rem',
+            borderBottomRightRadius: '0.75rem',
+            backdropFilter: 'blur(12px)'
+          }}>
+            <FaBoxes style={{ fontSize: '3rem', marginBottom: '1rem', opacity: 0.5, color: '#f8fafc' }} />
+            <h3 style={{ color: '#f8fafc' }}>No hay insumos registrados</h3>
+            <p>Comienza agregando tu primer insumo para monitorear precios y stock</p>
+          </div>
+        )}
 
-            <FormRow>
-              <FormGroup>
-                <label>Stock Actual *</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={formData.stock_actual}
-                  onChange={(e) => setFormData(prev => ({ ...prev, stock_actual: e.target.value }))}
-                  required
-                  placeholder="0.00"
-                />
-              </FormGroup>
-              <FormGroup>
-                <label>Stock Mínimo *</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={formData.stock_minimo}
-                  onChange={(e) => setFormData(prev => ({ ...prev, stock_minimo: e.target.value }))}
-                  required
-                  placeholder="0.00"
-                />
-              </FormGroup>
-            </FormRow>
-
-            <FormGroup>
-              <label>Proveedor</label>
-              <input
-                type="text"
-                value={formData.proveedor}
-                onChange={(e) => setFormData(prev => ({ ...prev, proveedor: e.target.value }))}
-                placeholder="Nombre del proveedor"
-              />
-            </FormGroup>
-
-            <FormGroup>
-              <label>Notas</label>
-              <textarea
-                value={formData.notas}
-                onChange={(e) => setFormData(prev => ({ ...prev, notas: e.target.value }))}
-                placeholder="Información adicional sobre el insumo..."
-              />
-            </FormGroup>
-
-            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end', position: 'relative', zIndex: 1 }}>
+        <Modal isOpen={isModalOpen || isClosingModal} $isClosing={isClosingModal} onMouseDown={closeModal}>
+          <ModalContent $isClosing={isClosingModal} onMouseDown={(e) => e.stopPropagation()}>
+            <ModalHeader>
+              <h2>{editingInsumo ? 'Editar Insumo' : 'Nuevo Insumo'}</h2>
               <Button
                 type="button"
                 variant="secondary"
                 onClick={closeModal}
+                style={{ padding: '0.5rem' }}
               >
-                Cancelar
+                <FaTimesCircle />
               </Button>
-              <Button type="submit">
-                {editingInsumo ? 'Actualizar' : 'Crear'} Insumo
-              </Button>
-            </div>
-          </Form>
-        </ModalContent>
-      </Modal>
+            </ModalHeader>
+
+            <Form onSubmit={handleSubmit}>
+              <FormRow>
+                <FormGroup>
+                  <label>Nombre del Insumo *</label>
+                  <input
+                    type="text"
+                    value={formData.nombre}
+                    onChange={(e) => setFormData(prev => ({ ...prev, nombre: e.target.value }))}
+                    required
+                    placeholder="Ej: Semillas Tomate Cherry"
+                  />
+                </FormGroup>
+                <FormGroup>
+                  <label>Categoría *</label>
+                  <div style={{ position: 'relative', zIndex: 1001 }}>
+                    <CustomSelect
+                      value={formData.categoria}
+                      onChange={(val: string) => setFormData(prev => ({ ...prev, categoria: val as any }))}
+                      options={[
+                        { value: 'semillas', label: 'Semillas' },
+                        { value: 'fertilizantes', label: 'Fertilizantes' },
+                        { value: 'sustratos', label: 'Sustratos' },
+                        { value: 'herramientas', label: 'Herramientas' },
+                        { value: 'pesticidas', label: 'Pesticidas' },
+                        { value: 'otros', label: 'Otros' }
+                      ]}
+                    />
+                  </div>
+                </FormGroup>
+              </FormRow>
+
+              <FormRow>
+                <FormGroup>
+                  <label>Unidad de Medida *</label>
+                  <input
+                    type="text"
+                    value={formData.unidad_medida}
+                    onChange={(e) => setFormData(prev => ({ ...prev, unidad_medida: e.target.value }))}
+                    required
+                    placeholder="Ej: kg, litros, unidades"
+                  />
+                </FormGroup>
+                <FormGroup>
+                  <label>Precio Actual *</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={formData.precio_actual}
+                    onChange={(e) => setFormData(prev => ({ ...prev, precio_actual: e.target.value }))}
+                    required
+                    placeholder="0.00"
+                  />
+                </FormGroup>
+              </FormRow>
+
+              <FormRow>
+                <FormGroup>
+                  <label>Stock Actual *</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={formData.stock_actual}
+                    onChange={(e) => setFormData(prev => ({ ...prev, stock_actual: e.target.value }))}
+                    required
+                    placeholder="0.00"
+                  />
+                </FormGroup>
+                <FormGroup>
+                  <label>Stock Mínimo *</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={formData.stock_minimo}
+                    onChange={(e) => setFormData(prev => ({ ...prev, stock_minimo: e.target.value }))}
+                    required
+                    placeholder="0.00"
+                  />
+                </FormGroup>
+              </FormRow>
+
+              <FormGroup>
+                <label>Proveedor</label>
+                <input
+                  type="text"
+                  value={formData.proveedor}
+                  onChange={(e) => setFormData(prev => ({ ...prev, proveedor: e.target.value }))}
+                  placeholder="Nombre del proveedor"
+                />
+              </FormGroup>
+
+              <FormGroup>
+                <label>Notas</label>
+                <textarea
+                  value={formData.notas}
+                  onChange={(e) => setFormData(prev => ({ ...prev, notas: e.target.value }))}
+                  placeholder="Información adicional sobre el insumo..."
+                />
+              </FormGroup>
+
+              <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end', position: 'relative', zIndex: 1 }}>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={closeModal}
+                >
+                  Cancelar
+                </Button>
+                <Button type="submit">
+                  {editingInsumo ? 'Actualizar' : 'Crear'} Insumo
+                </Button>
+              </div>
+            </Form>
+          </ModalContent>
+        </Modal>
+      </div>
     </Page>
   );
 };

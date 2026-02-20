@@ -10,8 +10,15 @@ import { ConfirmationModal } from '../components/ConfirmationModal';
 import { FaFlask, FaPlus, FaCalendarAlt, FaWeightHanging, FaTrash, FaEye, FaEdit, FaLeaf, FaBoxOpen } from 'react-icons/fa';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { useOrganization } from '../context/OrganizationContext';
+import UpgradeOverlay from '../components/common/UpgradeOverlay';
 
 export const LaboratoryPage: React.FC = () => {
+    const { currentOrganization } = useOrganization();
+    const plan = currentOrganization?.plan || 'individual';
+    const planLevel = ['ong', 'enterprise'].includes(plan) ? 3 :
+        ['equipo', 'pro'].includes(plan) ? 2 : 1;
+
     const [extractions, setExtractions] = useState<Extraction[]>([]);
     const [rawMaterials, setRawMaterials] = useState<DispensaryBatch[]>([]);
 
@@ -80,153 +87,157 @@ export const LaboratoryPage: React.FC = () => {
     };
 
     return (
-        <Container>
-            <Header>
-                <Title>
-                    <FaFlask size={24} color="#805ad5" />
-                    Laboratorio
-                </Title>
-                <div style={{ display: 'flex', gap: '1rem' }}>
-                    <TabButton $active={activeTab === 'raw'} onClick={() => setActiveTab('raw')}>
-                        <FaLeaf /> Materia Prima ({rawMaterials.length})
-                    </TabButton>
-                    <TabButton $active={activeTab === 'processed'} onClick={() => setActiveTab('processed')}>
-                        <FaBoxOpen /> Extracciones ({extractions.length})
-                    </TabButton>
-                </div>
-            </Header>
+        <Container style={{ position: 'relative', overflow: 'hidden' }}>
+            {planLevel < 2 && <UpgradeOverlay requiredPlanName="Equipo o superior" />}
 
-            {loading ? (
-                <div style={{ color: '#4a5568', textAlign: 'center', padding: '2rem' }}>Cargando laboratorio...</div>
-            ) : (
-                <>
-                    {activeTab === 'raw' && (
-                        <Grid>
-                            {rawMaterials.length === 0 ? (
-                                <EmptyState>
-                                    <FaLeaf size={48} color="#cbd5e0" />
-                                    <p>No hay materia prima en el laboratorio.</p>
-                                    <small>Envía items desde la sección de Stock.</small>
-                                </EmptyState>
-                            ) : (
-                                rawMaterials.map(batch => (
-                                    <Card key={batch.id} style={{ borderColor: '#805ad5' }}>
-                                        <CardContent>
-                                            <CardHeader>
-                                                <Badge>{batch.quality_grade}</Badge>
-                                                <DateText>{new Date(batch.created_at).toLocaleDateString()}</DateText>
-                                            </CardHeader>
-                                            <MainInfo>
-                                                <div className="source">
-                                                    <strong>{batch.strain_name}</strong>
-                                                    <span>{batch.batch_code}</span>
-                                                </div>
-                                                <div className="yield">
-                                                    <YieldValue style={{ color: '#805ad5' }}>{Number(batch.current_weight).toFixed(2)}g</YieldValue>
-                                                    <small>Disponible</small>
-                                                </div>
-                                            </MainInfo>
-                                            <div style={{ fontSize: '0.85rem', color: '#718096', fontStyle: 'italic' }}>
-                                                {batch.notes}
-                                            </div>
-                                        </CardContent>
-                                        <CardFooter>
-                                            <ActionButton onClick={() => handleProcess(batch)} className="process" style={{ width: '100%', justifyContent: 'center', background: '#805ad5', color: 'white', borderColor: 'transparent' }}>
-                                                <FaFlask /> Procesar / Extraer
-                                            </ActionButton>
-                                        </CardFooter>
-                                    </Card>
-                                ))
-                            )}
-                        </Grid>
-                    )}
+            <div style={{ filter: planLevel < 2 ? 'blur(4px)' : 'none', pointerEvents: planLevel < 2 ? 'none' : 'auto', userSelect: planLevel < 2 ? 'none' : 'auto', opacity: planLevel < 2 ? 0.5 : 1 }}>
+                <Header>
+                    <Title>
+                        <FaFlask size={24} color="#805ad5" />
+                        Laboratorio
+                    </Title>
+                    <div style={{ display: 'flex', gap: '1rem' }}>
+                        <TabButton $active={activeTab === 'raw'} onClick={() => setActiveTab('raw')}>
+                            <FaLeaf /> Materia Prima ({rawMaterials.length})
+                        </TabButton>
+                        <TabButton $active={activeTab === 'processed'} onClick={() => setActiveTab('processed')}>
+                            <FaBoxOpen /> Extracciones ({extractions.length})
+                        </TabButton>
+                    </div>
+                </Header>
 
-                    {activeTab === 'processed' && (
-                        <Grid>
-                            {extractions.length === 0 ? (
-                                <EmptyState>
-                                    <FaFlask size={48} color="#cbd5e0" />
-                                    <p>No hay extracciones registradas aún.</p>
-                                    <NewButton onClick={handleCreateDirect}>Registrar Extracción Manual</NewButton>
-                                </EmptyState>
-                            ) : (
-                                <>
-                                    <div style={{ gridColumn: '1 / -1', display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
-                                        <NewButton onClick={handleCreateDirect} style={{ fontSize: '0.85rem', padding: '0.5rem 1rem' }}>
-                                            <FaPlus /> Nueva Extracción Manual
-                                        </NewButton>
-                                    </div>
-                                    {extractions.map(ext => (
-                                        <Card key={ext.id} onClick={() => setSelectedExtraction(ext)}>
+                {loading ? (
+                    <div style={{ color: '#4a5568', textAlign: 'center', padding: '2rem' }}>Cargando laboratorio...</div>
+                ) : (
+                    <>
+                        {activeTab === 'raw' && (
+                            <Grid>
+                                {rawMaterials.length === 0 ? (
+                                    <EmptyState>
+                                        <FaLeaf size={48} color="#cbd5e0" />
+                                        <p>No hay materia prima en el laboratorio.</p>
+                                        <small>Envía items desde la sección de Stock.</small>
+                                    </EmptyState>
+                                ) : (
+                                    rawMaterials.map(batch => (
+                                        <Card key={batch.id} style={{ borderColor: '#805ad5' }}>
                                             <CardContent>
                                                 <CardHeader>
-                                                    <Badge $technique={ext.technique}>{ext.technique}</Badge>
-                                                    <DateText><FaCalendarAlt /> {format(new Date(ext.date), 'dd MMM', { locale: es })}</DateText>
+                                                    <Badge>{batch.quality_grade}</Badge>
+                                                    <DateText>{new Date(batch.created_at).toLocaleDateString()}</DateText>
                                                 </CardHeader>
-
                                                 <MainInfo>
                                                     <div className="source">
-                                                        <small>Origen</small>
-                                                        <strong>{ext.source_batch?.strain_name || 'Desconocido'}</strong>
-                                                        <span>{ext.source_batch?.batch_code || '-'}</span>
+                                                        <strong>{batch.strain_name}</strong>
+                                                        <span>{batch.batch_code}</span>
                                                     </div>
                                                     <div className="yield">
-                                                        <small>Retorno</small>
-                                                        <YieldValue>{ext.yield_percentage ? ext.yield_percentage.toFixed(1) : ((ext.output_weight / ext.input_weight) * 100).toFixed(1)}%</YieldValue>
+                                                        <YieldValue style={{ color: '#805ad5' }}>{Number(batch.current_weight).toFixed(2)}g</YieldValue>
+                                                        <small>Disponible</small>
                                                     </div>
                                                 </MainInfo>
-
-                                                <StatsGrid>
-                                                    <div><FaWeightHanging size={10} /> IN: {Number(ext.input_weight).toFixed(2)}g</div>
-                                                    <div><FaFlask size={10} /> OUT: {Number(ext.output_weight).toFixed(2)}g</div>
-                                                </StatsGrid>
+                                                <div style={{ fontSize: '0.85rem', color: '#718096', fontStyle: 'italic' }}>
+                                                    {batch.notes}
+                                                </div>
                                             </CardContent>
-
                                             <CardFooter>
-                                                <ActionButton onClick={(e) => { e.stopPropagation(); setSelectedExtraction(ext); }} className="view">
-                                                    <FaEye />
-                                                </ActionButton>
-                                                <ActionButton onClick={(e) => handleEdit(ext, e)} className="edit">
-                                                    <FaEdit />
-                                                </ActionButton>
-                                                <ActionButton onClick={(e) => handleDeleteClick(ext.id, e)} className="delete">
-                                                    <FaTrash />
+                                                <ActionButton onClick={() => handleProcess(batch)} className="process" style={{ width: '100%', justifyContent: 'center', background: '#805ad5', color: 'white', borderColor: 'transparent' }}>
+                                                    <FaFlask /> Procesar / Extraer
                                                 </ActionButton>
                                             </CardFooter>
                                         </Card>
-                                    ))}
-                                </>
-                            )}
-                        </Grid>
-                    )}
-                </>
-            )}
+                                    ))
+                                )}
+                            </Grid>
+                        )}
 
-            {isFormOpen && (
-                <ExtractionForm
-                    onClose={() => setIsFormOpen(false)}
-                    onSuccess={() => { setIsFormOpen(false); loadData(); }}
-                    initialData={editingExtraction || undefined}
-                    preselectedBatch={selectedRawBatch || undefined}
+                        {activeTab === 'processed' && (
+                            <Grid>
+                                {extractions.length === 0 ? (
+                                    <EmptyState>
+                                        <FaFlask size={48} color="#cbd5e0" />
+                                        <p>No hay extracciones registradas aún.</p>
+                                        <NewButton onClick={handleCreateDirect}>Registrar Extracción Manual</NewButton>
+                                    </EmptyState>
+                                ) : (
+                                    <>
+                                        <div style={{ gridColumn: '1 / -1', display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
+                                            <NewButton onClick={handleCreateDirect} style={{ fontSize: '0.85rem', padding: '0.5rem 1rem' }}>
+                                                <FaPlus /> Nueva Extracción Manual
+                                            </NewButton>
+                                        </div>
+                                        {extractions.map(ext => (
+                                            <Card key={ext.id} onClick={() => setSelectedExtraction(ext)}>
+                                                <CardContent>
+                                                    <CardHeader>
+                                                        <Badge $technique={ext.technique}>{ext.technique}</Badge>
+                                                        <DateText><FaCalendarAlt /> {format(new Date(ext.date), 'dd MMM', { locale: es })}</DateText>
+                                                    </CardHeader>
+
+                                                    <MainInfo>
+                                                        <div className="source">
+                                                            <small>Origen</small>
+                                                            <strong>{ext.source_batch?.strain_name || 'Desconocido'}</strong>
+                                                            <span>{ext.source_batch?.batch_code || '-'}</span>
+                                                        </div>
+                                                        <div className="yield">
+                                                            <small>Retorno</small>
+                                                            <YieldValue>{ext.yield_percentage ? ext.yield_percentage.toFixed(1) : ((ext.output_weight / ext.input_weight) * 100).toFixed(1)}%</YieldValue>
+                                                        </div>
+                                                    </MainInfo>
+
+                                                    <StatsGrid>
+                                                        <div><FaWeightHanging size={10} /> IN: {Number(ext.input_weight).toFixed(2)}g</div>
+                                                        <div><FaFlask size={10} /> OUT: {Number(ext.output_weight).toFixed(2)}g</div>
+                                                    </StatsGrid>
+                                                </CardContent>
+
+                                                <CardFooter>
+                                                    <ActionButton onClick={(e) => { e.stopPropagation(); setSelectedExtraction(ext); }} className="view">
+                                                        <FaEye />
+                                                    </ActionButton>
+                                                    <ActionButton onClick={(e) => handleEdit(ext, e)} className="edit">
+                                                        <FaEdit />
+                                                    </ActionButton>
+                                                    <ActionButton onClick={(e) => handleDeleteClick(ext.id, e)} className="delete">
+                                                        <FaTrash />
+                                                    </ActionButton>
+                                                </CardFooter>
+                                            </Card>
+                                        ))}
+                                    </>
+                                )}
+                            </Grid>
+                        )}
+                    </>
+                )}
+
+                {isFormOpen && (
+                    <ExtractionForm
+                        onClose={() => setIsFormOpen(false)}
+                        onSuccess={() => { setIsFormOpen(false); loadData(); }}
+                        initialData={editingExtraction || undefined}
+                        preselectedBatch={selectedRawBatch || undefined}
+                    />
+                )}
+
+                {selectedExtraction && (
+                    <ExtractionDetails
+                        extraction={selectedExtraction}
+                        onClose={() => setSelectedExtraction(null)}
+                    />
+                )}
+
+                <ConfirmationModal
+                    isOpen={!!itemToDelete}
+                    title="Eliminar Extracción"
+                    message="¿Estás seguro de que deseas eliminar este registro? Esta acción no se puede deshacer."
+                    onConfirm={confirmDelete}
+                    onCancel={() => setItemToDelete(null)}
+                    confirmText="Eliminar"
+                    isDestructive
                 />
-            )}
-
-            {selectedExtraction && (
-                <ExtractionDetails
-                    extraction={selectedExtraction}
-                    onClose={() => setSelectedExtraction(null)}
-                />
-            )}
-
-            <ConfirmationModal
-                isOpen={!!itemToDelete}
-                title="Eliminar Extracción"
-                message="¿Estás seguro de que deseas eliminar este registro? Esta acción no se puede deshacer."
-                onConfirm={confirmDelete}
-                onCancel={() => setItemToDelete(null)}
-                confirmText="Eliminar"
-                isDestructive
-            />
+            </div>
         </Container>
     );
 };

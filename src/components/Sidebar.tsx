@@ -20,8 +20,10 @@ import {
   FaFlask,
   FaUsers,
   FaHeartbeat,
+  FaLock,
 } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
+import { useOrganization } from '../context/OrganizationContext';
 
 
 
@@ -149,8 +151,11 @@ const StyledNavLink = styled(NavLink)`
     border: 1px solid rgba(34, 197, 94, 0.2);
   }
 
-  svg {
-    font-size: 1.25rem;
+  svg.lock-icon {
+    font-size: 0.85rem;
+    color: #e2e8f0;
+    margin-left: auto;
+    opacity: 0.8;
   }
 `;
 
@@ -210,6 +215,13 @@ const Sidebar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
   const { user, logout } = useAuth();
+  const { currentOrganization } = useOrganization();
+
+  // Compute plan level for feature access
+  const plan = currentOrganization?.plan || 'individual';
+  const planLevel = ['ong', 'enterprise'].includes(plan) ? 3 :
+    ['equipo', 'pro'].includes(plan) ? 2 : 1;
+
 
   // Close sidebar when route changes only on mobile
   React.useEffect(() => {
@@ -275,26 +287,32 @@ const Sidebar: React.FC = () => {
               <StyledNavLink to="/dispensary">
                 <FaHandHoldingMedical /> Dispensario
               </StyledNavLink>
-              <StyledNavLink to="/genetics">
+              <StyledNavLink to="/genetics" style={{ opacity: planLevel >= 2 ? 1 : 0.6 }}>
                 <FaDna /> Madres
+                {planLevel < 2 && <FaLock className="lock-icon" title="Requiere Plan Equipo" />}
               </StyledNavLink>
-              <StyledNavLink to="/laboratory">
+              <StyledNavLink to="/laboratory" style={{ opacity: planLevel >= 2 ? 1 : 0.6 }}>
                 <FaFlask /> Laboratorio
+                {planLevel < 2 && <FaLock className="lock-icon" title="Requiere Plan Equipo" />}
               </StyledNavLink>
 
               <SectionTitle>Gestión</SectionTitle>
 
-              <StyledNavLink to="/insumos">
+              <StyledNavLink to="/insumos" style={{ opacity: planLevel >= 2 ? 1 : 0.6 }}>
                 <FaShoppingBag /> Insumos
+                {planLevel < 2 && <FaLock className="lock-icon" title="Requiere Plan Equipo" />}
               </StyledNavLink>
-              <StyledNavLink to="/expenses">
+              <StyledNavLink to="/expenses" style={{ opacity: planLevel >= 2 ? 1 : 0.6 }}>
                 <FaMoneyBillWave /> Gastos
+                {planLevel < 2 && <FaLock className="lock-icon" title="Requiere Plan Equipo" />}
               </StyledNavLink>
-              <StyledNavLink to="/patients">
+              <StyledNavLink to="/patients" style={{ opacity: planLevel >= 3 ? 1 : 0.6 }}>
                 <FaIdCard /> Socios
+                {planLevel < 3 && <FaLock className="lock-icon" title="Requiere Plan ONG" />}
               </StyledNavLink>
-              <StyledNavLink to="/metrics">
+              <StyledNavLink to="/metrics" style={{ opacity: planLevel >= 2 ? 1 : 0.6 }}>
                 <FaChartPie /> Métricas
+                {planLevel < 2 && <FaLock className="lock-icon" title="Requiere Plan Equipo" />}
               </StyledNavLink>
               <StyledNavLink to="/settings">
                 <FaCog /> Configuración

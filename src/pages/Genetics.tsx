@@ -7,6 +7,8 @@ import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ConfirmModal } from '../components/ConfirmModal';
 import { ToastModal } from '../components/ToastModal';
 import { CustomDatePicker } from '../components/CustomDatePicker';
+import { useOrganization } from '../context/OrganizationContext';
+import UpgradeOverlay from '../components/common/UpgradeOverlay';
 
 const fadeIn = keyframes`
   from { opacity: 0; transform: translateY(10px); }
@@ -255,6 +257,11 @@ const DashedCircle = styled.div`
 `;
 
 const Genetics: React.FC = () => {
+    const { currentOrganization } = useOrganization();
+    const plan = currentOrganization?.plan || 'individual';
+    const planLevel = ['ong', 'enterprise'].includes(plan) ? 3 :
+        ['equipo', 'pro'].includes(plan) ? 2 : 1;
+
     const [genetics, setGenetics] = useState<Genetic[]>([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -385,261 +392,265 @@ const Genetics: React.FC = () => {
     if (loading) return <LoadingSpinner text="Cargando madres..." fullScreen />;
 
     return (
-        <Container>
-            <Header>
-                <h1><FaDna /> Gestión de Madres</h1>
-            </Header>
+        <Container style={{ position: 'relative', overflow: 'hidden' }}>
+            {planLevel < 2 && <UpgradeOverlay requiredPlanName="Equipo o superior" />}
 
-            <StatsGrid>
-                <StatCard>
-                    <div className="icon-wrapper">
-                        <FaDna size={20} />
-                        <h3>Total de Genéticas</h3>
-                    </div>
-                    <div className="value">{genetics.length}</div>
-                </StatCard>
-            </StatsGrid>
+            <div style={{ filter: planLevel < 2 ? 'blur(4px)' : 'none', pointerEvents: planLevel < 2 ? 'none' : 'auto', userSelect: planLevel < 2 ? 'none' : 'auto', opacity: planLevel < 2 ? 0.5 : 1 }}>
+                <Header>
+                    <h1><FaDna /> Gestión de Madres</h1>
+                </Header>
 
-            <ContentGrid>
-                {genetics.map(gen => (
-                    <GeneticCard key={gen.id}>
-                        <CardHeader>
-                            <h3>{gen.name}</h3>
-                            <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                <button
-                                    onClick={() => handleEdit(gen)}
-                                    style={{ background: 'rgba(56, 189, 248, 0.1)', border: '1px solid rgba(56, 189, 248, 0.2)', cursor: 'pointer', color: '#38bdf8', padding: '0.4rem', borderRadius: '0.25rem', transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                                    title="Editar"
-                                    onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(56, 189, 248, 0.2)'; }}
-                                    onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(56, 189, 248, 0.1)'; }}
-                                >
-                                    <FaEdit />
-                                </button>
-                                <button
-                                    onClick={() => handleDeleteClick(gen)}
-                                    style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)', cursor: 'pointer', color: '#f87171', padding: '0.4rem', borderRadius: '0.25rem', transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                                    title="Eliminar"
-                                    onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(239, 68, 68, 0.2)'; }}
-                                    onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)'; }}
-                                >
-                                    <FaTrash />
-                                </button>
-                            </div>
-                        </CardHeader>
-                        <CardBody>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: '#cbd5e1', fontSize: '0.95rem' }}>
-                                <FaLeaf color="#a855f7" /> <strong>Vege:</strong> {gen.vegetative_weeks} semanas
-                            </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: '#cbd5e1', fontSize: '0.95rem' }}>
-                                <FaClock color="#a855f7" /> <strong>Flora:</strong> {gen.flowering_weeks} semanas
-                            </div>
-                            <div style={{ marginTop: '0.5rem', paddingTop: '0.5rem', borderTop: '1px solid rgba(255, 255, 255, 0.1)', fontSize: '0.85rem', color: '#94a3b8' }}>
-                                <FaCalendarAlt style={{ marginRight: '0.5rem', color: '#64748b' }} />
-                                Ciclo Total Est.: {gen.vegetative_weeks + gen.flowering_weeks} semanas
-                            </div>
-                            {gen.description && (
-                                <p style={{ fontSize: '0.85rem', color: '#94a3b8', margin: 0 }}>{gen.description}</p>
-                            )}
-                            {gen.acquisition_date && (
-                                <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '0.5rem', fontStyle: 'italic' }}>
-                                    Inicio: {gen.acquisition_date.split('-').reverse().join('/')}
+                <StatsGrid>
+                    <StatCard>
+                        <div className="icon-wrapper">
+                            <FaDna size={20} />
+                            <h3>Total de Genéticas</h3>
+                        </div>
+                        <div className="value">{genetics.length}</div>
+                    </StatCard>
+                </StatsGrid>
+
+                <ContentGrid>
+                    {genetics.map(gen => (
+                        <GeneticCard key={gen.id}>
+                            <CardHeader>
+                                <h3>{gen.name}</h3>
+                                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                    <button
+                                        onClick={() => handleEdit(gen)}
+                                        style={{ background: 'rgba(56, 189, 248, 0.1)', border: '1px solid rgba(56, 189, 248, 0.2)', cursor: 'pointer', color: '#38bdf8', padding: '0.4rem', borderRadius: '0.25rem', transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                        title="Editar"
+                                        onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(56, 189, 248, 0.2)'; }}
+                                        onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(56, 189, 248, 0.1)'; }}
+                                    >
+                                        <FaEdit />
+                                    </button>
+                                    <button
+                                        onClick={() => handleDeleteClick(gen)}
+                                        style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)', cursor: 'pointer', color: '#f87171', padding: '0.4rem', borderRadius: '0.25rem', transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                        title="Eliminar"
+                                        onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(239, 68, 68, 0.2)'; }}
+                                        onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)'; }}
+                                    >
+                                        <FaTrash />
+                                    </button>
                                 </div>
-                            )}
-                            <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem', flexWrap: 'wrap' }}>
-                                {(gen.thc_percent !== undefined) && (
-                                    <span style={{ fontSize: '0.7rem', background: 'rgba(74, 222, 128, 0.1)', color: '#4ade80', border: '1px solid rgba(74, 222, 128, 0.3)', padding: '0.1rem 0.4rem', borderRadius: '4px', fontWeight: 'bold' }}>
-                                        THC: {gen.thc_percent}%
-                                    </span>
+                            </CardHeader>
+                            <CardBody>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: '#cbd5e1', fontSize: '0.95rem' }}>
+                                    <FaLeaf color="#a855f7" /> <strong>Vege:</strong> {gen.vegetative_weeks} semanas
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: '#cbd5e1', fontSize: '0.95rem' }}>
+                                    <FaClock color="#a855f7" /> <strong>Flora:</strong> {gen.flowering_weeks} semanas
+                                </div>
+                                <div style={{ marginTop: '0.5rem', paddingTop: '0.5rem', borderTop: '1px solid rgba(255, 255, 255, 0.1)', fontSize: '0.85rem', color: '#94a3b8' }}>
+                                    <FaCalendarAlt style={{ marginRight: '0.5rem', color: '#64748b' }} />
+                                    Ciclo Total Est.: {gen.vegetative_weeks + gen.flowering_weeks} semanas
+                                </div>
+                                {gen.description && (
+                                    <p style={{ fontSize: '0.85rem', color: '#94a3b8', margin: 0 }}>{gen.description}</p>
                                 )}
-                                {(gen.cbd_percent !== undefined) && (
-                                    <span style={{ fontSize: '0.7rem', background: 'rgba(56, 189, 248, 0.1)', color: '#38bdf8', border: '1px solid rgba(56, 189, 248, 0.3)', padding: '0.1rem 0.4rem', borderRadius: '4px', fontWeight: 'bold' }}>
-                                        CBD: {gen.cbd_percent}%
-                                    </span>
+                                {gen.acquisition_date && (
+                                    <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '0.5rem', fontStyle: 'italic' }}>
+                                        Inicio: {gen.acquisition_date.split('-').reverse().join('/')}
+                                    </div>
                                 )}
-                                {(gen.estimated_yield_g !== undefined) && (
-                                    <span style={{ fontSize: '0.7rem', background: 'rgba(239, 68, 68, 0.1)', color: '#f87171', border: '1px solid rgba(239, 68, 68, 0.3)', padding: '0.1rem 0.4rem', borderRadius: '4px', fontWeight: 'bold' }}>
-                                        Prod: {gen.estimated_yield_g}g
-                                    </span>
-                                )}
-                                {gen.default_price_per_gram && (
-                                    <span style={{ fontSize: '0.7rem', background: 'rgba(250, 204, 21, 0.1)', color: '#facc15', border: '1px solid rgba(250, 204, 21, 0.3)', padding: '0.1rem 0.4rem', borderRadius: '4px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
-                                        <FaTag size={10} /> ${gen.default_price_per_gram}/g
-                                    </span>
-                                )}
-                            </div>
-                        </CardBody>
-                    </GeneticCard>
-                ))}
-                <CreateCard onClick={() => setIsModalOpen(true)}>
-                    <DashedCircle>
-                        <FaPlus />
-                    </DashedCircle>
-                    <span style={{ fontWeight: 600, fontSize: '1rem', color: 'inherit', textAlign: 'center', padding: '0 1rem' }}>Nueva Madre</span>
-                </CreateCard>
-            </ContentGrid>
+                                <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem', flexWrap: 'wrap' }}>
+                                    {(gen.thc_percent !== undefined) && (
+                                        <span style={{ fontSize: '0.7rem', background: 'rgba(74, 222, 128, 0.1)', color: '#4ade80', border: '1px solid rgba(74, 222, 128, 0.3)', padding: '0.1rem 0.4rem', borderRadius: '4px', fontWeight: 'bold' }}>
+                                            THC: {gen.thc_percent}%
+                                        </span>
+                                    )}
+                                    {(gen.cbd_percent !== undefined) && (
+                                        <span style={{ fontSize: '0.7rem', background: 'rgba(56, 189, 248, 0.1)', color: '#38bdf8', border: '1px solid rgba(56, 189, 248, 0.3)', padding: '0.1rem 0.4rem', borderRadius: '4px', fontWeight: 'bold' }}>
+                                            CBD: {gen.cbd_percent}%
+                                        </span>
+                                    )}
+                                    {(gen.estimated_yield_g !== undefined) && (
+                                        <span style={{ fontSize: '0.7rem', background: 'rgba(239, 68, 68, 0.1)', color: '#f87171', border: '1px solid rgba(239, 68, 68, 0.3)', padding: '0.1rem 0.4rem', borderRadius: '4px', fontWeight: 'bold' }}>
+                                            Prod: {gen.estimated_yield_g}g
+                                        </span>
+                                    )}
+                                    {gen.default_price_per_gram && (
+                                        <span style={{ fontSize: '0.7rem', background: 'rgba(250, 204, 21, 0.1)', color: '#facc15', border: '1px solid rgba(250, 204, 21, 0.3)', padding: '0.1rem 0.4rem', borderRadius: '4px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                                            <FaTag size={10} /> ${gen.default_price_per_gram}/g
+                                        </span>
+                                    )}
+                                </div>
+                            </CardBody>
+                        </GeneticCard>
+                    ))}
+                    <CreateCard onClick={() => setIsModalOpen(true)}>
+                        <DashedCircle>
+                            <FaPlus />
+                        </DashedCircle>
+                        <span style={{ fontWeight: 600, fontSize: '1rem', color: 'inherit', textAlign: 'center', padding: '0 1rem' }}>Nueva Madre</span>
+                    </CreateCard>
+                </ContentGrid>
 
-            {
-                isModalOpen && (
-                    <ModalOverlay $isClosing={isClosingModal}>
-                        <ModalContent $isClosing={isClosingModal}>
-                            <h2>{editingId ? 'Editar Madre' : 'Nueva Madre'}</h2>
+                {
+                    isModalOpen && (
+                        <ModalOverlay $isClosing={isClosingModal}>
+                            <ModalContent $isClosing={isClosingModal}>
+                                <h2>{editingId ? 'Editar Madre' : 'Nueva Madre'}</h2>
 
-                            <FormGroup>
-                                <label>Nombre</label>
-                                <input
-                                    type="text"
-                                    value={newGenetic.name}
-                                    onChange={e => setNewGenetic({ ...newGenetic, name: e.target.value })}
-                                    placeholder="Ej: Gorilla Glue #4"
-                                />
-                            </FormGroup>
-
-                            <FormGroup>
-                                <label>Nomenclatura (Código)</label>
-                                <input
-                                    type="text"
-                                    value={newGenetic.nomenclatura || ''}
-                                    onChange={e => setNewGenetic({ ...newGenetic, nomenclatura: e.target.value })}
-                                    placeholder="Ej: GG4"
-                                />
-                            </FormGroup>
-
-                            <FormGroup>
-                                <label>Fecha de inicio</label>
-                                <CustomDatePicker
-                                    selected={newGenetic.acquisition_date ? new Date(newGenetic.acquisition_date + 'T12:00:00') : null}
-                                    onChange={(date: Date | null) => setNewGenetic({ ...newGenetic, acquisition_date: date ? date.toISOString().split('T')[0] : '' })}
-                                    placeholderText="Seleccionar fecha"
-                                />
-                            </FormGroup>
-
-                            <div style={{ display: 'flex', gap: '1rem' }}>
-                                <FormGroup style={{ flex: 1 }}>
-                                    <label>Prod. Est. (g)</label>
+                                <FormGroup>
+                                    <label>Nombre</label>
                                     <input
-                                        type="number"
-                                        value={newGenetic.estimated_yield_g || ''}
-                                        onChange={e => setNewGenetic({ ...newGenetic, estimated_yield_g: parseFloat(e.target.value) })}
-                                        placeholder="Ej: 500"
+                                        type="text"
+                                        value={newGenetic.name}
+                                        onChange={e => setNewGenetic({ ...newGenetic, name: e.target.value })}
+                                        placeholder="Ej: Gorilla Glue #4"
                                     />
                                 </FormGroup>
-                            </div>
 
-                            <div style={{ display: 'flex', gap: '1rem' }}>
-                                <FormGroup style={{ flex: 1 }}>
-                                    <label>% THC (Opcional)</label>
+                                <FormGroup>
+                                    <label>Nomenclatura (Código)</label>
                                     <input
-                                        type="number"
-                                        step="0.1"
-                                        value={newGenetic.thc_percent || ''}
-                                        onChange={e => setNewGenetic({ ...newGenetic, thc_percent: parseFloat(e.target.value) })}
-                                        placeholder="Ej: 22.5"
+                                        type="text"
+                                        value={newGenetic.nomenclatura || ''}
+                                        onChange={e => setNewGenetic({ ...newGenetic, nomenclatura: e.target.value })}
+                                        placeholder="Ej: GG4"
                                     />
                                 </FormGroup>
-                                <FormGroup style={{ flex: 1 }}>
-                                    <label>% CBD (Opcional)</label>
-                                    <input
-                                        type="number"
-                                        step="0.1"
-                                        value={newGenetic.cbd_percent || ''}
-                                        onChange={e => setNewGenetic({ ...newGenetic, cbd_percent: parseFloat(e.target.value) })}
-                                        placeholder="Ej: 0.5"
+
+                                <FormGroup>
+                                    <label>Fecha de inicio</label>
+                                    <CustomDatePicker
+                                        selected={newGenetic.acquisition_date ? new Date(newGenetic.acquisition_date + 'T12:00:00') : null}
+                                        onChange={(date: Date | null) => setNewGenetic({ ...newGenetic, acquisition_date: date ? date.toISOString().split('T')[0] : '' })}
+                                        placeholderText="Seleccionar fecha"
                                     />
                                 </FormGroup>
-                            </div>
 
-                            <div style={{ display: 'flex', gap: '1rem' }}>
-                                <FormGroup style={{ flex: 1 }}>
-                                    <label>Semanas Vege</label>
-                                    <input
-                                        type="number"
-                                        value={newGenetic.vegetative_weeks}
-                                        onChange={e => setNewGenetic({ ...newGenetic, vegetative_weeks: parseInt(e.target.value) })}
+                                <div style={{ display: 'flex', gap: '1rem' }}>
+                                    <FormGroup style={{ flex: 1 }}>
+                                        <label>Prod. Est. (g)</label>
+                                        <input
+                                            type="number"
+                                            value={newGenetic.estimated_yield_g || ''}
+                                            onChange={e => setNewGenetic({ ...newGenetic, estimated_yield_g: parseFloat(e.target.value) })}
+                                            placeholder="Ej: 500"
+                                        />
+                                    </FormGroup>
+                                </div>
+
+                                <div style={{ display: 'flex', gap: '1rem' }}>
+                                    <FormGroup style={{ flex: 1 }}>
+                                        <label>% THC (Opcional)</label>
+                                        <input
+                                            type="number"
+                                            step="0.1"
+                                            value={newGenetic.thc_percent || ''}
+                                            onChange={e => setNewGenetic({ ...newGenetic, thc_percent: parseFloat(e.target.value) })}
+                                            placeholder="Ej: 22.5"
+                                        />
+                                    </FormGroup>
+                                    <FormGroup style={{ flex: 1 }}>
+                                        <label>% CBD (Opcional)</label>
+                                        <input
+                                            type="number"
+                                            step="0.1"
+                                            value={newGenetic.cbd_percent || ''}
+                                            onChange={e => setNewGenetic({ ...newGenetic, cbd_percent: parseFloat(e.target.value) })}
+                                            placeholder="Ej: 0.5"
+                                        />
+                                    </FormGroup>
+                                </div>
+
+                                <div style={{ display: 'flex', gap: '1rem' }}>
+                                    <FormGroup style={{ flex: 1 }}>
+                                        <label>Semanas Vege</label>
+                                        <input
+                                            type="number"
+                                            value={newGenetic.vegetative_weeks}
+                                            onChange={e => setNewGenetic({ ...newGenetic, vegetative_weeks: parseInt(e.target.value) })}
+                                        />
+                                        <div className="hint">Desde semilla hasta cambio de ciclo</div>
+                                    </FormGroup>
+                                    <FormGroup style={{ flex: 1 }}>
+                                        <label>Semanas Flora</label>
+                                        <input
+                                            type="number"
+                                            value={newGenetic.flowering_weeks}
+                                            onChange={e => setNewGenetic({ ...newGenetic, flowering_weeks: parseInt(e.target.value) })}
+                                        />
+                                        <div className="hint">Duración de la fase de floración</div>
+                                    </FormGroup>
+                                </div>
+
+                                <FormGroup>
+                                    <label>Descripción / Notas</label>
+                                    <textarea
+                                        rows={3}
+                                        value={newGenetic.description}
+                                        onChange={e => setNewGenetic({ ...newGenetic, description: e.target.value })}
+                                        placeholder="Información adicional..."
                                     />
-                                    <div className="hint">Desde semilla hasta cambio de ciclo</div>
                                 </FormGroup>
-                                <FormGroup style={{ flex: 1 }}>
-                                    <label>Semanas Flora</label>
-                                    <input
-                                        type="number"
-                                        value={newGenetic.flowering_weeks}
-                                        onChange={e => setNewGenetic({ ...newGenetic, flowering_weeks: parseInt(e.target.value) })}
-                                    />
-                                    <div className="hint">Duración de la fase de floración</div>
-                                </FormGroup>
-                            </div>
 
-                            <FormGroup>
-                                <label>Descripción / Notas</label>
-                                <textarea
-                                    rows={3}
-                                    value={newGenetic.description}
-                                    onChange={e => setNewGenetic({ ...newGenetic, description: e.target.value })}
-                                    placeholder="Información adicional..."
-                                />
-                            </FormGroup>
+                                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1rem' }}>
+                                    <button
+                                        onClick={closeModal}
+                                        style={{
+                                            padding: '0.75rem 1.5rem',
+                                            background: 'rgba(30, 41, 59, 0.6)',
+                                            color: '#cbd5e1',
+                                            border: '1px solid rgba(255, 255, 255, 0.1)',
+                                            borderRadius: '0.5rem',
+                                            cursor: 'pointer',
+                                            fontWeight: '600',
+                                            transition: 'all 0.2s',
+                                            backdropFilter: 'blur(8px)'
+                                        }}
+                                        onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'; e.currentTarget.style.color = '#f8fafc'; }}
+                                        onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(30, 41, 59, 0.6)'; e.currentTarget.style.color = '#cbd5e1'; }}
+                                    >
+                                        Cancelar
+                                    </button>
+                                    <button
+                                        onClick={handleSave}
+                                        style={{
+                                            padding: '0.75rem 1.5rem',
+                                            background: 'rgba(168, 85, 247, 0.2)',
+                                            color: '#c084fc',
+                                            border: '1px solid rgba(168, 85, 247, 0.5)',
+                                            borderRadius: '0.5rem',
+                                            cursor: 'pointer',
+                                            fontWeight: 'bold',
+                                            transition: 'all 0.2s',
+                                            backdropFilter: 'blur(8px)'
+                                        }}
+                                        onMouseOver={(e) => e.currentTarget.style.background = 'rgba(168, 85, 247, 0.3)'}
+                                        onMouseOut={(e) => e.currentTarget.style.background = 'rgba(168, 85, 247, 0.2)'}
+                                    >
+                                        {editingId ? 'Actualizar' : 'Guardar Madre'}
+                                    </button>
+                                </div>
+                            </ModalContent>
+                        </ModalOverlay>
+                    )}
 
-                            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1rem' }}>
-                                <button
-                                    onClick={closeModal}
-                                    style={{
-                                        padding: '0.75rem 1.5rem',
-                                        background: 'rgba(30, 41, 59, 0.6)',
-                                        color: '#cbd5e1',
-                                        border: '1px solid rgba(255, 255, 255, 0.1)',
-                                        borderRadius: '0.5rem',
-                                        cursor: 'pointer',
-                                        fontWeight: '600',
-                                        transition: 'all 0.2s',
-                                        backdropFilter: 'blur(8px)'
-                                    }}
-                                    onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'; e.currentTarget.style.color = '#f8fafc'; }}
-                                    onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(30, 41, 59, 0.6)'; e.currentTarget.style.color = '#cbd5e1'; }}
-                                >
-                                    Cancelar
-                                </button>
-                                <button
-                                    onClick={handleSave}
-                                    style={{
-                                        padding: '0.75rem 1.5rem',
-                                        background: 'rgba(168, 85, 247, 0.2)',
-                                        color: '#c084fc',
-                                        border: '1px solid rgba(168, 85, 247, 0.5)',
-                                        borderRadius: '0.5rem',
-                                        cursor: 'pointer',
-                                        fontWeight: 'bold',
-                                        transition: 'all 0.2s',
-                                        backdropFilter: 'blur(8px)'
-                                    }}
-                                    onMouseOver={(e) => e.currentTarget.style.background = 'rgba(168, 85, 247, 0.3)'}
-                                    onMouseOut={(e) => e.currentTarget.style.background = 'rgba(168, 85, 247, 0.2)'}
-                                >
-                                    {editingId ? 'Actualizar' : 'Guardar Madre'}
-                                </button>
-                            </div>
-                        </ModalContent>
-                    </ModalOverlay>
-                )}
+                {/* Confirm Delete Modal */}
+                <ConfirmModal
+                    isOpen={confirmDeleteOpen}
+                    title="Eliminar Madre"
+                    message={`¿Estás seguro de que deseas eliminar la madre "${geneticToDelete?.name}"? Esta acción no se puede deshacer.`}
+                    onClose={() => setConfirmDeleteOpen(false)}
+                    onConfirm={handleConfirmDelete}
+                    confirmText="Eliminar"
+                    isDanger
+                    isLoading={isDeleting}
+                />
 
-            {/* Confirm Delete Modal */}
-            <ConfirmModal
-                isOpen={confirmDeleteOpen}
-                title="Eliminar Madre"
-                message={`¿Estás seguro de que deseas eliminar la madre "${geneticToDelete?.name}"? Esta acción no se puede deshacer.`}
-                onClose={() => setConfirmDeleteOpen(false)}
-                onConfirm={handleConfirmDelete}
-                confirmText="Eliminar"
-                isDanger
-                isLoading={isDeleting}
-            />
-
-            <ToastModal
-                isOpen={toastOpen}
-                message={toastMessage}
-                type={toastType}
-                onClose={() => setToastOpen(false)}
-                animateOverlay={toastAnimate}
-            />
+                <ToastModal
+                    isOpen={toastOpen}
+                    message={toastMessage}
+                    type={toastType}
+                    onClose={() => setToastOpen(false)}
+                    animateOverlay={toastAnimate}
+                />
+            </div>
         </Container >
     );
 };

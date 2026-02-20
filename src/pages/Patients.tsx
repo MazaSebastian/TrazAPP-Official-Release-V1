@@ -8,6 +8,8 @@ import { ToastModal } from '../components/ToastModal';
 import { FaUserPlus, FaIdCard, FaFileUpload, FaCheckCircle, FaFileAlt } from 'react-icons/fa';
 import { CustomSelect } from '../components/CustomSelect';
 import { CustomDatePicker } from '../components/CustomDatePicker';
+import { useOrganization } from '../context/OrganizationContext';
+import UpgradeOverlay from '../components/common/UpgradeOverlay';
 
 const fadeIn = keyframes`
   from { opacity: 0; }
@@ -251,6 +253,11 @@ const FileUploadBox = styled.div`
 `;
 
 const Patients: React.FC = () => {
+    const { currentOrganization } = useOrganization();
+    const plan = currentOrganization?.plan || 'individual';
+    const planLevel = ['ong', 'enterprise'].includes(plan) ? 3 :
+        ['equipo', 'pro'].includes(plan) ? 2 : 1;
+
     const [patients, setPatients] = useState<Patient[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
@@ -476,382 +483,386 @@ const Patients: React.FC = () => {
     );
 
     return (
-        <PageContainer>
-            <Header>
-                <Title><FaIdCard /> Gestión de Socios</Title>
-                <ActionButton onClick={() => setIsAddOpen(true)}>
-                    <FaUserPlus /> Nuevo Socio
-                </ActionButton>
-            </Header>
+        <PageContainer style={{ position: 'relative', overflow: 'hidden' }}>
+            {planLevel < 3 && <UpgradeOverlay requiredPlanName="ONG" />}
 
-            <SearchInput
-                placeholder="Buscar por nombre o reprocann..."
-                value={searchTerm}
-                onChange={e => setSearchTerm(e.target.value)}
-            />
+            <div style={{ filter: planLevel < 3 ? 'blur(4px)' : 'none', pointerEvents: planLevel < 3 ? 'none' : 'auto', userSelect: planLevel < 3 ? 'none' : 'auto', opacity: planLevel < 3 ? 0.5 : 1 }}>
+                <Header>
+                    <Title><FaIdCard /> Gestión de Socios</Title>
+                    <ActionButton onClick={() => setIsAddOpen(true)}>
+                        <FaUserPlus /> Nuevo Socio
+                    </ActionButton>
+                </Header>
 
-            {isLoading ? (
-                <LoadingSpinner text="Cargando socios..." />
-            ) : (
-                <CardGrid>
-                    {filteredPatients.map(patient => (
-                        <PatientCard key={patient.id} onClick={() => openEdit(patient)}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                                <StatusBadge status={patient.reprocann_status}>
-                                    {patient.reprocann_status === 'active' ? 'Activo' :
-                                        patient.reprocann_status === 'expired' ? 'Vencido' : 'Pendiente'}
-                                </StatusBadge>
-                                <span style={{ fontSize: '0.8rem', color: '#718096' }}>Límite Mensual: {patient.monthly_limit}g</span>
-                            </div>
-                            <h3 style={{ margin: '0 0 0.25rem 0' }}>{patient.profile?.full_name || 'Sin Nombre'}</h3>
-                            <p style={{ color: '#718096', fontSize: '0.9rem', margin: 0 }}>
-                                {patient.reprocann_number || 'Sin Reprocann'}
-                            </p>
-                            {/* Show extra info if available */}
-                            {patient.document_number && <p style={{ fontSize: '0.8rem', color: '#94a3b8' }}>DNI: {patient.document_number}</p>}
-                            {(patient as any).expiration_date && (
-                                <small style={{ color: new Date((patient as any).expiration_date!) < new Date() ? '#f87171' : '#4ade80', display: 'block', marginTop: '0.5rem' }}>
-                                    Vence: {(patient as any).expiration_date}
-                                </small>
-                            )}
+                <SearchInput
+                    placeholder="Buscar por nombre o reprocann..."
+                    value={searchTerm}
+                    onChange={e => setSearchTerm(e.target.value)}
+                />
 
-                            <div style={{ marginTop: '1rem', borderTop: '1px solid rgba(255, 255, 255, 0.1)', paddingTop: '1rem' }}>
-                                <ActionButton
-                                    type="button"
-                                    style={{ width: '100%', justifyContent: 'center' }}
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        window.location.href = `/patients/${patient.id || patient.profile_id}/clinical`; // Using href for now to ensure clean load, or use navigate
-                                        // navigate(\`/patients/\${patient.id}/clinical\`); 
-                                    }}
-                                >
-                                    <FaFileAlt /> Historia Clínica
-                                </ActionButton>
-                            </div>
-                        </PatientCard>
-                    ))}
-                </CardGrid>
-            )}
+                {isLoading ? (
+                    <LoadingSpinner text="Cargando socios..." />
+                ) : (
+                    <CardGrid>
+                        {filteredPatients.map(patient => (
+                            <PatientCard key={patient.id} onClick={() => openEdit(patient)}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                                    <StatusBadge status={patient.reprocann_status}>
+                                        {patient.reprocann_status === 'active' ? 'Activo' :
+                                            patient.reprocann_status === 'expired' ? 'Vencido' : 'Pendiente'}
+                                    </StatusBadge>
+                                    <span style={{ fontSize: '0.8rem', color: '#718096' }}>Límite Mensual: {patient.monthly_limit}g</span>
+                                </div>
+                                <h3 style={{ margin: '0 0 0.25rem 0' }}>{patient.profile?.full_name || 'Sin Nombre'}</h3>
+                                <p style={{ color: '#718096', fontSize: '0.9rem', margin: 0 }}>
+                                    {patient.reprocann_number || 'Sin Reprocann'}
+                                </p>
+                                {/* Show extra info if available */}
+                                {patient.document_number && <p style={{ fontSize: '0.8rem', color: '#94a3b8' }}>DNI: {patient.document_number}</p>}
+                                {(patient as any).expiration_date && (
+                                    <small style={{ color: new Date((patient as any).expiration_date!) < new Date() ? '#f87171' : '#4ade80', display: 'block', marginTop: '0.5rem' }}>
+                                        Vence: {(patient as any).expiration_date}
+                                    </small>
+                                )}
 
-            {/* Modal: Add Patient (Registration) */}
-            <Modal isOpen={isAddOpen || isClosingAdd} $isClosing={isClosingAdd} onMouseDown={closeAddModal}>
-                <ModalContent $isClosing={isClosingAdd} onMouseDown={(e) => e.stopPropagation()}>
-                    <h2 style={{ marginBottom: '1.5rem', color: '#f8fafc' }}>📄 Vinculación de Nuevo Socio</h2>
-                    <form onSubmit={handleRegister}>
+                                <div style={{ marginTop: '1rem', borderTop: '1px solid rgba(255, 255, 255, 0.1)', paddingTop: '1rem' }}>
+                                    <ActionButton
+                                        type="button"
+                                        style={{ width: '100%', justifyContent: 'center' }}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            window.location.href = `/patients/${patient.id || patient.profile_id}/clinical`; // Using href for now to ensure clean load, or use navigate
+                                            // navigate(\`/patients/\${patient.id}/clinical\`); 
+                                        }}
+                                    >
+                                        <FaFileAlt /> Historia Clínica
+                                    </ActionButton>
+                                </div>
+                            </PatientCard>
+                        ))}
+                    </CardGrid>
+                )}
 
-                        <SectionHeader>Datos Personales</SectionHeader>
+                {/* Modal: Add Patient (Registration) */}
+                <Modal isOpen={isAddOpen || isClosingAdd} $isClosing={isClosingAdd} onMouseDown={closeAddModal}>
+                    <ModalContent $isClosing={isClosingAdd} onMouseDown={(e) => e.stopPropagation()}>
+                        <h2 style={{ marginBottom: '1.5rem', color: '#f8fafc' }}>📄 Vinculación de Nuevo Socio</h2>
+                        <form onSubmit={handleRegister}>
 
-                        <FormGroup>
-                            <label>Nombre Completo</label>
-                            <input
-                                value={regForm.fullName}
-                                onChange={e => setRegForm({ ...regForm, fullName: e.target.value })}
-                                placeholder="Nombre y Apellido"
-                                required
-                            />
-                        </FormGroup>
+                            <SectionHeader>Datos Personales</SectionHeader>
 
-                        <FormGroup>
-                            <label>Email</label>
-                            <input
-                                type="email"
-                                value={regForm.email}
-                                onChange={e => setRegForm({ ...regForm, email: e.target.value })}
-                                placeholder="email@ejemplo.com"
-                                required
-                            />
-                        </FormGroup>
-
-                        <FormRow>
                             <FormGroup>
-                                <label>DNI / Documento</label>
+                                <label>Nombre Completo</label>
                                 <input
-                                    value={regForm.documentNumber}
-                                    onChange={e => setRegForm({ ...regForm, documentNumber: e.target.value })}
-                                    placeholder="Número de documento"
+                                    value={regForm.fullName}
+                                    onChange={e => setRegForm({ ...regForm, fullName: e.target.value })}
+                                    placeholder="Nombre y Apellido"
                                     required
                                 />
                             </FormGroup>
+
                             <FormGroup>
-                                <label>Teléfono</label>
+                                <label>Email</label>
                                 <input
-                                    value={regForm.phone}
-                                    onChange={e => setRegForm({ ...regForm, phone: e.target.value })}
-                                    placeholder="+54 9 ..."
+                                    type="email"
+                                    value={regForm.email}
+                                    onChange={e => setRegForm({ ...regForm, email: e.target.value })}
+                                    placeholder="email@ejemplo.com"
+                                    required
                                 />
                             </FormGroup>
-                        </FormRow>
-                        <FormGroup>
-                            <label>Dirección</label>
-                            <input
-                                value={regForm.address}
-                                onChange={e => setRegForm({ ...regForm, address: e.target.value })}
-                                placeholder="Calle, Altura, Localidad"
-                            />
-                        </FormGroup>
 
-                        <SectionHeader>Datos REPROCANN</SectionHeader>
-                        <FormGroup>
-                            <label>Código de Vinculación / Número de Trámite</label>
-                            <input
-                                value={regForm.reprocannNumber}
-                                onChange={e => setRegForm({ ...regForm, reprocannNumber: e.target.value })}
-                                placeholder="XXXX-XXXX-XXXX"
-                                required
-                            />
-                        </FormGroup>
-                        <FormRow>
-                            <FormGroup style={{ position: 'relative', zIndex: 1001 }}>
-                                <label>Fecha Emisión</label>
-                                <CustomDatePicker
-                                    selected={regForm.issueDate ? new Date(regForm.issueDate) : null}
-                                    onChange={(val) => setRegForm({ ...regForm, issueDate: val ? val.toISOString().split('T')[0] : '' })}
-                                    placeholderText="Seleccionar Fecha"
-                                />
-                            </FormGroup>
-                            <FormGroup style={{ position: 'relative', zIndex: 1001 }}>
-                                <label>Fecha Vencimiento</label>
-                                <CustomDatePicker
-                                    selected={regForm.expirationDate ? new Date(regForm.expirationDate) : null}
-                                    onChange={(val) => setRegForm({ ...regForm, expirationDate: val ? val.toISOString().split('T')[0] : '' })}
-                                    placeholderText="Seleccionar Fecha"
-                                />
-                            </FormGroup>
-                        </FormRow>
-
-                        <SectionHeader>Documentación (Adjuntos)</SectionHeader>
-
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
-                            <FormGroup>
-                                <label>Credencial REPROCANN</label>
-                                <FileUploadBox onClick={() => document.getElementById('file-reprocann')?.click()}>
-                                    {files.reprocann ? <FaCheckCircle color="green" size={24} /> : <FaFileUpload size={24} color="#a0aec0" />}
-                                    <p style={{ fontSize: '0.8rem', marginTop: '0.5rem' }}>
-                                        {files.reprocann ? files.reprocann.name : 'Subir Credencial'}
-                                    </p>
-                                    <input id="file-reprocann" type="file" onChange={e => handleFileChange('reprocann', e)} accept="image/*,.pdf" />
-                                </FileUploadBox>
-                            </FormGroup>
-
-                            <FormGroup>
-                                <label>Declaración Jurada</label>
-                                <FileUploadBox onClick={() => document.getElementById('file-affidavit')?.click()}>
-                                    {files.affidavit ? <FaCheckCircle color="green" size={24} /> : <FaFileUpload size={24} color="#a0aec0" />}
-                                    <p style={{ fontSize: '0.8rem', marginTop: '0.5rem' }}>
-                                        {files.affidavit ? files.affidavit.name : 'Subir DDJJ'}
-                                    </p>
-                                    <input id="file-affidavit" type="file" onChange={e => handleFileChange('affidavit', e)} accept=".pdf,image/*" />
-                                </FileUploadBox>
-                            </FormGroup>
-
-                            <FormGroup>
-                                <label>Consentimiento Bilateral</label>
-                                <FileUploadBox onClick={() => document.getElementById('file-consent')?.click()}>
-                                    {files.consent ? <FaCheckCircle color="green" size={24} /> : <FaFileUpload size={24} color="#a0aec0" />}
-                                    <p style={{ fontSize: '0.8rem', marginTop: '0.5rem' }}>
-                                        {files.consent ? files.consent.name : 'Subir Consentimiento'}
-                                    </p>
-                                    <input id="file-consent" type="file" onChange={e => handleFileChange('consent', e)} accept=".pdf,image/*" />
-                                </FileUploadBox>
-                            </FormGroup>
-                        </div>
-
-                        <FormGroup style={{ marginTop: '1rem' }}>
-                            <label>Notas Adicionales</label>
-                            <textarea
-                                value={regForm.notes}
-                                onChange={e => setRegForm({ ...regForm, notes: e.target.value })}
-                                placeholder="Observaciones sobre documentación o paciente..."
-                            />
-                        </FormGroup>
-
-                        <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem', justifyContent: 'flex-end' }}>
-                            <ActionButton type="button" style={{ background: 'rgba(100, 116, 139, 0.2)', color: '#cbd5e1', borderColor: 'transparent' }} onClick={() => { closeAddModal(); resetForm(); }}>Cancelar</ActionButton>
-                            <ActionButton type="submit" disabled={isSubmitting}>
-                                {isSubmitting ? 'Guardando...' : 'Registrar Socio'}
-                            </ActionButton>
-                        </div>
-                    </form>
-                </ModalContent>
-            </Modal>
-
-            {/* Modal: View/Edit Patient Details */}
-            <Modal isOpen={isEditOpen || isClosingEdit} $isClosing={isClosingEdit} onMouseDown={closeEditModal}>
-                <ModalContent $isClosing={isClosingEdit} onMouseDown={(e) => e.stopPropagation()}>
-                    {selectedPatient && (
-                        <>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', paddingBottom: '1rem' }}>
-                                <div>
-                                    <h2 style={{ margin: 0, color: '#f8fafc' }}>{selectedPatient.profile?.full_name}</h2>
-                                    <span style={{ fontSize: '0.9rem', color: '#94a3b8' }}>{selectedPatient.profile?.email}</span>
-                                </div>
-                                <StatusBadge status={selectedPatient.reprocann_status} style={{ fontSize: '1rem', padding: '0.5rem 1rem' }}>
-                                    {selectedPatient.reprocann_status.toUpperCase()}
-                                </StatusBadge>
-                            </div>
-
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
-                                <div>
-                                    <SectionHeader style={{ marginTop: 0 }}>Datos Personales</SectionHeader>
-                                    <p><strong>DNI:</strong> {selectedPatient.document_number || '-'}</p>
-                                    <p><strong>Teléfono:</strong> {selectedPatient.phone || '-'}</p>
-                                    <p><strong>Dirección:</strong> {selectedPatient.address || '-'}</p>
-                                    <p><strong>Límite Mensual:</strong> {selectedPatient.monthly_limit}g</p>
-                                </div>
-                                <div>
-                                    <SectionHeader style={{ marginTop: 0 }}>Datos REPROCANN</SectionHeader>
-                                    <p><strong>Código:</strong> {selectedPatient.reprocann_number}</p>
-                                    <p><strong>Emisión:</strong> {selectedPatient.reprocann_issue_date || '-'}</p>
-                                    <p><strong>Vencimiento:</strong> <span style={{ color: new Date(selectedPatient.expiration_date!) < new Date() ? 'red' : 'inherit' }}>{selectedPatient.expiration_date}</span></p>
-                                </div>
-                            </div>
-
-                            <SectionHeader>Documentación</SectionHeader>
-                            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-                                {selectedPatient.file_reprocann_url ? (
-                                    <ActionButton as="a" href={selectedPatient.file_reprocann_url} target="_blank" style={{ fontSize: '0.9rem' }}>
-                                        <FaFileAlt /> Ver Credencial
-                                    </ActionButton>
-                                ) : <span style={{ color: '#64748b' }}>Sin Credencial</span>}
-
-                                {selectedPatient.file_affidavit_url ? (
-                                    <ActionButton as="a" href={selectedPatient.file_affidavit_url} target="_blank" style={{ fontSize: '0.9rem' }}>
-                                        <FaFileAlt /> Ver DDJJ
-                                    </ActionButton>
-                                ) : <span style={{ color: '#64748b' }}>Sin DDJJ</span>}
-
-                                {selectedPatient.file_consent_url ? (
-                                    <ActionButton as="a" href={selectedPatient.file_consent_url} target="_blank" style={{ fontSize: '0.9rem' }}>
-                                        <FaFileAlt /> Ver Consentimiento
-                                    </ActionButton>
-                                ) : <span style={{ color: '#64748b' }}>Sin Consentimiento</span>}
-                            </div>
-
-                            <SectionHeader>Gestión de Estado</SectionHeader>
-
-                            {selectedPatient.reprocann_status === 'pending' && (
-                                <div style={{ background: 'rgba(56, 189, 248, 0.1)', border: '1px solid rgba(56, 189, 248, 0.3)', borderRadius: '0.5rem', padding: '1rem', marginBottom: '1.5rem' }}>
-                                    <h4 style={{ margin: '0 0 0.5rem 0', color: '#38bdf8' }}>ℹ️ Acción Requerida</h4>
-                                    <p style={{ margin: '0 0 1rem 0', fontSize: '0.9rem', color: '#bae6fd' }}>
-                                        Este socio está pendiente. Si la documentación es correcta, apruébalo para habilitar su cuenta.
-                                    </p>
-                                    <ActionButton
-                                        type="button"
-                                        style={{ width: '100%', justifyContent: 'center', background: 'rgba(74, 222, 128, 0.2)', color: '#4ade80', borderColor: 'rgba(74, 222, 128, 0.5)' }}
-                                        onClick={() => {
-                                            setConfirmModal({
-                                                isOpen: true,
-                                                title: 'Aprobar Socio',
-                                                message: `¿Estás seguro de que deseas aprobar y habilitar a ${selectedPatient.profile?.full_name}? Esto activará su cuenta inmediatamente.`,
-                                                onConfirm: async () => {
-                                                    try {
-                                                        await patientsService.upsertPatient({ ...selectedPatient, reprocann_status: 'active' });
-                                                        showToast("Socio aprobado correctamente.", 'success');
-                                                        setConfirmModal(prev => ({ ...prev, isOpen: false }));
-                                                        setIsEditOpen(false);
-                                                        loadData();
-                                                    } catch (error) {
-                                                        console.error(error);
-                                                        showToast("Error al aprobar.", 'error');
-                                                    }
-                                                },
-                                                isDanger: false
-                                            });
-                                        }}
-                                    >
-                                        <FaCheckCircle /> APROBAR Y HABILITAR SOCIO
-                                    </ActionButton>
-                                </div>
-                            )}
-
-                            <SectionHeader>Edición Manual</SectionHeader>
-                            <form onSubmit={handleUpdatePatient}>
-                                <FormGroup style={{ position: 'relative', zIndex: 1002 }}>
-                                    <label>Cambiar Estado</label>
-                                    <CustomSelect
-                                        value={selectedPatient.reprocann_status}
-                                        onChange={val => setSelectedPatient({ ...selectedPatient, reprocann_status: val as any })}
-                                        options={[
-                                            { value: 'pending', label: 'Pendiente de Revisión' },
-                                            { value: 'active', label: 'Activo (Habilitado)' },
-                                            { value: 'expired', label: 'Vencido' },
-                                            { value: 'rejected', label: 'Rechazado' }
-                                        ]}
-                                    />
-                                </FormGroup>
+                            <FormRow>
                                 <FormGroup>
-                                    <label>Actualizar Límite (g)</label>
+                                    <label>DNI / Documento</label>
                                     <input
-                                        type="number"
-                                        value={selectedPatient.monthly_limit}
-                                        onChange={e => setSelectedPatient({ ...selectedPatient, monthly_limit: Number(e.target.value) })}
+                                        value={regForm.documentNumber}
+                                        onChange={e => setRegForm({ ...regForm, documentNumber: e.target.value })}
+                                        placeholder="Número de documento"
+                                        required
                                     />
                                 </FormGroup>
                                 <FormGroup>
-                                    <label>Notas Internas</label>
-                                    <textarea
-                                        value={selectedPatient.notes || ''}
-                                        onChange={e => setSelectedPatient({ ...selectedPatient, notes: e.target.value })}
-                                        rows={2}
+                                    <label>Teléfono</label>
+                                    <input
+                                        value={regForm.phone}
+                                        onChange={e => setRegForm({ ...regForm, phone: e.target.value })}
+                                        placeholder="+54 9 ..."
                                     />
                                 </FormGroup>
+                            </FormRow>
+                            <FormGroup>
+                                <label>Dirección</label>
+                                <input
+                                    value={regForm.address}
+                                    onChange={e => setRegForm({ ...regForm, address: e.target.value })}
+                                    placeholder="Calle, Altura, Localidad"
+                                />
+                            </FormGroup>
 
-                                <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <ActionButton
-                                        type="button"
-                                        style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#f87171', borderColor: 'rgba(239, 68, 68, 0.5)', fontSize: '0.85rem' }}
-                                        onClick={() => {
-                                            setConfirmModal({
-                                                isOpen: true,
-                                                title: 'Eliminar Socio',
-                                                message: `¿Estás seguro de que deseas eliminar a ${selectedPatient.profile?.full_name}? Esta acción es irreversible.`,
-                                                onConfirm: async () => {
-                                                    try {
-                                                        await patientsService.deletePatient(selectedPatient.id);
-                                                        setConfirmModal(prev => ({ ...prev, isOpen: false }));
-                                                        closeEditModal();
-                                                        loadData();
-                                                        showToast("Socio eliminado correctamente.", 'success');
-                                                    } catch (error) {
-                                                        console.error(error);
-                                                        showToast("Error al eliminar.", 'error');
-                                                    }
-                                                },
-                                                isDanger: true
-                                            });
-                                        }}
-                                    >
-                                        Eliminar Paciente
-                                    </ActionButton>
+                            <SectionHeader>Datos REPROCANN</SectionHeader>
+                            <FormGroup>
+                                <label>Código de Vinculación / Número de Trámite</label>
+                                <input
+                                    value={regForm.reprocannNumber}
+                                    onChange={e => setRegForm({ ...regForm, reprocannNumber: e.target.value })}
+                                    placeholder="XXXX-XXXX-XXXX"
+                                    required
+                                />
+                            </FormGroup>
+                            <FormRow>
+                                <FormGroup style={{ position: 'relative', zIndex: 1001 }}>
+                                    <label>Fecha Emisión</label>
+                                    <CustomDatePicker
+                                        selected={regForm.issueDate ? new Date(regForm.issueDate) : null}
+                                        onChange={(val) => setRegForm({ ...regForm, issueDate: val ? val.toISOString().split('T')[0] : '' })}
+                                        placeholderText="Seleccionar Fecha"
+                                    />
+                                </FormGroup>
+                                <FormGroup style={{ position: 'relative', zIndex: 1001 }}>
+                                    <label>Fecha Vencimiento</label>
+                                    <CustomDatePicker
+                                        selected={regForm.expirationDate ? new Date(regForm.expirationDate) : null}
+                                        onChange={(val) => setRegForm({ ...regForm, expirationDate: val ? val.toISOString().split('T')[0] : '' })}
+                                        placeholderText="Seleccionar Fecha"
+                                    />
+                                </FormGroup>
+                            </FormRow>
 
-                                    <div style={{ display: 'flex', gap: '1rem' }}>
-                                        <ActionButton type="button" style={{ background: 'rgba(100, 116, 139, 0.2)', color: '#cbd5e1', borderColor: 'transparent' }} onClick={closeEditModal}>Cerrar</ActionButton>
-                                        <ActionButton type="submit">Guardar Cambios</ActionButton>
+                            <SectionHeader>Documentación (Adjuntos)</SectionHeader>
+
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+                                <FormGroup>
+                                    <label>Credencial REPROCANN</label>
+                                    <FileUploadBox onClick={() => document.getElementById('file-reprocann')?.click()}>
+                                        {files.reprocann ? <FaCheckCircle color="green" size={24} /> : <FaFileUpload size={24} color="#a0aec0" />}
+                                        <p style={{ fontSize: '0.8rem', marginTop: '0.5rem' }}>
+                                            {files.reprocann ? files.reprocann.name : 'Subir Credencial'}
+                                        </p>
+                                        <input id="file-reprocann" type="file" onChange={e => handleFileChange('reprocann', e)} accept="image/*,.pdf" />
+                                    </FileUploadBox>
+                                </FormGroup>
+
+                                <FormGroup>
+                                    <label>Declaración Jurada</label>
+                                    <FileUploadBox onClick={() => document.getElementById('file-affidavit')?.click()}>
+                                        {files.affidavit ? <FaCheckCircle color="green" size={24} /> : <FaFileUpload size={24} color="#a0aec0" />}
+                                        <p style={{ fontSize: '0.8rem', marginTop: '0.5rem' }}>
+                                            {files.affidavit ? files.affidavit.name : 'Subir DDJJ'}
+                                        </p>
+                                        <input id="file-affidavit" type="file" onChange={e => handleFileChange('affidavit', e)} accept=".pdf,image/*" />
+                                    </FileUploadBox>
+                                </FormGroup>
+
+                                <FormGroup>
+                                    <label>Consentimiento Bilateral</label>
+                                    <FileUploadBox onClick={() => document.getElementById('file-consent')?.click()}>
+                                        {files.consent ? <FaCheckCircle color="green" size={24} /> : <FaFileUpload size={24} color="#a0aec0" />}
+                                        <p style={{ fontSize: '0.8rem', marginTop: '0.5rem' }}>
+                                            {files.consent ? files.consent.name : 'Subir Consentimiento'}
+                                        </p>
+                                        <input id="file-consent" type="file" onChange={e => handleFileChange('consent', e)} accept=".pdf,image/*" />
+                                    </FileUploadBox>
+                                </FormGroup>
+                            </div>
+
+                            <FormGroup style={{ marginTop: '1rem' }}>
+                                <label>Notas Adicionales</label>
+                                <textarea
+                                    value={regForm.notes}
+                                    onChange={e => setRegForm({ ...regForm, notes: e.target.value })}
+                                    placeholder="Observaciones sobre documentación o paciente..."
+                                />
+                            </FormGroup>
+
+                            <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem', justifyContent: 'flex-end' }}>
+                                <ActionButton type="button" style={{ background: 'rgba(100, 116, 139, 0.2)', color: '#cbd5e1', borderColor: 'transparent' }} onClick={() => { closeAddModal(); resetForm(); }}>Cancelar</ActionButton>
+                                <ActionButton type="submit" disabled={isSubmitting}>
+                                    {isSubmitting ? 'Guardando...' : 'Registrar Socio'}
+                                </ActionButton>
+                            </div>
+                        </form>
+                    </ModalContent>
+                </Modal>
+
+                {/* Modal: View/Edit Patient Details */}
+                <Modal isOpen={isEditOpen || isClosingEdit} $isClosing={isClosingEdit} onMouseDown={closeEditModal}>
+                    <ModalContent $isClosing={isClosingEdit} onMouseDown={(e) => e.stopPropagation()}>
+                        {selectedPatient && (
+                            <>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', paddingBottom: '1rem' }}>
+                                    <div>
+                                        <h2 style={{ margin: 0, color: '#f8fafc' }}>{selectedPatient.profile?.full_name}</h2>
+                                        <span style={{ fontSize: '0.9rem', color: '#94a3b8' }}>{selectedPatient.profile?.email}</span>
+                                    </div>
+                                    <StatusBadge status={selectedPatient.reprocann_status} style={{ fontSize: '1rem', padding: '0.5rem 1rem' }}>
+                                        {selectedPatient.reprocann_status.toUpperCase()}
+                                    </StatusBadge>
+                                </div>
+
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+                                    <div>
+                                        <SectionHeader style={{ marginTop: 0 }}>Datos Personales</SectionHeader>
+                                        <p><strong>DNI:</strong> {selectedPatient.document_number || '-'}</p>
+                                        <p><strong>Teléfono:</strong> {selectedPatient.phone || '-'}</p>
+                                        <p><strong>Dirección:</strong> {selectedPatient.address || '-'}</p>
+                                        <p><strong>Límite Mensual:</strong> {selectedPatient.monthly_limit}g</p>
+                                    </div>
+                                    <div>
+                                        <SectionHeader style={{ marginTop: 0 }}>Datos REPROCANN</SectionHeader>
+                                        <p><strong>Código:</strong> {selectedPatient.reprocann_number}</p>
+                                        <p><strong>Emisión:</strong> {selectedPatient.reprocann_issue_date || '-'}</p>
+                                        <p><strong>Vencimiento:</strong> <span style={{ color: new Date(selectedPatient.expiration_date!) < new Date() ? 'red' : 'inherit' }}>{selectedPatient.expiration_date}</span></p>
                                     </div>
                                 </div>
-                            </form>
-                        </>
-                    )}
-                </ModalContent>
-            </Modal>
 
-            <ConfirmModal
-                isOpen={confirmModal.isOpen}
-                title={confirmModal.title}
-                message={confirmModal.message}
-                onConfirm={confirmModal.onConfirm}
-                onClose={() => setConfirmModal({ ...confirmModal, isOpen: false })}
-                confirmText="Sí, Aprobar"
-                cancelText="Cancelar"
-                isDanger={confirmModal.isDanger}
-            />
+                                <SectionHeader>Documentación</SectionHeader>
+                                <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                                    {selectedPatient.file_reprocann_url ? (
+                                        <ActionButton as="a" href={selectedPatient.file_reprocann_url} target="_blank" style={{ fontSize: '0.9rem' }}>
+                                            <FaFileAlt /> Ver Credencial
+                                        </ActionButton>
+                                    ) : <span style={{ color: '#64748b' }}>Sin Credencial</span>}
 
-            <ToastModal
-                isOpen={toastOpen}
-                message={toastMessage}
-                type={toastType}
-                onClose={() => setToastOpen(false)}
-            />
+                                    {selectedPatient.file_affidavit_url ? (
+                                        <ActionButton as="a" href={selectedPatient.file_affidavit_url} target="_blank" style={{ fontSize: '0.9rem' }}>
+                                            <FaFileAlt /> Ver DDJJ
+                                        </ActionButton>
+                                    ) : <span style={{ color: '#64748b' }}>Sin DDJJ</span>}
+
+                                    {selectedPatient.file_consent_url ? (
+                                        <ActionButton as="a" href={selectedPatient.file_consent_url} target="_blank" style={{ fontSize: '0.9rem' }}>
+                                            <FaFileAlt /> Ver Consentimiento
+                                        </ActionButton>
+                                    ) : <span style={{ color: '#64748b' }}>Sin Consentimiento</span>}
+                                </div>
+
+                                <SectionHeader>Gestión de Estado</SectionHeader>
+
+                                {selectedPatient.reprocann_status === 'pending' && (
+                                    <div style={{ background: 'rgba(56, 189, 248, 0.1)', border: '1px solid rgba(56, 189, 248, 0.3)', borderRadius: '0.5rem', padding: '1rem', marginBottom: '1.5rem' }}>
+                                        <h4 style={{ margin: '0 0 0.5rem 0', color: '#38bdf8' }}>ℹ️ Acción Requerida</h4>
+                                        <p style={{ margin: '0 0 1rem 0', fontSize: '0.9rem', color: '#bae6fd' }}>
+                                            Este socio está pendiente. Si la documentación es correcta, apruébalo para habilitar su cuenta.
+                                        </p>
+                                        <ActionButton
+                                            type="button"
+                                            style={{ width: '100%', justifyContent: 'center', background: 'rgba(74, 222, 128, 0.2)', color: '#4ade80', borderColor: 'rgba(74, 222, 128, 0.5)' }}
+                                            onClick={() => {
+                                                setConfirmModal({
+                                                    isOpen: true,
+                                                    title: 'Aprobar Socio',
+                                                    message: `¿Estás seguro de que deseas aprobar y habilitar a ${selectedPatient.profile?.full_name}? Esto activará su cuenta inmediatamente.`,
+                                                    onConfirm: async () => {
+                                                        try {
+                                                            await patientsService.upsertPatient({ ...selectedPatient, reprocann_status: 'active' });
+                                                            showToast("Socio aprobado correctamente.", 'success');
+                                                            setConfirmModal(prev => ({ ...prev, isOpen: false }));
+                                                            setIsEditOpen(false);
+                                                            loadData();
+                                                        } catch (error) {
+                                                            console.error(error);
+                                                            showToast("Error al aprobar.", 'error');
+                                                        }
+                                                    },
+                                                    isDanger: false
+                                                });
+                                            }}
+                                        >
+                                            <FaCheckCircle /> APROBAR Y HABILITAR SOCIO
+                                        </ActionButton>
+                                    </div>
+                                )}
+
+                                <SectionHeader>Edición Manual</SectionHeader>
+                                <form onSubmit={handleUpdatePatient}>
+                                    <FormGroup style={{ position: 'relative', zIndex: 1002 }}>
+                                        <label>Cambiar Estado</label>
+                                        <CustomSelect
+                                            value={selectedPatient.reprocann_status}
+                                            onChange={val => setSelectedPatient({ ...selectedPatient, reprocann_status: val as any })}
+                                            options={[
+                                                { value: 'pending', label: 'Pendiente de Revisión' },
+                                                { value: 'active', label: 'Activo (Habilitado)' },
+                                                { value: 'expired', label: 'Vencido' },
+                                                { value: 'rejected', label: 'Rechazado' }
+                                            ]}
+                                        />
+                                    </FormGroup>
+                                    <FormGroup>
+                                        <label>Actualizar Límite (g)</label>
+                                        <input
+                                            type="number"
+                                            value={selectedPatient.monthly_limit}
+                                            onChange={e => setSelectedPatient({ ...selectedPatient, monthly_limit: Number(e.target.value) })}
+                                        />
+                                    </FormGroup>
+                                    <FormGroup>
+                                        <label>Notas Internas</label>
+                                        <textarea
+                                            value={selectedPatient.notes || ''}
+                                            onChange={e => setSelectedPatient({ ...selectedPatient, notes: e.target.value })}
+                                            rows={2}
+                                        />
+                                    </FormGroup>
+
+                                    <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <ActionButton
+                                            type="button"
+                                            style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#f87171', borderColor: 'rgba(239, 68, 68, 0.5)', fontSize: '0.85rem' }}
+                                            onClick={() => {
+                                                setConfirmModal({
+                                                    isOpen: true,
+                                                    title: 'Eliminar Socio',
+                                                    message: `¿Estás seguro de que deseas eliminar a ${selectedPatient.profile?.full_name}? Esta acción es irreversible.`,
+                                                    onConfirm: async () => {
+                                                        try {
+                                                            await patientsService.deletePatient(selectedPatient.id);
+                                                            setConfirmModal(prev => ({ ...prev, isOpen: false }));
+                                                            closeEditModal();
+                                                            loadData();
+                                                            showToast("Socio eliminado correctamente.", 'success');
+                                                        } catch (error) {
+                                                            console.error(error);
+                                                            showToast("Error al eliminar.", 'error');
+                                                        }
+                                                    },
+                                                    isDanger: true
+                                                });
+                                            }}
+                                        >
+                                            Eliminar Paciente
+                                        </ActionButton>
+
+                                        <div style={{ display: 'flex', gap: '1rem' }}>
+                                            <ActionButton type="button" style={{ background: 'rgba(100, 116, 139, 0.2)', color: '#cbd5e1', borderColor: 'transparent' }} onClick={closeEditModal}>Cerrar</ActionButton>
+                                            <ActionButton type="submit">Guardar Cambios</ActionButton>
+                                        </div>
+                                    </div>
+                                </form>
+                            </>
+                        )}
+                    </ModalContent>
+                </Modal>
+
+                <ConfirmModal
+                    isOpen={confirmModal.isOpen}
+                    title={confirmModal.title}
+                    message={confirmModal.message}
+                    onConfirm={confirmModal.onConfirm}
+                    onClose={() => setConfirmModal({ ...confirmModal, isOpen: false })}
+                    confirmText="Sí, Aprobar"
+                    cancelText="Cancelar"
+                    isDanger={confirmModal.isDanger}
+                />
+
+                <ToastModal
+                    isOpen={toastOpen}
+                    message={toastMessage}
+                    type={toastType}
+                    onClose={() => setToastOpen(false)}
+                />
+            </div>
         </PageContainer>
     );
 };

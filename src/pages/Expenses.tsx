@@ -4,6 +4,8 @@ import { FaMoneyBillWave, FaTrash, FaExclamationCircle } from 'react-icons/fa';
 import { expensesService, CashMovement } from '../services/expensesService';
 import { format } from 'date-fns';
 import { CustomSelect } from '../components/CustomSelect';
+import { useOrganization } from '../context/OrganizationContext';
+import UpgradeOverlay from '../components/common/UpgradeOverlay';
 
 const fadeIn = keyframes`
   from { opacity: 0; transform: translate(-50%, 20px); }
@@ -166,6 +168,11 @@ const Table = styled.table`
 `;
 
 const Expenses: React.FC = () => {
+    const { currentOrganization } = useOrganization();
+    const plan = currentOrganization?.plan || 'individual';
+    const planLevel = ['ong', 'enterprise'].includes(plan) ? 3 :
+        ['equipo', 'pro'].includes(plan) ? 2 : 1;
+
     const [movements, setMovements] = useState<CashMovement[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -245,108 +252,112 @@ const Expenses: React.FC = () => {
     };
 
     return (
-        <Container>
-            <Header>
-                <h1><FaMoneyBillWave color="#38b2ac" /> Control de Gastos</h1>
-            </Header>
+        <Container style={{ position: 'relative', overflow: 'hidden' }}>
+            {planLevel < 2 && <UpgradeOverlay requiredPlanName="Equipo o superior" />}
 
-            <Grid>
-                <BalanceCard>
-                    <h2>Saldo Total</h2>
-                    <p className="balance" style={{ color: totalBalance >= 0 ? '#4ade80' : '#f87171' }}>
-                        {formatMoney(totalBalance)}
-                    </p>
-                    <div className="sub-balances">
-                        <span>Saldo Sebastian: <strong>{formatMoney(sebaBalance)}</strong></span>
-                        <span>Saldo Santiago: <strong>{formatMoney(santiBalance)}</strong></span>
-                    </div>
-                </BalanceCard>
+            <div style={{ filter: planLevel < 2 ? 'blur(4px)' : 'none', pointerEvents: planLevel < 2 ? 'none' : 'auto', userSelect: planLevel < 2 ? 'none' : 'auto', opacity: planLevel < 2 ? 0.5 : 1 }}>
+                <Header>
+                    <h1><FaMoneyBillWave color="#38b2ac" /> Control de Gastos</h1>
+                </Header>
 
-                {/* Input Form */}
-                <Card>
-                    <h3 style={{ marginTop: 0, color: '#f8fafc' }}>Nuevo Movimiento</h3>
-                    <Form>
-                        <div style={{ position: 'relative', zIndex: 1002 }}>
-                            <CustomSelect
-                                value={type}
-                                onChange={(val) => setType(val as any)}
-                                options={[
-                                    { value: 'EGRESO', label: 'EGRESO (Gasto)' },
-                                    { value: 'INGRESO', label: 'INGRESO (Aporte)' }
-                                ]}
-                            />
+                <Grid>
+                    <BalanceCard>
+                        <h2>Saldo Total</h2>
+                        <p className="balance" style={{ color: totalBalance >= 0 ? '#4ade80' : '#f87171' }}>
+                            {formatMoney(totalBalance)}
+                        </p>
+                        <div className="sub-balances">
+                            <span>Saldo Sebastian: <strong>{formatMoney(sebaBalance)}</strong></span>
+                            <span>Saldo Santiago: <strong>{formatMoney(santiBalance)}</strong></span>
                         </div>
-                        <div style={{ position: 'relative', zIndex: 1001 }}>
-                            <CustomSelect
-                                value={owner}
-                                onChange={(val) => setOwner(val)}
-                                options={[
-                                    { value: 'Sebastian', label: 'Sebastian' },
-                                    { value: 'Santiago', label: 'Santiago' }
-                                ]}
-                            />
-                        </div>
-                        <input
-                            placeholder="Concepto (ej: Fertilizante, Luz)"
-                            value={concept}
-                            onChange={e => setConcept(e.target.value)}
-                        />
-                        <input
-                            type="number"
-                            placeholder="Monto"
-                            value={amount}
-                            onChange={e => setAmount(e.target.value)}
-                        />
-                        <button onClick={handleCreate}>Agregar Movimiento</button>
-                    </Form>
-                </Card>
+                    </BalanceCard>
 
-                {/* List */}
-                <TableContainer>
-                    <h3 style={{ paddingLeft: '1rem', marginTop: '1rem', color: '#f8fafc' }}>Movimientos Recientes</h3>
-                    {loading ? <p style={{ padding: '1rem', color: '#94a3b8' }}>Cargando...</p> : (
-                        <Table>
-                            <thead>
-                                <tr>
-                                    <th>Tipo</th>
-                                    <th>Fecha</th>
-                                    <th>Concepto</th>
-                                    <th>Responsable</th>
-                                    <th>Monto</th>
-                                    <th></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {movements.map(m => (
-                                    <tr key={m.id}>
-                                        <td><span className={`type-badge ${m.type}`}>{m.type}</span></td>
-                                        <td>{format(new Date(m.date), 'dd/MM/yyyy')}</td>
-                                        <td>{m.concept}</td>
-                                        <td>{m.owner}</td>
-                                        <td style={{ fontWeight: 600, color: m.type === 'INGRESO' ? '#4ade80' : '#f87171' }}>
-                                            {m.type === 'INGRESO' ? '+' : '-'}{formatMoney(m.amount)}
-                                        </td>
-                                        <td>
-                                            <button onClick={() => m.id && handleDelete(m.id)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: '1rem' }}
-                                                onMouseOver={(e) => e.currentTarget.style.color = '#f87171'}
-                                                onMouseOut={(e) => e.currentTarget.style.color = '#94a3b8'}
-                                            >
-                                                <FaTrash />
-                                            </button>
-                                        </td>
+                    {/* Input Form */}
+                    <Card>
+                        <h3 style={{ marginTop: 0, color: '#f8fafc' }}>Nuevo Movimiento</h3>
+                        <Form>
+                            <div style={{ position: 'relative', zIndex: 1002 }}>
+                                <CustomSelect
+                                    value={type}
+                                    onChange={(val) => setType(val as any)}
+                                    options={[
+                                        { value: 'EGRESO', label: 'EGRESO (Gasto)' },
+                                        { value: 'INGRESO', label: 'INGRESO (Aporte)' }
+                                    ]}
+                                />
+                            </div>
+                            <div style={{ position: 'relative', zIndex: 1001 }}>
+                                <CustomSelect
+                                    value={owner}
+                                    onChange={(val) => setOwner(val)}
+                                    options={[
+                                        { value: 'Sebastian', label: 'Sebastian' },
+                                        { value: 'Santiago', label: 'Santiago' }
+                                    ]}
+                                />
+                            </div>
+                            <input
+                                placeholder="Concepto (ej: Fertilizante, Luz)"
+                                value={concept}
+                                onChange={e => setConcept(e.target.value)}
+                            />
+                            <input
+                                type="number"
+                                placeholder="Monto"
+                                value={amount}
+                                onChange={e => setAmount(e.target.value)}
+                            />
+                            <button onClick={handleCreate}>Agregar Movimiento</button>
+                        </Form>
+                    </Card>
+
+                    {/* List */}
+                    <TableContainer>
+                        <h3 style={{ paddingLeft: '1rem', marginTop: '1rem', color: '#f8fafc' }}>Movimientos Recientes</h3>
+                        {loading ? <p style={{ padding: '1rem', color: '#94a3b8' }}>Cargando...</p> : (
+                            <Table>
+                                <thead>
+                                    <tr>
+                                        <th>Tipo</th>
+                                        <th>Fecha</th>
+                                        <th>Concepto</th>
+                                        <th>Responsable</th>
+                                        <th>Monto</th>
+                                        <th></th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </Table>
-                    )}
-                </TableContainer>
-            </Grid>
-            {toastMessage && (
-                <ToastContainer $isClosing={isToastClosing}>
-                    <FaExclamationCircle color="#c084fc" size={20} />
-                    {toastMessage}
-                </ToastContainer>
-            )}
+                                </thead>
+                                <tbody>
+                                    {movements.map(m => (
+                                        <tr key={m.id}>
+                                            <td><span className={`type-badge ${m.type}`}>{m.type}</span></td>
+                                            <td>{format(new Date(m.date), 'dd/MM/yyyy')}</td>
+                                            <td>{m.concept}</td>
+                                            <td>{m.owner}</td>
+                                            <td style={{ fontWeight: 600, color: m.type === 'INGRESO' ? '#4ade80' : '#f87171' }}>
+                                                {m.type === 'INGRESO' ? '+' : '-'}{formatMoney(m.amount)}
+                                            </td>
+                                            <td>
+                                                <button onClick={() => m.id && handleDelete(m.id)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: '1rem' }}
+                                                    onMouseOver={(e) => e.currentTarget.style.color = '#f87171'}
+                                                    onMouseOut={(e) => e.currentTarget.style.color = '#94a3b8'}
+                                                >
+                                                    <FaTrash />
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </Table>
+                        )}
+                    </TableContainer>
+                </Grid>
+                {toastMessage && (
+                    <ToastContainer $isClosing={isToastClosing}>
+                        <FaExclamationCircle color="#c084fc" size={20} />
+                        {toastMessage}
+                    </ToastContainer>
+                )}
+            </div>
         </Container>
     );
 };
