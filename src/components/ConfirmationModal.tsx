@@ -61,7 +61,7 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
 const Overlay = styled.div<{ isClosing?: boolean }>`
     position: fixed;
     top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0.6);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -81,12 +81,15 @@ const Overlay = styled.div<{ isClosing?: boolean }>`
 `;
 
 const ModalContainer = styled.div<{ isClosing?: boolean }>`
-    background: white;
+    background: rgba(15, 23, 42, 0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     padding: 2rem;
-    border-radius: 1rem;
+    border-radius: 1.25rem;
     width: 90%;
     max-width: 400px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -106,8 +109,8 @@ const ModalContainer = styled.div<{ isClosing?: boolean }>`
 `;
 
 const IconWrapper = styled.div<{ $variant: 'primary' | 'danger' | 'success' }>`
-    background: ${props => props.$variant === 'danger' ? '#fed7d7' : props.$variant === 'success' ? '#c6f6d5' : '#feebc8'};
-    color: ${props => props.$variant === 'danger' ? '#c53030' : props.$variant === 'success' ? '#2f855a' : '#d69e2e'};
+    background: ${props => props.$variant === 'danger' ? 'rgba(239, 68, 68, 0.2)' : props.$variant === 'success' ? 'rgba(74, 222, 128, 0.2)' : 'rgba(236, 201, 75, 0.2)'};
+    color: ${props => props.$variant === 'danger' ? '#f87171' : props.$variant === 'success' ? '#4ade80' : '#facc15'};
     width: 50px;
     height: 50px;
     border-radius: 50%;
@@ -119,12 +122,12 @@ const IconWrapper = styled.div<{ $variant: 'primary' | 'danger' | 'success' }>`
 
 const Title = styled.h3`
     margin: 0 0 0.5rem 0;
-    color: #2d3748;
+    color: #f8fafc;
     font-size: 1.25rem;
 `;
 
 const Message = styled.p`
-    color: #718096;
+    color: #94a3b8;
     margin: 0 0 2rem 0;
     font-size: 0.95rem;
     line-height: 1.5;
@@ -147,15 +150,15 @@ const Button = styled.button`
 `;
 
 const CancelButton = styled(Button)`
-    background: white;
-    border: 1px solid #cbd5e0;
-    color: #4a5568;
-    &:hover { background: #f7fafc; }
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #cbd5e1;
+    &:hover { background: rgba(255, 255, 255, 0.1); color: #f8fafc; }
 `;
 
 const ConfirmButton = styled(Button) <{ $variant: 'primary' | 'danger' | 'success' }>`
-    background: ${props => props.$variant === 'danger' ? '#e53e3e' : props.$variant === 'success' ? '#48bb78' : '#3182ce'};
-    border: none;
-    color: white;
-    &:hover { background: ${props => props.$variant === 'danger' ? '#c53030' : props.$variant === 'success' ? '#38a169' : '#2b6cb0'}; }
+    background: ${props => props.$variant === 'danger' ? 'rgba(239, 68, 68, 0.2)' : props.$variant === 'success' ? 'rgba(74, 222, 128, 0.2)' : 'rgba(56, 189, 248, 0.2)'};
+    border: 1px solid ${props => props.$variant === 'danger' ? 'rgba(239, 68, 68, 0.5)' : props.$variant === 'success' ? 'rgba(74, 222, 128, 0.5)' : 'rgba(56, 189, 248, 0.5)'};
+    color: ${props => props.$variant === 'danger' ? '#f87171' : props.$variant === 'success' ? '#4ade80' : '#38bdf8'};
+    &:hover { background: ${props => props.$variant === 'danger' ? 'rgba(239, 68, 68, 0.3)' : props.$variant === 'success' ? 'rgba(74, 222, 128, 0.3)' : 'rgba(56, 189, 248, 0.3)'}; }
 `;
