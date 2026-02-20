@@ -3768,7 +3768,9 @@ const RoomDetail: React.FC = () => {
                                     boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.3)',
                                     height: '80px',
                                     width: '100%',
-                                    boxSizing: 'border-box'
+                                    boxSizing: 'border-box',
+                                    position: 'relative',
+                                    zIndex: 40
                                 }}>
                                     {/* LEFT: Map Title & Info */}
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexShrink: 0, overflow: 'hidden' }}>
