@@ -2987,19 +2987,15 @@ const RoomDetail: React.FC = () => {
             // 2. Create Map
             const newMapName = `${pendingMapBatch.name} -${format(new Date(), 'dd/MM HH:mm')} `;
 
-            const { data: newMap, error: mapError } = await supabase
-                .from('clone_maps')
-                .insert([{
-                    room_id: room.id,
-                    name: newMapName,
-                    grid_rows: rows,
-                    grid_columns: cols
-                }])
-                .select()
-                .single();
+            const newMap = await roomsService.createCloneMap({
+                room_id: room.id,
+                name: newMapName,
+                grid_rows: rows,
+                grid_columns: cols
+            });
 
-            if (mapError || !newMap) {
-                console.error("Error creating map:", mapError);
+            if (!newMap) {
+                console.error("Error creating map");
                 throw new Error("Error creating map");
             }
 
@@ -3058,18 +3054,14 @@ const RoomDetail: React.FC = () => {
                 newMapName = `Lote ${prefix} ${displayDate} `; // Consistent naming without hyphen
             }
 
-            const { data: newMap, error: mapError } = await supabase
-                .from('clone_maps')
-                .insert([{
-                    room_id: room.id,
-                    name: newMapName,
-                    grid_rows: rows,
-                    grid_columns: cols
-                }])
-                .select()
-                .single();
+            const newMap = await roomsService.createCloneMap({
+                room_id: room.id,
+                name: newMapName,
+                grid_rows: rows,
+                grid_columns: cols
+            });
 
-            if (mapError || !newMap) throw mapError;
+            if (!newMap) throw new Error("Could not create clone map");
 
             // 3. Assign Batches Sequentially (BULK OPTIMIZATION)
             await roomsService.bulkDistributeBatchesToMap(
