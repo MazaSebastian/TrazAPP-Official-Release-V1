@@ -11,6 +11,7 @@ export const geneticsService = {
         const { data, error } = await getClient()
             .from('genetics')
             .select('*')
+            .eq('organization_id', getSelectedOrgId())
             .order('name');
 
         if (error) {
@@ -38,7 +39,8 @@ export const geneticsService = {
         const { error } = await getClient()
             .from('genetics')
             .update(updates)
-            .eq('id', id);
+            .eq('id', id)
+            .eq('organization_id', getSelectedOrgId());
 
         if (error) {
             console.error('Error updating genetic:', error);
@@ -51,7 +53,8 @@ export const geneticsService = {
         const { error } = await getClient()
             .from('genetics')
             .delete()
-            .eq('id', id);
+            .eq('id', id)
+            .eq('organization_id', getSelectedOrgId());
 
         if (error) {
             console.error('Error deleting genetic:', error);
