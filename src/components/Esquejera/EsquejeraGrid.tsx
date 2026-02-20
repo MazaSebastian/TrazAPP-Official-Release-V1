@@ -128,7 +128,7 @@ const HeaderCell = styled.div<{ cellSize: number }>`
   }
 `;
 
-const CellStyled = styled.div<{ $isOver?: boolean; $isOccupied?: boolean; $geneticColor?: string; $isPainting?: boolean; $isSelected?: boolean; cellSize: number }>`
+const CellStyled = styled.div<{ $isOver?: boolean; $isOccupied?: boolean; $geneticColor?: string; $isPainting?: boolean; $isSelected?: boolean; cellSize: number; $hasAlert?: boolean }>`
   background: ${p => p.$isSelected ? 'rgba(74, 222, 128, 0.2)' : p.$isOccupied ? (p.$geneticColor || 'rgba(30, 41, 59, 0.8)') : p.$isOver ? 'rgba(56, 189, 248, 0.1)' : 'rgba(30, 41, 59, 0.3)'};
   backdrop-filter: ${p => p.$isOccupied ? 'none' : 'blur(4px)'};
   
@@ -152,6 +152,20 @@ const CellStyled = styled.div<{ $isOver?: boolean; $isOccupied?: boolean; $genet
   transition: all 0.2s;
   cursor: ${p => p.$isOccupied || p.$isPainting ? 'pointer' : 'default'};
   overflow: hidden;
+
+  /* Alert Overlay Logic */
+  ${p => p.$hasAlert && `
+    &::after {
+      content: '';
+      position: absolute;
+      top: 2px; right: 2px;
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: #ef4444; /* red-500 */
+      box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.95);
+      z-index: 5;
+    }
+  `}
 
   @media print {
     border: 1px solid #000 !important;
@@ -367,6 +381,7 @@ const GridCell = ({ row, col, batch, onClick, isPainting, isSelected, renderActi
             $isOccupied={!!batch}
             $geneticColor={batch ? getGeneticColor(batch.genetic?.name || batch.name).bg : undefined}
             $isSelected={isSelected}
+            $hasAlert={!!batch?.notes}
             cellSize={cellSize}
             onClick={() => {
                 // In selection mode, click propagates up.
