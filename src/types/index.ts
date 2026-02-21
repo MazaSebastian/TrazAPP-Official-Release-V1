@@ -64,7 +64,7 @@ export interface OrganizationMember {
   id: string;
   organization_id: string;
   user_id: string;
-  role: 'owner' | 'admin' | 'staff' | 'viewer';
+  role: 'owner' | 'admin' | 'grower' | 'medico';
   created_at: string;
   organization?: Organization; // Joined
 }

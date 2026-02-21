@@ -28,6 +28,7 @@ import Expenses from './pages/Expenses';
 import Metrics from './pages/Metrics'; // New Import
 import Patients from './pages/Patients';
 import ClinicalFollowUp from './pages/ClinicalFollowUp';
+import AccountInfo from './pages/AccountInfo';
 import { notificationService } from './services/notificationService';
 import Login from './pages/Login';
 import Register from './pages/Register'; // New Import
@@ -44,6 +45,7 @@ import { ChatWidget } from './components/AI/ChatWidget';
 import PageTransition from './components/PageTransition';
 import { LoadingSpinner } from './components/LoadingSpinner';
 import { MainContent } from './components/MainContent';
+import { RoleGuard } from './components/RoleGuard';
 
 const RequireAuth: React.FC<{ children: React.ReactElement }> = ({ children }) => {
   const { user, isLoading } = useAuth();
@@ -123,136 +125,185 @@ function App() {
               </RequireAuth>
             } />
 
+            {/* GROWER / CULTIVO MODULES */}
             <Route path="/crops" element={
               <RequireAuth>
-                <MainContent>
-                  <Crops />
-                </MainContent>
+                <RoleGuard allowedRoles={['admin', 'grower']}>
+                  <MainContent>
+                    <Crops />
+                  </MainContent>
+                </RoleGuard>
               </RequireAuth>
             } />
             <Route path="/crops/:id" element={
               <RequireAuth>
-                <MainContent>
-                  <CropDetail />
-                </MainContent>
+                <RoleGuard allowedRoles={['admin', 'grower']}>
+                  <MainContent>
+                    <CropDetail />
+                  </MainContent>
+                </RoleGuard>
               </RequireAuth>
             } />
 
             <Route path="/rooms" element={
               <RequireAuth>
-                <MainContent>
-                  <Rooms />
-                </MainContent>
+                <RoleGuard allowedRoles={['admin', 'grower']}>
+                  <MainContent>
+                    <Rooms />
+                  </MainContent>
+                </RoleGuard>
               </RequireAuth>
             } />
 
             <Route path="/rooms/:id" element={
               <RequireAuth>
-                <MainContent>
-                  <RoomDetail />
-                </MainContent>
+                <RoleGuard allowedRoles={['admin', 'grower']}>
+                  <MainContent>
+                    <RoomDetail />
+                  </MainContent>
+                </RoleGuard>
               </RequireAuth>
             } />
             <Route path="/genetics" element={
               <RequireAuth>
-                <MainContent>
-                  <Genetics />
-                </MainContent>
+                <RoleGuard allowedRoles={['admin', 'grower']}>
+                  <MainContent>
+                    <Genetics />
+                  </MainContent>
+                </RoleGuard>
               </RequireAuth>
             } />
             <Route path="/clones" element={
               <RequireAuth>
-                <MainContent>
-                  <Clones />
-                </MainContent>
+                <RoleGuard allowedRoles={['admin', 'grower']}>
+                  <MainContent>
+                    <Clones />
+                  </MainContent>
+                </RoleGuard>
               </RequireAuth>
             } />
             <Route path="/devices" element={
               <RequireAuth>
-                <MainContent>
-                  <Devices />
-                </MainContent>
+                <RoleGuard allowedRoles={['admin', 'grower']}>
+                  <MainContent>
+                    <Devices />
+                  </MainContent>
+                </RoleGuard>
               </RequireAuth>
             } />
 
             <Route path="/laboratory" element={
               <RequireAuth>
-                <MainContent>
-                  <LaboratoryPage />
-                </MainContent>
+                <RoleGuard allowedRoles={['admin', 'grower']}>
+                  <MainContent>
+                    <LaboratoryPage />
+                  </MainContent>
+                </RoleGuard>
               </RequireAuth>
             } />
 
             <Route path="/extractions" element={
               <RequireAuth>
-                <MainContent>
-                  <Extractions />
-                </MainContent>
+                <RoleGuard allowedRoles={['admin', 'grower']}>
+                  <MainContent>
+                    <Extractions />
+                  </MainContent>
+                </RoleGuard>
               </RequireAuth>
             } />
 
-            <Route path="/stock" element={
-              <RequireAuth>
-                <MainContent>
-                  <Stock />
-                </MainContent>
-              </RequireAuth>
-            } />
-
-            <Route path="/dispensary" element={
-              <RequireAuth>
-                <MainContent>
-                  <Dispensary />
-                </MainContent>
-              </RequireAuth>
-            } />
-            <Route path="/settings" element={
-              <RequireAuth>
-                <MainContent>
-                  <Settings />
-                </MainContent>
-              </RequireAuth>
-            } />
             <Route path="/insumos" element={
               <RequireAuth>
-                <MainContent>
-                  <Insumos />
-                </MainContent>
+                <RoleGuard allowedRoles={['admin', 'grower']}>
+                  <MainContent>
+                    <Insumos />
+                  </MainContent>
+                </RoleGuard>
+              </RequireAuth>
+            } />
+
+            {/* FINANCE / ADMIN MODULES */}
+            <Route path="/stock" element={
+              <RequireAuth>
+                <RoleGuard allowedRoles={['admin']}>
+                  <MainContent>
+                    <Stock />
+                  </MainContent>
+                </RoleGuard>
+              </RequireAuth>
+            } />
+
+            <Route path="/settings" element={
+              <RequireAuth>
+                <RoleGuard allowedRoles={['admin']}>
+                  <MainContent>
+                    <Settings />
+                  </MainContent>
+                </RoleGuard>
               </RequireAuth>
             } />
             <Route path="/compras" element={
               <RequireAuth>
-                <MainContent>
-                  <Compras />
-                </MainContent>
+                <RoleGuard allowedRoles={['admin']}>
+                  <MainContent>
+                    <Compras />
+                  </MainContent>
+                </RoleGuard>
               </RequireAuth>
             } />
             <Route path="/expenses" element={
               <RequireAuth>
-                <MainContent>
-                  <Expenses />
-                </MainContent>
-              </RequireAuth>
-            } />
-            <Route path="/patients" element={
-              <RequireAuth>
-                <MainContent>
-                  <Patients />
-                </MainContent>
-              </RequireAuth>
-            } />
-            <Route path="/patients/:id/clinical" element={
-              <RequireAuth>
-                <MainContent>
-                  <ClinicalFollowUp />
-                </MainContent>
+                <RoleGuard allowedRoles={['admin']}>
+                  <MainContent>
+                    <Expenses />
+                  </MainContent>
+                </RoleGuard>
               </RequireAuth>
             } />
             <Route path="/metrics" element={
               <RequireAuth>
+                <RoleGuard allowedRoles={['admin']}>
+                  <MainContent>
+                    <Metrics />
+                  </MainContent>
+                </RoleGuard>
+              </RequireAuth>
+            } />
+
+            {/* MEDICAL / PATIENTS MODULES */}
+            <Route path="/dispensary" element={
+              <RequireAuth>
+                <RoleGuard allowedRoles={['admin', 'medico']}>
+                  <MainContent>
+                    <Dispensary />
+                  </MainContent>
+                </RoleGuard>
+              </RequireAuth>
+            } />
+            <Route path="/account" element={
+              <RequireAuth>
                 <MainContent>
-                  <Metrics />
+                  <AccountInfo />
                 </MainContent>
+              </RequireAuth>
+            } />
+
+            <Route path="/patients" element={
+              <RequireAuth>
+                <RoleGuard allowedRoles={['admin', 'medico']}>
+                  <MainContent>
+                    <Patients />
+                  </MainContent>
+                </RoleGuard>
+              </RequireAuth>
+            } />
+            <Route path="/patients/:id/clinical" element={
+              <RequireAuth>
+                <RoleGuard allowedRoles={['admin', 'medico']}>
+                  <MainContent>
+                    <ClinicalFollowUp />
+                  </MainContent>
+                </RoleGuard>
               </RequireAuth>
             } />
 

@@ -635,6 +635,64 @@ const Stock: React.FC = () => {
   // Group Dispense
   const [isGroupDispenseOpen, setIsGroupDispenseOpen] = useState(false);
   const [groupDispenseStrain, setGroupDispenseStrain] = useState<string | null>(null);
+  const [groupDispenseAmount, setGroupDispenseAmount] = useState('');
+
+  const confirmGroupDispense = async () => {
+    if (!groupDispenseStrain || !groupDispenseAmount) return;
+    const amountToDispense = parseFloat(groupDispenseAmount);
+
+    if (isNaN(amountToDispense) || amountToDispense <= 0) {
+      showToast("Cantidad inválida.", 'error');
+      return;
+    }
+
+    const itemGroup = aggregatedStock.find(i => i.strain === groupDispenseStrain);
+    if (!itemGroup) return;
+
+    if (amountToDispense > itemGroup.totalWeight) {
+      showToast(`El stock máximo disponible es ${itemGroup.totalWeight}g.`, 'error');
+      return;
+    }
+
+    // Quick Loading State hack: change text/disable
+    const btn = document.activeElement as HTMLButtonElement;
+    if (btn) { btn.disabled = true; btn.innerText = "Procesando..."; }
+
+    // Logic: Sort batches by oldest created_at, then deduct sequentially
+    const sortedBatches = [...itemGroup.batches].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+    let remainingToDispense = amountToDispense;
+    let successCount = 0;
+
+    for (const batch of sortedBatches) {
+      if (remainingToDispense <= 0) break;
+      if (batch.current_weight <= 0) continue;
+
+      const deductAmount = Math.min(batch.current_weight, remainingToDispense);
+      const success = await dispensaryService.dispenseToShop(batch.id, deductAmount);
+
+      if (success) {
+        remainingToDispense -= deductAmount;
+        successCount++;
+      } else {
+        showToast(`Error al dispensar del lote ${batch.batch_code}.`, 'error');
+        // We could break here, but let's try to fulfill with other batches if one fails? 
+        // Safer to break to avoid partial confusing states if it's a real network error.
+        break;
+      }
+    }
+
+    if (remainingToDispense === 0) {
+      showToast(`Se dispensaron ${amountToDispense}g exitosamente en ${successCount} lote(s).`, 'success');
+      setIsGroupDispenseOpen(false);
+      setGroupDispenseAmount('');
+      setGroupDispenseStrain(null);
+      loadData();
+    } else {
+      // It partially failed or didn't complete
+      showToast(`Atención: Se dispensó un parcial. Faltaron ${remainingToDispense}g.`, 'info');
+      loadData(); // Reload to see the partial state
+    }
+  };
 
   // Shop Dispense (Keeping these for legacy/other flows if needed, though replaced by Group Dispense in some contexts)
 
@@ -741,6 +799,7 @@ const Stock: React.FC = () => {
       return;
     }
     setGroupDispenseStrain(strainName);
+    setGroupDispenseAmount('');
     setIsGroupDispenseOpen(true);
   };
 
@@ -1175,55 +1234,43 @@ const Stock: React.FC = () => {
         </div>
       </AnimatedModal>
 
-      {/* GROUP DISPENSE SELECTION MODAL */}
-      <AnimatedModal isOpen={isGroupDispenseOpen} onClose={() => setIsGroupDispenseOpen(false)} wide>
-        {groupDispenseStrain && (
-          <>
-            <CloseIcon onClick={() => setIsGroupDispenseOpen(false)}><FaTimes /></CloseIcon>
-            <h2 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#f8fafc' }}>
-              <FaHandHoldingMedical /> Dispensar: {groupDispenseStrain}
-            </h2>
-            <p style={{ marginBottom: '1rem', color: '#cbd5e1' }}>Selecciona la unidad de la cual deseas dispensar:</p>
+      {/* GROUP DISPENSE SELECTION MODAL (BULK) */}
+      <AnimatedModal isOpen={isGroupDispenseOpen} onClose={() => setIsGroupDispenseOpen(false)}>
+        {groupDispenseStrain && (() => {
+          const itemGroup = aggregatedStock.find(s => s.strain === groupDispenseStrain);
+          const maxAvailable = itemGroup ? itemGroup.totalWeight : 0;
+          return (
+            <>
+              <CloseIcon onClick={() => setIsGroupDispenseOpen(false)}><FaTimes /></CloseIcon>
+              <h2 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#f8fafc' }}>
+                <FaHandHoldingMedical /> Dispensar: {groupDispenseStrain}
+              </h2>
 
-            <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
-                <thead>
-                  <tr style={{ textAlign: 'left', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', color: '#cbd5e1' }}>
-                    <th style={{ padding: '0.75rem' }}>Fecha</th>
-                    <th style={{ padding: '0.75rem' }}>Código</th>
-                    <th style={{ padding: '0.75rem', textAlign: 'right' }}>Stock Actual</th>
-                    <th style={{ padding: '0.75rem', textAlign: 'center' }}>Acción</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {aggregatedStock.find(s => s.strain === groupDispenseStrain)?.batches
-                    .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()) // FIFO display
-                    .map(batch => (
-                      <tr key={batch.id} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.05)', color: '#e2e8f0' }}>
-                        <td style={{ padding: '0.75rem' }}>{new Date(batch.created_at).toLocaleDateString()}</td>
-                        <td style={{ padding: '0.75rem', fontWeight: 'bold' }}>{batch.batch_code}</td>
-                        <td style={{ padding: '0.75rem', textAlign: 'right' }}>
-                          <span style={{ fontWeight: 'bold', color: batch.current_weight > 0 ? '#4ade80' : '#f87171' }}>
-                            {batch.current_weight}g
-                          </span>
-                        </td>
-                        <td style={{ padding: '0.75rem', textAlign: 'center' }}>
-                          <ActionButton
-                            variant="primary"
-                            disabled={batch.current_weight <= 0}
-                            onClick={() => openDispenseToShop(batch)}
-                            style={{ padding: '0.25rem 0.75rem', fontSize: '0.8rem', margin: '0 auto' }}
-                          >
-                            Seleccionar
-                          </ActionButton>
-                        </td>
-                      </tr>
-                    ))}
-                </tbody>
-              </table>
-            </div>
-          </>
-        )}
+              <div style={{ marginBottom: '1.5rem', background: 'rgba(30, 41, 59, 0.6)', padding: '1rem', borderRadius: '0.5rem', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
+                <p style={{ margin: 0, fontSize: '0.9rem', color: '#cbd5e1' }}>Stock Total Disponible:</p>
+                <p style={{ margin: '0.25rem 0 0 0', fontWeight: 'bold', color: '#4ade80', fontSize: '1.25rem' }}>{maxAvailable.toFixed(2)}g</p>
+                <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.8rem', color: '#94a3b8' }}>Se descontará automáticamente de los lotes más antiguos primero.</p>
+              </div>
+
+              <FormGroup style={{ marginTop: '1rem' }}>
+                <label>Cantidad a Enviar (g)</label>
+                <input
+                  type="number"
+                  autoFocus
+                  value={groupDispenseAmount}
+                  onChange={e => setGroupDispenseAmount(e.target.value)}
+                  placeholder="0.00"
+                  max={maxAvailable}
+                />
+              </FormGroup>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '2rem' }}>
+                <ActionButton variant="secondary" onClick={() => setIsGroupDispenseOpen(false)}>Cancelar</ActionButton>
+                <ActionButton variant="primary" onClick={confirmGroupDispense}>Confirmar Dispensa</ActionButton>
+              </div>
+            </>
+          );
+        })()}
       </AnimatedModal>
 
       {/* DISPENSE TO SHOP MODAL */}

@@ -21,6 +21,7 @@ import {
   FaUsers,
   FaHeartbeat,
   FaLock,
+  FaUserCircle,
 } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 import { useOrganization } from '../context/OrganizationContext';
@@ -215,7 +216,7 @@ const Sidebar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
   const { user, logout } = useAuth();
-  const { currentOrganization } = useOrganization();
+  const { currentOrganization, currentRole } = useOrganization();
 
   // Compute plan level for feature access
   const plan = currentOrganization?.plan || 'individual';
@@ -270,58 +271,79 @@ const Sidebar: React.FC = () => {
                 <FaChartLine /> Dashboard
               </StyledNavLink>
 
-              <SectionTitle>Cultivo</SectionTitle>
+              {['owner', 'admin', 'grower'].includes(currentRole || '') && (
+                <>
+                  <SectionTitle>Cultivo</SectionTitle>
 
-              <StyledNavLink to="/crops">
-                <FaSeedling /> Cultivos
-              </StyledNavLink>
-              <StyledNavLink to="/clones">
-                <FaCut /> Esquejes
-              </StyledNavLink>
-              <StyledNavLink to="/devices">
-                <FaPlug /> Dispositivos
-              </StyledNavLink>
-              <StyledNavLink to="/stock">
-                <FaBoxes /> Stock
-              </StyledNavLink>
-              <StyledNavLink to="/dispensary">
-                <FaHandHoldingMedical /> Dispensario
-              </StyledNavLink>
-              <StyledNavLink to="/genetics" style={{ opacity: planLevel >= 2 ? 1 : 0.6 }}>
-                <FaDna /> Madres
-                {planLevel < 2 && <FaLock className="lock-icon" title="Requiere Plan Equipo" />}
-              </StyledNavLink>
-              <StyledNavLink to="/laboratory" style={{ opacity: planLevel >= 2 ? 1 : 0.6 }}>
-                <FaFlask /> Laboratorio
-                {planLevel < 2 && <FaLock className="lock-icon" title="Requiere Plan Equipo" />}
-              </StyledNavLink>
+                  <StyledNavLink to="/crops">
+                    <FaSeedling /> Cultivos
+                  </StyledNavLink>
+                  <StyledNavLink to="/clones">
+                    <FaCut /> Esquejes
+                  </StyledNavLink>
+                  <StyledNavLink to="/devices">
+                    <FaPlug /> Dispositivos
+                  </StyledNavLink>
+                  <StyledNavLink to="/genetics" style={{ opacity: planLevel >= 2 ? 1 : 0.6 }}>
+                    <FaDna /> Madres
+                    {planLevel < 2 && <FaLock className="lock-icon" title="Requiere Plan Equipo" />}
+                  </StyledNavLink>
+                  <StyledNavLink to="/laboratory" style={{ opacity: planLevel >= 2 ? 1 : 0.6 }}>
+                    <FaFlask /> Laboratorio
+                    {planLevel < 2 && <FaLock className="lock-icon" title="Requiere Plan Equipo" />}
+                  </StyledNavLink>
+                </>
+              )}
+
+              {['owner', 'admin', 'medico'].includes(currentRole || '') && (
+                <>
+                  <SectionTitle>Médico / Dispensario</SectionTitle>
+
+                  <StyledNavLink to="/dispensary">
+                    <FaHandHoldingMedical /> Dispensario
+                  </StyledNavLink>
+                  <StyledNavLink to="/patients" style={{ opacity: planLevel >= 3 ? 1 : 0.6 }}>
+                    <FaIdCard /> Socios
+                    {planLevel < 3 && <FaLock className="lock-icon" title="Requiere Plan ONG" />}
+                  </StyledNavLink>
+                </>
+              )}
 
               <SectionTitle>Gestión</SectionTitle>
 
-              <StyledNavLink to="/insumos" style={{ opacity: planLevel >= 2 ? 1 : 0.6 }}>
-                <FaShoppingBag /> Insumos
-                {planLevel < 2 && <FaLock className="lock-icon" title="Requiere Plan Equipo" />}
-              </StyledNavLink>
-              <StyledNavLink to="/expenses" style={{ opacity: planLevel >= 2 ? 1 : 0.6 }}>
-                <FaMoneyBillWave /> Gastos
-                {planLevel < 2 && <FaLock className="lock-icon" title="Requiere Plan Equipo" />}
-              </StyledNavLink>
-              <StyledNavLink to="/patients" style={{ opacity: planLevel >= 3 ? 1 : 0.6 }}>
-                <FaIdCard /> Socios
-                {planLevel < 3 && <FaLock className="lock-icon" title="Requiere Plan ONG" />}
-              </StyledNavLink>
-              <StyledNavLink to="/metrics" style={{ opacity: planLevel >= 2 ? 1 : 0.6 }}>
-                <FaChartPie /> Métricas
-                {planLevel < 2 && <FaLock className="lock-icon" title="Requiere Plan Equipo" />}
-              </StyledNavLink>
-              <StyledNavLink to="/settings">
-                <FaCog /> Configuración
-              </StyledNavLink>
+              {['owner', 'admin', 'grower'].includes(currentRole || '') && (
+                <StyledNavLink to="/insumos" style={{ opacity: planLevel >= 2 ? 1 : 0.6 }}>
+                  <FaShoppingBag /> Insumos
+                  {planLevel < 2 && <FaLock className="lock-icon" title="Requiere Plan Equipo" />}
+                </StyledNavLink>
+              )}
+
+              {['owner', 'admin'].includes(currentRole || '') && (
+                <>
+                  <StyledNavLink to="/stock">
+                    <FaBoxes /> Stock
+                  </StyledNavLink>
+                  <StyledNavLink to="/expenses" style={{ opacity: planLevel >= 2 ? 1 : 0.6 }}>
+                    <FaMoneyBillWave /> Gastos
+                    {planLevel < 2 && <FaLock className="lock-icon" title="Requiere Plan Equipo" />}
+                  </StyledNavLink>
+                  <StyledNavLink to="/metrics" style={{ opacity: planLevel >= 2 ? 1 : 0.6 }}>
+                    <FaChartPie /> Métricas
+                    {planLevel < 2 && <FaLock className="lock-icon" title="Requiere Plan Equipo" />}
+                  </StyledNavLink>
+                  <StyledNavLink to="/settings">
+                    <FaCog /> Configuración
+                  </StyledNavLink>
+                </>
+              )}
             </>
           )}
         </NavList>
 
         <UserSection>
+          <StyledNavLink to="/account" style={{ marginBottom: '0.5rem' }}>
+            <FaUserCircle /> Mi Cuenta
+          </StyledNavLink>
           <LogoutButton onClick={logout}>
             <FaSignOutAlt /> Cerrar Sesión
           </LogoutButton>

@@ -1,10 +1,12 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../services/supabaseClient';
 import { Organization } from '../types';
 import { useAuth } from './AuthContext';
 
 interface OrganizationContextType {
     currentOrganization: Organization | null;
+    currentRole: string | null;
     organizations: Organization[];
     isLoading: boolean;
     selectOrganization: (orgId: string) => void;
@@ -13,83 +15,108 @@ interface OrganizationContextType {
 const OrganizationContext = createContext<OrganizationContextType | undefined>(undefined);
 
 export const OrganizationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const { user } = useAuth();
+    const { user, isLoading: authIsLoading } = useAuth();
+
+    // Derived local state for the UI
     const [currentOrganization, setCurrentOrganization] = useState<Organization | null>(null);
+    const [currentRole, setCurrentRole] = useState<string | null>(null);
     const [organizations, setOrganizations] = useState<Organization[]>([]);
 
-    const [isLoading, setIsLoading] = useState<boolean>(true);
+    // React Query declarative fetch: Only runs when auth is definitely finished and user exists
+    const { data: memberData, isLoading: queryIsLoading } = useQuery({
+        queryKey: ['userOrganizations', user?.id],
+        queryFn: async () => {
+            console.log('[OrgContext] React Query fetching for user:', user?.id);
+            // Just in case, force Supabase to ensure its local session headers are synced
+            await supabase.auth.getSession();
+            await new Promise(resolve => setTimeout(resolve, 200));
 
-    useEffect(() => {
-        if (user) {
-            fetchUserOrganizations();
-        } else {
-            setOrganizations([]);
-            setCurrentOrganization(null);
-            setIsLoading(false);
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [user]);
-
-    const fetchUserOrganizations = async () => {
-        setIsLoading(true);
-        try {
-            // Fetch members and join organizations
-            // Note: RLS should filter this to only my memberships
             const { data, error } = await supabase
                 .from('organization_members')
                 .select(`
-                    *,
+                    role,
+                    organization_id,
                     organization:organizations(*)
                 `)
                 .eq('user_id', user?.id);
 
             if (error) {
-                console.error('Error fetching organizations:', error);
-                return;
+                console.error('[OrgContext] Fetch error:', error);
+                throw error;
             }
+            return data || [];
+        },
+        enabled: !authIsLoading && !!user?.id,
+        staleTime: 1000 * 60 * 5, // Cache for 5 minutes to prevent flickering
+        retry: 2 // Try twice if it fails (e.g., if RLS blocks it momentarily)
+    });
 
-            if (data) {
-                // Extract organizations from the join
-                const orgs = data.map((member: any) => member.organization).filter((org: any) => org !== null) as Organization[];
-                setOrganizations(orgs);
+    // We are loading if Auth is loading, OR if the Query is loading (and we expect it to load because there is a user)
+    const isLoading = authIsLoading || (queryIsLoading && !!user?.id);
 
-                // Auto-select first org if none selected or if only one exists
-                const storedOrgId = localStorage.getItem('selectedOrganizationId');
-                let selectedOrg = null;
-
-                if (storedOrgId) {
-                    selectedOrg = orgs.find(o => o.id === storedOrgId);
-                }
-
-                if (!selectedOrg && orgs.length > 0) {
-                    selectedOrg = orgs[0];
-                }
-
-                if (selectedOrg) {
-                    setCurrentOrganization(selectedOrg);
-                    localStorage.setItem('selectedOrganizationId', selectedOrg.id);
-                    // Fetch plan details for the selected org
-                    // In a real app we might cache this or fetch it with the org
-                    // For now, we'll fetch it separately if needed, or rely on what we have
-                }
-            }
-        } catch (error) {
-            console.error('Unexpected error fetching organizations:', error);
-        } finally {
-            setIsLoading(false);
+    // Sync derived state when Query data changes
+    useEffect(() => {
+        if (!user) {
+            setOrganizations([]);
+            setCurrentOrganization(null);
+            setCurrentRole(null);
+            return;
         }
-    };
+
+        if (memberData) {
+            const orgs = memberData.map((m: any) => m.organization).filter(Boolean) as Organization[];
+            setOrganizations(orgs);
+            console.log('[OrgContext] Synced orgs from query:', orgs.length);
+
+            // Auto-select
+            const storedOrgId = localStorage.getItem('selectedOrganizationId');
+            let selectedOrg: Organization | null = null;
+
+            if (storedOrgId) {
+                selectedOrg = orgs.find(o => o.id === storedOrgId) || null;
+            }
+            if (!selectedOrg && orgs.length > 0) {
+                selectedOrg = orgs[0];
+            }
+
+            if (selectedOrg) {
+                setCurrentOrganization(selectedOrg);
+                localStorage.setItem('selectedOrganizationId', selectedOrg.id);
+                const mem = memberData.find((m: any) => m.organization_id === selectedOrg?.id);
+                if (mem) {
+                    setCurrentRole(mem.role);
+                }
+            }
+        }
+    }, [memberData, user]);
 
     const selectOrganization = (orgId: string) => {
         const org = organizations.find(o => o.id === orgId);
         if (org) {
             setCurrentOrganization(org);
             localStorage.setItem('selectedOrganizationId', org.id);
+
+            // Re-fetch role for new context instantly from cached query data
+            const mem = memberData?.find((m: any) => m.organization_id === org.id);
+            if (mem) {
+                setCurrentRole(mem.role);
+            } else {
+                // Fallback direct request
+                supabase
+                    .from('organization_members')
+                    .select('role')
+                    .eq('organization_id', org.id)
+                    .eq('user_id', user?.id)
+                    .single()
+                    .then(({ data }) => {
+                        if (data) setCurrentRole(data.role);
+                    });
+            }
         }
     };
 
     return (
-        <OrganizationContext.Provider value={{ currentOrganization, organizations, isLoading, selectOrganization }}>
+        <OrganizationContext.Provider value={{ currentOrganization, currentRole, organizations, isLoading, selectOrganization }}>
             {children}
         </OrganizationContext.Provider>
     );

@@ -1719,9 +1719,9 @@ const RoomDetail: React.FC = () => {
     const [harvestTargetMapId, setHarvestTargetMapId] = useState<string | null>(null); // Track which map is being harvested
 
     // HARVEST CONFIRM HANDLER
-    const handleHarvestConfirm = async (selectedBatchIds: string[], targetRoomId?: string) => {
+    const handleHarvestConfirm = async (selectedBatchesData: { id: string, weight: number }[], targetRoomId?: string) => {
         try {
-            await roomsService.harvestBatches(selectedBatchIds, targetRoomId);
+            await roomsService.harvestBatches(selectedBatchesData, targetRoomId);
             showToast('Cosecha registrada correctamente', 'success');
 
             // Reload data after delay

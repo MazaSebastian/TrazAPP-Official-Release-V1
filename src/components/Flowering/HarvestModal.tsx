@@ -10,7 +10,7 @@ interface HarvestModalProps {
     onClose: () => void;
     batches: Batch[]; // Batches in the current room
     rooms: Room[]; // Available rooms to potentially move to (Drying)
-    onConfirm: (selectedBatchIds: string[], targetRoomId?: string) => Promise<void>;
+    onConfirm: (selectedBatchesData: { id: string, weight: number }[], targetRoomId?: string) => Promise<void>;
     overrideGroupName?: string;
 }
 
@@ -137,6 +137,8 @@ export const HarvestModal: React.FC<HarvestModalProps> = ({ isOpen, isClosing, o
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
     const [lastSelectedId, setLastSelectedId] = useState<string | null>(null);
     const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set()); // Track expanded groups
+    const [weights, setWeights] = useState<Record<string, string>>({}); // Track individual weights
+    const [bulkWeightInput, setBulkWeightInput] = useState<string>(''); // For equal distribution
     const [targetRoomId, setTargetRoomId] = useState<string>('');
     const [loading, setLoading] = useState(false);
 
@@ -190,11 +192,16 @@ export const HarvestModal: React.FC<HarvestModalProps> = ({ isOpen, isClosing, o
         return groups;
     }, [batches, overrideGroupName]);
 
-    const toggleBatch = (id: string) => {
+    const toggleBatch = (id: string, e?: React.MouseEvent) => {
+        if (e) e.stopPropagation();
         setSelectedIds(prev => {
             const next = new Set(prev);
-            if (next.has(id)) next.delete(id);
-            else next.add(id);
+            if (next.has(id)) {
+                next.delete(id);
+                // Optionally clear weight when unselected, but maybe keep it in case they re-select
+            } else {
+                next.add(id);
+            }
             return next;
         });
     };
@@ -222,6 +229,11 @@ export const HarvestModal: React.FC<HarvestModalProps> = ({ isOpen, isClosing, o
     };
 
     const handleBatchClick = (id: string, e: React.MouseEvent) => {
+        // Only trigger selection toggle if the click wasn't on the input field
+        if ((e.target as HTMLElement).tagName.toLowerCase() === 'input' && (e.target as HTMLInputElement).type === 'number') {
+            return;
+        }
+
         if (e.shiftKey && lastSelectedId) {
             // Range Selection
             const allBatches = Object.values(groupedBatches).flat();
@@ -244,11 +256,44 @@ export const HarvestModal: React.FC<HarvestModalProps> = ({ isOpen, isClosing, o
         setLastSelectedId(id);
     };
 
-    const handleConfirm = async () => {
+    const applyBulkWeight = () => {
+        const totalWeight = parseFloat(bulkWeightInput);
+        if (isNaN(totalWeight) || totalWeight <= 0) {
+            alert("Ingrese un peso total válido mayor a 0.");
+            return;
+        }
         if (selectedIds.size === 0) return;
+
+        const weightPerPlant = (totalWeight / selectedIds.size).toFixed(2);
+        const newWeights = { ...weights };
+
+        selectedIds.forEach(id => {
+            newWeights[id] = weightPerPlant;
+        });
+
+        setWeights(newWeights);
+        setBulkWeightInput(''); // Optional: clear after applying
+    };
+
+    const isConfirmDisabled = useMemo(() => {
+        if (loading || selectedIds.size === 0 || !targetRoomId) return true;
+        // Check if all selected batches have a valid weight
+        for (const id of Array.from(selectedIds)) {
+            const weightVal = parseFloat(weights[id] || '0');
+            if (isNaN(weightVal) || weightVal <= 0) return true;
+        }
+        return false;
+    }, [loading, selectedIds, targetRoomId, weights]);
+
+    const handleConfirm = async () => {
+        if (isConfirmDisabled) return;
         setLoading(true);
         try {
-            await onConfirm(Array.from(selectedIds), targetRoomId || undefined);
+            const payload = Array.from(selectedIds).map(id => ({
+                id,
+                weight: parseFloat(weights[id] || '0')
+            }));
+            await onConfirm(payload, targetRoomId || undefined);
             // Parent handles loading state if needed, but we close here implies success?
             // Actually parent usually reloads. We should wait for promise.
             // onConfirm is async props.
@@ -282,8 +327,44 @@ export const HarvestModal: React.FC<HarvestModalProps> = ({ isOpen, isClosing, o
                         />
                     </div>
 
-                    <div style={{ marginBottom: '1rem', fontWeight: 'bold', color: '#2d3748' }}>
-                        Seleccionadas: {selectedIds.size} de {batches.length}
+                    <div style={{ marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+                        <div style={{ fontWeight: 'bold', color: '#2d3748' }}>
+                            Seleccionadas: {selectedIds.size} de {batches.length}
+                        </div>
+
+                        {selectedIds.size > 0 && (
+                            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', background: '#f7fafc', padding: '0.5rem', borderRadius: '0.5rem', border: '1px solid #e2e8f0' }}>
+                                <span style={{ fontSize: '0.85rem', color: '#4a5568' }}>Repartir total:</span>
+                                <input
+                                    type="number"
+                                    placeholder="Total (g)"
+                                    value={bulkWeightInput}
+                                    onChange={e => setBulkWeightInput(e.target.value)}
+                                    style={{
+                                        width: '80px',
+                                        padding: '0.25rem 0.5rem',
+                                        border: '1px solid #cbd5e0',
+                                        borderRadius: '0.25rem',
+                                        fontSize: '0.85rem'
+                                    }}
+                                />
+                                <button
+                                    onClick={applyBulkWeight}
+                                    style={{
+                                        padding: '0.25rem 0.75rem',
+                                        background: '#3182ce',
+                                        color: 'white',
+                                        border: 'none',
+                                        borderRadius: '0.25rem',
+                                        fontSize: '0.85rem',
+                                        cursor: 'pointer',
+                                        fontWeight: 600
+                                    }}
+                                >
+                                    Aplicar
+                                </button>
+                            </div>
+                        )}
                     </div>
 
                     <BatchList>
@@ -309,29 +390,50 @@ export const HarvestModal: React.FC<HarvestModalProps> = ({ isOpen, isClosing, o
                                     </GroupHeader>
                                     {isExpanded && (
                                         <div style={{ paddingLeft: '0.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                                            {groupBatches.map(batch => (
-                                                <BatchItem
-                                                    key={batch.id}
-                                                    $selected={selectedIds.has(batch.id)}
-                                                    onClick={(e) => handleBatchClick(batch.id, e)}
-                                                >
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flex: 1 }}>
-                                                        <Checkbox $checked={selectedIds.has(batch.id)}>
-                                                            <FaCheck />
-                                                        </Checkbox>
-                                                        <div style={{ fontWeight: 600, color: '#2d3748', fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                                            <FaLeaf color="#48bb78" size={12} />
-                                                            {batch.tracking_code || batch.name}
+                                            {groupBatches.map(batch => {
+                                                const isSelected = selectedIds.has(batch.id);
+                                                return (
+                                                    <BatchItem
+                                                        key={batch.id}
+                                                        $selected={isSelected}
+                                                        onClick={(e) => handleBatchClick(batch.id, e)}
+                                                    >
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flex: 1 }}>
+                                                            <Checkbox $checked={isSelected}>
+                                                                {isSelected && <FaCheck />}
+                                                            </Checkbox>
+                                                            <div style={{ fontWeight: 600, color: '#2d3748', fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                                                <FaLeaf color="#48bb78" size={12} />
+                                                                {batch.tracking_code || batch.name}
+                                                            </div>
                                                         </div>
-                                                    </div>
 
-                                                    <div style={{ fontSize: '0.85rem', color: '#718096', display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                                                        <span><strong>{batch.quantity}</strong> p.</span>
-                                                        <span style={{ color: '#cbd5e0' }}>|</span>
-                                                        <span>{batch.stage}</span>
-                                                    </div>
-                                                </BatchItem>
-                                            ))}
+                                                        <div style={{ fontSize: '0.85rem', color: '#718096', display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                                                            <span><strong>{batch.quantity}</strong> p.</span>
+                                                            <span style={{ color: '#cbd5e0' }}>|</span>
+                                                            {isSelected ? (
+                                                                <input
+                                                                    type="number"
+                                                                    placeholder="Gramos (g)"
+                                                                    value={weights[batch.id] || ''}
+                                                                    onChange={(e) => setWeights(prev => ({ ...prev, [batch.id]: e.target.value }))}
+                                                                    onClick={(e) => e.stopPropagation()}
+                                                                    style={{
+                                                                        width: '80px',
+                                                                        padding: '0.25rem 0.5rem',
+                                                                        border: '1px solid #cbd5e0',
+                                                                        borderRadius: '0.25rem',
+                                                                        fontSize: '0.85rem',
+                                                                        textAlign: 'right'
+                                                                    }}
+                                                                />
+                                                            ) : (
+                                                                <span style={{ opacity: 0.5 }}>{batch.stage}</span>
+                                                            )}
+                                                        </div>
+                                                    </BatchItem>
+                                                );
+                                            })}
                                         </div>
                                     )}
                                 </GeneticGroup>
@@ -343,7 +445,7 @@ export const HarvestModal: React.FC<HarvestModalProps> = ({ isOpen, isClosing, o
                     <Button $variant="secondary" onClick={onClose} disabled={loading}>
                         Cancelar
                     </Button>
-                    <Button $variant="primary" onClick={handleConfirm} disabled={loading || selectedIds.size === 0 || !targetRoomId}>
+                    <Button $variant="primary" onClick={handleConfirm} disabled={isConfirmDisabled}>
                         {loading ? 'Procesando...' : `Confirmar Cosecha (${selectedIds.size})`}
                     </Button>
                 </Footer>

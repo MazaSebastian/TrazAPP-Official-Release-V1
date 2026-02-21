@@ -1183,35 +1183,55 @@ export const roomsService = {
         return true;
     },
 
-    async harvestBatches(batchIds: string[], toRoomId?: string, userId?: string): Promise<boolean> {
-        if (!batchIds.length) return false;
+    async harvestBatches(selectedBatches: { id: string, weight: number }[], toRoomId?: string, userId?: string): Promise<boolean> {
+        if (!selectedBatches.length) return false;
 
-        const updates: any = {
-            stage: 'drying',
-            clone_map_id: null,
-            grid_position: null,
-        };
+        const batchIds = selectedBatches.map(b => b.id);
 
-        if (toRoomId) {
-            updates.current_room_id = toRoomId;
-        }
-
-        const { error } = await getClient()
+        // Fetch existing notes to append to them
+        const { data: existingBatches } = await getClient()
             .from('batches')
-            .update(updates)
+            .select('id, notes')
             .in('id', batchIds);
 
-        if (error) {
-            console.error('Error harvesting batches:', error);
-            throw error;
+        const existingNotesMap = new Map(existingBatches?.map(b => [b.id, b.notes || '']));
+
+        // Perform individual updates because each batch has a different weight and note
+        const updatePromises = selectedBatches.map(batchData => {
+            const currentNotes = existingNotesMap.get(batchData.id) || '';
+            const newNoteStr = currentNotes ? `${currentNotes} | Peso Húmedo: ${batchData.weight}g` : `Peso Húmedo: ${batchData.weight}g`;
+
+            const updates: any = {
+                stage: 'drying',
+                clone_map_id: null,
+                grid_position: null,
+                notes: newNoteStr
+            };
+
+            if (toRoomId) {
+                updates.current_room_id = toRoomId;
+            }
+
+            return getClient()
+                .from('batches')
+                .update(updates)
+                .eq('id', batchData.id);
+        });
+
+        const results = await Promise.all(updatePromises);
+        const hasErrors = results.some(r => r.error);
+
+        if (hasErrors) {
+            console.error('Error harvesting some batches:', results.filter(r => r.error));
+            throw new Error('Some batches failed to harvest');
         }
 
-        // Log Harvest Movement
-        const movements = batchIds.map(id => ({
-            batch_id: id,
+        // Log Harvest Movement with weight
+        const movements = selectedBatches.map(b => ({
+            batch_id: b.id,
             from_room_id: null, // Unknown without fetch, but allowable in log? Or we leave null.
             to_room_id: toRoomId || null,
-            notes: 'Cosecha: Planta procesada',
+            notes: `Cosecha: Planta procesada. Peso Húmedo: ${b.weight}g`,
             created_by: userId,
             moved_at: new Date().toISOString()
         }));

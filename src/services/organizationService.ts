@@ -94,5 +94,132 @@ export const organizationService = {
             ...org,
             planDetails: plan
         };
+    },
+
+    /**
+     * Get all members of an organization with their profiles
+     */
+    async getOrganizationMembers(orgId: string): Promise<any[]> {
+        const { data, error } = await supabase
+            .from('organization_members')
+            .select(`
+                id,
+                role,
+                created_at,
+                user_id,
+                profile:profiles!organization_members_user_id_fkey(
+                    id,
+                    email,
+                    full_name,
+                    avatar_url
+                )
+            `)
+            .eq('organization_id', orgId);
+
+        if (error) {
+            console.error('Error fetching organization members:', error);
+            throw error;
+        }
+
+        return data || [];
+    },
+
+    /**
+     * Update a member's role
+     */
+    async updateMemberRole(orgId: string, userId: string, newRole: string): Promise<boolean> {
+        const { error } = await supabase
+            .from('organization_members')
+            .update({ role: newRole })
+            .eq('organization_id', orgId)
+            .eq('user_id', userId);
+
+        if (error) {
+            console.error('Error updating member role:', error);
+            throw error;
+        }
+
+        return true;
+    },
+
+    /**
+     * Remove a member from the organization
+     */
+    async removeMember(orgId: string, userId: string): Promise<boolean> {
+        const { error } = await supabase
+            .from('organization_members')
+            .delete()
+            .eq('organization_id', orgId)
+            .eq('user_id', userId);
+
+        if (error) {
+            console.error('Error removing member:', error);
+            throw error;
+        }
+
+        return true;
+    },
+
+    /**
+     * Call the create-user Edge Function to create a user directly
+     */
+    async createUserDirectly(orgId: string, email: string, name: string, role: string, password: string): Promise<any> {
+        // First check limits
+        const { data: org, error: orgError } = await supabase
+            .from('organizations')
+            .select('plan')
+            .eq('id', orgId)
+            .single();
+
+        if (orgError || !org) throw new Error('Organización no encontrada');
+
+        const plan = await planService.getPlanBySlug(org.plan);
+        if (!plan) throw new Error('Plan no encontrado');
+
+        const maxUsers = plan.limits.max_users;
+
+        const { count: membersCount, error: countError } = await supabase
+            .from('organization_members')
+            .select('*', { count: 'exact', head: true })
+            .eq('organization_id', orgId);
+
+        if (countError) throw countError;
+
+        if ((membersCount || 0) >= maxUsers) {
+            throw new Error(`Has alcanzado el límite de ${maxUsers} usuarios activos permitidos para tu plan. Actualiza tu plan para agregar más.`);
+        }
+
+        // Call the edge function
+        const { data, error } = await supabase.functions.invoke('create-user', {
+            body: {
+                email,
+                password,
+                name,
+                role,
+                organizationId: orgId
+            }
+        });
+
+        if (error) {
+            console.error("Error from edge function:", error);
+            let rawError = error.message;
+            if (error.context && typeof error.context.text === 'function') {
+                try {
+                    const ctxText = await error.context.text();
+                    rawError = `RAW_ERROR: ${ctxText}`;
+                    console.error("Edge function context:", ctxText);
+                } catch (e) { }
+            }
+            else if (error.context && typeof error.context === 'string') {
+                rawError = `RAW_ERROR: ${error.context}`;
+            }
+            throw new Error(rawError || 'Error al crear el usuario en el servidor');
+        }
+
+        if (data?.error) {
+            throw new Error(data.error);
+        }
+
+        return data;
     }
 };

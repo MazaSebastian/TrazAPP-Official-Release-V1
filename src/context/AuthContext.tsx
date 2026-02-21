@@ -52,71 +52,88 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
     };
 
+    let isUpdatingProfile = false;
+
     const handleUserUpdate = async (session: any) => {
-      if (!session?.user) {
-        if (mounted) {
-          setUser(null);
-          setIsLoading(false);
-        }
+      console.log('AuthContext: handleUserUpdate started. session exists?', !!session);
+
+      // Prevent double execution race condition on hard refresh
+      if (isUpdatingProfile) {
+        console.log('AuthContext: handleUserUpdate is already running in parallel, skipping...');
         return;
       }
+      isUpdatingProfile = true;
 
-      // 1. Optimistic set - UNBLOCK UI IMMEDIATELY
-      const cachedRole = localStorage.getItem('userRole')?.toLowerCase();
-      const metaRole = session.user.user_metadata?.role?.toLowerCase();
-      // Priority: Cache (Correct/Latest) > Meta (Maybe Stale) > Default
-      const effectiveRole = cachedRole || metaRole || 'partner';
+      try {
+        if (!session?.user) {
+          if (mounted) {
+            console.log('AuthContext: No session user. Setting user=null, isLoading=false');
+            setUser(null);
+            setIsLoading(false);
+          }
+          return;
+        }
 
-      const initialUser: User = {
-        id: session.user.id,
-        email: session.user.email || '',
-        name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'Usuario',
-        role: effectiveRole,
-        avatar: session.user.user_metadata?.avatar
-      };
+        // 1. Optimistic set - UNBLOCK UI IMMEDIATELY
+        const cachedRole = localStorage.getItem('userRole')?.toLowerCase();
+        const metaRole = session.user.user_metadata?.role?.toLowerCase();
+        // Priority: Cache (Correct/Latest) > Meta (Maybe Stale) > Default
+        const effectiveRole = cachedRole || metaRole || 'partner';
 
-      if (mounted) {
-        setUser(initialUser);
-        setIsLoading(false);
-      }
+        const initialUser: User = {
+          id: session.user.id,
+          email: session.user.email || '',
+          name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'Usuario',
+          role: effectiveRole,
+          avatar: session.user.user_metadata?.avatar
+        };
 
-      // 2. Background profile update
-      console.log('AuthContext: Fetching profile in background...');
-      fetchProfile(session.user).then(profile => {
-        if (mounted && profile) {
-          console.log('AuthContext: Profile fetched successfully', profile);
-          const dbName = profile?.full_name || profile?.name || profile?.nombre || profile?.username;
-          const rawDbRole = profile?.role;
-          const dbRole = rawDbRole ? rawDbRole.toLowerCase() : null;
+        if (mounted) {
+          console.log('AuthContext: Optimistic user set. Setting isLoading=false');
+          setUser(initialUser);
+          setIsLoading(false);
+        }
 
-          // Always update cache if we get a valid role
-          if (dbRole) localStorage.setItem('userRole', dbRole);
+        // 2. Background profile update
+        console.log('AuthContext: Fetching profile in background...');
+        fetchProfile(session.user).then(profile => {
+          if (mounted && profile) {
+            console.log('AuthContext: Profile fetched successfully', profile);
+            const dbName = profile?.full_name || profile?.name || profile?.nombre || profile?.username;
+            const rawDbRole = profile?.role;
+            const dbRole = rawDbRole ? rawDbRole.toLowerCase() : null;
 
-          setUser(prev => {
-            if (!prev || prev.id !== session.user.id) return prev;
+            // Always update cache if we get a valid role
+            if (dbRole) localStorage.setItem('userRole', dbRole);
 
-            // PROTECTION: Don't downgrade Super Admin to Partner based on ambiguous DB data
-            if (prev.role === 'super_admin' && dbRole && dbRole !== 'super_admin') {
-              console.warn('AuthContext: SAFETY BLOCKED - Prevented downgrading Super Admin to', dbRole);
-              // Update other fields but KEEP role as super_admin
+            setUser(prev => {
+              if (!prev || prev.id !== session.user.id) return prev;
+
+              // PROTECTION: Don't downgrade Super Admin to Partner based on ambiguous DB data
+              if (prev.role === 'super_admin' && dbRole && dbRole !== 'super_admin') {
+                console.warn('AuthContext: SAFETY BLOCKED - Prevented downgrading Super Admin to', dbRole);
+                // Update other fields but KEEP role as super_admin
+                return {
+                  ...prev,
+                  name: dbName || prev.name,
+                  avatar: profile?.avatar_url || prev.avatar
+                };
+              }
+
               return {
                 ...prev,
                 name: dbName || prev.name,
+                role: dbRole || prev.role,
                 avatar: profile?.avatar_url || prev.avatar
               };
-            }
+            });
+          }
+        });
 
-            return {
-              ...prev,
-              name: dbName || prev.name,
-              role: dbRole || prev.role,
-              avatar: profile?.avatar_url || prev.avatar
-            };
-          });
-        }
-      });
-
-      if (mounted) setIsLoading(false);
+        if (mounted) setIsLoading(false);
+      } finally {
+        isUpdatingProfile = false;
+      }
     };
 
     // Initialize Auth Listener
@@ -124,9 +141,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       console.log(`AuthContext: Auth Event ${event}`, session?.user?.id);
 
       if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
+        clearTimeout(safetyTimer);
         await handleUserUpdate(session);
       } else if (event === 'SIGNED_OUT') {
         if (mounted) {
+          clearTimeout(safetyTimer);
           setUser(null);
           setIsLoading(false);
         }
@@ -134,15 +153,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     });
 
     // Check initial session manually in case event doesn't fire immediately
+    console.log('AuthContext: Starting manual getSession check...');
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!mounted) return; // Component unmounted while fetching session
+      console.log('AuthContext: getSession returned. session exists?', !!session);
+      if (!mounted) return;
 
       if (!session) {
-        // If no session, ensure we stop loading, unless onAuthStateChange takes over
+        console.log('AuthContext: No initial session. Setting isLoading=false');
+        clearTimeout(safetyTimer);
         setIsLoading(false);
       } else {
-        // If session exists, handle it (onAuthStateChange might also fire, but this ensures coverage)
-        // We use the same handler, it handles idempotency reasonably well by id check
+        console.log('AuthContext: Initial session found. Calling handleUserUpdate...');
+        clearTimeout(safetyTimer);
         handleUserUpdate(session);
       }
     });
@@ -265,9 +287,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // 1. Try to tell the server we are leaving
     if (supabase) {
       try {
-        await supabase.auth.signOut();
+        const signOutTimeout = new Promise((_, reject) => setTimeout(() => reject(new Error('SignOut Timeout')), 2000));
+        await Promise.race([
+          supabase.auth.signOut(),
+          signOutTimeout
+        ]);
       } catch (e) {
-        console.error('Logout error:', e);
+        console.error('Logout error/timeout (ignoring):', e);
       }
     }
 

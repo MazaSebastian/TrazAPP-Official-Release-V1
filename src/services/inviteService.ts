@@ -1,4 +1,5 @@
 import { supabase } from './supabaseClient';
+import { planService } from './planService';
 
 export interface Invite {
     id: string;
@@ -15,8 +16,50 @@ export const inviteService = {
     /**
      * Create an invitation for a user to join an organization.
      */
-    async createInvite(orgId: string, email: string, role: string = 'staff'): Promise<Invite | null> {
-        // 1. Check if invite already exists
+    async createInvite(orgId: string, email: string, role: string = 'grower'): Promise<Invite | null> {
+        // 0. Check Organization Limits
+        // Get organization plan
+        const { data: org, error: orgError } = await supabase
+            .from('organizations')
+            .select('plan')
+            .eq('id', orgId)
+            .single();
+
+        if (orgError || !org) {
+            throw new Error('Organization not found');
+        }
+
+        const plan = await planService.getPlanBySlug(org.plan);
+        if (!plan) {
+            throw new Error('Plan not found for organization');
+        }
+
+        const maxUsers = plan.limits.max_users;
+
+        // Count current members
+        const { count: membersCount, error: countError } = await supabase
+            .from('organization_members')
+            .select('*', { count: 'exact', head: true })
+            .eq('organization_id', orgId);
+
+        if (countError) throw countError;
+
+        // Count pending invites
+        const { count: pendingCount, error: pendingError } = await supabase
+            .from('organization_invites')
+            .select('*', { count: 'exact', head: true })
+            .eq('organization_id', orgId)
+            .eq('status', 'pending');
+
+        if (pendingError) throw pendingError;
+
+        const currentTotal = (membersCount || 0) + (pendingCount || 0);
+
+        if (currentTotal >= maxUsers) {
+            throw new Error(`Has alcanzado el límite de ${maxUsers} usuarios para tu plan actual. Actualiza tu plan para agregar más miembros.`);
+        }
+
+        // 1. Check if invite already exists for this email
         const { data: existing } = await supabase
             .from('organization_invites')
             .select('*')
