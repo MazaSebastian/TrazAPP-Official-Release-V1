@@ -271,7 +271,7 @@ const Sidebar: React.FC = () => {
                 <FaChartLine /> Dashboard
               </StyledNavLink>
 
-              {['owner', 'admin', 'grower'].includes(currentRole || '') && (
+              {['owner', 'grower'].includes(currentRole || '') && (
                 <>
                   <SectionTitle>Cultivo</SectionTitle>
 
@@ -327,6 +327,11 @@ const Sidebar: React.FC = () => {
                     <FaMoneyBillWave /> Gastos
                     {planLevel < 2 && <FaLock className="lock-icon" title="Requiere Plan Equipo" />}
                   </StyledNavLink>
+                </>
+              )}
+
+              {['owner'].includes(currentRole || '') && (
+                <>
                   <StyledNavLink to="/metrics" style={{ opacity: planLevel >= 2 ? 1 : 0.6 }}>
                     <FaChartPie /> Métricas
                     {planLevel < 2 && <FaLock className="lock-icon" title="Requiere Plan Equipo" />}

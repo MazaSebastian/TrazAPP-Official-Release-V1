@@ -487,61 +487,22 @@ const Register: React.FC = () => {
 
             const userId = authData.user.id;
 
-            // 2. Insert into public.profiles using ONLY existing columns (id, full_name, updated_at). 
-            // Avoid using email or role here as they don't exist and would crash the upsert.
-            const { error: profileError } = await supabase
-                .from('profiles')
-                .upsert({
-                    id: userId,
-                    full_name: name,
-                    updated_at: new Date().toISOString()
-                });
-
-            if (profileError) {
-                console.error('Error updating profile:', profileError);
-                // Non-fatal, continue to link org
-            }
-
-            // 3. Link user to organization in organization_members
-            const { error: memberError } = await supabase
-                .from('organization_members')
-                .insert([{
-                    organization_id: inviteDetails.organization_id,
-                    user_id: userId,
-                    role: inviteDetails.role
-                }]);
-
-            if (memberError) {
-                console.error('Error creating org member:', memberError);
-                throw new Error('No se pudo vincular el usuario a la organización.');
-            }
-
-            // 4. Update the organization record with the new details
-            const orgUpdatePayload: any = {
-                owner_name: name,
-                phone: phone,
-                referral_source: referralSource,
-                status: 'active'
-            };
-
+            // 2. Call the RPC to securely handle the rest of the registration
+            // The RPC runs as SECURITY DEFINER and bypasses the 401 RLS limitations for unauthenticated users.
             const isOng = inviteDetails?.organization?.plan === 'ong';
-            if (isOng && ongName.trim()) {
-                orgUpdatePayload.name = ongName.trim();
-                orgUpdatePayload.slug = ongName.trim().toLowerCase().replace(/\s+/g, '-');
+            const { error: rpcError } = await supabase.rpc('accept_invitation', {
+                p_token: token,
+                p_user_id: userId,
+                p_full_name: name,
+                p_phone: phone,
+                p_referral_source: referralSource,
+                p_ong_name: isOng && ongName.trim() ? ongName.trim() : null
+            });
+
+            if (rpcError) {
+                console.error('Error during secure registration step:', rpcError);
+                throw new Error('No se pudo completar el registro. ' + rpcError.message);
             }
-
-            const { error: orgUpdateError } = await supabase
-                .from('organizations')
-                .update(orgUpdatePayload)
-                .eq('id', inviteDetails.organization_id);
-
-            if (orgUpdateError) {
-                console.error('Error updating organization info:', orgUpdateError);
-                // Not throwing here, allow registration to complete
-            }
-
-            // 5. Mark invite as accepted
-            await inviteService.acceptInvite(token as string);
 
             setStatus('registered');
 

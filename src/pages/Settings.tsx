@@ -205,7 +205,16 @@ const Settings: React.FC = () => {
   };
 
   const handleRemoveMember = async (userId: string) => {
-    if (!currentOrganization || !window.confirm('¿Estás seguro de que deseas eliminar a este usuario de la organización?')) return;
+    if (!currentOrganization) return;
+
+    const memberToRemove = members.find(m => m.user_id === userId);
+    if (memberToRemove?.role === 'owner') {
+      setToast({ isOpen: true, message: 'No puedes eliminar al dueño de la organización', type: 'error' });
+      return;
+    }
+
+    if (!window.confirm('¿Estás seguro de que deseas eliminar a este usuario de la organización?')) return;
+
     try {
       await organizationService.removeMember(currentOrganization.id, userId);
       setToast({ isOpen: true, message: 'Usuario eliminado', type: 'success' });

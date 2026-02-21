@@ -128,7 +128,7 @@ function App() {
             {/* GROWER / CULTIVO MODULES */}
             <Route path="/crops" element={
               <RequireAuth>
-                <RoleGuard allowedRoles={['admin', 'grower']}>
+                <RoleGuard allowedRoles={['grower']}>
                   <MainContent>
                     <Crops />
                   </MainContent>
@@ -137,7 +137,7 @@ function App() {
             } />
             <Route path="/crops/:id" element={
               <RequireAuth>
-                <RoleGuard allowedRoles={['admin', 'grower']}>
+                <RoleGuard allowedRoles={['grower']}>
                   <MainContent>
                     <CropDetail />
                   </MainContent>
@@ -147,7 +147,7 @@ function App() {
 
             <Route path="/rooms" element={
               <RequireAuth>
-                <RoleGuard allowedRoles={['admin', 'grower']}>
+                <RoleGuard allowedRoles={['grower']}>
                   <MainContent>
                     <Rooms />
                   </MainContent>
@@ -157,7 +157,7 @@ function App() {
 
             <Route path="/rooms/:id" element={
               <RequireAuth>
-                <RoleGuard allowedRoles={['admin', 'grower']}>
+                <RoleGuard allowedRoles={['grower']}>
                   <MainContent>
                     <RoomDetail />
                   </MainContent>
@@ -166,7 +166,7 @@ function App() {
             } />
             <Route path="/genetics" element={
               <RequireAuth>
-                <RoleGuard allowedRoles={['admin', 'grower']}>
+                <RoleGuard allowedRoles={['grower']}>
                   <MainContent>
                     <Genetics />
                   </MainContent>
@@ -175,7 +175,7 @@ function App() {
             } />
             <Route path="/clones" element={
               <RequireAuth>
-                <RoleGuard allowedRoles={['admin', 'grower']}>
+                <RoleGuard allowedRoles={['grower']}>
                   <MainContent>
                     <Clones />
                   </MainContent>
@@ -184,7 +184,7 @@ function App() {
             } />
             <Route path="/devices" element={
               <RequireAuth>
-                <RoleGuard allowedRoles={['admin', 'grower']}>
+                <RoleGuard allowedRoles={['grower']}>
                   <MainContent>
                     <Devices />
                   </MainContent>
@@ -194,7 +194,7 @@ function App() {
 
             <Route path="/laboratory" element={
               <RequireAuth>
-                <RoleGuard allowedRoles={['admin', 'grower']}>
+                <RoleGuard allowedRoles={['grower']}>
                   <MainContent>
                     <LaboratoryPage />
                   </MainContent>
@@ -204,7 +204,7 @@ function App() {
 
             <Route path="/extractions" element={
               <RequireAuth>
-                <RoleGuard allowedRoles={['admin', 'grower']}>
+                <RoleGuard allowedRoles={['grower']}>
                   <MainContent>
                     <Extractions />
                   </MainContent>
@@ -235,7 +235,7 @@ function App() {
 
             <Route path="/settings" element={
               <RequireAuth>
-                <RoleGuard allowedRoles={['admin']}>
+                <RoleGuard allowedRoles={[]}>
                   <MainContent>
                     <Settings />
                   </MainContent>
@@ -262,7 +262,7 @@ function App() {
             } />
             <Route path="/metrics" element={
               <RequireAuth>
-                <RoleGuard allowedRoles={['admin']}>
+                <RoleGuard allowedRoles={[]}>
                   <MainContent>
                     <Metrics />
                   </MainContent>
