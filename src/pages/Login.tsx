@@ -3,7 +3,9 @@ import styled from 'styled-components';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
-import ParticleBackground from '../components/ParticleBackground';
+import Aurora from '../components/Aurora';
+import BlurText from '../components/BlurText';
+import StarBorder from '../components/StarBorder';
 
 // ... (skipping styled components that don't need change, wait, replace_file_content replaces chunks)
 // I should only replace the necessary parts. 
@@ -30,17 +32,32 @@ const LoginContainer = styled.div`
 
 
 
-const LoginCard = styled.div`
-  background: rgba(15, 23, 42, 0.75);
-  backdrop-filter: blur(12px);
-  border-radius: 1.5rem;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-  padding: 3rem;
+const LoginCardWrapper = styled.div`
   width: 100%;
   max-width: 420px;
   position: relative;
-  border: 1px solid rgba(34, 197, 94, 0.2);
   z-index: 10;
+  
+  .star-border-container {
+    width: 100%;
+    display: block;
+    border-radius: 1.5rem !important;
+    
+    background: rgba(15, 23, 42, 0.4);
+    backdrop-filter: blur(24px);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-top: 1px solid rgba(255, 255, 255, 0.15);
+  }
+  
+  .inner-content {
+    background: transparent !important;
+    backdrop-filter: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 3rem !important;
+    text-align: left !important;
+  }
 `;
 
 const Logo = styled.div`
@@ -70,9 +87,18 @@ const Logo = styled.div`
     letter-spacing: -0.025em;
   }
   
-  p {
+  p.welcome-subtitle {
     color: #94a3b8;
     font-size: 0.95rem;
+  }
+  
+  .blur-text-container p {
+    justify-content: center;
+    font-size: 1.875rem;
+    font-weight: 800;
+    color: #4ade80;
+    margin-bottom: 0.5rem;
+    letter-spacing: -0.025em;
   }
 `;
 
@@ -241,67 +267,75 @@ const Login: React.FC = () => {
 
   return (
     <LoginContainer>
-      <ParticleBackground />
+      <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0, opacity: 0.6 }}>
+        <Aurora colorStops={['#16a34a', '#22c55e', '#0f172a']} speed={0.5} amplitude={1.2} />
+      </div>
 
-      <LoginCard>
-        <Logo>
-          <div className="icon-wrapper">
-            <img src="/logotrazappfix.png" alt="TrazApp Logo" style={{ filter: 'drop-shadow(0 6px 8px rgba(0,0,0,0.3))' }} />
-          </div>
-        </Logo>
+      <LoginCardWrapper>
+        <StarBorder as="div" color="#4ade80" speed="7s" thickness={3}>
+          <Logo>
+            <div className="icon-wrapper">
+              <img src="/logotrazappfix.png" alt="TrazApp Logo" style={{ filter: 'drop-shadow(0 6px 8px rgba(0,0,0,0.4))' }} />
+            </div>
+            <div className="blur-text-container">
+              <BlurText text="Acceso TrazApp" delay={50} animateBy="words" direction="bottom" />
+            </div>
+            <p className="welcome-subtitle">Ingresa tus credenciales para continuar</p>
+          </Logo>
 
 
-        <Form onSubmit={handleSubmit}>
-          {error && <ErrorMessage>{error}</ErrorMessage>}
+          <Form onSubmit={handleSubmit}>
+            {error && <ErrorMessage>{error}</ErrorMessage>}
 
-          <FormGroup>
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="usuario@ejemplo.com"
-              required
-            />
-          </FormGroup>
-
-          <FormGroup>
-            <Label htmlFor="password">Contraseña</Label>
-            <PasswordWrapper>
+            <FormGroup>
+              <Label htmlFor="email">Email</Label>
               <Input
-                id="password"
-                type={showPassword ? 'text' : 'password'}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="usuario@ejemplo.com"
                 required
               />
-              <ToggleButton type="button" onClick={() => setShowPassword(!showPassword)}>
-                {showPassword ? <FaEyeSlash /> : <FaEye />}
-              </ToggleButton>
-            </PasswordWrapper>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.25rem' }}>
-              <button
-                type="button"
-                onClick={() => navigate('/forgot-password')}
-                style={{ background: 'none', border: 'none', color: '#4ade80', fontSize: '0.8rem', cursor: 'pointer', padding: 0 }}
-              >
-                ¿Olvidaste tu contraseña?
-              </button>
-            </div>
-          </FormGroup>
+            </FormGroup>
 
-          <LoginButton type="submit" disabled={isLoading}>
-            {isLoading ? 'Accediendo...' : 'Iniciar Sesión'}
-          </LoginButton>
-        </Form>
+            <FormGroup>
+              <Label htmlFor="password">Contraseña</Label>
+              <PasswordWrapper>
+                <Input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  required
+                />
+                <ToggleButton type="button" onClick={() => setShowPassword(!showPassword)}>
+                  {showPassword ? <FaEyeSlash /> : <FaEye />}
+                </ToggleButton>
+              </PasswordWrapper>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.25rem' }}>
+                <button
+                  type="button"
+                  onClick={() => navigate('/forgot-password')}
+                  style={{ background: 'none', border: 'none', color: '#4ade80', fontSize: '0.8rem', cursor: 'pointer', padding: 0 }}
+                >
+                  ¿Olvidaste tu contraseña?
+                </button>
+              </div>
+            </FormGroup>
 
-        <FooterLink>
-          ¿No tienes acceso? <button onClick={() => alert('Contacta a Seba Maza o al administrador del sistema.')} style={{ background: 'none', border: 'none', color: '#16a34a', fontWeight: 600, cursor: 'pointer', padding: 0, fontSize: 'inherit' }}>Contacta al administrador</button>
-        </FooterLink>
+            <LoginButton type="submit" disabled={isLoading}>
+              {isLoading ? 'Accediendo...' : 'Iniciar Sesión'}
+            </LoginButton>
+          </Form>
 
-      </LoginCard>
+          <FooterLink>
+            ¿No tienes acceso? <button onClick={() => alert('Contacta a Seba Maza o al administrador del sistema.')} style={{ background: 'none', border: 'none', color: '#16a34a', fontWeight: 600, cursor: 'pointer', padding: 0, fontSize: 'inherit' }}>Contacta al administrador</button>
+          </FooterLink>
+
+        </StarBorder>
+      </LoginCardWrapper>
     </LoginContainer>
   );
 };

@@ -56,7 +56,7 @@ export const OrganizationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
     // Sync derived state when Query data changes
     useEffect(() => {
-        if (!user) {
+        if (!user?.id) {
             setOrganizations([]);
             setCurrentOrganization(null);
             setCurrentRole(null);
@@ -88,7 +88,7 @@ export const OrganizationProvider: React.FC<{ children: React.ReactNode }> = ({ 
                 }
             }
         }
-    }, [memberData, user]);
+    }, [memberData, user?.id]);
 
     const selectOrganization = (orgId: string) => {
         const org = organizations.find(o => o.id === orgId);

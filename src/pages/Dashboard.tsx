@@ -33,6 +33,30 @@ const fadeIn = keyframes`
   to { opacity: 1; transform: translateY(0); }
 `;
 
+const spin = keyframes`
+  100% { transform: rotate(360deg); }
+`;
+
+const fadeInModal = keyframes`
+  from { opacity: 0; backdrop-filter: blur(0px); }
+  to { opacity: 1; backdrop-filter: blur(8px); }
+`;
+
+const fadeOutModal = keyframes`
+  from { opacity: 1; backdrop-filter: blur(8px); }
+  to { opacity: 0; backdrop-filter: blur(0px); }
+`;
+
+const scaleUp = keyframes`
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+`;
+
+const scaleDown = keyframes`
+  from { transform: scale(1); opacity: 1; }
+  to { transform: scale(0.95); opacity: 0; }
+`;
+
 const Container = styled.div`
   padding: 2rem;
   max-width: 1400px;
@@ -382,13 +406,33 @@ const AddStickyParams = styled.div`
   transition: all 0.2s;
 
   &:hover {
-    border-color: #4ade80;
+    border-color: rgba(74, 222, 128, 0.5);
     color: #4ade80;
     background: rgba(20, 83, 45, 0.2);
+    
+    .dashed-circle {
+      border-color: #4ade80;
+      animation: ${spin} 3s linear infinite;
+      
+      & > svg {
+        animation: ${spin} 3s linear infinite reverse;
+      }
+    }
   }
 `;
 
-const ModalOverlay = styled.div`
+const DashedCircle = styled.div`
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 2px dashed rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.2s, animation 0.2s;
+`;
+
+const ModalOverlay = styled.div<{ $isClosing?: boolean }>`
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
   background: rgba(0,0,0,0.5);
@@ -396,19 +440,21 @@ const ModalOverlay = styled.div`
   align-items: center;
   justify-content: center;
   z-index: 2000;
-  backdrop-filter: blur(4px);
+  backdrop-filter: blur(8px);
+  animation: ${p => p.$isClosing ? fadeOutModal : fadeInModal} 0.25s ease-out forwards;
 `;
 
-const ModalContent = styled.div`
+const ModalContent = styled.div<{ $isClosing?: boolean }>`
   background: rgba(15, 23, 42, 0.95);
   padding: 2rem;
   border-radius: 1rem;
   width: 90%;
-  max-width: 400px;
+  max-width: 420px;
   border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  animation: ${p => p.$isClosing ? scaleDown : scaleUp} 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   
-  h3 { margin-top: 0; color: #f8fafc; }
+  h3 { margin-top: 0; margin-bottom: 1.5rem; color: #f8fafc; font-weight: 700; display: flex; align-items: center; gap: 0.5rem; }
   
   textarea {
     width: 100%;
@@ -453,14 +499,40 @@ const ColorOption = styled.button<{ color: string, selected: boolean }>`
 const Button = styled.button<{ variant?: 'primary' | 'secondary' }>`
   padding: 0.75rem 1.5rem;
   border-radius: 0.5rem;
-  border: none;
-  background: ${p => p.variant === 'secondary' ? '#e2e8f0' : '#3182ce'};
-  color: ${p => p.variant === 'secondary' ? '#4a5568' : 'white'};
+  border: 1px solid ${p => p.variant === 'secondary' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(74, 222, 128, 0.3)'};
+  background: ${p => p.variant === 'secondary' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(20, 83, 45, 0.3)'};
+  color: ${p => p.variant === 'secondary' ? '#94a3b8' : '#4ade80'};
   font-weight: 600;
   cursor: pointer;
+  transition: all 0.2s;
+  flex: 1; /* Makes buttons equal width */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  backdrop-filter: blur(4px);
+  position: relative;
+  overflow: hidden;
+
+  /* Subtle top highlight for glass effect */
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0) 100%);
+    pointer-events: none;
+  }
   
   &:hover {
-    opacity: 0.9;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px ${p => p.variant === 'secondary' ? 'rgba(0,0,0,0.4)' : 'rgba(74, 222, 128, 0.15)'};
+    background: ${p => p.variant === 'secondary' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(20, 83, 45, 0.5)'};
+    border-color: ${p => p.variant === 'secondary' ? 'rgba(255, 255, 255, 0.2)' : '#4ade80'};
+  }
+  
+  &:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
   }
 `;
 
@@ -503,8 +575,17 @@ const Dashboard: React.FC = () => {
 
   // Sticky Modal State
   const [isStickyModalOpen, setIsStickyModalOpen] = useState(false);
+  const [isClosingStickyModal, setIsClosingStickyModal] = useState(false);
   const [newStickyContent, setNewStickyContent] = useState('');
   const [newStickyColor, setNewStickyColor] = useState<'yellow' | 'blue' | 'pink' | 'green'>('yellow');
+
+  const handleCloseStickyModal = () => {
+    setIsClosingStickyModal(true);
+    setTimeout(() => {
+      setIsStickyModalOpen(false);
+      setIsClosingStickyModal(false);
+    }, 240); // Wait for CSS animation to nearly finish before unmounting
+  };
 
   const getIconForType = (type: string) => {
     switch (type) {
@@ -542,7 +623,7 @@ const Dashboard: React.FC = () => {
     const note = await stickiesService.createSticky(newStickyContent, newStickyColor);
     if (note) {
       updateStickies();
-      setIsStickyModalOpen(false);
+      handleCloseStickyModal();
       setNewStickyContent('');
       setNewStickyColor('yellow');
     }
@@ -605,17 +686,19 @@ const Dashboard: React.FC = () => {
             </StickyNoteCard>
           ))}
           <AddStickyParams onClick={() => setIsStickyModalOpen(true)}>
-            <FaPlus size={24} />
-            <span style={{ marginTop: '0.5rem', fontWeight: 600 }}>Nueva Nota</span>
+            <DashedCircle className="dashed-circle">
+              <FaPlus size={20} />
+            </DashedCircle>
+            <span style={{ marginTop: '1rem', fontWeight: 600 }}>Nueva Nota</span>
           </AddStickyParams>
         </StickyGrid>
       </StickyBoard>
 
       {/* Sticky Modal */}
       {isStickyModalOpen && (
-        <ModalOverlay onClick={() => setIsStickyModalOpen(false)}>
-          <ModalContent onClick={e => e.stopPropagation()}>
-            <h3>Nueva Nota Adhesiva</h3>
+        <ModalOverlay $isClosing={isClosingStickyModal} onClick={handleCloseStickyModal}>
+          <ModalContent $isClosing={isClosingStickyModal} onClick={e => e.stopPropagation()}>
+            <h3><FaStickyNote style={{ color: '#4ade80' }} /> Nueva Nota Adhesiva</h3>
             <ColorPicker>
               {['yellow', 'blue', 'pink', 'green'].map(c => (
                 <ColorOption
@@ -633,7 +716,7 @@ const Dashboard: React.FC = () => {
               autoFocus
             />
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
-              <Button variant="secondary" onClick={() => setIsStickyModalOpen(false)}>Cancelar</Button>
+              <Button variant="secondary" onClick={handleCloseStickyModal}>Cancelar</Button>
               <Button onClick={handleCreateSticky}>Pegar Nota</Button>
             </div>
           </ModalContent>

@@ -3,6 +3,8 @@ import styled from 'styled-components';
 import { FaCog, FaSave, FaDna } from 'react-icons/fa';
 import { geneticsService } from '../services/geneticsService';
 import { ToastModal } from '../components/ToastModal';
+import { ConfirmModal } from '../components/ConfirmModal';
+import { CustomSelect } from '../components/CustomSelect';
 import { Genetic } from '../types/genetics';
 import { useOrganization } from '../context/OrganizationContext';
 import { useAuth } from '../context/AuthContext';
@@ -92,21 +94,6 @@ const SaveButton = styled.button`
   }
 `;
 
-const Select = styled.select`
-  background: rgba(15, 23, 42, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #f8fafc;
-  padding: 0.5rem;
-  border-radius: 0.25rem;
-  outline: none;
-  &:focus {
-    border-color: rgba(168, 85, 247, 0.5);
-  }
-  option {
-    background: #0f172a;
-  }
-`;
-
 const ActionButton = styled.button<{ $danger?: boolean }>`
   background: none;
   border: none;
@@ -139,6 +126,11 @@ const Settings: React.FC = () => {
     isOpen: false,
     message: '',
     type: 'success'
+  });
+
+  const [confirmDelete, setConfirmDelete] = useState<{ isOpen: boolean, userId: string | null }>({
+    isOpen: false,
+    userId: null
   });
 
   useEffect(() => {
@@ -213,15 +205,21 @@ const Settings: React.FC = () => {
       return;
     }
 
-    if (!window.confirm('¿Estás seguro de que deseas eliminar a este usuario de la organización?')) return;
+    setConfirmDelete({ isOpen: true, userId });
+  };
+
+  const executeRemoveMember = async () => {
+    if (!currentOrganization || !confirmDelete.userId) return;
 
     try {
-      await organizationService.removeMember(currentOrganization.id, userId);
+      await organizationService.removeMember(currentOrganization.id, confirmDelete.userId);
       setToast({ isOpen: true, message: 'Usuario eliminado', type: 'success' });
       const mData = await organizationService.getOrganizationMembers(currentOrganization.id);
       setMembers(mData || []);
     } catch (error: any) {
       setToast({ isOpen: true, message: error.message || 'Error al eliminar usuario', type: 'error' });
+    } finally {
+      setConfirmDelete({ isOpen: false, userId: null });
     }
   };
 
@@ -335,13 +333,18 @@ const Settings: React.FC = () => {
                   onChange={e => setNewUserPassword(e.target.value)}
                   style={{ width: '100%', padding: '0.5rem', borderRadius: '0.25rem', border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(30,41,59,0.5)', color: '#fff' }}
                 />
-                <Select value={newUserRole} onChange={e => setNewUserRole(e.target.value)} style={{ width: '100%' }}>
-                  <option value="owner">Dueño</option>
-                  <option value="admin">Administrador</option>
-                  <option value="grower">Grower / Director de Cultivo</option>
-                  <option value="medico">Médico / Director Médico</option>
-                  <option value="staff">Staff / Operario</option>
-                </Select>
+                <CustomSelect
+                  value={newUserRole}
+                  onChange={val => setNewUserRole(val)}
+                  options={[
+                    { value: 'owner', label: 'Dueño' },
+                    { value: 'admin', label: 'Administrador' },
+                    { value: 'grower', label: 'Grower / Director de Cultivo' },
+                    { value: 'medico', label: 'Médico / Director Médico' },
+                    { value: 'staff', label: 'Staff / Operario' }
+                  ]}
+                  triggerStyle={{ padding: '0.625rem', borderRadius: '0.25rem', border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(30,41,59,0.5)', fontSize: '0.9rem' }}
+                />
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
@@ -375,17 +378,18 @@ const Settings: React.FC = () => {
                     <td style={{ padding: '0.75rem', color: '#94a3b8' }}>{new Date(member.created_at).toLocaleDateString()}</td>
                     <td style={{ padding: '0.75rem', textAlign: 'center' }}>
                       {canManageUsers ? (
-                        <Select
+                        <CustomSelect
                           value={member.role}
-                          onChange={e => handleRoleChange(member.user_id, e.target.value)}
-                          style={{ background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'center' }}
-                        >
-                          <option value="owner">Dueño</option>
-                          <option value="admin">Administrador</option>
-                          <option value="grower">Grower</option>
-                          <option value="medico">Médico</option>
-                          <option value="staff">Staff</option>
-                        </Select>
+                          onChange={val => handleRoleChange(member.user_id, val)}
+                          options={[
+                            { value: 'owner', label: 'Dueño' },
+                            { value: 'admin', label: 'Administrador' },
+                            { value: 'grower', label: 'Grower' },
+                            { value: 'medico', label: 'Médico' },
+                            { value: 'staff', label: 'Staff' }
+                          ]}
+                          triggerStyle={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: '0.5rem', boxShadow: 'none', fontSize: '0.9rem', justifyContent: 'center' }}
+                        />
                       ) : (
                         <span style={{ color: '#cbd5e1' }}>
                           {member.role === 'owner' ? 'Dueño' :
@@ -420,6 +424,17 @@ const Settings: React.FC = () => {
         message={toast.message}
         type={toast.type}
         onClose={closeToast}
+      />
+
+      <ConfirmModal
+        isOpen={confirmDelete.isOpen}
+        title="Eliminar usuario"
+        message="¿Estás seguro de que deseas eliminar a este usuario de la organización?"
+        onConfirm={executeRemoveMember}
+        onClose={() => setConfirmDelete({ isOpen: false, userId: null })}
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+        isDanger={true}
       />
     </PageContainer>
   );

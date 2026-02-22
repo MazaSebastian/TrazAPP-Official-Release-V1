@@ -95,14 +95,14 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
 
     // Initial Load
     useEffect(() => {
-        if (user) {
+        if (user?.id) {
             setIsLoading(true);
             refreshData(true).finally(() => setIsLoading(false));
         } else {
             // If no user, maybe clear data or keep loading false
             setIsLoading(false);
         }
-    }, [user, refreshData]);
+    }, [user?.id, refreshData]);
 
     const value: DataContextType = {
         crops,

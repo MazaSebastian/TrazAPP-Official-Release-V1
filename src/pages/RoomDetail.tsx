@@ -4925,7 +4925,7 @@ const RoomDetail: React.FC = () => {
                                         {/* Left Column: Primary Info */}
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                                             <FormGroup>
-                                                <label style={{ color: '#4a5568', fontWeight: 600, fontSize: '0.9rem', marginBottom: '0.5rem', display: 'block' }}>Tipo de Tarea</label>
+                                                <label style={{ color: '#94a3b8', fontWeight: 600, fontSize: '0.9rem', marginBottom: '0.5rem', display: 'block' }}>Tipo de Tarea</label>
                                                 <CustomSelect
                                                     value={taskForm.type}
                                                     onChange={(value) => {
@@ -4964,7 +4964,7 @@ const RoomDetail: React.FC = () => {
 
                                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                                                 <FormGroup>
-                                                    <label style={{ color: '#4a5568', fontWeight: 600, fontSize: '0.9rem', marginBottom: '0.5rem', display: 'block' }}>Fecha</label>
+                                                    <label style={{ color: '#94a3b8', fontWeight: 600, fontSize: '0.9rem', marginBottom: '0.5rem', display: 'block' }}>Fecha</label>
                                                     <CustomDatePicker
                                                         selected={taskForm.due_date ? new Date(taskForm.due_date) : new Date()}
                                                         onChange={(date) => {
@@ -4975,7 +4975,7 @@ const RoomDetail: React.FC = () => {
                                                     />
                                                 </FormGroup>
                                                 <FormGroup>
-                                                    <label style={{ color: '#4a5568', fontWeight: 600, fontSize: '0.9rem', marginBottom: '0.5rem', display: 'block' }}>Asignar a</label>
+                                                    <label style={{ color: '#94a3b8', fontWeight: 600, fontSize: '0.9rem', marginBottom: '0.5rem', display: 'block' }}>Asignar a</label>
                                                     <CustomSelect
                                                         value={taskForm.assigned_to}
                                                         onChange={(value) => setTaskForm({ ...taskForm, assigned_to: value })}
@@ -4989,8 +4989,8 @@ const RoomDetail: React.FC = () => {
                                             </div>
 
                                             {/* Recurrence Section */}
-                                            <div style={{ padding: '1rem', background: '#f8fafc', borderRadius: '0.75rem', border: '1px solid #edf2f7' }}>
-                                                <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 600, color: '#2d3748', cursor: 'pointer', marginBottom: recurrenceEnabled ? '1rem' : 0, fontSize: '0.95rem', transition: 'margin-bottom 0.3s ease-out' }}>
+                                            <div style={{ padding: '1rem', background: 'rgba(15, 23, 42, 0.4)', borderRadius: '0.75rem', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
+                                                <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 600, color: '#f8fafc', cursor: 'pointer', marginBottom: recurrenceEnabled ? '1rem' : 0, fontSize: '0.95rem', transition: 'margin-bottom 0.3s ease-out' }}>
                                                     <input
                                                         type="checkbox"
                                                         checked={recurrenceEnabled}
@@ -5008,7 +5008,7 @@ const RoomDetail: React.FC = () => {
                                                     <div style={{ overflow: 'hidden', minHeight: 0 }}>
                                                         <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
                                                             <div style={{ flex: 1 }}>
-                                                                <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.5rem', color: '#718096' }}>Repetir cada:</label>
+                                                                <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.5rem', color: '#94a3b8' }}>Repetir cada:</label>
                                                                 <div style={{ display: 'flex', gap: '0.5rem' }}>
                                                                     <input
                                                                         type="number"
@@ -5021,7 +5021,7 @@ const RoomDetail: React.FC = () => {
                                                                                 interval: val === '' ? '' : Math.max(1, parseInt(val))
                                                                             }));
                                                                         }}
-                                                                        style={{ width: '70px', padding: '0.5rem', borderRadius: '0.375rem', border: '1px solid #cbd5e0', fontSize: '0.9rem' }}
+                                                                        style={{ width: '70px', padding: '0.5rem', borderRadius: '0.375rem', border: '1px solid rgba(255, 255, 255, 0.1)', fontSize: '0.9rem', background: 'rgba(15, 23, 42, 0.6)', color: '#f8fafc', colorScheme: 'dark' }}
                                                                     />
                                                                     <div style={{ flex: 1 }}>
                                                                         <CustomSelect
@@ -5041,7 +5041,7 @@ const RoomDetail: React.FC = () => {
 
                                                         {recurrenceConfig.unit === 'week' && (
                                                             <div>
-                                                                <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.5rem', color: '#718096' }}>Se repite el:</label>
+                                                                <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.5rem', color: '#94a3b8' }}>Se repite el:</label>
                                                                 <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                                                                     {['D', 'L', 'M', 'M', 'J', 'V', 'S'].map((day, idx) => {
                                                                         const isSelected = recurrenceConfig.daysOfWeek?.includes(idx);
@@ -5057,11 +5057,11 @@ const RoomDetail: React.FC = () => {
                                                                                 }}
                                                                                 style={{
                                                                                     width: '32px', height: '32px', borderRadius: '50%', border: '1px solid',
-                                                                                    borderColor: isSelected ? '#3182ce' : '#e2e8f0',
-                                                                                    background: isSelected ? '#3182ce' : 'white',
-                                                                                    color: isSelected ? 'white' : '#4a5568',
+                                                                                    borderColor: isSelected ? 'rgba(56, 189, 248, 0.5)' : 'rgba(255, 255, 255, 0.1)',
+                                                                                    background: isSelected ? 'rgba(56, 189, 248, 0.3)' : 'rgba(255, 255, 255, 0.05)',
+                                                                                    color: isSelected ? '#38bdf8' : '#94a3b8',
                                                                                     fontWeight: 'bold', cursor: 'pointer', fontSize: '0.8rem',
-                                                                                    boxShadow: isSelected ? '0 2px 4px rgba(49,130,206,0.3)' : 'none',
+                                                                                    boxShadow: isSelected ? '0 0 10px rgba(56, 189, 248, 0.2)' : 'none',
                                                                                     transition: 'all 0.2s'
                                                                                 }}
                                                                             >
@@ -5080,7 +5080,7 @@ const RoomDetail: React.FC = () => {
                                         {/* Right Column: Instructions & Files */}
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                                             <FormGroup style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-                                                <label style={{ color: '#4a5568', fontWeight: 600, fontSize: '0.9rem', marginBottom: '0.5rem', display: 'block' }}>Instrucciones</label>
+                                                <label style={{ color: '#94a3b8', fontWeight: 600, fontSize: '0.9rem', marginBottom: '0.5rem', display: 'block' }}>Instrucciones</label>
                                                 <textarea
                                                     value={taskForm.description}
                                                     onChange={e => setTaskForm({ ...taskForm, description: e.target.value })}
@@ -5089,28 +5089,29 @@ const RoomDetail: React.FC = () => {
                                                         flex: 1,
                                                         padding: '1rem',
                                                         borderRadius: '0.5rem',
-                                                        border: '1px solid #e2e8f0',
+                                                        border: '1px solid rgba(255, 255, 255, 0.1)',
                                                         fontSize: '0.95rem',
                                                         resize: 'none',
                                                         minHeight: '200px',
-                                                        background: '#fafbfc',
+                                                        background: 'rgba(15, 23, 42, 0.6)',
+                                                        color: '#f8fafc',
                                                         lineHeight: '1.5'
                                                     }}
                                                 />
                                             </FormGroup>
 
                                             <div>
-                                                <label style={{ display: 'block', fontWeight: 600, color: '#4a5568', fontSize: '0.9rem', marginBottom: '0.5rem' }}>Gestor de archivos</label>
+                                                <label style={{ display: 'block', fontWeight: 600, color: '#94a3b8', fontSize: '0.9rem', marginBottom: '0.5rem' }}>Gestor de archivos</label>
                                                 <button
                                                     onClick={() => alert("Funcionalidad de subida de fotos en desarrollo. Se integrará con Supabase Storage.")}
                                                     style={{
-                                                        background: 'white',
-                                                        border: '2px dashed #cbd5e0',
+                                                        background: 'rgba(255, 255, 255, 0.05)',
+                                                        border: '1px dashed rgba(255, 255, 255, 0.2)',
                                                         padding: '1.5rem',
                                                         width: '100%',
                                                         borderRadius: '0.5rem',
                                                         cursor: 'pointer',
-                                                        color: '#718096',
+                                                        color: '#94a3b8',
                                                         display: 'flex',
                                                         alignItems: 'center',
                                                         justifyContent: 'center',
@@ -5118,8 +5119,8 @@ const RoomDetail: React.FC = () => {
                                                         transition: 'all 0.2s',
                                                         fontWeight: 500
                                                     }}
-                                                    onMouseEnter={e => { e.currentTarget.style.borderColor = '#48bb78'; e.currentTarget.style.color = '#38a169'; e.currentTarget.style.background = '#f0fff4'; }}
-                                                    onMouseLeave={e => { e.currentTarget.style.borderColor = '#cbd5e0'; e.currentTarget.style.color = '#718096'; e.currentTarget.style.background = 'white'; }}
+                                                    onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(74, 222, 128, 0.5)'; e.currentTarget.style.color = '#4ade80'; e.currentTarget.style.background = 'rgba(74, 222, 128, 0.1)'; }}
+                                                    onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)'; e.currentTarget.style.color = '#94a3b8'; e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'; }}
                                                 >
                                                     <FaPlus /> Subir Foto / Archivo
                                                 </button>
@@ -5128,31 +5129,22 @@ const RoomDetail: React.FC = () => {
                                     </div>
 
                                     {/* Footer Actions */}
-                                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '2rem', paddingTop: '1.5rem', borderTop: '1px solid #edf2f7' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '2rem', paddingTop: '1.5rem', borderTop: '1px solid rgba(255, 255, 255, 0.1)' }}>
                                         {selectedTask && (
-                                            <CancelButton onClick={handleDeleteTask} style={{ color: '#e53e3e', borderColor: '#e53e3e' }}>
+                                            <ModalActionButton variant="danger" onClick={handleDeleteTask}>
                                                 Eliminar
-                                            </CancelButton>
+                                            </ModalActionButton>
                                         )}
-                                        <button
+                                        <ModalActionButton
+                                            variant="secondary"
                                             onClick={closeTaskModal}
-                                            style={{ padding: '0.75rem 1.5rem', borderRadius: '0.5rem', border: '1px solid #e2e8f0', background: 'white', color: '#4a5568', fontWeight: 600, cursor: 'pointer' }}
                                         >
                                             Cancelar
-                                        </button>
-                                        <ActionButton
+                                        </ModalActionButton>
+                                        <ModalActionButton
+                                            variant="primary"
                                             onClick={handleSaveTask}
-                                            $variant="success"
                                             disabled={isSavingTask}
-                                            style={{
-                                                minWidth: '150px',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                gap: '0.5rem',
-                                                opacity: isSavingTask ? 0.7 : 1,
-                                                cursor: isSavingTask ? 'not-allowed' : 'pointer'
-                                            }}
                                         >
                                             {isSavingTask ? (
                                                 <>
@@ -5161,7 +5153,7 @@ const RoomDetail: React.FC = () => {
                                             ) : (
                                                 selectedTask ? 'Guardar Cambios' : 'Crear Tarea'
                                             )}
-                                        </ActionButton>
+                                        </ModalActionButton>
                                     </div>
                                 </>
                             ) : (
@@ -5171,42 +5163,69 @@ const RoomDetail: React.FC = () => {
                                         <strong>{selectedTask?.title}</strong> <br />
                                         <Badge taskType={selectedTask?.type}>{selectedTask?.type?.replace(/_/g, ' ')}</Badge>
                                     </div>
-                                    <p style={{ color: '#4a5568', marginBottom: '1rem' }}>{selectedTask?.description || 'Sin descripción'}</p>
-                                    <p style={{ fontSize: '0.9rem', color: '#718096' }}>Asignado a: {users.find(u => u.id === selectedTask?.assigned_to)?.full_name || 'Nadie'}</p>
+                                    <p style={{ color: '#94a3b8', marginBottom: '1rem' }}>{selectedTask?.description || 'Sin descripción'}</p>
+                                    <p style={{ fontSize: '0.9rem', color: '#94a3b8' }}>Asignado a: {users.find(u => u.id === selectedTask?.assigned_to)?.full_name || 'Nadie'}</p>
 
                                     {/* Observations Field for Execution */}
                                     <FormGroup>
-                                        <label>Observaciones</label>
+                                        <label style={{ color: '#94a3b8', fontWeight: 600, fontSize: '0.9rem', marginBottom: '0.5rem', display: 'block' }}>Observaciones</label>
                                         <textarea
                                             placeholder="Registra observaciones puntuales al completar..."
                                             value={taskForm.description} // Re-using state for simplicity, ideally separate 'observations' state
                                             onChange={e => setTaskForm({ ...taskForm, description: e.target.value })}
+                                            style={{
+                                                width: '100%',
+                                                padding: '1rem',
+                                                borderRadius: '0.5rem',
+                                                border: '1px solid rgba(255, 255, 255, 0.1)',
+                                                fontSize: '0.95rem',
+                                                resize: 'none',
+                                                minHeight: '100px',
+                                                background: 'rgba(15, 23, 42, 0.6)',
+                                                color: '#f8fafc',
+                                                lineHeight: '1.5',
+                                                marginBottom: '1rem'
+                                            }}
                                         />
                                     </FormGroup>
 
                                     <div style={{ marginBottom: '1rem' }}>
                                         <button
                                             onClick={() => alert("Subir foto de evidencia (En desarrollo)")}
-                                            style={{ background: '#edf2f7', border: '1px dashed #cbd5e0', padding: '0.5rem', width: '100%', borderRadius: '0.5rem', cursor: 'pointer', color: '#718096', fontSize: '0.9rem' }}
+                                            style={{
+                                                background: 'rgba(255, 255, 255, 0.05)',
+                                                border: '1px dashed rgba(255, 255, 255, 0.2)',
+                                                padding: '0.75rem',
+                                                width: '100%',
+                                                borderRadius: '0.5rem',
+                                                cursor: 'pointer',
+                                                color: '#94a3b8',
+                                                fontSize: '0.9rem',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                gap: '0.5rem',
+                                                transition: 'all 0.2s',
+                                                fontWeight: 500
+                                            }}
+                                            onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(74, 222, 128, 0.5)'; e.currentTarget.style.color = '#4ade80'; e.currentTarget.style.background = 'rgba(74, 222, 128, 0.1)'; }}
+                                            onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)'; e.currentTarget.style.color = '#94a3b8'; e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'; }}
                                         >
                                             <FaPlus /> Subir Foto Evidencia
                                         </button>
                                     </div>
 
-                                    <ActionButton
+                                    <ModalActionButton
+                                        variant="primary"
                                         onClick={async () => {
                                             if (selectedTask) {
-                                                // Save observations first if any are typed (we are using description field state as a proxy for now, but should separate)
-                                                // Actually, let's just complete it.
                                                 const newStatus = selectedTask.status === 'done' ? 'pending' : 'done';
-                                                // Ideally we save the observations to the 'observations' column, not description.
-                                                // For now, let's just toggle status.
+
                                                 await tasksService.updateTask(selectedTask.id, {
-                                                    observations: taskForm.description, // Saving the typed text as observations
+                                                    observations: taskForm.description,
                                                     status: newStatus
                                                 } as any);
 
-                                                // Refresh
                                                 if (id) {
                                                     const updatedTasks = await tasksService.getTasksByRoomId(id);
                                                     setTasks(updatedTasks);
@@ -5214,11 +5233,11 @@ const RoomDetail: React.FC = () => {
                                                 setIsTaskModalOpen(false);
                                             }
                                         }}
-                                        $variant={selectedTask?.status === 'done' ? 'primary' : 'success'}
-                                        style={{ width: '100%', marginTop: '0.5rem' }}
+                                        disabled={isSavingTask}
+                                        style={{ width: '100%', marginTop: '0.5rem', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem' }}
                                     >
-                                        {selectedTask?.status === 'done' ? 'Marcar como Pendiente' : 'Completa y Guardar'}
-                                    </ActionButton>
+                                        {isSavingTask ? <div style={{ border: '2px solid rgba(255,255,255,0.3)', borderTop: '2px solid white', borderRadius: '50%', width: '1rem', height: '1rem', animation: 'spin 1s linear infinite' }} /> : (selectedTask?.status === 'done' ? 'Marcar como Pendiente' : 'Completa y Guardar')}
+                                    </ModalActionButton>
                                 </div>
                             )}
                         </TaskModalContent>

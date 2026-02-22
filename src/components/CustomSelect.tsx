@@ -79,9 +79,10 @@ interface CustomSelectProps {
     onChange: (value: string) => void;
     options: Option[];
     placeholder?: string;
+    triggerStyle?: React.CSSProperties;
 }
 
-export const CustomSelect: React.FC<CustomSelectProps> = ({ value, onChange, options, placeholder = "Seleccionar..." }) => {
+export const CustomSelect: React.FC<CustomSelectProps> = ({ value, onChange, options, placeholder = "Seleccionar...", triggerStyle }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [coords, setCoords] = useState({ top: 0, left: 0, width: 0 });
     const containerRef = useRef<HTMLDivElement>(null);
@@ -154,7 +155,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({ value, onChange, opt
 
     return (
         <SelectContainer ref={containerRef}>
-            <SelectTrigger $isOpen={isOpen} onClick={toggleOpen}>
+            <SelectTrigger $isOpen={isOpen} onClick={toggleOpen} style={triggerStyle}>
                 <span>{selectedOption ? selectedOption.label : placeholder}</span>
                 <FaChevronDown size={12} color="#94a3b8" style={{ transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }} />
             </SelectTrigger>
