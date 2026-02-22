@@ -85,7 +85,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           email: session.user.email || '',
           name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'Usuario',
           role: effectiveRole,
-          avatar: session.user.user_metadata?.avatar
+          avatar: session.user.user_metadata?.avatar,
+          has_completed_tour: true // Optimistically assume true until DB confirms it's false for new users
         };
 
         if (mounted) {
@@ -116,7 +117,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 return {
                   ...prev,
                   name: dbName || prev.name,
-                  avatar: profile?.avatar_url || prev.avatar
+                  avatar: profile?.avatar_url || prev.avatar,
+                  has_completed_tour: profile?.has_completed_tour ?? false
                 };
               }
 
@@ -124,7 +126,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 ...prev,
                 name: dbName || prev.name,
                 role: dbRole || prev.role,
-                avatar: profile?.avatar_url || prev.avatar
+                avatar: profile?.avatar_url || prev.avatar,
+                has_completed_tour: profile?.has_completed_tour ?? false
               };
             });
           }

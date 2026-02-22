@@ -7,6 +7,7 @@ export interface User {
   name: string;
   role: 'super_admin' | 'admin' | 'technician' | 'partner';
   avatar?: string;
+  has_completed_tour?: boolean;
 }
 
 export interface LoginCredentials {

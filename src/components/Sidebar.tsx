@@ -242,7 +242,7 @@ const Sidebar: React.FC = () => {
 
       <Overlay isOpen={isOpen} onClick={() => setIsOpen(false)} />
 
-      <SidebarContainer isOpen={isOpen}>
+      <SidebarContainer className="tour-sidebar" isOpen={isOpen}>
         <LogoSection style={{ justifyContent: 'center', padding: '1.5rem' }}>
           <img src="/logotrazappfix.png" alt="Logo" style={{ height: 'auto', width: '100%', maxWidth: '135px', filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.3))' }} />
         </LogoSection>

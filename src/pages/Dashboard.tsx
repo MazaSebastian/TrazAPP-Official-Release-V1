@@ -24,6 +24,7 @@ import { WeatherWidget } from '../components/WeatherWidget';
 import { useAuth } from '../context/AuthContext';
 import { useData } from '../context/DataContext';
 import { LoadingSpinner } from '../components/LoadingSpinner';
+import { GuidedTour } from '../components/GuidedTour';
 
 
 // --- Styled Components (Premium Eco-Tech Theme) ---
@@ -664,7 +665,8 @@ const Dashboard: React.FC = () => {
 
   return (
     <Container>
-      <WelcomeHeader>
+      <GuidedTour />
+      <WelcomeHeader className="tour-welcome">
         <h1>Panel de Control</h1>
         <p>Bienvenido de nuevo, {user?.name || 'Cultivador'}. Aquí está el estado actual de tus cultivos.</p>
         <DateDisplay>

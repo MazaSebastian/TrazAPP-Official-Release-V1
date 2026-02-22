@@ -160,7 +160,7 @@ export const ChatWidget: React.FC = () => {
             )}
 
             {/* Floating Button */}
-            <FloatingButton onClick={() => setIsOpen(!isOpen)} $isOpen={isOpen}>
+            <FloatingButton className="tour-ai-chat" onClick={() => setIsOpen(!isOpen)} $isOpen={isOpen}>
                 {isOpen ? <FaTimes size={20} /> : <FaRobot size={24} />}
             </FloatingButton>
         </Wrapper>
