@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { patientsService, Patient } from '../services/patientsService';
+import { useNavigate } from 'react-router-dom';
 
 import { ConfirmModal } from '../components/ConfirmModal';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ToastModal } from '../components/ToastModal';
-import { FaUserPlus, FaIdCard, FaFileUpload, FaCheckCircle, FaFileAlt } from 'react-icons/fa';
+import { FaUserPlus, FaIdCard, FaFileUpload, FaCheckCircle, FaFileAlt, FaNotesMedical } from 'react-icons/fa';
 import { CustomSelect } from '../components/CustomSelect';
 import { CustomDatePicker } from '../components/CustomDatePicker';
 import { useOrganization } from '../context/OrganizationContext';
@@ -253,6 +254,7 @@ const FileUploadBox = styled.div`
 `;
 
 const Patients: React.FC = () => {
+    const navigate = useNavigate();
     const { currentOrganization } = useOrganization();
     const plan = currentOrganization?.plan || 'individual';
     const planLevel = ['ong', 'enterprise'].includes(plan) ? 3 :
@@ -294,7 +296,6 @@ const Patients: React.FC = () => {
     // Form Data
 
 
-    // Registration Form State
     const [regForm, setRegForm] = useState({
         fullName: '',
         email: '',
@@ -303,10 +304,14 @@ const Patients: React.FC = () => {
         expirationDate: '',
         issueDate: '',
         documentNumber: '',
+        dateOfBirth: '',
+        pathology: '',
         phone: '',
         address: '',
         notes: ''
     });
+
+    const [hasReprocann, setHasReprocann] = useState<boolean | null>(null);
 
     // File States
     const [files, setFiles] = useState<{
@@ -372,6 +377,8 @@ const Patients: React.FC = () => {
                 expiration_date: regForm.expirationDate || undefined,
                 reprocann_issue_date: regForm.issueDate || undefined,
                 document_number: regForm.documentNumber,
+                date_of_birth: regForm.dateOfBirth || undefined,
+                pathology: regForm.pathology || undefined,
                 phone: regForm.phone,
                 address: regForm.address,
                 notes: regForm.notes,
@@ -434,11 +441,14 @@ const Patients: React.FC = () => {
             expirationDate: '',
             issueDate: '',
             documentNumber: '',
+            dateOfBirth: '',
+            pathology: '',
             phone: '',
             address: '',
             notes: ''
         });
         setFiles({});
+        setHasReprocann(null);
     };
 
     const openEdit = (patient: Patient) => {
@@ -525,17 +535,26 @@ const Patients: React.FC = () => {
                                     </small>
                                 )}
 
-                                <div style={{ marginTop: '1rem', borderTop: '1px solid rgba(255, 255, 255, 0.1)', paddingTop: '1rem' }}>
+                                <div style={{ marginTop: '1rem', borderTop: '1px solid rgba(255, 255, 255, 0.1)', paddingTop: '1rem', display: 'flex', gap: '0.5rem' }}>
                                     <ActionButton
                                         type="button"
-                                        style={{ width: '100%', justifyContent: 'center' }}
+                                        style={{ flex: 1, justifyContent: 'center', padding: '0.75rem 0.5rem', fontSize: '0.9rem' }}
                                         onClick={(e) => {
                                             e.stopPropagation();
-                                            window.location.href = `/patients/${patient.id || patient.profile_id}/clinical`; // Using href for now to ensure clean load, or use navigate
-                                            // navigate(\`/patients/\${patient.id}/clinical\`); 
+                                            navigate(`/patients/${patient.id || patient.profile_id}`);
                                         }}
                                     >
-                                        <FaFileAlt /> Historia Clínica
+                                        <FaFileAlt /> H. Clínica
+                                    </ActionButton>
+                                    <ActionButton
+                                        type="button"
+                                        style={{ flex: 1, justifyContent: 'center', padding: '0.75rem 0.5rem', fontSize: '0.9rem', backgroundColor: 'rgba(59, 130, 246, 0.2)', color: '#60a5fa', border: '1px solid rgba(59, 130, 246, 0.4)' }}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            navigate(`/patients/${patient.id || patient.profile_id}?action=new_followup`);
+                                        }}
+                                    >
+                                        <FaNotesMedical /> Seguimiento
                                     </ActionButton>
                                 </div>
                             </PatientCard>
@@ -547,141 +566,214 @@ const Patients: React.FC = () => {
                 <Modal isOpen={isAddOpen || isClosingAdd} $isClosing={isClosingAdd} onMouseDown={closeAddModal}>
                     <ModalContent $isClosing={isClosingAdd} onMouseDown={(e) => e.stopPropagation()}>
                         <h2 style={{ marginBottom: '1.5rem', color: '#f8fafc' }}>📄 Vinculación de Nuevo Socio</h2>
-                        <form onSubmit={handleRegister}>
 
-                            <SectionHeader>Datos Personales</SectionHeader>
+                        {hasReprocann === null ? (
+                            <div style={{ textAlign: 'center', padding: '2rem 1rem' }}>
+                                <h3 style={{ fontSize: '1.4rem', color: '#f8fafc', marginBottom: '2.5rem', fontWeight: 500 }}>
+                                    ¿El socio cuenta con vinculación en REPROCANN?
+                                </h3>
+                                <div style={{ display: 'flex', gap: '1.5rem', justifyContent: 'center' }}>
+                                    <ActionButton
+                                        type="button"
+                                        onClick={() => setHasReprocann(true)}
+                                        style={{
+                                            padding: '1.5rem 2.5rem',
+                                            fontSize: '1.1rem',
+                                            flexDirection: 'column',
+                                            gap: '1rem',
+                                            background: 'rgba(74, 222, 128, 0.1)',
+                                            borderColor: 'rgba(74, 222, 128, 0.3)',
+                                            color: '#4ade80'
+                                        }}
+                                    >
+                                        <FaCheckCircle size={32} />
+                                        SÍ, CUENTA CON REPROCANN
+                                    </ActionButton>
 
-                            <FormGroup>
-                                <label>Nombre Completo</label>
-                                <input
-                                    value={regForm.fullName}
-                                    onChange={e => setRegForm({ ...regForm, fullName: e.target.value })}
-                                    placeholder="Nombre y Apellido"
-                                    required
-                                />
-                            </FormGroup>
+                                    <ActionButton
+                                        type="button"
+                                        onClick={() => setHasReprocann(false)}
+                                        style={{
+                                            padding: '1.5rem 2.5rem',
+                                            fontSize: '1.1rem',
+                                            flexDirection: 'column',
+                                            gap: '1rem',
+                                            background: 'rgba(148, 163, 184, 0.1)',
+                                            borderColor: 'rgba(148, 163, 184, 0.3)',
+                                            color: '#cbd5e1'
+                                        }}
+                                    >
+                                        <FaNotesMedical size={32} />
+                                        NO, AÚN NO
+                                    </ActionButton>
+                                </div>
+                                <div style={{ marginTop: '3rem' }}>
+                                    <ActionButton type="button" style={{ margin: '0 auto', background: 'rgba(239, 68, 68, 0.1)', color: '#f87171', border: 'none' }} onClick={() => { closeAddModal(); resetForm(); }}>Cancelar</ActionButton>
+                                </div>
+                            </div>
+                        ) : (
+                            <form onSubmit={handleRegister} style={{ animation: 'fadeIn 0.3s ease-out' }}>
 
-                            <FormGroup>
-                                <label>Email</label>
-                                <input
-                                    type="email"
-                                    value={regForm.email}
-                                    onChange={e => setRegForm({ ...regForm, email: e.target.value })}
-                                    placeholder="email@ejemplo.com"
-                                    required
-                                />
-                            </FormGroup>
+                                <SectionHeader>Datos Personales</SectionHeader>
 
-                            <FormRow>
                                 <FormGroup>
-                                    <label>DNI / Documento</label>
+                                    <label>Nombre Completo</label>
                                     <input
-                                        value={regForm.documentNumber}
-                                        onChange={e => setRegForm({ ...regForm, documentNumber: e.target.value })}
-                                        placeholder="Número de documento"
+                                        value={regForm.fullName}
+                                        onChange={e => setRegForm({ ...regForm, fullName: e.target.value })}
+                                        placeholder="Nombre y Apellido"
                                         required
                                     />
                                 </FormGroup>
+
                                 <FormGroup>
-                                    <label>Teléfono</label>
+                                    <label>Email</label>
                                     <input
-                                        value={regForm.phone}
-                                        onChange={e => setRegForm({ ...regForm, phone: e.target.value })}
-                                        placeholder="+54 9 ..."
+                                        type="email"
+                                        value={regForm.email}
+                                        onChange={e => setRegForm({ ...regForm, email: e.target.value })}
+                                        placeholder="email@ejemplo.com"
+                                        required
                                     />
                                 </FormGroup>
-                            </FormRow>
-                            <FormGroup>
-                                <label>Dirección</label>
-                                <input
-                                    value={regForm.address}
-                                    onChange={e => setRegForm({ ...regForm, address: e.target.value })}
-                                    placeholder="Calle, Altura, Localidad"
-                                />
-                            </FormGroup>
 
-                            <SectionHeader>Datos REPROCANN</SectionHeader>
-                            <FormGroup>
-                                <label>Código de Vinculación / Número de Trámite</label>
-                                <input
-                                    value={regForm.reprocannNumber}
-                                    onChange={e => setRegForm({ ...regForm, reprocannNumber: e.target.value })}
-                                    placeholder="XXXX-XXXX-XXXX"
-                                    required
-                                />
-                            </FormGroup>
-                            <FormRow>
-                                <FormGroup style={{ position: 'relative', zIndex: 1001 }}>
-                                    <label>Fecha Emisión</label>
-                                    <CustomDatePicker
-                                        selected={regForm.issueDate ? new Date(regForm.issueDate) : null}
-                                        onChange={(val) => setRegForm({ ...regForm, issueDate: val ? val.toISOString().split('T')[0] : '' })}
-                                        placeholderText="Seleccionar Fecha"
+                                <FormRow>
+                                    <FormGroup>
+                                        <label>DNI / Documento</label>
+                                        <input
+                                            value={regForm.documentNumber}
+                                            onChange={e => setRegForm({ ...regForm, documentNumber: e.target.value })}
+                                            placeholder="Número de documento"
+                                            required
+                                        />
+                                    </FormGroup>
+                                    <FormGroup>
+                                        <label>Fecha de Nacimiento</label>
+                                        <input
+                                            type="date"
+                                            value={regForm.dateOfBirth}
+                                            onChange={e => setRegForm({ ...regForm, dateOfBirth: e.target.value })}
+                                            required
+                                        />
+                                    </FormGroup>
+                                </FormRow>
+                                <FormRow>
+                                    <FormGroup>
+                                        <label>Teléfono</label>
+                                        <input
+                                            value={regForm.phone}
+                                            onChange={e => setRegForm({ ...regForm, phone: e.target.value })}
+                                            placeholder="+54 9 ..."
+                                        />
+                                    </FormGroup>
+                                    <FormGroup>
+                                        <label>Dirección</label>
+                                        <input
+                                            value={regForm.address}
+                                            onChange={e => setRegForm({ ...regForm, address: e.target.value })}
+                                            placeholder="Calle, Altura, Localidad"
+                                        />
+                                    </FormGroup>
+                                </FormRow>
+                                <FormRow>
+                                    <FormGroup>
+                                        <label>Patología / Condición Médica</label>
+                                        <input
+                                            value={regForm.pathology}
+                                            onChange={e => setRegForm({ ...regForm, pathology: e.target.value })}
+                                            placeholder="Ej. Dolor crónico, Insomnio, Ansiedad"
+                                        />
+                                    </FormGroup>
+                                </FormRow>
+
+                                {hasReprocann && (
+                                    <>
+                                        <SectionHeader>Datos REPROCANN</SectionHeader>
+                                        <FormGroup>
+                                            <label>Código de Vinculación / Número de Trámite</label>
+                                            <input
+                                                value={regForm.reprocannNumber}
+                                                onChange={e => setRegForm({ ...regForm, reprocannNumber: e.target.value })}
+                                                placeholder="XXXX-XXXX-XXXX"
+                                                required={hasReprocann}
+                                            />
+                                        </FormGroup>
+                                        <FormRow>
+                                            <FormGroup style={{ position: 'relative', zIndex: 1001 }}>
+                                                <label>Fecha Emisión</label>
+                                                <CustomDatePicker
+                                                    selected={regForm.issueDate ? new Date(regForm.issueDate) : null}
+                                                    onChange={(val) => setRegForm({ ...regForm, issueDate: val ? val.toISOString().split('T')[0] : '' })}
+                                                    placeholderText="Seleccionar Fecha"
+                                                />
+                                            </FormGroup>
+                                            <FormGroup style={{ position: 'relative', zIndex: 1001 }}>
+                                                <label>Fecha Vencimiento</label>
+                                                <CustomDatePicker
+                                                    selected={regForm.expirationDate ? new Date(regForm.expirationDate) : null}
+                                                    onChange={(val) => setRegForm({ ...regForm, expirationDate: val ? val.toISOString().split('T')[0] : '' })}
+                                                    placeholderText="Seleccionar Fecha"
+                                                />
+                                            </FormGroup>
+                                        </FormRow>
+
+                                        <SectionHeader>Documentación (Adjuntos)</SectionHeader>
+
+                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+                                            <FormGroup>
+                                                <label>Credencial REPROCANN</label>
+                                                <FileUploadBox onClick={() => document.getElementById('file-reprocann')?.click()}>
+                                                    {files.reprocann ? <FaCheckCircle color="green" size={24} /> : <FaFileUpload size={24} color="#a0aec0" />}
+                                                    <p style={{ fontSize: '0.8rem', marginTop: '0.5rem' }}>
+                                                        {files.reprocann ? files.reprocann.name : 'Subir Credencial'}
+                                                    </p>
+                                                    <input id="file-reprocann" type="file" onChange={e => handleFileChange('reprocann', e)} accept="image/*,.pdf" />
+                                                </FileUploadBox>
+                                            </FormGroup>
+
+                                            <FormGroup>
+                                                <label>Declaración Jurada</label>
+                                                <FileUploadBox onClick={() => document.getElementById('file-affidavit')?.click()}>
+                                                    {files.affidavit ? <FaCheckCircle color="green" size={24} /> : <FaFileUpload size={24} color="#a0aec0" />}
+                                                    <p style={{ fontSize: '0.8rem', marginTop: '0.5rem' }}>
+                                                        {files.affidavit ? files.affidavit.name : 'Subir DDJJ'}
+                                                    </p>
+                                                    <input id="file-affidavit" type="file" onChange={e => handleFileChange('affidavit', e)} accept=".pdf,image/*" />
+                                                </FileUploadBox>
+                                            </FormGroup>
+
+                                            <FormGroup>
+                                                <label>Consentimiento Bilateral</label>
+                                                <FileUploadBox onClick={() => document.getElementById('file-consent')?.click()}>
+                                                    {files.consent ? <FaCheckCircle color="green" size={24} /> : <FaFileUpload size={24} color="#a0aec0" />}
+                                                    <p style={{ fontSize: '0.8rem', marginTop: '0.5rem' }}>
+                                                        {files.consent ? files.consent.name : 'Subir Consentimiento'}
+                                                    </p>
+                                                    <input id="file-consent" type="file" onChange={e => handleFileChange('consent', e)} accept=".pdf,image/*" />
+                                                </FileUploadBox>
+                                            </FormGroup>
+                                        </div>
+                                    </>
+                                )}
+
+                                <FormGroup style={{ marginTop: '1rem' }}>
+                                    <label>Notas Adicionales</label>
+                                    <textarea
+                                        value={regForm.notes}
+                                        onChange={e => setRegForm({ ...regForm, notes: e.target.value })}
+                                        placeholder="Observaciones sobre documentación o paciente..."
                                     />
                                 </FormGroup>
-                                <FormGroup style={{ position: 'relative', zIndex: 1001 }}>
-                                    <label>Fecha Vencimiento</label>
-                                    <CustomDatePicker
-                                        selected={regForm.expirationDate ? new Date(regForm.expirationDate) : null}
-                                        onChange={(val) => setRegForm({ ...regForm, expirationDate: val ? val.toISOString().split('T')[0] : '' })}
-                                        placeholderText="Seleccionar Fecha"
-                                    />
-                                </FormGroup>
-                            </FormRow>
 
-                            <SectionHeader>Documentación (Adjuntos)</SectionHeader>
-
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
-                                <FormGroup>
-                                    <label>Credencial REPROCANN</label>
-                                    <FileUploadBox onClick={() => document.getElementById('file-reprocann')?.click()}>
-                                        {files.reprocann ? <FaCheckCircle color="green" size={24} /> : <FaFileUpload size={24} color="#a0aec0" />}
-                                        <p style={{ fontSize: '0.8rem', marginTop: '0.5rem' }}>
-                                            {files.reprocann ? files.reprocann.name : 'Subir Credencial'}
-                                        </p>
-                                        <input id="file-reprocann" type="file" onChange={e => handleFileChange('reprocann', e)} accept="image/*,.pdf" />
-                                    </FileUploadBox>
-                                </FormGroup>
-
-                                <FormGroup>
-                                    <label>Declaración Jurada</label>
-                                    <FileUploadBox onClick={() => document.getElementById('file-affidavit')?.click()}>
-                                        {files.affidavit ? <FaCheckCircle color="green" size={24} /> : <FaFileUpload size={24} color="#a0aec0" />}
-                                        <p style={{ fontSize: '0.8rem', marginTop: '0.5rem' }}>
-                                            {files.affidavit ? files.affidavit.name : 'Subir DDJJ'}
-                                        </p>
-                                        <input id="file-affidavit" type="file" onChange={e => handleFileChange('affidavit', e)} accept=".pdf,image/*" />
-                                    </FileUploadBox>
-                                </FormGroup>
-
-                                <FormGroup>
-                                    <label>Consentimiento Bilateral</label>
-                                    <FileUploadBox onClick={() => document.getElementById('file-consent')?.click()}>
-                                        {files.consent ? <FaCheckCircle color="green" size={24} /> : <FaFileUpload size={24} color="#a0aec0" />}
-                                        <p style={{ fontSize: '0.8rem', marginTop: '0.5rem' }}>
-                                            {files.consent ? files.consent.name : 'Subir Consentimiento'}
-                                        </p>
-                                        <input id="file-consent" type="file" onChange={e => handleFileChange('consent', e)} accept=".pdf,image/*" />
-                                    </FileUploadBox>
-                                </FormGroup>
-                            </div>
-
-                            <FormGroup style={{ marginTop: '1rem' }}>
-                                <label>Notas Adicionales</label>
-                                <textarea
-                                    value={regForm.notes}
-                                    onChange={e => setRegForm({ ...regForm, notes: e.target.value })}
-                                    placeholder="Observaciones sobre documentación o paciente..."
-                                />
-                            </FormGroup>
-
-                            <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem', justifyContent: 'flex-end' }}>
-                                <ActionButton type="button" style={{ background: 'rgba(100, 116, 139, 0.2)', color: '#cbd5e1', borderColor: 'transparent' }} onClick={() => { closeAddModal(); resetForm(); }}>Cancelar</ActionButton>
-                                <ActionButton type="submit" disabled={isSubmitting}>
-                                    {isSubmitting ? 'Guardando...' : 'Registrar Socio'}
-                                </ActionButton>
-                            </div>
-                        </form>
+                                <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem', justifyContent: 'flex-end', borderTop: '1px solid rgba(255, 255, 255, 0.1)', paddingTop: '1.5rem' }}>
+                                    <ActionButton type="button" style={{ background: 'rgba(100, 116, 139, 0.2)', color: '#cbd5e1', borderColor: 'transparent' }} onClick={() => { closeAddModal(); resetForm(); }}>Cancelar</ActionButton>
+                                    <ActionButton type="button" style={{ background: 'rgba(56, 189, 248, 0.1)', color: '#38bdf8', borderColor: 'transparent' }} onClick={() => setHasReprocann(null)}>Atrás</ActionButton>
+                                    <ActionButton type="submit" disabled={isSubmitting}>
+                                        {isSubmitting ? 'Guardando...' : 'Registrar Socio'}
+                                    </ActionButton>
+                                </div>
+                            </form>
+                        )}
                     </ModalContent>
                 </Modal>
 
@@ -862,8 +954,8 @@ const Patients: React.FC = () => {
                     type={toastType}
                     onClose={() => setToastOpen(false)}
                 />
-            </div>
-        </PageContainer>
+            </div >
+        </PageContainer >
     );
 };
 

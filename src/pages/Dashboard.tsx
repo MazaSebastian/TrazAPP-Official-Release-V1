@@ -25,6 +25,7 @@ import { useAuth } from '../context/AuthContext';
 import { useData } from '../context/DataContext';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { GuidedTour } from '../components/GuidedTour';
+import { MedicoDashboard } from '../components/MedicoDashboard';
 
 
 // --- Styled Components (Premium Eco-Tech Theme) ---
@@ -90,13 +91,17 @@ const WelcomeHeader = styled.div`
 const DateDisplay = styled.div`
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  margin-top: 0.5rem;
-  color: #4a5568;
-  font-size: 1rem;
-  font-weight: 600;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  color: #cbd5e1; /* Lighter, more premium slate */
+  font-size: 1.25rem; /* Larger font size */
+  font-weight: 500;
+  letter-spacing: 0.025em;
   
-  svg { color: #3182ce; }
+  svg { 
+    color: #38bdf8; /* Brighter accent blue */
+    font-size: 1.35rem; /* Make icons slightly larger too */
+  }
 `;
 
 const KPISection = styled.div`
@@ -574,6 +579,14 @@ const Dashboard: React.FC = () => {
   const { tasks, crops, rooms, stickies, isLoading, refreshData, updateStickies, updateTasks } = useData();
   const [alerts, setAlerts] = useState<any[]>([]);
 
+  // Time state for the clock
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 60000);
+    return () => clearInterval(timer);
+  }, []);
+
   // Sticky Modal State
   const [isStickyModalOpen, setIsStickyModalOpen] = useState(false);
   const [isClosingStickyModal, setIsClosingStickyModal] = useState(false);
@@ -617,6 +630,16 @@ const Dashboard: React.FC = () => {
   // Redirect Super Admin (Placed after all hooks)
   if ((user?.role as string) === 'super_admin') {
     return <Navigate to="/admin" replace />;
+  }
+
+  // Medico Dashboard (Placed after all hooks)
+  if (user?.role === 'medico') {
+    return (
+      <>
+        <GuidedTour />
+        <MedicoDashboard />
+      </>
+    );
   }
 
   const handleCreateSticky = async () => {
@@ -667,11 +690,13 @@ const Dashboard: React.FC = () => {
     <Container>
       <GuidedTour />
       <WelcomeHeader className="tour-welcome">
-        <h1>Panel de Control</h1>
-        <p>Bienvenido de nuevo, {user?.name || 'Cultivador'}. Aquí está el estado actual de tus cultivos.</p>
+        <h1>Hola, {user?.name || 'Cultivador'}, ¿qué vamos a hacer hoy?</h1>
         <DateDisplay>
           <FaCalendarCheck />
-          {format(new Date(), "EEEE, d 'de' MMMM 'de' yyyy", { locale: es })}
+          {format(currentTime, "EEEE, d 'de' MMMM 'de' yyyy", { locale: es })}
+          <span style={{ margin: '0 0.5rem', opacity: 0.5 }}>|</span>
+          <FaClock />
+          {format(currentTime, "HH:mm")}
         </DateDisplay>
       </WelcomeHeader>
 

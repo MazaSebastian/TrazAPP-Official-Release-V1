@@ -13,6 +13,8 @@ export interface Patient {
     notes?: string;
 
     // New Fields
+    date_of_birth?: string;
+    pathology?: string;
     phone?: string;
     address?: string;
     document_number?: string;
@@ -327,7 +329,10 @@ export const patientsService = {
 
         const { data, error } = await supabase
             .from('clinical_evolutions')
-            .insert([{ ...evolution, organization_id: getSelectedOrgId() }])
+            .insert([{
+                ...evolution,
+                organization_id: getSelectedOrgId()
+            }])
             .select()
             .single();
 
