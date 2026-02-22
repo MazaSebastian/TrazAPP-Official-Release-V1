@@ -1,731 +1,707 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import styled from 'styled-components';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '../services/supabaseClient';
 import { inviteService } from '../services/inviteService';
 import { useAuth } from '../context/AuthContext';
-import { FaCheckCircle, FaExclamationTriangle, FaEye, FaEyeSlash, FaChevronDown } from 'react-icons/fa';
+import { FaCheckCircle, FaExclamationTriangle, FaEye, FaEyeSlash, FaArrowRight } from 'react-icons/fa';
+import { motion, AnimatePresence } from 'framer-motion';
+
+import Antigravity from '../components/Antigravity';
 import Aurora from '../components/Aurora';
 import BlurText from '../components/BlurText';
-
-const fadeIn = `
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-`;
-
-const fadeOut = `
-  @keyframes fadeOut {
-    from { opacity: 1; }
-    to { opacity: 0; }
-  }
-`;
-
-const pulseGlow = `
-  @keyframes pulseGlow {
-    0% { transform: scale(1); filter: drop-shadow(0 0 10px rgba(34, 197, 94, 0.4)); }
-    50% { transform: scale(1.05); filter: drop-shadow(0 0 25px rgba(34, 197, 94, 0.8)); }
-    100% { transform: scale(1); filter: drop-shadow(0 0 10px rgba(34, 197, 94, 0.4)); }
-  }
-`;
-
-const textReveal = `
-  @keyframes textReveal {
-    from { opacity: 0; transform: translateY(15px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-`;
+import SplitText from '../components/SplitText';
+import ShinyText from '../components/ShinyText';
+import StarBorder from '../components/StarBorder';
 
 const Container = styled.div`
-  ${fadeIn}
-  ${fadeOut}
-  ${pulseGlow}
-  ${textReveal}
   min-height: 100vh;
   display: flex;
-  align-items: center;
+  flex-direction: column;
   justify-content: center;
+  align-items: center;
   background: #020617;
-  padding: 1rem;
+  padding: 2rem 1rem;
   position: relative;
   overflow: hidden;
-`;
-
-const WelcomeOverlay = styled.div<{ $fadingOut?: boolean }>`
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: #020617; /* Very dark slate to make logo pop */
-  z-index: 9999;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  animation: ${props => props.$fadingOut ? 'fadeOut 0.6s ease-out forwards' : 'fadeIn 0.5s ease-out'};
-  pointer-events: ${props => props.$fadingOut ? 'none' : 'auto'};
-`;
-
-const WelcomeLogo = styled.img`
-  width: 120px;
-  height: auto;
-  margin-bottom: 2rem;
-  animation: pulseGlow 2.5s infinite ease-in-out;
-  position: relative;
-  z-index: 10;
-`;
-
-const WelcomeText = styled.div`
-  margin: 0;
-  text-align: center;
-  position: relative;
-  z-index: 10;
-
-  .blur-text-container p {
-    color: #22c55e;
-    font-size: 2.5rem;
-    font-weight: 800;
-    letter-spacing: -0.025em;
-    text-shadow: 0 0 15px rgba(34, 197, 94, 0.3);
-    margin-bottom: 0px;
-    justify-content: center;
-
-    @media (max-width: 640px) {
-      font-size: 1.75rem;
-    }
-  }
-`;
-
-const WelcomeSubtext = styled.div`
-  margin-top: 1rem;
-  text-align: center;
-  position: relative;
-  z-index: 10;
-
-  .blur-text-container p {
-    color: #94a3b8;
-    font-size: 1.1rem;
-    justify-content: center;
-    margin-bottom: 0px;
-  }
-`;
-
-const Card = styled.div<{ $fadingIn?: boolean }>`
-  background: rgba(15, 23, 42, 0.4);
-  backdrop-filter: blur(24px);
-  border-radius: 1.5rem;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-  padding: 3rem;
-  width: 100%;
-  max-width: 480px;
-  position: relative;
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-top: 1px solid rgba(255, 255, 255, 0.15);
-  z-index: 10;
-  animation: ${props => props.$fadingIn ? 'fadeIn 0.6s ease-out forwards' : 'none'};
-  opacity: ${props => props.$fadingIn ? 0 : 1};
-`;
-
-const Title = styled.h2`
-  text-align: center;
-  color: #4ade80;
-  font-size: 1.75rem;
-  font-weight: 800;
-  margin-bottom: 0.5rem;
-`;
-
-const Subtitle = styled.p`
-  text-align: center;
-  color: #94a3b8;
-  font-size: 1rem;
-  margin-bottom: 2rem;
-`;
-
-const Form = styled.form`
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-`;
-
-const FormGroup = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-`;
-
-const Label = styled.label`
-  font-weight: 600;
-  color: #cbd5e1;
-  font-size: 0.875rem;
-`;
-
-const Input = styled.input`
-  width: 100%;
-  padding: 0.875rem 1rem;
-  border: 1px solid #334155;
-  border-radius: 0.75rem;
-  font-size: 1rem;
-  transition: all 0.2s;
-  background: rgba(30, 41, 59, 0.5);
   color: #f8fafc;
-
-  &:focus {
-    outline: none;
-    border-color: #22c55e;
-    background: rgba(30, 41, 59, 0.8);
-    box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.15);
-  }
-
-  &:disabled {
-    background: rgba(15, 23, 42, 0.5);
-    cursor: not-allowed;
-    color: #64748b;
-    border-color: #1e293b;
-  }
+  
+  /* Shared Tailwind-like utility classes */
+  .text-4xl { font-size: 2.25rem; line-height: 2.5rem; }
+  .text-5xl { font-size: 3rem; line-height: 1; }
+  .text-3xl { font-size: 1.875rem; line-height: 2.25rem; }
+  .text-2xl { font-size: 1.5rem; line-height: 2rem; }
+  .font-bold { font-weight: 700; }
+  .font-semibold { font-weight: 600; }
+  .text-green-400 { color: #4ade80; }
+  .mb-12 { margin-bottom: 3rem; }
+  .text-center { text-align: center; }
 `;
 
-const DropdownContainer = styled.div`
+const ContentWrapper = styled.div`
+  width: 100%;
+  max-width: 800px;
   position: relative;
-  width: 100%;
-`;
-
-const DropdownHeader = styled.div<{ $isOpen: boolean; $hasValue: boolean }>`
-  width: 100%;
-  padding: 0.875rem 1rem;
-  border: 1px solid ${props => props.$isOpen ? '#22c55e' : '#334155'};
-  border-radius: 0.75rem;
-  font-size: 1rem;
-  transition: all 0.2s;
-  background: ${props => props.$isOpen ? 'rgba(30, 41, 59, 0.8)' : 'rgba(30, 41, 59, 0.5)'};
-  color: ${props => props.$hasValue ? '#f8fafc' : '#94a3b8'};
-  cursor: pointer;
+  z-index: 10;
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
   align-items: center;
-  box-shadow: ${props => props.$isOpen ? '0 0 0 3px rgba(34, 197, 94, 0.15)' : 'none'};
-
-  &:hover {
-    border-color: #22c55e;
-  }
+  justify-content: center;
 `;
 
-const DropdownList = styled.ul`
+const StepContainer = styled(motion.div)`
   position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
-  margin-top: 0.5rem;
-  padding: 0.5rem;
-  background: #1e293b;
-  border-radius: 0.75rem;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
-  border: 1px solid #334155;
-  list-style: none;
-  z-index: 50;
-  max-height: 250px;
-  overflow-y: auto;
-  animation: fadeIn 0.2s ease-out;
-
-  &::-webkit-scrollbar {
-    width: 6px;
-  }
-  &::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
-    border-radius: 3px;
-  }
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 `;
 
-const DropdownItem = styled.li<{ $isSelected: boolean }>`
-  padding: 0.75rem 1rem;
-  border-radius: 0.5rem;
-  cursor: pointer;
-  font-size: 0.95rem;
-  color: ${props => props.$isSelected ? '#4ade80' : '#cbd5e1'};
-  background: ${props => props.$isSelected ? 'rgba(34, 197, 94, 0.1)' : 'transparent'};
-  transition: all 0.15s;
-  font-weight: ${props => props.$isSelected ? '600' : '400'};
-
-  &:hover {
-    background: ${props => props.$isSelected ? 'rgba(34, 197, 94, 0.15)' : 'rgba(30, 41, 59, 0.8)'};
-  }
-`;
-
-const PasswordWrapper = styled.div`
+const InputCardWrapper = styled.div`
+  width: 100%;
+  max-width: 400px;
   position: relative;
   
-  input {
-    padding-right: 2.5rem;
+  .star-border-container {
+    width: 100%;
+    display: block;
+    border-radius: 1rem !important;
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(24px);
+    box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  .inner-content {
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    text-align: left !important;
+    display: flex;
+    align-items: center;
+    border-radius: inherit;
   }
 `;
 
-const ToggleButton = styled.button`
-  position: absolute;
-  right: 0.75rem;
-  top: 50%;
-  transform: translateY(-50%);
+const StyledInput = styled.input`
+  flex: 1;
+  background: transparent;
+  border: none;
+  padding: 1rem 1.5rem;
+  color: #f8fafc;
+  font-size: 1.125rem;
+  font-weight: 500;
+  outline: none;
+  text-align: center;
+
+  &:focus, &:focus-visible {
+    outline: none !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+
+  &::placeholder {
+    color: #64748b;
+    font-weight: 400;
+  }
+  
+  &:disabled {
+    color: #94a3b8;
+  }
+`;
+
+const IconButton = styled.button`
+  background: #22c55e;
+  border: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  margin-right: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+  
+  &:hover:not(:disabled) {
+    background: #16a34a;
+    transform: scale(1.05);
+  }
+  
+  &:disabled {
+    background: #334155;
+    color: #64748b;
+    cursor: not-allowed;
+    transform: none;
+  }
+`;
+
+const ValidationButton = styled.button`
+  margin-top: 2rem;
+  padding: 0.8rem 2rem;
+  background: rgba(34, 197, 94, 0.1); /* Subtle transparent green */
+  border: 1px solid rgba(34, 197, 94, 0.4);
+  color: #4ade80;
+  font-size: 1.1rem;
+  font-weight: 500;
+  border-radius: 3rem; /* Pill shape */
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(10px);
+
+  &:hover {
+    background: rgba(34, 197, 94, 0.2);
+    border-color: rgba(34, 197, 94, 0.8);
+    box-shadow: 0 0 20px rgba(34, 197, 94, 0.3);
+    color: #fff;
+    transform: translateY(-2px);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+`;
+
+const PasswordToggle = styled.button`
   background: none;
   border: none;
   color: #94a3b8;
+  padding: 0 1rem;
   cursor: pointer;
-  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   
   &:hover {
     color: #f8fafc;
   }
 `;
 
-const SubmitButton = styled.button`
+const SummaryCard = styled.div`
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  padding: 2.5rem 2rem;
+  border-radius: 1.5rem;
+  backdrop-filter: blur(24px);
   width: 100%;
-  padding: 0.875rem;
-  background: #16a34a;
-  color: white;
-  border: none;
-  border-radius: 0.75rem;
-  font-weight: 600;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: all 0.2s;
-  margin-top: 1rem;
-  box-shadow: 0 4px 6px -1px rgba(22, 163, 74, 0.2);
-
-  &:hover {
-    background: #15803d;
-    transform: translateY(-1px);
-    box-shadow: 0 10px 15px -3px rgba(22, 163, 74, 0.3);
-  }
-
-  &:disabled {
-    opacity: 0.7;
-    cursor: not-allowed;
-    background: #9ca3af;
-    transform: none;
-    box-shadow: none;
-  }
-`;
-
-const Message = styled.div<{ $type: 'error' | 'info' | 'success' }>`
-  background: ${props => props.$type === 'error' ? 'rgba(127, 29, 29, 0.2)' : props.$type === 'success' ? 'rgba(20, 83, 45, 0.2)' : 'rgba(30, 58, 138, 0.2)'};
-  border-left: 4px solid ${props => props.$type === 'error' ? '#ef4444' : props.$type === 'success' ? '#22c55e' : '#3b82f6'};
-  color: ${props => props.$type === 'error' ? '#fca5a5' : props.$type === 'success' ? '#86efac' : '#93c5fd'};
-  padding: 0.75rem 1rem;
-  border-radius: 0.25rem;
-  font-size: 0.875rem;
+  max-width: 500px;
+  box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.5);
   display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 1.5rem;
+  flex-direction: column;
+  gap: 1.2rem;
 `;
 
-const Divider = styled.div`
+const SummaryRow = styled.div`
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  text-align: center;
-  color: #94a3b8;
-  font-size: 0.875rem;
-  margin: 1rem 0;
-
-  &::before,
-  &::after {
-    content: '';
-    flex: 1;
-    border-bottom: 1px solid #334155;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.1);
+  padding-bottom: 1rem;
+  
+  &:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
   }
-
-  &::before {
-    margin-right: .5em;
+  
+  .label {
+    color: #94a3b8;
+    font-size: 0.95rem;
   }
-
-  &::after {
-    margin-left: .5em;
+  
+  .value {
+    color: #f8fafc;
+    font-weight: 500;
+    font-size: 1.05rem;
+  }
+  
+  .value.highlight {
+    color: #4ade80;
+    font-weight: 600;
   }
 `;
-
-const referralOptions = [
-  { value: 'recommendation', label: 'Recomendación de un amigo' },
-  { value: 'social_media', label: 'Redes Sociales (Instagram, Meta)' },
-  { value: 'web_search', label: 'Búsqueda Web (Google)' },
-  { value: 'event', label: 'Evento / Expo' },
-  { value: 'other', label: 'Otro' },
-];
 
 const Register: React.FC = () => {
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token');
   const navigate = useNavigate();
-  const { user } = useAuth(); // Assume auth context provides current user
+  const { user } = useAuth();
 
-  const [inviteDetails, setInviteDetails] = useState<any>(null);
-  const [status, setStatus] = useState<'validating' | 'valid' | 'invalid' | 'registered'>('validating');
-  const [isFadingOut, setIsFadingOut] = useState(false);
+  const [status, setStatus] = useState<'validating' | 'invalid'>('validating');
   const [errorMsg, setErrorMsg] = useState('');
+  const [inviteDetails, setInviteDetails] = useState<any>(null);
 
-  const [name, setName] = useState('');
-  const [ongName, setOngName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [referralSource, setReferralSource] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  // Flow State
+  // 0: Validating
+  // 1: ¡Hola!
+  // 2: ¡Bienvenido a TrazAPP!
+  // 3: Name Input
+  // 4: Email Input (Confirmation)
+  // 5: Phone Input
+  // 6: Password Input
+  // 7: ¡Excelente!
+  // 8: Configuring / API Call
+  // 9: Success
+  const [step, setStep] = useState(0);
+  const [inputValue, setInputValue] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [showSummaryPassword, setShowSummaryPassword] = useState(false);
 
-  // Redirect if already logged in and using a register link
+  const [data, setData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    password: ''
+  });
+
+  const inputRef = useRef<HTMLInputElement>(null);
+
   useEffect(() => {
-    if (user) {
+    // Only auto-redirect if the user is already logged in before starting the registration flow
+    if (user && step === 0) {
       navigate('/', { replace: true });
     }
-  }, [user, navigate]);
+  }, [user, navigate, step]);
 
+  // Initial Validation
   useEffect(() => {
     const validateToken = async () => {
       if (!token) {
         setStatus('invalid');
-        setErrorMsg('No se proporcionó un token de invitación válido en la URL.');
+        setErrorMsg('No se proporcionó un token de invitación válido.');
         return;
       }
 
-      // Force a minimum delay of 3.5 seconds to show the pretty animation
-      const minDelay = new Promise(resolve => setTimeout(resolve, 3500));
-
       try {
-        const invitePromise = inviteService.getInviteByToken(token);
-
-        const [invite] = await Promise.all([invitePromise, minDelay]);
-
-        const transition = async (newStatus: 'valid' | 'invalid', msg?: string) => {
-          setIsFadingOut(true);
-          await new Promise(res => setTimeout(res, 500)); // Wait for fade out
-          if (msg) setErrorMsg(msg);
-          setStatus(newStatus);
-        };
-
-        if (!invite) {
-          await transition('invalid', 'La invitación no existe o ha sido eliminada.');
-          return;
-        }
-
-        if (invite.status !== 'pending') {
-          await transition('invalid', `Esta invitación ya ha sido utilizada o se encuentra en estado: ${invite.status}.`);
-          return;
-        }
-
-        if (new Date(invite.expires_at) < new Date()) {
-          await transition('invalid', 'El enlace de invitación ha expirado.');
+        const invite = await inviteService.getInviteByToken(token);
+        if (!invite || invite.status !== 'pending' || new Date(invite.expires_at) < new Date()) {
+          setStatus('invalid');
+          setErrorMsg('La invitación no existe, ha expirado o ya fue utilizada.');
           return;
         }
 
         setInviteDetails(invite);
-        await transition('valid');
+        setData(prev => ({ ...prev, email: invite.email }));
 
+        // Begin the cinematic flow smoothly
+        setTimeout(() => setStep(1), 1000);
       } catch (err: any) {
-        await minDelay; // Ensure animation finishes even on error
-        setIsFadingOut(true);
-        await new Promise(res => setTimeout(res, 500));
         setStatus('invalid');
-        setErrorMsg('Ocurrió un error al validar la invitación.');
-        console.error('Error validating token:', err);
+        setErrorMsg('Error al validar invitación.');
       }
     };
-
     validateToken();
   }, [token]);
 
-  const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setErrorMsg('');
-
-    if (password !== confirmPassword) {
-      setErrorMsg('Las contraseñas no coinciden.');
-      return;
+  // Auto-advance cinematic text steps
+  useEffect(() => {
+    if (step === 1) {
+      setTimeout(() => setStep(2), 2500); // 1.5s reading time + 1s split animation
+    } else if (step === 2) {
+      setTimeout(() => setStep(3), 3000);
+    } else if (step === 8) {
+      setTimeout(() => setStep(9), 3500);
+    } else if (step === 9) {
+      // Delay the actual API call logic by 1.2s to allow the ShinyText (Step 9) 
+      // to smoothly scale and blur in via AnimatePresence before we freeze the JS thread or calculate time.
+      setTimeout(() => {
+        submitRegistration();
+      }, 1200);
     }
+  }, [step]);
 
-    if (password.length < 6) {
-      setErrorMsg('La contraseña debe tener al menos 6 caracteres.');
-      return;
+  // Auto-fill and focus
+  useEffect(() => {
+    if (step === 3 || step === 5 || step === 6) {
+      setInputValue('');
+      setTimeout(() => inputRef.current?.focus(), 1500); // wait for text to animate then input to appear
+    } else if (step === 4) {
+      setInputValue(data.email);
     }
+  }, [step, data.email]);
 
-    if (!name.trim()) {
-      setErrorMsg('Por favor, ingresa tu nombre.');
-      return;
+  const handleNext = () => {
+    if (step === 3) {
+      if (!inputValue.trim()) return;
+      setData(prev => ({ ...prev, name: inputValue.trim() }));
+      setStep(4);
+    } else if (step === 4) {
+      setStep(5);
+    } else if (step === 5) {
+      if (!inputValue.trim()) return;
+      setData(prev => ({ ...prev, phone: inputValue.trim() }));
+      setStep(6);
+    } else if (step === 6) {
+      if (inputValue.length < 6) return;
+      setData(prev => ({ ...prev, password: inputValue }));
+      setStep(7);
     }
+  };
 
-    if (!phone.trim()) {
-      setErrorMsg('Por favor, ingresa tu número de teléfono.');
-      return;
-    }
-
-    if (!referralSource) {
-      setErrorMsg('Por favor, indícanos cómo nos conociste.');
-      return;
-    }
-
-    const isOng = inviteDetails?.organization?.plan === 'ong';
-    if (isOng && !ongName.trim()) {
-      setErrorMsg('Por favor, ingresa el nombre de la ONG.');
-      return;
-    }
-
-    setIsSubmitting(true);
-
+  const submitRegistration = async () => {
     try {
-      // 1. Sign up user via Supabase Auth
+      // Record start time to enforce a 10-second cinematic delay for the ShinyText step
+      const startTime = Date.now();
+
       const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: inviteDetails.email,
-        password: password,
+        email: data.email,
+        password: data.password,
         options: {
           data: {
-            name: name, // Some integrations expect 'name'
-            full_name: name, // The trigger likely expects 'full_name'
+            name: data.name,
+            full_name: data.name,
             role: inviteDetails.role === 'owner' ? 'admin' : inviteDetails.role
           }
         }
       });
 
-      if (authError) {
-        throw authError;
-      }
-
-      if (!authData.user) {
-        throw new Error('No se pudo crear el usuario.');
-      }
+      if (authError) throw authError;
+      if (!authData.user) throw new Error('No se pudo crear el usuario.');
 
       const userId = authData.user.id;
 
-      // 2. Call the RPC to securely handle the rest of the registration
-      // The RPC runs as SECURITY DEFINER and bypasses the 401 RLS limitations for unauthenticated users.
-      const isOng = inviteDetails?.organization?.plan === 'ong';
       const { error: rpcError } = await supabase.rpc('accept_invitation', {
         p_token: token,
         p_user_id: userId,
-        p_full_name: name,
-        p_phone: phone,
-        p_referral_source: referralSource,
-        p_ong_name: isOng && ongName.trim() ? ongName.trim() : null
+        p_full_name: data.name,
+        p_phone: data.phone,
+        p_referral_source: 'other',
+        p_ong_name: null
       });
 
-      if (rpcError) {
-        console.error('Error during secure registration step:', rpcError);
-        throw new Error('No se pudo completar el registro. ' + rpcError.message);
+      if (rpcError) throw new Error(rpcError.message);
+
+      // Enforce the 10 second minimum display for "Configurando tu sistema"
+      const elapsed = Date.now() - startTime;
+      const remainingTime = 10000 - elapsed;
+      if (remainingTime > 0) {
+        await new Promise(resolve => setTimeout(resolve, remainingTime));
       }
 
-      setStatus('registered');
+      setStep(10);
 
-      // Redirect to login after a few seconds
-      setTimeout(() => {
-        navigate('/login?registered=true', { replace: true });
-      }, 3000);
+      // Sign out the automatically created session so the user has to login manually
+      await supabase.auth.signOut();
+
+      setTimeout(() => navigate('/login?registered=true', { replace: true }), 3000);
 
     } catch (err: any) {
+      setStatus('invalid');
       setErrorMsg(err.message || 'Ocurrió un error inesperado al registrarte.');
-      console.error('Registration error:', err);
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleNext();
+    }
+  };
+
+  // Variants for AnimatePresence
+  const stepVariants: any = {
+    initial: { opacity: 0, scale: 0.95, filter: 'blur(10px)' },
+    animate: { opacity: 1, scale: 1, filter: 'blur(0px)', transition: { duration: 0.8, ease: 'easeOut' } },
+    exit: { opacity: 0, scale: 1.05, filter: 'blur(10px)', transition: { duration: 0.8, ease: 'easeIn' } }
+  };
+
+  if (status === 'invalid') {
+    return (
+      <Container>
+        <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0 }}>
+          <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0.6 }}>
+            <Aurora colorStops={["#199301", "#7cff67", "#037233"]} amplitude={1} blend={1} />
+          </div>
+          <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0.6 }}>
+            <Antigravity
+              count={1000}
+              magnetRadius={10}
+              ringRadius={15}
+              waveSpeed={0.5}
+              waveAmplitude={2.6}
+              particleSize={0.5}
+              lerpSpeed={0.17}
+              color="#00ff59"
+              autoAnimate={false}
+              particleVariance={0.8}
+              rotationSpeed={0.1}
+              depthFactor={0.9}
+              pulseSpeed={2.5}
+              particleShape="capsule"
+              fieldStrength={15}
+            />
+          </div>
+        </div>
+        <ContentWrapper style={{ background: 'rgba(15, 23, 42, 0.4)', padding: '3rem', borderRadius: '1.5rem', backdropFilter: 'blur(24px)' }}>
+          <img src="/logotrazappfix.png" alt="Logo" style={{ width: '80px', margin: '0 0 2rem' }} />
+          <div style={{ background: 'rgba(127, 29, 29, 0.4)', color: '#fca5a5', border: '1px solid #ef4444', padding: '1rem', borderRadius: '0.5rem', display: 'flex', alignItems: 'center' }}>
+            <FaExclamationTriangle style={{ marginRight: '0.5rem' }} />
+            {errorMsg}
+          </div>
+          <button onClick={() => navigate('/login')} style={{ marginTop: '2rem', padding: '1rem 3rem', background: '#16a34a', color: 'white', borderRadius: '3rem', border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: '1.1rem' }}>Volver al Login</button>
+        </ContentWrapper>
+      </Container>
+    );
+  }
+
+  // The Main Cinematic Render
   return (
     <Container>
-      <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0, opacity: 0.6 }}>
-        <Aurora colorStops={['#16a34a', '#22c55e', '#0f172a']} speed={0.5} amplitude={1.2} />
+      <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0 }}>
+        <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0.6 }}>
+          <Aurora colorStops={["#199301", "#7cff67", "#037233"]} amplitude={1} blend={1} />
+        </div>
+        <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0.6 }}>
+          <Antigravity
+            count={1000}
+            magnetRadius={10}
+            ringRadius={15}
+            waveSpeed={0.5}
+            waveAmplitude={2.6}
+            particleSize={0.5}
+            lerpSpeed={0.17}
+            color="#00ff59"
+            autoAnimate={false}
+            particleVariance={0.8}
+            rotationSpeed={0.1}
+            depthFactor={0.9}
+            pulseSpeed={2.5}
+            particleShape="capsule"
+            fieldStrength={15}
+          />
+        </div>
       </div>
 
-      {status === 'validating' && (
-        <WelcomeOverlay $fadingOut={isFadingOut}>
-          <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0, opacity: 0.8 }}>
-            <Aurora colorStops={['#16a34a', '#22c55e', '#0f172a']} speed={0.5} amplitude={1.5} />
-          </div>
-          <WelcomeLogo src="/logotrazappfix.png" alt="TrazAPP Logo" />
-          <WelcomeText>
-            <div className="blur-text-container">
-              <BlurText text="¡Bienvenido a TrazAPP!" delay={50} animateBy="words" direction="bottom" />
-            </div>
-          </WelcomeText>
-          <WelcomeSubtext>
-            <div className="blur-text-container">
-              <BlurText text="Preparando tu entorno de trabajo..." delay={50} animateBy="words" direction="top" />
-            </div>
-          </WelcomeSubtext>
-        </WelcomeOverlay>
-      )}
+      <ContentWrapper style={{ minHeight: '300px' }}>
+        <AnimatePresence mode="wait">
 
-      {status !== 'validating' && (
-        <Card $fadingIn={true}>
-          <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-            <img src="/logotrazappfix.png" alt="Logo" style={{ width: '80px', height: 'auto', filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.1))' }} />
-          </div>
-
-          {status === 'invalid' && (
-            <>
-              <Title>Invitación Inválida</Title>
-              <Message $type="error">
-                <FaExclamationTriangle />
-                {errorMsg}
-              </Message>
-              <SubmitButton as="a" href="/login" style={{ textDecoration: 'none', display: 'block', textAlign: 'center' }}>
-                Ir al Inicio de Sesión
-              </SubmitButton>
-            </>
+          {step === 0 && (
+            <StepContainer key="step0" variants={stepVariants} initial="initial" animate="animate" exit="exit">
+              <img src="/logotrazappfix.png" alt="Logo" style={{ width: '120px' }} />
+              {/* <BlurText text="Validando invitación..." delay={50} direction="bottom" className="text-xl text-green-400" /> */}
+            </StepContainer>
           )}
 
-          {status === 'registered' && (
-            <>
-              <Title>¡Registro Exitoso!</Title>
-              <Message $type="success">
-                <FaCheckCircle />
-                Tu cuenta ha sido creada. Ahora puedes iniciar sesión en la plataforma.
-              </Message>
-              <p style={{ textAlign: 'center', fontSize: '0.875rem', color: '#64748b' }}>
-                Redirigiendo a la pantalla de acceso...
-              </p>
-            </>
+          {step === 1 && (
+            <StepContainer key="step1" variants={stepVariants} initial="initial" animate="animate" exit="exit">
+              <SplitText text="¡Hola!" delay={40} className="text-5xl font-bold" />
+            </StepContainer>
           )}
 
-          {status === 'valid' && inviteDetails && (
-            <>
-              <Title>Bienvenido a TrazAPP</Title>
-              <Subtitle>
-                Por favor completa los siguientes datos para acceder a tu sistema de gestión integral.
-              </Subtitle>
+          {step === 2 && (
+            <StepContainer key="step2" variants={stepVariants} initial="initial" animate="animate" exit="exit">
+              <SplitText text="¡Bienvenido a TrazAPP!" delay={40} className="text-5xl font-bold text-center" />
+            </StepContainer>
+          )}
 
-              <Form onSubmit={handleRegister}>
-                {errorMsg && (
-                  <Message $type="error">
-                    <FaExclamationTriangle />
-                    {errorMsg}
-                  </Message>
-                )}
-
-                <FormGroup>
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={inviteDetails.email}
-                    disabled
-                    readOnly
-                  />
-                </FormGroup>
-
-                <FormGroup>
-                  <Label htmlFor="name">Tu Nombre Completo</Label>
-                  <Input
-                    id="name"
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="Ej: Juan Pérez"
-                    required
-                  />
-                </FormGroup>
-
-                {inviteDetails.organization?.plan === 'ong' && (
-                  <FormGroup>
-                    <Label htmlFor="ongName">Nombre de la ONG</Label>
-                    <Input
-                      id="ongName"
+          {step === 3 && (
+            <StepContainer key="step3" variants={stepVariants} initial="initial" animate="animate" exit="exit">
+              <SplitText text="¿Podrías indicarnos tu nombre por favor?" delay={30} className="text-3xl font-semibold mb-12 text-center" />
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1.5, duration: 0.8 }}
+                style={{ width: '100%', display: 'flex', justifyContent: 'center' }}
+              >
+                <InputCardWrapper>
+                  <StarBorder as="div" color="#4ade80" speed="7s" thickness={2.5}>
+                    <StyledInput
+                      ref={inputRef}
                       type="text"
-                      value={ongName}
-                      onChange={(e) => setOngName(e.target.value)}
-                      placeholder="Ingrese el nombre de la ONG"
-                      required
+                      placeholder="Ingresa tu nombre..."
+                      value={inputValue}
+                      onChange={(e) => setInputValue(e.target.value)}
+                      onKeyDown={handleKeyDown}
                     />
-                  </FormGroup>
-                )}
-
-                <FormGroup>
-                  <Label htmlFor="phone">Número de Teléfono</Label>
-                  <Input
-                    id="phone"
-                    type="tel"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    placeholder="+54 9 11 ..."
-                    required
-                  />
-                </FormGroup>
-
-                <FormGroup>
-                  <Label>¿Cómo nos conociste?</Label>
-                  <DropdownContainer>
-                    <DropdownHeader
-                      $isOpen={isDropdownOpen}
-                      $hasValue={!!referralSource}
-                      onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                    >
-                      {referralSource ? referralOptions.find(o => o.value === referralSource)?.label : 'Seleccionar...'}
-                      <FaChevronDown style={{ transform: isDropdownOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s', color: '#94a3b8' }} />
-                    </DropdownHeader>
-
-                    {isDropdownOpen && (
-                      <>
-                        <div
-                          style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 40 }}
-                          onClick={() => setIsDropdownOpen(false)}
-                        />
-                        <DropdownList>
-                          {referralOptions.map(option => (
-                            <DropdownItem
-                              key={option.value}
-                              $isSelected={referralSource === option.value}
-                              onClick={() => {
-                                setReferralSource(option.value);
-                                setIsDropdownOpen(false);
-                              }}
-                            >
-                              {option.label}
-                            </DropdownItem>
-                          ))}
-                        </DropdownList>
-                      </>
-                    )}
-                  </DropdownContainer>
-                </FormGroup>
-
-                <Divider>Seguridad de la Cuenta</Divider>
-
-                <FormGroup>
-                  <Label htmlFor="password">Crea tu Contraseña</Label>
-                  <PasswordWrapper>
-                    <Input
-                      id="password"
-                      type={showPassword ? 'text' : 'password'}
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder="Min. 6 caracteres"
-                      required
-                      minLength={6}
-                    />
-                    <ToggleButton type="button" onClick={() => setShowPassword(!showPassword)}>
-                      {showPassword ? <FaEyeSlash /> : <FaEye />}
-                    </ToggleButton>
-                  </PasswordWrapper>
-                </FormGroup>
-
-                <FormGroup>
-                  <Label htmlFor="confirm_password">Repite la Contraseña</Label>
-                  <PasswordWrapper>
-                    <Input
-                      id="confirm_password"
-                      type={showPassword ? 'text' : 'password'}
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      placeholder="Confirmar contraseña"
-                      required
-                      minLength={6}
-                    />
-                  </PasswordWrapper>
-                </FormGroup>
-
-                <SubmitButton type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? 'Registrando...' : 'Ingresar a la Plataforma'}
-                </SubmitButton>
-              </Form>
-            </>
+                    <IconButton onClick={handleNext} disabled={!inputValue.trim()}>
+                      <FaArrowRight />
+                    </IconButton>
+                  </StarBorder>
+                </InputCardWrapper>
+              </motion.div>
+            </StepContainer>
           )}
-        </Card>
-      )}
+
+          {step === 4 && (
+            <StepContainer key="step4" variants={stepVariants} initial="initial" animate="animate" exit="exit">
+              <SplitText text={`Perfecto ${data.name.split(' ')[0]}. ¿Podrías confirmar tu email de acceso?`} delay={30} className="text-3xl font-semibold mb-12 text-center" />
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1.8, duration: 0.8 }}
+                style={{ width: '100%', display: 'flex', justifyContent: 'center' }}
+              >
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
+                  <InputCardWrapper>
+                    <StarBorder as="div" color="#4ade80" speed="7s" thickness={2.5}>
+                      <StyledInput
+                        disabled
+                        type="email"
+                        value={inputValue}
+                        style={{ textAlign: 'center' }}
+                      />
+                    </StarBorder>
+                  </InputCardWrapper>
+
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 2.2, duration: 0.6 }}
+                  >
+                    <ValidationButton onClick={handleNext}>
+                      Sí, este es mi email de acceso
+                    </ValidationButton>
+                  </motion.div>
+                </div>
+              </motion.div>
+            </StepContainer>
+          )}
+
+          {step === 5 && (
+            <StepContainer key="step5" variants={stepVariants} initial="initial" animate="animate" exit="exit">
+              <SplitText text="Por último, ¿podrías brindarme un número de teléfono?" delay={30} className="text-3xl font-semibold mb-12 text-center" />
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1.5, duration: 0.8 }}
+                style={{ width: '100%', display: 'flex', justifyContent: 'center' }}
+              >
+                <InputCardWrapper>
+                  <StarBorder as="div" color="#4ade80" speed="7s" thickness={2.5}>
+                    <StyledInput
+                      ref={inputRef}
+                      type="tel"
+                      placeholder="+54 9 11..."
+                      value={inputValue}
+                      onChange={(e) => setInputValue(e.target.value)}
+                      onKeyDown={handleKeyDown}
+                    />
+                    <IconButton onClick={handleNext} disabled={!inputValue.trim()}>
+                      <FaArrowRight />
+                    </IconButton>
+                  </StarBorder>
+                </InputCardWrapper>
+              </motion.div>
+            </StepContainer>
+          )}
+
+          {step === 6 && (
+            <StepContainer key="step6" variants={stepVariants} initial="initial" animate="animate" exit="exit">
+              <SplitText text="Para proteger tu cuenta, crea una contraseña segura." delay={30} className="text-3xl font-semibold mb-12 text-center" />
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1.5, duration: 0.8 }}
+                style={{ width: '100%', display: 'flex', justifyContent: 'center' }}
+              >
+                <InputCardWrapper>
+                  <StarBorder as="div" color="#4ade80" speed="7s" thickness={2.5}>
+                    <StyledInput
+                      ref={inputRef}
+                      type={showPassword ? 'text' : 'password'}
+                      placeholder="Mínimo 6 caracteres..."
+                      value={inputValue}
+                      onChange={(e) => setInputValue(e.target.value)}
+                      onKeyDown={handleKeyDown}
+                    />
+                    <PasswordToggle onClick={() => setShowPassword(!showPassword)}>
+                      {showPassword ? <FaEyeSlash /> : <FaEye />}
+                    </PasswordToggle>
+                    <IconButton onClick={handleNext} disabled={inputValue.length < 6}>
+                      <FaArrowRight />
+                    </IconButton>
+                  </StarBorder>
+                </InputCardWrapper>
+              </motion.div>
+            </StepContainer>
+          )}
+
+          {step === 7 && (
+            <StepContainer key="step7" variants={stepVariants} initial="initial" animate="animate" exit="exit">
+              <SplitText text="Verifica que tu información sea correcta" delay={30} className="text-3xl font-semibold mb-8 text-center" />
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 1, duration: 0.8 }}
+                style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}
+              >
+                <SummaryCard>
+                  <SummaryRow>
+                    <span className="label">Nombre Completo</span>
+                    <span className="value">{data.name}</span>
+                  </SummaryRow>
+                  <SummaryRow>
+                    <span className="label">Teléfono</span>
+                    <span className="value">{data.phone}</span>
+                  </SummaryRow>
+                  <SummaryRow>
+                    <span className="label">Email</span>
+                    <span className="value">{data.email}</span>
+                  </SummaryRow>
+                  <SummaryRow>
+                    <span className="label">Contraseña</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <span className="value">
+                        {showSummaryPassword ? data.password : '•'.repeat(Math.max(6, data.password.length))}
+                      </span>
+                      <PasswordToggle
+                        style={{ padding: '0 0.2rem', color: '#64748b' }}
+                        onClick={() => setShowSummaryPassword(!showSummaryPassword)}
+                      >
+                        {showSummaryPassword ? <FaEyeSlash size={16} /> : <FaEye size={16} />}
+                      </PasswordToggle>
+                    </div>
+                  </SummaryRow>
+                  <SummaryRow>
+                    <span className="label">Plan Asignado</span>
+                    <span className="value highlight" style={{ textTransform: 'capitalize' }}>
+                      {inviteDetails?.organization?.plan || 'Free'}
+                    </span>
+                  </SummaryRow>
+                  {inviteDetails?.organization?.plan?.toLowerCase().includes('ong') && (
+                    <SummaryRow>
+                      <span className="label">Organización</span>
+                      <span className="value highlight">{inviteDetails?.organization?.name}</span>
+                    </SummaryRow>
+                  )}
+                  <SummaryRow>
+                    <span className="label">Inicio de Abono</span>
+                    <span className="value">{new Date().toLocaleDateString('es-ES')}</span>
+                  </SummaryRow>
+
+                  <ValidationButton style={{ marginTop: '1rem', width: '100%' }} onClick={() => setStep(8)}>
+                    Confirmar Acceso
+                  </ValidationButton>
+                </SummaryCard>
+              </motion.div>
+            </StepContainer>
+          )}
+
+          {step === 8 && (
+            <StepContainer key="step8" variants={stepVariants} initial="initial" animate="animate" exit="exit">
+              <SplitText text={`¡Excelente ${data.name.split(' ')[0]}, tengo todo listo!`} delay={30} className="text-5xl text-green-400 font-bold text-center" />
+            </StepContainer>
+          )}
+
+          {step === 9 && (
+            <StepContainer key="step9" variants={stepVariants} initial="initial" animate="animate" exit="exit">
+              <ShinyText text="Configurando tu sistema, dame un segundo" speed={3} className="text-3xl font-semibold text-center" />
+            </StepContainer>
+          )}
+
+          {step === 10 && (
+            <StepContainer key="step10" variants={stepVariants} initial="initial">
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', background: 'rgba(20, 83, 45, 0.4)', border: '1px solid #22c55e', padding: '2rem 3rem', borderRadius: '1.5rem', backdropFilter: 'blur(16px)' }}>
+                <FaCheckCircle style={{ color: '#4ade80', fontSize: '3rem', marginBottom: '1rem' }} />
+                <span className="text-xl font-medium text-center">Registro exitoso.<br /><span style={{ fontSize: '0.9rem', color: '#94a3b8' }}>Redirigiendo al inicio de sesión...</span></span>
+              </div>
+            </StepContainer>
+          )}
+
+        </AnimatePresence>
+      </ContentWrapper>
     </Container>
   );
 };

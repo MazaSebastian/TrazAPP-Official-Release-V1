@@ -40,6 +40,7 @@ import { OrganizationProvider } from './context/OrganizationContext';
 import './App.css';
 
 import Sidebar from './components/Sidebar';
+import ClickSpark from './components/ClickSpark';
 
 import { ChatWidget } from './components/AI/ChatWidget';
 import PageTransition from './components/PageTransition';
@@ -81,6 +82,15 @@ function App() {
     <DataProvider>
       <OrganizationProvider>
         <div className={`App ${isPublicRoute ? 'public-theme' : ''}`}>
+          <ClickSpark
+            sparkColor="#03fc41"
+            sparkSize={5}
+            sparkRadius={20}
+            sparkCount={8}
+            duration={500}
+            easing="ease-in-out"
+            extraScale={0.9}
+          />
           {!isPublicRoute && <Sidebar />}
           {!isPublicRoute && <ChatWidget />}
 

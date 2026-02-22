@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import Antigravity from '../components/Antigravity';
 import Aurora from '../components/Aurora';
 import BlurText from '../components/BlurText';
 import StarBorder from '../components/StarBorder';
@@ -267,8 +268,29 @@ const Login: React.FC = () => {
 
   return (
     <LoginContainer>
-      <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0, opacity: 0.6 }}>
-        <Aurora colorStops={['#16a34a', '#22c55e', '#0f172a']} speed={0.5} amplitude={1.2} />
+      <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0 }}>
+        <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0.6 }}>
+          <Aurora colorStops={["#199301", "#7cff67", "#037233"]} amplitude={1} blend={1} />
+        </div>
+        <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0.6 }}>
+          <Antigravity
+            count={1000}
+            magnetRadius={10}
+            ringRadius={15}
+            waveSpeed={0.5}
+            waveAmplitude={2.6}
+            particleSize={0.5}
+            lerpSpeed={0.17}
+            color="#00ff59"
+            autoAnimate={false}
+            particleVariance={0.8}
+            rotationSpeed={0.1}
+            depthFactor={0.9}
+            pulseSpeed={2.5}
+            particleShape="capsule"
+            fieldStrength={15}
+          />
+        </div>
       </div>
 
       <LoginCardWrapper>

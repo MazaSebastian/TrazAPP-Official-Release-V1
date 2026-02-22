@@ -93,14 +93,18 @@ export const inviteService = {
      * Get invite details by token.
      */
     async getInviteByToken(token: string): Promise<Invite | null> {
-        const { data, error } = await supabase
-            .from('organization_invites')
-            .select('*, organization:organizations(*)')
-            .eq('token', token)
-            .single();
+        // We use a custom SECURITY DEFINER RPC to bypass RLS and fetch the masked 
+        // organization data (including the plan) for unauthenticated users
+        const { data, error } = await supabase.rpc('get_invite_details', { p_token: token });
 
-        if (error) return null;
-        return data;
+        if (error) {
+            console.error('RPC Error fetching invite:', error);
+            return null;
+        }
+
+        if (!data) return null;
+
+        return data as Invite;
     },
 
     /**
