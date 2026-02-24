@@ -66,7 +66,7 @@ export const geneticsService = {
     async getActiveBatchesForGenetic(geneticId: string): Promise<any[]> {
         const { data, error } = await getClient()
             .from('batches')
-            .select('quantity, room:rooms(name, spot:chakra_crops(name))')
+            .select('quantity, room:rooms(id, name, spot_id, spot:chakra_crops(id, name))')
             .eq('genetic_id', geneticId)
             // exclude 'completed' or strictly count any existing relation
             .neq('stage', 'completed');

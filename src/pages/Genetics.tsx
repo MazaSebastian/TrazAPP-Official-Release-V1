@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';
 import { FaDna, FaPlus, FaClock, FaCalendarAlt, FaLeaf, FaEdit, FaTrash, FaTag } from 'react-icons/fa';
 import { geneticsService } from '../services/geneticsService';
@@ -277,27 +278,40 @@ const DashedCircle = styled.div`
 
 
 // Helper component for expandable warning list
-const ExpandableLocationList: React.FC<{ locationEntries: [string, any][] }> = ({ locationEntries }) => {
+const ExpandableLocationList: React.FC<{
+    locationEntries: { label: string, qty: number, spotId?: string }[],
+    onNavigate: (spotId: string) => void
+}> = ({ locationEntries, onNavigate }) => {
     const [isExpanded, setIsExpanded] = React.useState(false);
-    
+
     const visibleCount = isExpanded ? locationEntries.length : 5;
     const hasMore = locationEntries.length > 5;
     const hiddenCount = locationEntries.length - 5;
 
     return (
         <ul style={{ textAlign: 'left', background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: '0.5rem', marginTop: '1rem', marginBottom: '1rem', listStyle: 'none', maxHeight: isExpanded ? '300px' : 'auto', overflowY: isExpanded ? 'auto' : 'visible' }}>
-            {locationEntries.slice(0, visibleCount).map(([location, qty], idx) => (
+            {locationEntries.slice(0, visibleCount).map((loc, idx) => (
                 <li key={idx} style={{ marginBottom: '0.5rem', fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     <FaLeaf color="#4ade80" size={14} style={{ minWidth: '14px' }} />
-                    <span><strong>{qty as number}</strong> plantas en {location}</span>
+                    <span><strong>{loc.qty}</strong> plantas en </span>
+                    {loc.spotId ? (
+                        <button
+                            onClick={() => onNavigate(loc.spotId!)}
+                            style={{ background: 'none', border: 'none', padding: 0, color: '#38bdf8', textDecoration: 'underline', cursor: 'pointer', textAlign: 'left', fontSize: 'inherit' }}
+                        >
+                            {loc.label}
+                        </button>
+                    ) : (
+                        <span>{loc.label}</span>
+                    )}
                 </li>
             ))}
-            
+
             {hasMore && (
                 <li style={{ marginTop: '0.75rem', textAlign: 'center', paddingTop: '0.5rem', borderTop: '1px dashed rgba(255,255,255,0.1)' }}>
-                    <button 
+                    <button
                         onClick={() => setIsExpanded(!isExpanded)}
-                        style={{ background: 'none', border: 'none', color: '#38bdf8', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', gap: '0.25rem' }}
+                        style={{ background: 'none', border: 'none', color: '#c084fc', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', gap: '0.25rem' }}
                     >
                         {isExpanded ? 'Ocultar listado completo' : `...y en ${hiddenCount} ubicación(es) más. Ver Todo`}
                     </button>
@@ -308,6 +322,7 @@ const ExpandableLocationList: React.FC<{ locationEntries: [string, any][] }> = (
 };
 
 const Genetics: React.FC = () => {
+    const navigate = useNavigate();
     const { currentOrganization } = useOrganization();
     const plan = currentOrganization?.plan || 'individual';
     const planLevel = ['ong', 'enterprise'].includes(plan) ? 3 :
@@ -376,15 +391,27 @@ const Genetics: React.FC = () => {
                 const spotName = b.room?.spot?.name ? `Cultivo: ${b.room.spot.name}` : 'Sin Cultivo Asignado';
                 const key = `${spotName} - Sala: ${roomName}`;
 
-                if (!acc[key]) acc[key] = 0;
-                acc[key] += (b.quantity || 1);
+                if (!acc[key]) {
+                    acc[key] = { qty: 0, spotId: b.room?.spot_id || null };
+                }
+                acc[key].qty += (b.quantity || 1);
 
                 return acc;
             }, {});
 
-            const locationEntries = Object.entries(groupedLocations);
+            const locationEntries = Object.entries(groupedLocations).map(([key, value]: [string, any]) => ({
+                label: key,
+                qty: value.qty,
+                spotId: value.spotId
+            }));
 
-            const locationsListNode = <ExpandableLocationList locationEntries={locationEntries} />;
+            const handleNavigateToSpot = (spotId: string) => {
+                setConfirmDeleteOpen(false);
+                setDeleteValidationError(null);
+                navigate(`/crops/${spotId}`);
+            };
+
+            const locationsListNode = <ExpandableLocationList locationEntries={locationEntries} onNavigate={handleNavigateToSpot} />;
 
             setDeleteValidationError(
                 <div>
