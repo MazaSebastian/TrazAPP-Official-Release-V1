@@ -61,5 +61,20 @@ export const geneticsService = {
             return false;
         }
         return true;
+    },
+
+    async getActiveBatchesCountForGenetic(geneticId: string): Promise<number> {
+        const { data, error, count } = await getClient()
+            .from('batches')
+            .select('*', { count: 'exact', head: true })
+            .eq('genetic_id', geneticId)
+            // exclude 'completed' or strictly count any existing relation
+            .neq('stage', 'completed');
+
+        if (error) {
+            console.error('Error counting active batches for genetic:', error);
+            return 0; // Return 0 on error to not block UI unnecessarily, though ideally we'd throw or return a status
+        }
+        return count || 0;
     }
 };

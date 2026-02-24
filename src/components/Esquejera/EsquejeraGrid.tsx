@@ -282,12 +282,15 @@ const BatchItem = ({ batch, onClick, cellSize }: { batch: Batch; onClick?: (e: R
                     onMouseEnter={handleMouseEnter}
                     onMouseLeave={handleMouseLeave}
                 >
-                    <div style={{ width: '80%', height: '80%', background: getGeneticColor(batch.genetic?.name || '', batch.genetic?.color).bg, borderRadius: '50%' }} />
+                    <div style={{ width: '80%', height: '80%', background: batch.genetic ? getGeneticColor(batch.genetic.name || '', batch.genetic?.color).bg : '#475569', borderRadius: '50%' }} />
                 </BatchItemStyled>
                 {tooltip && createPortal(
                     <TooltipContainer visible={tooltip.visible} x={tooltip.x} y={tooltip.y}>
                         <div style={{ fontWeight: 'bold', color: '#4ade80' }}>{batch.tracking_code}</div>
-                        <div style={{ fontSize: '0.8rem', color: '#94a3b8' }}>{batch.genetic?.name}</div>
+                        <div style={{ fontSize: '0.8rem', color: '#94a3b8', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.2rem' }}>
+                            {!batch.genetic && <span title="Genética Eliminada">⚠️</span>}
+                            {batch.genetic?.name || 'Huérfano'}
+                        </div>
                     </TooltipContainer>,
                     document.body
                 )}
@@ -312,8 +315,9 @@ const BatchItem = ({ batch, onClick, cellSize }: { batch: Batch; onClick?: (e: R
                     {batch.tracking_code || batch.name}
                 </span>
                 {batch.tracking_code && cellSize >= 70 && (
-                    <span style={{ fontSize: '0.6rem', color: '#1e293b', background: 'rgba(255,255,255,0.5)', backdropFilter: 'blur(4px)', borderRadius: '4px', padding: '0 2px', marginTop: '2px' }}>
-                        {batch.genetic?.name?.substring(0, 10)}
+                    <span style={{ fontSize: '0.6rem', color: '#1e293b', background: 'rgba(255,255,255,0.5)', backdropFilter: 'blur(4px)', borderRadius: '4px', padding: '0 2px', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '2px' }}>
+                        {!batch.genetic && <span title="Genética Eliminada">⚠️</span>}
+                        {batch.genetic?.name?.substring(0, 10) || 'Eliminada'}
                     </span>
                 )}
             </BatchItemStyled>
@@ -321,8 +325,9 @@ const BatchItem = ({ batch, onClick, cellSize }: { batch: Batch; onClick?: (e: R
                 <TooltipContainer visible={tooltip.visible} x={tooltip.x} y={tooltip.y}>
                     <div style={{ fontWeight: 'bold', color: '#4ade80', marginBottom: '0.25rem' }}>{batch.tracking_code || batch.name}</div>
 
-                    <div style={{ fontSize: '0.8rem', color: '#cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.25rem', marginBottom: '0.25rem' }}>
-                        <FaLeaf size={10} color="#38bdf8" /> {batch.genetic?.name}
+                    <div style={{ fontSize: '0.8rem', color: batch.genetic ? '#cbd5e1' : '#f87171', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.25rem', marginBottom: '0.25rem' }}>
+                        {!batch.genetic ? <span title="Genética Eliminada">⚠️</span> : <FaLeaf size={10} color="#38bdf8" />}
+                        {batch.genetic?.name || 'Genética Eliminada'}
                     </div>
 
                     <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginBottom: '0.25rem' }}>
@@ -379,7 +384,7 @@ const GridCell = ({ row, col, batch, onClick, isPainting, isSelected, renderActi
             ref={setNodeRef}
             $isOver={isOver}
             $isOccupied={!!batch}
-            $geneticColor={batch ? getGeneticColor(batch.genetic?.name || batch.name, batch.genetic?.color).bg : undefined}
+            $geneticColor={batch ? (batch.genetic ? getGeneticColor(batch.genetic.name || batch.name, batch.genetic.color).bg : '#475569') : undefined}
             $isSelected={isSelected}
             $hasAlert={!!batch?.notes}
             cellSize={cellSize}

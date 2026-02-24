@@ -328,7 +328,17 @@ const Genetics: React.FC = () => {
         setIsModalOpen(true);
     };
 
-    const handleDeleteClick = (genetic: Genetic) => {
+    const handleDeleteClick = async (genetic: Genetic) => {
+        // Prevent deletion if active clones exist
+        const activeCount = await geneticsService.getActiveBatchesCountForGenetic(genetic.id);
+        if (activeCount > 0) {
+            setToastMessage(`No puedes eliminar "${genetic.name}". Tienes ${activeCount} lote(s) activos de esta madre. Elimínalos o finalízalos primero.`);
+            setToastType('error');
+            setToastAnimate(true);
+            setToastOpen(true);
+            return;
+        }
+
         setGeneticToDelete(genetic);
         setConfirmDeleteOpen(true);
     };
