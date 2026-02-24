@@ -531,11 +531,16 @@ const BatchGroupRow = ({ group, onBarcodeClick, onMoveClick, onDiscardClick, onE
         };
         const cellStyle: React.CSSProperties = !isLast ? { borderBottom: 'none' } : {};
 
+        // If the batch only has 1 unit, it inherently acts as a unique entity, hide visual UI indexing.
+        const displayName = batch.quantity > 1
+            ? `${batch.name} - U#${unitIndex.toString().padStart(3, '0')}`
+            : batch.name;
+
         const nameDisplay = (
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', paddingLeft: '2rem' }}>
                 <FaLevelUpAlt style={{ transform: 'rotate(90deg)', color: '#a0aec0', fontSize: '1rem', minWidth: '1rem' }} title="Unidad" />
                 <FaBarcode style={{ color: '#94a3b8' }} />
-                <span>{batch.name} - U#{unitIndex.toString().padStart(3, '0')}</span>
+                <span>{displayName}</span>
             </div>
         );
 
@@ -1027,7 +1032,11 @@ const Clones: React.FC = () => {
     };
 
     const handleUnitDeleteClick = async (batch: any, unitIndex: number) => {
-        if (window.confirm(`¿Seguro que deseas eliminar la unidad #${unitIndex.toString().padStart(3, '0')} del lote ${batch.name}?`)) {
+        const displayDeleteName = batch.quantity > 1
+            ? `la unidad #${unitIndex.toString().padStart(3, '0')} del lote ${batch.name}`
+            : `el lote ${batch.name}`;
+
+        if (window.confirm(`¿Seguro que deseas eliminar ${displayDeleteName}?`)) {
             setLoading(true);
             try {
                 if (batch.quantity <= 1) {
@@ -1047,7 +1056,10 @@ const Clones: React.FC = () => {
     };
 
     const handleUnitPrintClick = (batch: any, unitIndex: number, autoPrint: boolean = false) => {
-        const customBatchName = `${batch.name} - U#${unitIndex.toString().padStart(3, '0')}`;
+        const customBatchName = batch.quantity > 1
+            ? `${batch.name} - U#${unitIndex.toString().padStart(3, '0')}`
+            : batch.name;
+
         setViewingBatch({ ...batch, name: customBatchName, quantity: 1 });
         setPrintQuantity(1);
         setIsBarcodeModalOpen(true);
