@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styled, { createGlobalStyle, keyframes } from 'styled-components';
+import { useNavigate } from 'react-router-dom';
 import {
     FaHistory, FaBarcode, FaExchangeAlt, FaMinusCircle, FaEdit, FaTrash,
     FaCut, FaTimes, FaLevelUpAlt, FaPlus, FaAngleRight, FaAngleDown,
@@ -343,7 +344,7 @@ const PrintStyles = createGlobalStyle`
   }
 `;
 
-const BatchGroupRow = ({ group, onBarcodeClick, onMoveClick, onDiscardClick, onEditClick, onDeleteClick, onUnitPrintClick, onUnitDeleteClick }: any) => {
+const BatchGroupRow = ({ group, onBarcodeClick, onMoveClick, onDiscardClick, onEditClick, onDeleteClick, onUnitPrintClick, onUnitDeleteClick, onNavigate }: any) => {
     const { root, children } = group;
     const [isExpanded, setIsExpanded] = useState(false);
 
@@ -435,8 +436,28 @@ const BatchGroupRow = ({ group, onBarcodeClick, onMoveClick, onDiscardClick, onE
                 <td style={cellStyle}>{nameDisplay}</td>
                 <td style={cellStyle}>{geneticName}</td>
                 <td style={cellStyle}>{quantityDisplay}</td>
-                <td style={cellStyle}>{root.room?.spot?.name || '---'}</td>
-                <td style={cellStyle}>{root.room?.name || 'Desconocido'}</td>
+                <td style={cellStyle}>
+                    {root.room?.spot?.id ? (
+                        <span
+                            onClick={(e) => { e.stopPropagation(); onNavigate(`/crops/${root.room.spot_id}`); }}
+                            style={{ cursor: 'pointer', color: '#38bdf8', textDecoration: 'underline', fontWeight: 500 }}
+                            title="Ver Cultivo"
+                        >
+                            {root.room?.spot?.name}
+                        </span>
+                    ) : '---'}
+                </td>
+                <td style={cellStyle}>
+                    {root.room?.id ? (
+                        <span
+                            onClick={(e) => { e.stopPropagation(); onNavigate(`/rooms/${root.room.id}`); }}
+                            style={{ cursor: 'pointer', color: '#c084fc', textDecoration: 'underline', fontWeight: 500 }}
+                            title="Ver Sala"
+                        >
+                            {root.room?.name}
+                        </span>
+                    ) : 'Desconocido'}
+                </td>
                 <td style={{ textAlign: 'center', ...cellStyle }}>
                     <div style={{ display: 'flex', justifyContent: 'center' }}>
                         <Tooltip text="Ver Código de Barras">
@@ -486,8 +507,28 @@ const BatchGroupRow = ({ group, onBarcodeClick, onMoveClick, onDiscardClick, onE
                 <td style={cellStyle}>{nameDisplay}</td>
                 <td style={cellStyle}>{batch.genetic?.name || 'Desconocida'}</td>
                 <td style={cellStyle}>1 u.</td>
-                <td style={cellStyle}>{batch.room?.spot?.name || '---'}</td>
-                <td style={cellStyle}>{batch.room?.name || 'Desconocido'}</td>
+                <td style={cellStyle}>
+                    {batch.room?.spot?.id ? (
+                        <span
+                            onClick={(e) => { e.stopPropagation(); onNavigate(`/crops/${batch.room.spot_id}`); }}
+                            style={{ cursor: 'pointer', color: '#38bdf8', textDecoration: 'underline', fontWeight: 500 }}
+                            title="Ver Cultivo"
+                        >
+                            {batch.room?.spot?.name}
+                        </span>
+                    ) : '---'}
+                </td>
+                <td style={cellStyle}>
+                    {batch.room?.id ? (
+                        <span
+                            onClick={(e) => { e.stopPropagation(); onNavigate(`/rooms/${batch.room.id}`); }}
+                            style={{ cursor: 'pointer', color: '#c084fc', textDecoration: 'underline', fontWeight: 500 }}
+                            title="Ver Sala"
+                        >
+                            {batch.room?.name}
+                        </span>
+                    ) : 'Desconocido'}
+                </td>
                 <td style={{ textAlign: 'center', ...cellStyle }}>
                     <div style={{ display: 'flex', justifyContent: 'center' }}>
                         <Tooltip text="Ver QR de Unidad">
@@ -514,6 +555,7 @@ const BatchGroupRow = ({ group, onBarcodeClick, onMoveClick, onDiscardClick, onE
 };
 
 const Clones: React.FC = () => {
+    const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
     const [mothersStates, setMothersStates] = useState<any[]>([]);
     const [cloneBatches, setCloneBatches] = useState<any[]>([]);
@@ -1143,6 +1185,7 @@ const Clones: React.FC = () => {
                                         onDeleteClick={handleDeleteClick}
                                         onUnitPrintClick={handleUnitPrintClick}
                                         onUnitDeleteClick={handleUnitDeleteClick}
+                                        onNavigate={(path: string) => navigate(path)}
                                     />
                                 );
                             })}
@@ -1212,8 +1255,28 @@ const Clones: React.FC = () => {
                                                                 </td>
                                                                 <td style={cellStyle}>{batch.genetic?.name || 'Desconocida'}</td>
                                                                 <td style={cellStyle}>{batch.quantity} u.</td>
-                                                                <td style={cellStyle}>{batch.room?.spot?.name || '---'}</td>
-                                                                <td style={cellStyle}>{batch.room?.name || 'Desconocido'}</td>
+                                                                <td style={cellStyle}>
+                                                                    {batch.room?.spot?.id ? (
+                                                                        <span
+                                                                            onClick={(e) => { e.stopPropagation(); navigate(`/crops/${batch.room.spot_id}`); }}
+                                                                            style={{ cursor: 'pointer', color: '#38bdf8', textDecoration: 'underline', fontWeight: 500 }}
+                                                                            title="Ver Cultivo"
+                                                                        >
+                                                                            {batch.room?.spot?.name}
+                                                                        </span>
+                                                                    ) : '---'}
+                                                                </td>
+                                                                <td style={cellStyle}>
+                                                                    {batch.room?.id ? (
+                                                                        <span
+                                                                            onClick={(e) => { e.stopPropagation(); navigate(`/rooms/${batch.room.id}`); }}
+                                                                            style={{ cursor: 'pointer', color: '#c084fc', textDecoration: 'underline', fontWeight: 500 }}
+                                                                            title="Ver Sala"
+                                                                        >
+                                                                            {batch.room?.name}
+                                                                        </span>
+                                                                    ) : 'Desconocido'}
+                                                                </td>
                                                                 <td style={{ textAlign: 'center', ...cellStyle }}>
                                                                     <div style={{ display: 'flex', justifyContent: 'center' }}>
                                                                         <Tooltip text="Ver Código de Barras">
