@@ -76,5 +76,20 @@ export const geneticsService = {
             return []; // Return empty array on error
         }
         return data || [];
+    },
+
+    async discardOrphanedBatches(geneticId: string): Promise<boolean> {
+        const { error } = await getClient()
+            .from('batches')
+            .update({ stage: 'completed' })
+            .eq('genetic_id', geneticId)
+            .is('current_room_id', null)
+            .neq('stage', 'completed');
+
+        if (error) {
+            console.error('Error discarding orphaned batches:', error);
+            return false;
+        }
+        return true;
     }
 };

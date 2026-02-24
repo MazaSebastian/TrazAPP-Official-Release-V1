@@ -332,6 +332,70 @@ const ExpandableLocationList: React.FC<{
     );
 };
 
+// Component for cleaning orphaned batches
+const OrphanedBatchesCleaner: React.FC<{
+    geneticId: string;
+    orphanQty: number;
+    onSuccess: () => void;
+}> = ({ geneticId, orphanQty, onSuccess }) => {
+    const [isLoading, setIsLoading] = React.useState(false);
+
+    const handleDiscard = async () => {
+        setIsLoading(true);
+        const success = await geneticsService.discardOrphanedBatches(geneticId);
+        setIsLoading(false);
+        if (success) {
+            onSuccess();
+        } else {
+            alert('Error al intentar desechar los lotes huérfanos. Por favor recarga e intenta nuevamente.');
+        }
+    };
+
+    return (
+        <div style={{ marginTop: '1rem', padding: '1rem', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: '0.5rem' }}>
+            <p style={{ margin: '0 0 0.75rem 0', fontSize: '0.9rem', color: '#fca5a5' }}>
+                <strong>Detección de Huérfanos:</strong> Se han encontrado <strong>{orphanQty} plantas</strong> de esta Genética en lotes que perdieron su sala asignada (porque la Sala/Cultivo fue eliminada).
+            </p>
+            <button
+                onClick={handleDiscard}
+                disabled={isLoading}
+                style={{
+                    background: isLoading ? '#991b1b' : '#ef4444',
+                    color: 'white',
+                    padding: '0.5rem 1rem',
+                    borderRadius: '0.4rem',
+                    border: 'none',
+                    fontWeight: 600,
+                    cursor: isLoading ? 'not-allowed' : 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    fontSize: '0.9rem',
+                    transition: 'background 0.2s'
+                }}
+            >
+                {isLoading ? (
+                    <>
+                        <div style={{
+                            border: '2px solid rgba(255, 255, 255, 0.3)',
+                            borderRadius: '50%',
+                            borderTop: '2px solid white',
+                            width: '14px',
+                            height: '14px',
+                            animation: 'spin 1s linear infinite'
+                        }} />
+                        Desechando...
+                    </>
+                ) : (
+                    <>
+                        <FaTrash /> Desechar {orphanQty} Plantas Huérfanas
+                    </>
+                )}
+            </button>
+        </div>
+    );
+};
+
 const Genetics: React.FC = () => {
     const navigate = useNavigate();
     const { currentOrganization } = useOrganization();
@@ -425,6 +489,10 @@ const Genetics: React.FC = () => {
                 roomName: value.roomName
             }));
 
+            // Find orphaned batches (no spot or room)
+            const orphanEntry = locationEntries.find(loc => !loc.spotId && !loc.roomId && loc.spotName === 'Sin Cultivo Asignado');
+            const orphanQty = orphanEntry ? orphanEntry.qty : 0;
+
             const handleNavigate = (type: 'spot' | 'room', id: string) => {
                 setConfirmDeleteOpen(false);
                 setDeleteValidationError(null);
@@ -435,6 +503,17 @@ const Genetics: React.FC = () => {
                 }
             };
 
+            const handleOrphansDiscardedContext = () => {
+                setDeleteValidationError(null);
+                setConfirmDeleteOpen(false);
+                setToastMessage(`Las plantas huérfanas derivadas de ${genetic.name} han sido desechadas exitosamente.`);
+                setToastType('success');
+                setToastAnimate(false);
+                setToastOpen(true);
+                // Call handle delete click again to see if there are more
+                setTimeout(() => handleDeleteClick(genetic), 500);
+            };
+
             const locationsListNode = <ExpandableLocationList locationEntries={locationEntries} onNavigate={handleNavigate} />;
 
             setDeleteValidationError(
@@ -442,6 +521,14 @@ const Genetics: React.FC = () => {
                     No puedes eliminar la genética <strong>{genetic.name}</strong> porque tienes <strong>{totalPlants} plantas activas</strong> en tu inventario.
                     {locationsListNode}
                     Debes cosechar, desechar o finalizar estas plantas antes de poder borrar la Madre de tu catálogo.
+
+                    {orphanQty > 0 && (
+                        <OrphanedBatchesCleaner
+                            geneticId={genetic.id}
+                            orphanQty={orphanQty}
+                            onSuccess={handleOrphansDiscardedContext}
+                        />
+                    )}
                 </div>
             );
             return;

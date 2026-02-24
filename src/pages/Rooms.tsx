@@ -319,6 +319,18 @@ const Rooms: React.FC = () => {
 
     const handleDeleteClick = (e: React.MouseEvent, id: string) => {
         e.stopPropagation(); // Prevent navigation to detail
+
+        const room = rooms.find(r => r.id === id);
+        const activeBatches = room?.batches?.filter(b => b.stage !== 'completed') || [];
+
+        if (activeBatches.length > 0) {
+            setToastMessage(`No puedes eliminar esta sala porque contiene ${activeBatches.length} lote(s) con plantas vivas. Mueve o desecha las plantas primero.`);
+            setToastType('error');
+            setToastAnimate(true);
+            setToastOpen(true);
+            return;
+        }
+
         setRoomToDelete(id);
         setIsConfirmDeleteOpen(true);
     };

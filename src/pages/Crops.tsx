@@ -12,6 +12,7 @@ import {
 import { dailyLogsService } from '../services/dailyLogsService';
 import { cropsService } from '../services/cropsService';
 import { tasksService } from '../services/tasksService';
+import { roomsService } from '../services/roomsService';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import type { Crop } from '../types';
 import { PromptModal } from '../components/PromptModal';
@@ -452,8 +453,23 @@ const Crops: React.FC = () => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [toastAnimate, setToastAnimate] = useState(true);
 
-  const handleDeleteCrop = (e: React.MouseEvent, id: string, name: string) => {
+  const handleDeleteCrop = async (e: React.MouseEvent, id: string, name: string) => {
     e.stopPropagation();
+
+    // Check for active batches in any room of this crop
+    const cropRooms = await roomsService.getRooms(id);
+    const hasActiveBatches = cropRooms.some((room: any) =>
+      room.batches && room.batches.some((b: any) => b.stage !== 'completed')
+    );
+
+    if (hasActiveBatches) {
+      setToastMessage(`No puedes eliminar este cultivo porque contiene salas con ${hasActiveBatches ? 'plantas vivas' : 'lotes activos'}. Mueve o desecha las plantas primero.`);
+      setToastType('error');
+      setToastAnimate(true);
+      setToastOpen(true);
+      return;
+    }
+
     setCropToDelete({ id, name, location: '', startDate: '', status: 'active', partners: [], photoUrl: '' }); // Minimal crop obj
     setConfirmOpen(true);
   };
