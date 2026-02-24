@@ -344,6 +344,31 @@ const PrintStyles = createGlobalStyle`
   }
 `;
 
+const getStatusBadge = (batch: any) => {
+    if (batch.clone_map_id) {
+        return (
+            <span style={{
+                display: 'inline-flex', alignItems: 'center', gap: '4px',
+                background: 'rgba(72, 187, 120, 0.1)', color: '#48bb78',
+                padding: '2px 8px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 600, border: '1px solid rgba(72, 187, 120, 0.2)'
+            }}>
+                <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#48bb78' }} />
+                En Mapa
+            </span>
+        );
+    }
+    return (
+        <span style={{
+            display: 'inline-flex', alignItems: 'center', gap: '4px',
+            background: 'rgba(236, 201, 75, 0.1)', color: '#ecc94b',
+            padding: '2px 8px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 600, border: '1px solid rgba(236, 201, 75, 0.2)'
+        }}>
+            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#ecc94b' }} />
+            Disponible
+        </span>
+    );
+};
+
 const BatchGroupRow = ({ group, onBarcodeClick, onMoveClick, onDiscardClick, onEditClick, onDeleteClick, onUnitPrintClick, onUnitDeleteClick, onNavigate }: any) => {
     const { root, children } = group;
     const [isExpanded, setIsExpanded] = useState(false);
@@ -458,6 +483,7 @@ const BatchGroupRow = ({ group, onBarcodeClick, onMoveClick, onDiscardClick, onE
                         </span>
                     ) : 'Desconocido'}
                 </td>
+                <td style={cellStyle}>{getStatusBadge(root)}</td>
                 <td style={{ textAlign: 'center', ...cellStyle }}>
                     <div style={{ display: 'flex', justifyContent: 'center' }}>
                         <Tooltip text="Ver Código de Barras">
@@ -529,6 +555,7 @@ const BatchGroupRow = ({ group, onBarcodeClick, onMoveClick, onDiscardClick, onE
                         </span>
                     ) : 'Desconocido'}
                 </td>
+                <td style={cellStyle}>{getStatusBadge(batch)}</td>
                 <td style={{ textAlign: 'center', ...cellStyle }}>
                     <div style={{ display: 'flex', justifyContent: 'center' }}>
                         <Tooltip text="Ver QR de Unidad">
@@ -1165,6 +1192,7 @@ const Clones: React.FC = () => {
                                 <th>Cantidad</th>
                                 <th>Cultivo</th>
                                 <th>Destino</th>
+                                <th>Estado</th>
                                 <th style={{ textAlign: 'center' }}>Acciones</th>
                             </tr>
                         </thead>
@@ -1220,6 +1248,7 @@ const Clones: React.FC = () => {
                                             <th>Cantidad</th>
                                             <th>Cultivo</th>
                                             <th>Destino</th>
+                                            <th>Estado</th>
                                             <th style={{ textAlign: 'center' }}>Acciones</th>
                                         </tr>
                                     </thead>
@@ -1277,6 +1306,7 @@ const Clones: React.FC = () => {
                                                                         </span>
                                                                     ) : 'Desconocido'}
                                                                 </td>
+                                                                <td style={cellStyle}>{getStatusBadge(batch)}</td>
                                                                 <td style={{ textAlign: 'center', ...cellStyle }}>
                                                                     <div style={{ display: 'flex', justifyContent: 'center' }}>
                                                                         <Tooltip text="Ver Código de Barras">
