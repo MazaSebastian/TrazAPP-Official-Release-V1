@@ -279,8 +279,8 @@ const DashedCircle = styled.div`
 
 // Helper component for expandable warning list
 const ExpandableLocationList: React.FC<{
-    locationEntries: { label: string, qty: number, spotId?: string }[],
-    onNavigate: (spotId: string) => void
+    locationEntries: { label: string, qty: number, spotId?: string, roomId?: string, spotName?: string, roomName?: string }[],
+    onNavigate: (type: 'spot' | 'room', id: string) => void
 }> = ({ locationEntries, onNavigate }) => {
     const [isExpanded, setIsExpanded] = React.useState(false);
 
@@ -291,18 +291,29 @@ const ExpandableLocationList: React.FC<{
     return (
         <ul style={{ textAlign: 'left', background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: '0.5rem', marginTop: '1rem', marginBottom: '1rem', listStyle: 'none', maxHeight: isExpanded ? '300px' : 'auto', overflowY: isExpanded ? 'auto' : 'visible' }}>
             {locationEntries.slice(0, visibleCount).map((loc, idx) => (
-                <li key={idx} style={{ marginBottom: '0.5rem', fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <li key={idx} style={{ marginBottom: '0.5rem', fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
                     <FaLeaf color="#4ade80" size={14} style={{ minWidth: '14px' }} />
                     <span><strong>{loc.qty}</strong> plantas en </span>
-                    {loc.spotId ? (
+                    {loc.spotId && loc.spotName !== 'Sin Cultivo Asignado' ? (
                         <button
-                            onClick={() => onNavigate(loc.spotId!)}
+                            onClick={() => onNavigate('spot', loc.spotId!)}
                             style={{ background: 'none', border: 'none', padding: 0, color: '#38bdf8', textDecoration: 'underline', cursor: 'pointer', textAlign: 'left', fontSize: 'inherit' }}
                         >
-                            {loc.label}
+                            {loc.spotName}
                         </button>
                     ) : (
-                        <span>{loc.label}</span>
+                        <span>{loc.spotName || 'Sin Cultivo Asignado'}</span>
+                    )}
+                    <span>{' - '}</span>
+                    {loc.roomId && loc.roomName !== 'Sala Desconocida' ? (
+                        <button
+                            onClick={() => onNavigate('room', loc.roomId!)}
+                            style={{ background: 'none', border: 'none', padding: 0, color: '#c084fc', textDecoration: 'underline', cursor: 'pointer', textAlign: 'left', fontSize: 'inherit' }}
+                        >
+                            {loc.roomName}
+                        </button>
+                    ) : (
+                        <span>{loc.roomName || 'Sala Desconocida'}</span>
                     )}
                 </li>
             ))}
@@ -392,7 +403,13 @@ const Genetics: React.FC = () => {
                 const key = `${spotName} - Sala: ${roomName}`;
 
                 if (!acc[key]) {
-                    acc[key] = { qty: 0, spotId: b.room?.spot_id || null };
+                    acc[key] = {
+                        qty: 0,
+                        spotId: b.room?.spot_id || null,
+                        roomId: b.room?.id || null,
+                        spotName: spotName,
+                        roomName: `Sala: ${roomName}`
+                    };
                 }
                 acc[key].qty += (b.quantity || 1);
 
@@ -402,16 +419,23 @@ const Genetics: React.FC = () => {
             const locationEntries = Object.entries(groupedLocations).map(([key, value]: [string, any]) => ({
                 label: key,
                 qty: value.qty,
-                spotId: value.spotId
+                spotId: value.spotId,
+                roomId: value.roomId,
+                spotName: value.spotName,
+                roomName: value.roomName
             }));
 
-            const handleNavigateToSpot = (spotId: string) => {
+            const handleNavigate = (type: 'spot' | 'room', id: string) => {
                 setConfirmDeleteOpen(false);
                 setDeleteValidationError(null);
-                navigate(`/crops/${spotId}`);
+                if (type === 'spot') {
+                    navigate(`/crops/${id}`);
+                } else {
+                    navigate(`/rooms/${id}`);
+                }
             };
 
-            const locationsListNode = <ExpandableLocationList locationEntries={locationEntries} onNavigate={handleNavigateToSpot} />;
+            const locationsListNode = <ExpandableLocationList locationEntries={locationEntries} onNavigate={handleNavigate} />;
 
             setDeleteValidationError(
                 <div>
