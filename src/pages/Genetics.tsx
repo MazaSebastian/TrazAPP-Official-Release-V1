@@ -275,6 +275,38 @@ const DashedCircle = styled.div`
   }
 `;
 
+
+// Helper component for expandable warning list
+const ExpandableLocationList: React.FC<{ locationEntries: [string, any][] }> = ({ locationEntries }) => {
+    const [isExpanded, setIsExpanded] = React.useState(false);
+    
+    const visibleCount = isExpanded ? locationEntries.length : 5;
+    const hasMore = locationEntries.length > 5;
+    const hiddenCount = locationEntries.length - 5;
+
+    return (
+        <ul style={{ textAlign: 'left', background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: '0.5rem', marginTop: '1rem', marginBottom: '1rem', listStyle: 'none', maxHeight: isExpanded ? '300px' : 'auto', overflowY: isExpanded ? 'auto' : 'visible' }}>
+            {locationEntries.slice(0, visibleCount).map(([location, qty], idx) => (
+                <li key={idx} style={{ marginBottom: '0.5rem', fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <FaLeaf color="#4ade80" size={14} style={{ minWidth: '14px' }} />
+                    <span><strong>{qty as number}</strong> plantas en {location}</span>
+                </li>
+            ))}
+            
+            {hasMore && (
+                <li style={{ marginTop: '0.75rem', textAlign: 'center', paddingTop: '0.5rem', borderTop: '1px dashed rgba(255,255,255,0.1)' }}>
+                    <button 
+                        onClick={() => setIsExpanded(!isExpanded)}
+                        style={{ background: 'none', border: 'none', color: '#38bdf8', fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', gap: '0.25rem' }}
+                    >
+                        {isExpanded ? 'Ocultar listado completo' : `...y en ${hiddenCount} ubicación(es) más. Ver Todo`}
+                    </button>
+                </li>
+            )}
+        </ul>
+    );
+};
+
 const Genetics: React.FC = () => {
     const { currentOrganization } = useOrganization();
     const plan = currentOrganization?.plan || 'individual';
@@ -352,21 +384,7 @@ const Genetics: React.FC = () => {
 
             const locationEntries = Object.entries(groupedLocations);
 
-            const locationsListNode = (
-                <ul style={{ textAlign: 'left', background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: '0.5rem', marginTop: '1rem', marginBottom: '1rem', listStyle: 'none' }}>
-                    {locationEntries.slice(0, 5).map(([location, qty], idx) => (
-                        <li key={idx} style={{ marginBottom: '0.5rem', fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <FaLeaf color="#4ade80" size={14} style={{ minWidth: '14px' }} />
-                            <span><strong>{qty as number}</strong> plantas en {location}</span>
-                        </li>
-                    ))}
-                    {locationEntries.length > 5 && (
-                        <li style={{ fontSize: '0.8rem', color: '#94a3b8', fontStyle: 'italic', marginTop: '0.5rem' }}>
-                            ...y en {locationEntries.length - 5} ubicación(es) más.
-                        </li>
-                    )}
-                </ul>
-            );
+            const locationsListNode = <ExpandableLocationList locationEntries={locationEntries} />;
 
             setDeleteValidationError(
                 <div>
