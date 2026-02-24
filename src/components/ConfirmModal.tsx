@@ -131,7 +131,7 @@ const Button = styled.button<{ variant?: 'primary' | 'danger' | 'secondary' }>`
 interface ConfirmModalProps {
   isOpen: boolean;
   title: string;
-  message: string;
+  message: React.ReactNode;
   onClose: () => void;
   onConfirm: () => void;
   confirmText?: string;
@@ -187,9 +187,11 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
         <h3>{title}</h3>
         <p>{message}</p>
         <ButtonGroup>
-          <Button onClick={onClose} variant="secondary" disabled={isLoading}>
-            {cancelText}
-          </Button>
+          {cancelText && (
+            <Button onClick={onClose} variant="secondary" disabled={isLoading}>
+              {cancelText}
+            </Button>
+          )}
           <Button
             onClick={onConfirm}
             variant={isDanger ? 'danger' : 'primary'}

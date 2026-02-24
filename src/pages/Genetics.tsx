@@ -320,6 +320,8 @@ const Genetics: React.FC = () => {
     const [toastMessage, setToastMessage] = useState('');
     const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('info');
 
+    const [deleteValidationError, setDeleteValidationError] = useState<React.ReactNode | null>(null);
+
     const [editingId, setEditingId] = useState<string | null>(null);
 
     const handleEdit = (genetic: Genetic) => {
@@ -350,16 +352,29 @@ const Genetics: React.FC = () => {
 
             const locationEntries = Object.entries(groupedLocations);
 
-            const locationsList = locationEntries.slice(0, 3).map(([location, qty]) => {
-                return `• ${qty} plantas - ${location}`;
-            }).join('\n');
+            const locationsListNode = (
+                <ul style={{ textAlign: 'left', background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: '0.5rem', marginTop: '1rem', marginBottom: '1rem', listStyle: 'none' }}>
+                    {locationEntries.slice(0, 3).map(([location, qty], idx) => (
+                        <li key={idx} style={{ marginBottom: '0.5rem', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <FaLeaf color="#4ade80" size={12} />
+                            <strong>{qty as number}</strong> plantas en {location}
+                        </li>
+                    ))}
+                    {locationEntries.length > 3 && (
+                        <li style={{ fontSize: '0.8rem', color: '#94a3b8', fontStyle: 'italic', marginTop: '0.5rem' }}>
+                            ...y en {locationEntries.length - 3} ubicación(es) más.
+                        </li>
+                    )}
+                </ul>
+            );
 
-            const moreText = locationEntries.length > 3 ? `\n...y en ${locationEntries.length - 3} ubicación(es) más.` : '';
-
-            setToastMessage(`No puedes eliminar "${genetic.name}". Tienes ${totalPlants} plantas activas de esta madre. Elimínalas o finalízalas primero:\n${locationsList}${moreText}`);
-            setToastType('error');
-            setToastAnimate(true);
-            setToastOpen(true);
+            setDeleteValidationError(
+                <div>
+                    No puedes eliminar la genética <strong>{genetic.name}</strong> porque tienes <strong>{totalPlants} plantas activas</strong> en tu inventario.
+                    {locationsListNode}
+                    Debes cosechar, desechar o finalizar estas plantas antes de poder borrar la Madre de tu catálogo.
+                </div>
+            );
             return;
         }
 
@@ -725,15 +740,19 @@ const Genetics: React.FC = () => {
                         </ModalOverlay>
                     )}
 
-                {/* Confirm Delete Modal */}
+                {/* Confirm Delete / Error Modal */}
                 <ConfirmModal
-                    isOpen={confirmDeleteOpen}
-                    title="Eliminar Madre"
-                    message={`¿Estás seguro de que deseas eliminar la madre "${geneticToDelete?.name}"? Esta acción no se puede deshacer.`}
-                    onClose={() => setConfirmDeleteOpen(false)}
-                    onConfirm={handleConfirmDelete}
-                    confirmText="Eliminar"
-                    isDanger
+                    isOpen={confirmDeleteOpen || !!deleteValidationError}
+                    title={deleteValidationError ? "Eliminación Bloqueada" : "Eliminar Madre"}
+                    message={deleteValidationError || `¿Estás seguro de que deseas eliminar la madre "${geneticToDelete?.name}"? Esta acción no se puede deshacer.`}
+                    onClose={() => {
+                        setConfirmDeleteOpen(false);
+                        setDeleteValidationError(null);
+                    }}
+                    onConfirm={deleteValidationError ? () => setDeleteValidationError(null) : handleConfirmDelete}
+                    confirmText={deleteValidationError ? "Entendido" : "Eliminar"}
+                    cancelText={deleteValidationError ? "" : "Cancelar"}
+                    isDanger={!deleteValidationError}
                     isLoading={isDeleting}
                 />
 
