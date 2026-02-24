@@ -20,7 +20,7 @@ export interface Room {
     grid_columns?: number; // For Esquejera (Clones) Battleship Grid
     batches?: Batch[];
     clone_maps?: CloneMap[]; // Added for maps
-    spot?: { name: string }; // Joined Crop Info
+    spot?: { id?: string; name: string }; // Joined Crop Info
 }
 
 export interface CloneMap {

@@ -268,7 +268,7 @@ export const roomsService = {
     async getBatches(): Promise<Batch[]> {
         const { data, error } = await getClient()
             .from('batches')
-            .select('*, room:rooms(id, name, type, spot:chakra_crops(name)), genetic:genetics(name, type)')
+            .select('*, room:rooms(id, name, type, spot_id, spot:chakra_crops(id, name)), genetic:genetics(name, type)')
             .eq('organization_id', getSelectedOrgId())
             .is('discarded_at', null) // Only active batches
             .order('created_at', { ascending: false });
