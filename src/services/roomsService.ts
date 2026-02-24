@@ -782,9 +782,21 @@ export const roomsService = {
         }
 
         // STANDARD MOVE (or full move)
+        // We first need to get the existing notes to append the new action without destroying custom observations
+        const { data: existingBatch } = await getClient()
+            .from('batches')
+            .select('notes')
+            .eq('id', batchId)
+            .single();
+
+        let newNotes = existingBatch?.notes || '';
+        if (notes) {
+            newNotes = newNotes ? `${newNotes}\n[${new Date().toLocaleDateString()}]: ${notes}` : `[${new Date().toLocaleDateString()}]: ${notes}`;
+        }
+
         const updates: any = {
             current_room_id: toRoomId,
-            notes: notes // Update note on batch too? Maybe append?
+            notes: newNotes // Append note instead of overwriting
         };
 
         if (gridPosition !== undefined) updates.grid_position = gridPosition;
@@ -833,6 +845,16 @@ export const roomsService = {
         const newBatchesToInsert: any[] = [];
         const sourceBatchIdsToDiscard: string[] = []; // Renamed from sourceBatchIdsToUpdate
         const batchesToUpdatePosition: { id: string, mapId: string, pos: string, roomId: string | null }[] = [];
+
+        // Fetch the room type to set the correct stage
+        const { data: mapData } = await getClient().from('clone_maps').select('room_id').eq('id', mapId).single();
+        let newStage: BatchStage = 'vegetation'; // Default
+        if (mapData?.room_id) {
+            const { data: roomData } = await getClient().from('rooms').select('type').eq('id', mapData.room_id).single();
+            if (roomData?.type === 'flowering' || roomData?.type === 'living_soil') newStage = 'flowering';
+            else if (roomData?.type === 'drying') newStage = 'drying';
+            else if (roomData?.type === 'clones' || roomData?.type === 'esquejera') newStage = 'clones';
+        }
 
         // Pre-fetch genetics info if needed for naming
         const geneticIds = batches.map(b => b.genetic_id).filter((v: any, i: number, a: any[]) => a.indexOf(v) === i);
@@ -921,7 +943,7 @@ export const roomsService = {
                     newBatchesToInsert.push({
                         name: `${trackingCode}`,
                         quantity: 1,
-                        stage: batch.stage,
+                        stage: newStage, // Set dynamically instead of batch.stage
                         genetic_id: batch.genetic_id,
                         start_date: batch.start_date,
                         current_room_id: batch.current_room_id,
@@ -1158,28 +1180,69 @@ export const roomsService = {
         return true;
     },
 
-    async moveBatches(batchIds: string[], toRoomId: string, notes: string = 'Transplante Masivo', userId?: string): Promise<boolean> {
+    async moveBatches(batchIds: string[], toRoomId: string, notes?: string, userId?: string, providedStage?: string): Promise<boolean> {
         if (!batchIds.length) return false;
 
-        const { error } = await getClient()
-            .from('batches')
-            .update({
-                current_room_id: toRoomId,
-                clone_map_id: null,
-                grid_position: null,
-                stage: 'vegetation', // Promote to Veg
-                notes: notes // Append or set notes? Ideally append, but simple set for now or DB trigger
-            })
-            .in('id', batchIds);
+        let newStage = providedStage;
+        if (!newStage) {
+            // Fetch destination room to determine the correct stage
+            const { data: toRoom } = await getClient()
+                .from('rooms')
+                .select('type')
+                .eq('id', toRoomId)
+                .single();
 
-        if (error) {
-            console.error('Error moving batches:', error);
-            throw error;
+            newStage = 'vegetation'; // Default fallback
+            if (toRoom?.type === 'flowering' || toRoom?.type === 'living_soil') {
+                newStage = 'flowering';
+            } else if (toRoom?.type === 'drying') {
+                newStage = 'drying';
+            } else if (toRoom?.type === 'clones') {
+                newStage = 'clones';
+            }
         }
 
-        // Ideally we should record movement history for each, but for bulk ops might be heavy.
-        // Let's rely on DB triggers or loop if strict history needed.
-        // For now, single bulk update is efficient.
+        // Fetch existing batches to get their current notes
+        const { data: existingBatches, error: fetchError } = await getClient()
+            .from('batches')
+            .select('id, notes')
+            .in('id', batchIds);
+
+        if (fetchError || !existingBatches) {
+            console.error('Error fetching batches for move:', fetchError);
+            return false;
+        }
+
+        const dateStr = new Date().toLocaleDateString();
+        const actionNote = notes || 'Transplante Masivo';
+
+        // Prepare bulk update promises
+        const updatePromises = existingBatches.map(batch => {
+            let newNotes = batch.notes || '';
+            newNotes = newNotes ? `${newNotes}\n[${dateStr}]: ${actionNote}` : `[${dateStr}]: ${actionNote}`;
+
+            return getClient()
+                .from('batches')
+                .update({
+                    current_room_id: toRoomId,
+                    clone_map_id: null,
+                    grid_position: null,
+                    stage: newStage, // Set dynamically
+                    notes: newNotes
+                })
+                .eq('id', batch.id);
+        });
+
+        // Execute updates
+        const results = await Promise.all(updatePromises);
+
+        const hasError = results.some(r => r.error);
+        if (hasError) {
+            console.error('Error in bulk move updates', results.find(r => r.error)?.error);
+            return false;
+        }
+
+        // We can log batch movements here if needed in the future
 
         return true;
     },

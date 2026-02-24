@@ -340,7 +340,7 @@ const BatchItem = ({ batch, onClick, cellSize }: { batch: Batch; onClick?: (e: R
                                     'drying': 'Secado',
                                     'curing': 'Curado',
                                     'completed': 'Corte',
-                                    'clones': 'Clones/Esquejes'
+                                    'clones': 'Plántula/Esqueje'
                                 };
                                 return stageMap[batch.stage] || (batch.stage.charAt(0).toUpperCase() + batch.stage.slice(1));
                             })()

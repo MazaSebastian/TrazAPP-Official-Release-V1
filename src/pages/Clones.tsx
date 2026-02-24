@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import styled, { createGlobalStyle, keyframes } from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import {
-    FaHistory, FaBarcode, FaExchangeAlt, FaMinusCircle, FaEdit, FaTrash,
+    FaSearch, FaHistory, FaBarcode, FaExchangeAlt, FaMinusCircle, FaEdit, FaTrash,
     FaCut, FaTimes, FaLevelUpAlt, FaPlus, FaAngleRight, FaAngleDown,
-    FaCheckCircle, FaDna, FaPrint
+    FaTint, FaLeaf, FaSun, FaCheckCircle, FaDna, FaPrint
 } from 'react-icons/fa';
 import { Tooltip } from '../components/Tooltip';
 import { roomsService } from '../services/roomsService';
@@ -29,11 +29,11 @@ const fadeIn = keyframes`
 
 
 const Container = styled.div`
-  padding: 2rem;
-  padding-top: 5rem;
-  max-width: 1400px;
-  margin: 0 auto;
-  animation: ${fadeIn} 0.5s ease-in-out;
+padding: 2rem;
+padding - top: 5rem;
+max - width: 1400px;
+margin: 0 auto;
+animation: ${fadeIn} 0.5s ease -in -out;
 `;
 
 // --- New Environment Components ---
@@ -42,28 +42,28 @@ const Container = styled.div`
 
 
 const SummaryGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 1.5rem;
-  margin-bottom: 2rem;
+display: grid;
+grid - template - columns: repeat(auto - fill, minmax(220px, 1fr));
+gap: 1.5rem;
+margin - bottom: 2rem;
 `;
 
 const SummaryCard = styled.div<{ isTotal?: boolean }>`
-  background: rgba(15, 23, 42, 0.75);
-  backdrop-filter: blur(12px);
-  padding: 1.25rem;
-  border-radius: 1rem;
-  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.3);
-  border: 1px solid ${p => p.isTotal ? 'rgba(74, 222, 128, 0.3)' : 'rgba(255, 255, 255, 0.05)'};
-  position: relative;
-  overflow: hidden;
-  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out, border-color 0.2s;
-  cursor: default;
+background: rgba(15, 23, 42, 0.75);
+backdrop - filter: blur(12px);
+padding: 1.25rem;
+border - radius: 1rem;
+box - shadow: 0 4px 6px - 1px rgba(0, 0, 0, 0.3);
+border: 1px solid ${p => p.isTotal ? 'rgba(74, 222, 128, 0.3)' : 'rgba(255, 255, 255, 0.05)'};
+position: relative;
+overflow: hidden;
+transition: transform 0.2s ease -in -out, box - shadow 0.2s ease -in -out, border - color 0.2s;
+cursor: default ;
 
   &:hover {
     transform: translateY(-5px);
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
-  }
+    box - shadow: 0 10px 15px - 3px rgba(0, 0, 0, 0.4), 0 4px 6px - 2px rgba(0, 0, 0, 0.2);
+}
 
   ${p => p.isTotal && `
     background: rgba(20, 83, 45, 0.3);
@@ -71,277 +71,277 @@ const SummaryCard = styled.div<{ isTotal?: boolean }>`
 
   h3 {
     margin: 0 0 0.25rem 0;
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+    font - size: 0.75rem;
+    text - transform: uppercase;
+    letter - spacing: 0.05em;
     color: #94a3b8;
-    font-weight: 700;
-  }
+    font - weight: 700;
+}
 
   .value {
-    font-size: 1.5rem;
-    font-weight: 800;
+    font - size: 1.5rem;
+    font - weight: 800;
     color: ${p => p.isTotal ? '#4ade80' : '#f8fafc'};
-    line-height: 1.2;
-  }
+    line - height: 1.2;
+}
 
   .icon {
     position: absolute;
     right: 1.25rem;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 1.75rem;
+    top: 50 %;
+    transform: translateY(-50 %);
+    font - size: 1.75rem;
     opacity: 0.15;
     color: ${p => p.isTotal ? '#4ade80' : '#cbd5e1'};
-  }
+}
 `;
 
 const Header = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
+display: flex;
+justify - content: space - between;
+align - items: center;
+margin - bottom: 2rem;
 
   h1 {
-    font-size: 2rem;
-    font-weight: 800;
+    font - size: 2rem;
+    font - weight: 800;
     color: #e2e8f0;
     margin: 0;
     display: flex;
-    align-items: center;
+    align - items: center;
     gap: 0.75rem;
-  }
+}
 `;
 
 const CreateButton = styled.button`
-  background: rgba(74, 222, 128, 0.2);
-  color: #4ade80;
-  padding: 0.75rem 1.5rem;
-  border-radius: 0.75rem;
-  border: 1px solid rgba(74, 222, 128, 0.5);
-  font-weight: 600;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  transition: all 0.2s;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-  backdrop-filter: blur(8px);
+background: rgba(74, 222, 128, 0.2);
+color: #4ade80;
+padding: 0.75rem 1.5rem;
+border - radius: 0.75rem;
+border: 1px solid rgba(74, 222, 128, 0.5);
+font - weight: 600;
+cursor: pointer;
+display: flex;
+align - items: center;
+gap: 0.5rem;
+transition: all 0.2s;
+box - shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+backdrop - filter: blur(8px);
 
   &:hover {
     background: rgba(74, 222, 128, 0.3);
     transform: translateY(-2px);
-    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.3);
-  }
+    box - shadow: 0 6px 8px rgba(0, 0, 0, 0.3);
+}
 `;
 
 const HistorySection = styled.div`
-  background: rgba(15, 23, 42, 0.75);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 1rem;
-  padding: 1.5rem;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+background: rgba(15, 23, 42, 0.75);
+backdrop - filter: blur(12px);
+border: 1px solid rgba(255, 255, 255, 0.05);
+border - radius: 1rem;
+padding: 1.5rem;
+box - shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 `;
 
 const DeleteAllButton = styled.button`
-  background: #fff5f5;
-  color: #e53e3e;
-  border: 1px solid #fc8181;
-  padding: 0.5rem 1rem;
-  border-radius: 0.5rem;
-  font-size: 0.8rem;
-  font-weight: 700;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  transition: all 0.2s ease-in-out;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+background: #fff5f5;
+color: #e53e3e;
+border: 1px solid #fc8181;
+padding: 0.5rem 1rem;
+border - radius: 0.5rem;
+font - size: 0.8rem;
+font - weight: 700;
+cursor: pointer;
+display: flex;
+align - items: center;
+gap: 0.5rem;
+transition: all 0.2s ease -in -out;
+box - shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 
   &:hover {
     background: #fed7d7;
-    border-color: #f56565;
+    border - color: #f56565;
     transform: translateY(-1px);
-    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
-  }
+    box - shadow: 0 4px 6px - 1px rgba(0, 0, 0, 0.1);
+}
 
   &:active {
     transform: translateY(0);
-    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-  }
+    box - shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
 `;
 
 const ButtonSpinner = styled.div`
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-radius: 50%;
-  border-top: 2px solid white;
-  width: 16px;
-  height: 16px;
-  animation: spin 1s linear infinite;
+border: 2px solid rgba(255, 255, 255, 0.3);
+border - radius: 50 %;
+border - top: 2px solid white;
+width: 16px;
+height: 16px;
+animation: spin 1s linear infinite;
 
-  @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-  }
+@keyframes spin {
+    0 % { transform: rotate(0deg); }
+    100 % { transform: rotate(360deg); }
+}
 `;
 
 const HistoryHeader = styled.div`
-  font-size: 1.5rem;
-  color: #f8fafc;
-  margin-bottom: 1.5rem;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
+font - size: 1.5rem;
+color: #f8fafc;
+margin - bottom: 1.5rem;
+display: flex;
+align - items: center;
+gap: 0.75rem;
 `;
 
 const HistoryTable = styled.table`
-  width: 100%;
-  border-collapse: collapse;
+width: 100 %;
+border - collapse: collapse;
 
   th {
-    text-align: left;
+    text - align: left;
     padding: 1rem;
     background: rgba(255, 255, 255, 0.05);
     color: #94a3b8;
-    font-weight: 600;
-    border-bottom: 2px solid rgba(255, 255, 255, 0.1);
-  }
+    font - weight: 600;
+    border - bottom: 2px solid rgba(255, 255, 255, 0.1);
+}
 
   td {
     padding: 1rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    border - bottom: 1px solid rgba(255, 255, 255, 0.05);
     color: #f8fafc;
-    vertical-align: middle;
-  }
+    vertical - align: middle;
+}
 `;
 
 const ActionButton = styled.button<{ color: string }>`
-    background: transparent;
-    border: 1px solid transparent;
-    color: ${p => p.color};
-    width: 32px;
-    height: 32px;
-    border-radius: 0.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.2s;
-    margin-right: 0.5rem;
+background: transparent;
+border: 1px solid transparent;
+color: ${p => p.color};
+width: 32px;
+height: 32px;
+border - radius: 0.5rem;
+display: flex;
+align - items: center;
+justify - content: center;
+cursor: pointer;
+transition: all 0.2s;
+margin - right: 0.5rem;
 
     &:hover {
-        background: ${p => p.color}15;
-        border-color: ${p => p.color}30;
-    }
+    background: ${p => p.color} 15;
+    border - color: ${p => p.color} 30;
+}
 `;
 
 
 
 
 const FormGroup = styled.div`
-  margin-bottom: 1rem;
-  label { display: block; margin-bottom: 0.5rem; font-weight: 600; color: #cbd5e1; }
-  input, select, textarea { width: 100%; padding: 0.75rem; background: rgba(30, 41, 59, 0.5); color: #f8fafc; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 0.5rem; font-size: 0.95rem; }
+margin - bottom: 1rem;
+  label { display: block; margin - bottom: 0.5rem; font - weight: 600; color: #cbd5e1; }
+input, select, textarea { width: 100 %; padding: 0.75rem; background: rgba(30, 41, 59, 0.5); color: #f8fafc; border: 1px solid rgba(255, 255, 255, 0.1); border - radius: 0.5rem; font - size: 0.95rem; }
 `;
 
 
 
 const BarcodeDisplay = styled.div`
-    background: rgba(15, 23, 42, 0.4);
-    padding: 2rem;
-    text-align: center;
-    border-radius: 0.5rem;
-    border: 2px dashed rgba(255, 255, 255, 0.1);
-    margin: 1rem 0;
+background: rgba(15, 23, 42, 0.4);
+padding: 2rem;
+text - align: center;
+border - radius: 0.5rem;
+border: 2px dashed rgba(255, 255, 255, 0.1);
+margin: 1rem 0;
 
     .code {
-        font-family: 'Courier New', monospace;
-        font-size: 1.5rem;
-        font-weight: 800;
-        letter-spacing: 0.1em;
-        color: #f8fafc;
-        margin-top: 1rem;
-        display: block;
-    }
+    font - family: 'Courier New', monospace;
+    font - size: 1.5rem;
+    font - weight: 800;
+    letter - spacing: 0.1em;
+    color: #f8fafc;
+    margin - top: 1rem;
+    display: block;
+}
     
     .label {
-        font-size: 0.85rem;
-        color: #94a3b8;
-        margin-top: 0.5rem;
-    }
+    font - size: 0.85rem;
+    color: #94a3b8;
+    margin - top: 0.5rem;
+}
 `;
 
 const PrintableCloneLabel = styled.div`
-  display: none;
+display: none;
 
-  @media print {
+@media print {
     display: flex;
-    flex-direction: row; /* Horizontal layout for wide small label */
-    align-items: center;
-    justify-content: space-between;
+    flex - direction: row; /* Horizontal layout for wide small label */
+    align - items: center;
+    justify - content: space - between;
     width: 50mm;
     height: 30mm;
-    page-break-after: always;
+    page -break-after: always;
     padding: 2mm;
-    box-sizing: border-box;
+    box - sizing: border - box;
     overflow: hidden;
-    
+
     /* Ensure only this is printed */
     position: relative;
     
-    .qr-side {
+    .qr - side {
         width: 22mm;
         height: 22mm;
         display: flex;
-        align-items: center;
-        justify-content: center;
+        align - items: center;
+        justify - content: center;
     }
 
-    .info-side {
+    .info - side {
         flex: 1;
         display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: flex-start;
-        padding-left: 2mm;
-        font-family: Arial, sans-serif;
+        flex - direction: column;
+        justify - content: center;
+        align - items: flex - start;
+        padding - left: 2mm;
+        font - family: Arial, sans - serif;
     }
 
     .name {
-        font-size: 10pt;
-        font-weight: 800;
+        font - size: 10pt;
+        font - weight: 800;
         color: black;
-        margin-bottom: 2px;
+        margin - bottom: 2px;
     }
 
     .meta {
-        font-size: 7pt;
+        font - size: 7pt;
         color: black;
-        line-height: 1.1;
+        line - height: 1.1;
     }
-  }
+}
 `;
 
 const PrintStyles = createGlobalStyle`
-  @media print {
+@media print {
     @page {
-      size: 50mm 30mm;
-      margin: 0;
+        size: 50mm 30mm;
+        margin: 0;
     }
     body * {
-      visibility: hidden;
+        visibility: hidden;
     }
-    #printable-clones-area, #printable-clones-area * {
-      visibility: visible;
+    #printable - clones - area, #printable - clones - area * {
+        visibility: visible;
     }
-    #printable-clones-area {
-      position: absolute;
-      left: 0;
-      top: 0;
-      width: 100%;
+    #printable - clones - area {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100 %;
     }
-  }
+}
 `;
 
 const getStatusBadge = (batch: any, onNavigate?: (path: string) => void) => {
@@ -354,7 +354,7 @@ const getStatusBadge = (batch: any, onNavigate?: (path: string) => void) => {
                 onClick={(e) => {
                     if (isClickable) {
                         e.stopPropagation();
-                        onNavigate(`/rooms/${roomId}?mapId=${batch.clone_map_id}`);
+                        onNavigate(`/ rooms / ${roomId}?mapId = ${batch.clone_map_id} `);
                     }
                 }}
                 style={{
@@ -383,6 +383,32 @@ const getStatusBadge = (batch: any, onNavigate?: (path: string) => void) => {
     );
 };
 
+const getStageBadge = (roomType?: string) => {
+    switch (roomType) {
+        case 'clones':
+        case 'esquejera':
+            return (
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: 'rgba(56, 189, 248, 0.1)', color: '#38bdf8', padding: '2px 6px', borderRadius: '4px', fontSize: '0.65rem', fontWeight: 600 }}>
+                    <FaTint style={{ fontSize: '0.6rem' }} /> Clones
+                </span>
+            );
+        case 'vegetation':
+            return (
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: 'rgba(72, 187, 120, 0.1)', color: '#48bb78', padding: '2px 6px', borderRadius: '4px', fontSize: '0.65rem', fontWeight: 600 }}>
+                    <FaLeaf style={{ fontSize: '0.6rem' }} /> Vegetación
+                </span>
+            );
+        case 'flowering':
+            return (
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: 'rgba(159, 122, 234, 0.1)', color: '#9f7aea', padding: '2px 6px', borderRadius: '4px', fontSize: '0.65rem', fontWeight: 600 }}>
+                    <FaSun style={{ fontSize: '0.6rem' }} /> Floración
+                </span>
+            );
+        default:
+            return null; // Return nothing if unknown
+    }
+};
+
 const BatchGroupRow = ({ group, onBarcodeClick, onMoveClick, onDiscardClick, onEditClick, onDeleteClick, onUnitPrintClick, onUnitDeleteClick, onNavigate }: any) => {
     const { root, children } = group;
     const [isExpanded, setIsExpanded] = useState(false);
@@ -398,7 +424,7 @@ const BatchGroupRow = ({ group, onBarcodeClick, onMoveClick, onDiscardClick, onE
         const year = d.getFullYear().toString().slice(-2);
         const hours = d.getHours().toString().padStart(2, '0');
         const minutes = d.getMinutes().toString().padStart(2, '0');
-        return `${day}/${month}/${year} ${hours}:${minutes}`;
+        return `${day} /${month}/${year} ${hours}:${minutes} `;
     };
 
     const rootFormattedDate = formatBatchDate(root);
@@ -445,13 +471,13 @@ const BatchGroupRow = ({ group, onBarcodeClick, onMoveClick, onDiscardClick, onE
             // But we want to enforce the exact format asked by the user.
             // Let's parse the ID part. Usually root.name is something like "Lote XXXX"
             const idPart = displayName.split('-')[0].trim();
-            displayName = `${idPart} - ${nomenclature} - ${rootFormattedDate}`;
+            displayName = `${idPart} - ${nomenclature} - ${rootFormattedDate} `;
         } else if (displayName && displayName.toLowerCase().startsWith('lote')) {
-            displayName = `${displayName} - ${nomenclature} - ${rootFormattedDate}`;
+            displayName = `${displayName} - ${nomenclature} - ${rootFormattedDate} `;
         } else {
             // Fallback if the name is entirely different
             const shortId = root.id ? root.id.substring(0, 4).toUpperCase() : '0000';
-            displayName = `Lote ${shortId} - ${nomenclature} - ${rootFormattedDate}`;
+            displayName = `Lote ${shortId} - ${nomenclature} - ${rootFormattedDate} `;
         }
 
         const nameDisplay = (
@@ -470,7 +496,7 @@ const BatchGroupRow = ({ group, onBarcodeClick, onMoveClick, onDiscardClick, onE
         );
 
         return (
-            <tr key={`root-${root.id}`} style={rowStyle}>
+            <tr key={`root - ${root.id} `} style={rowStyle}>
                 <td style={cellStyle}>{rootFormattedDate}</td>
                 <td style={cellStyle}>{nameDisplay}</td>
                 <td style={cellStyle}>{geneticName}</td>
@@ -478,7 +504,7 @@ const BatchGroupRow = ({ group, onBarcodeClick, onMoveClick, onDiscardClick, onE
                 <td style={cellStyle}>
                     {root.room?.spot?.id ? (
                         <span
-                            onClick={(e) => { e.stopPropagation(); onNavigate(`/crops/${root.room.spot_id}`); }}
+                            onClick={(e) => { e.stopPropagation(); onNavigate(`/ crops / ${root.room.spot_id} `); }}
                             style={{ cursor: 'pointer', color: '#38bdf8', textDecoration: 'underline', fontWeight: 500 }}
                             title="Ver Cultivo"
                         >
@@ -488,13 +514,16 @@ const BatchGroupRow = ({ group, onBarcodeClick, onMoveClick, onDiscardClick, onE
                 </td>
                 <td style={cellStyle}>
                     {root.room?.id ? (
-                        <span
-                            onClick={(e) => { e.stopPropagation(); onNavigate(`/rooms/${root.room.id}`); }}
-                            style={{ cursor: 'pointer', color: '#c084fc', textDecoration: 'underline', fontWeight: 500 }}
-                            title="Ver Sala"
-                        >
-                            {root.room?.name}
-                        </span>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '4px' }}>
+                            <span
+                                onClick={(e) => { e.stopPropagation(); onNavigate(`/ rooms / ${root.room.id} `); }}
+                                style={{ cursor: 'pointer', color: '#c084fc', textDecoration: 'underline', fontWeight: 500 }}
+                                title="Ver Sala"
+                            >
+                                {root.room?.name}
+                            </span>
+                            {getStageBadge(root.room?.type)}
+                        </div>
                     ) : 'Desconocido'}
                 </td>
                 <td style={cellStyle}>{getStatusBadge(root, onNavigate)}</td>
@@ -533,7 +562,7 @@ const BatchGroupRow = ({ group, onBarcodeClick, onMoveClick, onDiscardClick, onE
 
         // If the batch only has 1 unit, it inherently acts as a unique entity, hide visual UI indexing.
         const displayName = batch.quantity > 1
-            ? `${batch.name} - U#${unitIndex.toString().padStart(3, '0')}`
+            ? `${batch.name} - U#${unitIndex.toString().padStart(3, '0')} `
             : batch.name;
 
         const nameDisplay = (
@@ -547,7 +576,7 @@ const BatchGroupRow = ({ group, onBarcodeClick, onMoveClick, onDiscardClick, onE
         const unitFormattedDate = formatBatchDate(batch);
 
         return (
-            <tr key={`unit-${batch.id}-${unitIndex}`} style={rowStyle}>
+            <tr key={`unit - ${batch.id} -${unitIndex} `} style={rowStyle}>
                 <td style={cellStyle}>{unitFormattedDate}</td>
                 <td style={cellStyle}>{nameDisplay}</td>
                 <td style={cellStyle}>{batch.genetic?.name || 'Desconocida'}</td>
@@ -555,7 +584,7 @@ const BatchGroupRow = ({ group, onBarcodeClick, onMoveClick, onDiscardClick, onE
                 <td style={cellStyle}>
                     {batch.room?.spot?.id ? (
                         <span
-                            onClick={(e) => { e.stopPropagation(); onNavigate(`/crops/${batch.room.spot_id}`); }}
+                            onClick={(e) => { e.stopPropagation(); onNavigate(`/ crops / ${batch.room.spot_id} `); }}
                             style={{ cursor: 'pointer', color: '#38bdf8', textDecoration: 'underline', fontWeight: 500 }}
                             title="Ver Cultivo"
                         >
@@ -565,13 +594,16 @@ const BatchGroupRow = ({ group, onBarcodeClick, onMoveClick, onDiscardClick, onE
                 </td>
                 <td style={cellStyle}>
                     {batch.room?.id ? (
-                        <span
-                            onClick={(e) => { e.stopPropagation(); onNavigate(`/rooms/${batch.room.id}`); }}
-                            style={{ cursor: 'pointer', color: '#c084fc', textDecoration: 'underline', fontWeight: 500 }}
-                            title="Ver Sala"
-                        >
-                            {batch.room?.name}
-                        </span>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '4px' }}>
+                            <span
+                                onClick={(e) => { e.stopPropagation(); onNavigate(`/ rooms / ${batch.room.id} `); }}
+                                style={{ cursor: 'pointer', color: '#c084fc', textDecoration: 'underline', fontWeight: 500 }}
+                                title="Ver Sala"
+                            >
+                                {batch.room?.name}
+                            </span>
+                            {getStageBadge(batch.room?.type)}
+                        </div>
                     ) : 'Desconocido'}
                 </td>
                 <td style={cellStyle}>{getStatusBadge(batch, onNavigate)}</td>
@@ -792,7 +824,7 @@ const Clones: React.FC = () => {
             const { root } = group;
             // Key: GeneticID | Date(DD/MM/YYYY) | RoomID
             const dateKey = new Date(root.start_date || root.created_at).toLocaleDateString();
-            const key = `${root.genetic_id || 'unk'}|${dateKey}|${root.room_id || root.current_room_id || 'unk'}`; // Handle room_id naming variation if any
+            const key = `${root.genetic_id || 'unk'}| ${dateKey}| ${root.room_id || root.current_room_id || 'unk'} `; // Handle room_id naming variation if any
 
             if (!groupMap.has(key)) {
                 groupMap.set(key, []);
@@ -841,7 +873,7 @@ const Clones: React.FC = () => {
 
         // Filter all batches that start with this Genetic Prefix
         // Note: We check specifically for the pattern PREFIX-xxxx
-        const pattern = new RegExp(`^${prefix}-\\d{4}$`);
+        const pattern = new RegExp(`^ ${prefix} -\\d{ 4 } $`);
 
         const existing = allBatchesHistory.filter(b => pattern.test(b.name));
 
@@ -855,7 +887,7 @@ const Clones: React.FC = () => {
         });
 
         const nextSeq = (maxSeq + 1).toString().padStart(4, '0');
-        return `${prefix}-${nextSeq}`;
+        return `${prefix} -${nextSeq} `;
     };
 
     const [isCreating, setIsCreating] = useState(false);
@@ -1033,8 +1065,8 @@ const Clones: React.FC = () => {
 
     const handleUnitDeleteClick = async (batch: any, unitIndex: number) => {
         const displayDeleteName = batch.quantity > 1
-            ? `la unidad #${unitIndex.toString().padStart(3, '0')} del lote ${batch.name}`
-            : `el lote ${batch.name}`;
+            ? `la unidad #${unitIndex.toString().padStart(3, '0')} del lote ${batch.name} `
+            : `el lote ${batch.name} `;
 
         if (window.confirm(`¿Seguro que deseas eliminar ${displayDeleteName}?`)) {
             setLoading(true);
@@ -1057,7 +1089,7 @@ const Clones: React.FC = () => {
 
     const handleUnitPrintClick = (batch: any, unitIndex: number, autoPrint: boolean = false) => {
         const customBatchName = batch.quantity > 1
-            ? `${batch.name} - U#${unitIndex.toString().padStart(3, '0')}`
+            ? `${batch.name} - U#${unitIndex.toString().padStart(3, '0')} `
             : batch.name;
 
         setViewingBatch({ ...batch, name: customBatchName, quantity: 1 });
@@ -1115,7 +1147,7 @@ const Clones: React.FC = () => {
 
         if (success) {
             // Ideally log the reason
-            console.log(`Discarded ${discardQuantity} from ${batchToDiscard.name}. Reason: ${discardReason}`);
+            console.log(`Discarded ${discardQuantity} from ${batchToDiscard.name}.Reason: ${discardReason} `);
             loadData();
             setIsDiscardModalOpen(false);
             setBatchToDiscard(null);
@@ -1227,6 +1259,7 @@ const Clones: React.FC = () => {
                             {cloneBatches.map(group => {
                                 const { root } = group;
 
+                                console.log("🔍 Renderizando BatchGroupRow:", { name: root.name, room: root.room, current_room_id: root.current_room_id });
 
                                 return (
                                     <BatchGroupRow
@@ -1313,7 +1346,7 @@ const Clones: React.FC = () => {
                                                                 <td style={cellStyle}>
                                                                     {batch.room?.spot?.id ? (
                                                                         <span
-                                                                            onClick={(e) => { e.stopPropagation(); navigate(`/crops/${batch.room.spot_id}`); }}
+                                                                            onClick={(e) => { e.stopPropagation(); navigate(`/ crops / ${batch.room.spot_id} `); }}
                                                                             style={{ cursor: 'pointer', color: '#38bdf8', textDecoration: 'underline', fontWeight: 500 }}
                                                                             title="Ver Cultivo"
                                                                         >
@@ -1323,13 +1356,16 @@ const Clones: React.FC = () => {
                                                                 </td>
                                                                 <td style={cellStyle}>
                                                                     {batch.room?.id ? (
-                                                                        <span
-                                                                            onClick={(e) => { e.stopPropagation(); navigate(`/rooms/${batch.room.id}`); }}
-                                                                            style={{ cursor: 'pointer', color: '#c084fc', textDecoration: 'underline', fontWeight: 500 }}
-                                                                            title="Ver Sala"
-                                                                        >
-                                                                            {batch.room?.name}
-                                                                        </span>
+                                                                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '4px' }}>
+                                                                            <span
+                                                                                onClick={(e) => { e.stopPropagation(); navigate(`/ rooms / ${batch.room.id} `); }}
+                                                                                style={{ cursor: 'pointer', color: '#c084fc', textDecoration: 'underline', fontWeight: 500 }}
+                                                                                title="Ver Sala"
+                                                                            >
+                                                                                {batch.room?.name}
+                                                                            </span>
+                                                                            {getStageBadge(batch.room?.type)}
+                                                                        </div>
                                                                     ) : 'Desconocido'}
                                                                 </td>
                                                                 <td style={cellStyle}>{getStatusBadge(batch, navigate)}</td>
@@ -1538,7 +1574,7 @@ const Clones: React.FC = () => {
                                 />
                                 <div style={{ fontSize: '0.8rem', color: '#718096', marginTop: '0.25rem' }}>
                                     {moveQuantity < batchToMove.quantity
-                                        ? `Se moverán ${moveQuantity} esquejes. Quedarán ${batchToMove.quantity - moveQuantity} en el lote original.`
+                                        ? `Se moverán ${moveQuantity} esquejes.Quedarán ${batchToMove.quantity - moveQuantity} en el lote original.`
                                         : 'Se moverá todo el lote.'}
                                 </div>
                             </FormGroup>
@@ -1680,7 +1716,7 @@ const Clones: React.FC = () => {
                 isOpen={isDeleteModalOpen}
                 title="Eliminar Lote"
                 message={batchToDelete?.idsToDelete?.length > 1
-                    ? `¿Estás seguro de que deseas eliminar estos ${batchToDelete.idsToDelete.length} lotes? Esta acción no se puede deshacer.`
+                    ? `¿Estás seguro de que deseas eliminar estos ${batchToDelete.idsToDelete.length} lotes ? Esta acción no se puede deshacer.`
                     : `¿Estás seguro de que deseas eliminar el lote ${batchToDelete?.name}?`
                 }
                 confirmText="Eliminar"
@@ -1693,7 +1729,7 @@ const Clones: React.FC = () => {
             <ConfirmModal
                 isOpen={isDeleteAllModalOpen}
                 title="Eliminar TODOS los Lotes"
-                message={`¿Estás seguro de que deseas eliminar TODOS los lotes de esquejes visibles? Esta acción no se puede deshacer.`}
+                message={`¿Estás seguro de que deseas eliminar TODOS los lotes de esquejes visibles ? Esta acción no se puede deshacer.`}
                 confirmText="Eliminar Todo"
                 isDanger
                 isLoading={isDeleting}
@@ -1735,7 +1771,7 @@ const Clones: React.FC = () => {
                                 <span>{item.quantity} u.</span>
                             </div>
                             <div style={{ width: '100%', height: '8px', background: 'rgba(255, 255, 255, 0.1)', borderRadius: '4px', overflow: 'hidden' }}>
-                                <div style={{ height: '100%', width: `${item.percentage}%`, background: '#38b2ac', borderRadius: '4px' }}></div>
+                                <div style={{ height: '100%', width: `${item.percentage}% `, background: '#38b2ac', borderRadius: '4px' }}></div>
                             </div>
                             <div style={{ textAlign: 'right', fontSize: '0.75rem', color: '#94a3b8', marginTop: '0.25rem' }}>
                                 {item.percentage.toFixed(1)}%

@@ -41,6 +41,7 @@ import { TransplantModal } from '../components/Esquejera/TransplantModal';
 import { HarvestModal } from '../components/Flowering/HarvestModal';
 import { ToastModal } from '../components/ToastModal';
 import { CustomDatePicker } from '../components/CustomDatePicker';
+import { PromptModal } from '../components/PromptModal';
 import { CustomSelect } from '../components/CustomSelect';
 
 import { createGlobalStyle } from 'styled-components';
@@ -899,13 +900,13 @@ const groupBatchesByGeneticDate = (batches: Batch[], groupByGenetic: boolean = f
     groups.forEach(group => {
         const { root } = group;
 
-        // Check for Custom Group Tag in Notes
+        // Check for Custom Group Tag in group_name (new) or Notes (legacy)
         const notes = root.notes || '';
         const groupMatch = notes.match(/\[Grupo:\s*(.*?)\]/);
+        const groupName = root.group_name || (groupMatch ? groupMatch[1].trim() : null);
 
-        if (groupMatch) {
-            // Priority Grouping by "Grupo: X"
-            const groupName = groupMatch[1].trim();
+        if (groupName) {
+            // Priority Grouping by group_name or legacy "Grupo: X" note
             const key = `GROUP|${groupName}`;
             if (!groupMap.has(key)) {
                 groupMap.set(key, []);
@@ -1584,6 +1585,7 @@ const RoomDetail: React.FC = () => {
     };
 
     // Plant Detail Modal State (Individual Clone on Map)
+    const [notePromptModal, setNotePromptModal] = useState<{ isOpen: boolean, batch: Batch | null }>({ isOpen: false, batch: null });
     const [plantDetailModal, setPlantDetailModal] = useState<{ isOpen: boolean; batch: Batch | null }>({
         isOpen: false,
         batch: null
@@ -1826,9 +1828,20 @@ const RoomDetail: React.FC = () => {
         if (!room) return;
 
         try {
+            // Determine the new stage based on destination room type
+            const { data: toRoom } = await supabase.from('rooms').select('type').eq('id', destinationRoomId).single();
+            let newStage: BatchStage = 'vegetation'; // Default fallback
+            if (toRoom?.type === 'flowering' || toRoom?.type === 'living_soil') {
+                newStage = 'flowering';
+            } else if (toRoom?.type === 'drying') {
+                newStage = 'drying';
+            } else if (toRoom?.type === 'clones') {
+                newStage = 'clones';
+            }
+
             // 1. Move Singles (Existing Logic)
             if (singles.length > 0) {
-                await roomsService.moveBatches(singles, destinationRoomId, ''); // Clean notes: No label
+                await roomsService.moveBatches(singles, destinationRoomId, undefined); // Pass undefined to preserve notes
             }
 
             // 2. Process Groups (Merge Logic)
@@ -1854,16 +1867,16 @@ const RoomDetail: React.FC = () => {
                                     batchId,
                                     room.id,
                                     destinationRoomId,
-                                    'Transplante' // Clean history, no group label
+                                    undefined // Pass undefined to preserve notes
                                 );
 
                                 await roomsService.updateBatch(batchId, {
-                                    stage: 'vegetation',
-                                    notes: `[Grupo: ${group.name}]`, // Tag for grouping in destination room based on Transplant Wizard
+                                    stage: newStage, // Set dynamically instead of hardcoded 'vegetation'
+                                    group_name: group.name, // Native DB grouping via new column
                                     current_room_id: destinationRoomId,
                                     clone_map_id: null,
                                     grid_position: null
-                                }, user?.id, 'Transplante: Inicio de Vegetación');
+                                }, user?.id, `Transplante: Inicio de ${newStage === 'flowering' ? 'Floración' : 'Vegetación'}`);
                             })());
                         }
                     }
@@ -2716,11 +2729,16 @@ const RoomDetail: React.FC = () => {
             if (active.data.current?.type === 'genetic') {
                 const genetic = active.data.current?.genetic as Genetic;
                 try {
+                    let defaultStage: BatchStage = 'vegetation';
+                    if (room?.type === 'flowering' || room?.type === 'living_soil') defaultStage = 'flowering';
+                    else if (room?.type === 'drying') defaultStage = 'drying';
+                    else if (room?.type === 'clones') defaultStage = 'clones';
+
                     await roomsService.createBatch({
                         name: genetic.name,
                         genetic_id: genetic.id,
                         quantity: 1,
-                        stage: 'vegetation', // Default for clones
+                        stage: defaultStage, // Dynamic based on room
                         start_date: new Date().toISOString(),
                         current_room_id: room?.id,
                         clone_map_id: activeMapId || undefined,
@@ -5782,11 +5800,19 @@ const RoomDetail: React.FC = () => {
                                             <label style={{ display: 'block', fontSize: '0.75rem', color: '#94a3b8', marginBottom: '0.25rem' }}>Fase</label>
                                             <span style={{
                                                 display: 'inline-block', padding: '0.1rem 0.5rem', borderRadius: '999px', fontSize: '0.75rem', fontWeight: 700,
-                                                background: plantDetailModal.batch.stage === 'vegetation' ? 'rgba(74, 222, 128, 0.15)' : 'rgba(56, 189, 248, 0.15)',
-                                                color: plantDetailModal.batch.stage === 'vegetation' ? '#4ade80' : '#38bdf8',
-                                                border: `1px solid ${plantDetailModal.batch.stage === 'vegetation' ? 'rgba(74, 222, 128, 0.3)' : 'rgba(56, 189, 248, 0.3)'}`
+                                                background: plantDetailModal.batch.stage === 'vegetation' ? 'rgba(74, 222, 128, 0.15)' :
+                                                    (plantDetailModal.batch.stage === 'clones' || plantDetailModal.batch.stage === 'seedling') ? 'rgba(167, 139, 250, 0.15)' :
+                                                        'rgba(56, 189, 248, 0.15)',
+                                                color: plantDetailModal.batch.stage === 'vegetation' ? '#4ade80' :
+                                                    (plantDetailModal.batch.stage === 'clones' || plantDetailModal.batch.stage === 'seedling') ? '#a855f7' :
+                                                        '#38bdf8',
+                                                border: `1px solid ${plantDetailModal.batch.stage === 'vegetation' ? 'rgba(74, 222, 128, 0.3)' :
+                                                    (plantDetailModal.batch.stage === 'clones' || plantDetailModal.batch.stage === 'seedling') ? 'rgba(167, 139, 250, 0.3)' :
+                                                        'rgba(56, 189, 248, 0.3)'}`
                                             }}>
-                                                {plantDetailModal.batch.stage === 'vegetation' ? 'Vegetativo' : 'Floración'}
+                                                {plantDetailModal.batch.stage === 'vegetation' ? 'Vegetativo' :
+                                                    (plantDetailModal.batch.stage === 'clones' || plantDetailModal.batch.stage === 'seedling') ? 'Plántula / Esqueje' :
+                                                        'Floración'}
                                             </span>
                                         </div>
                                         {plantDetailModal.batch.notes && (
@@ -5839,6 +5865,22 @@ const RoomDetail: React.FC = () => {
                                             <FaArrowLeft /> Asignar al Mapa
                                         </button>
                                     )}
+
+                                    <button
+                                        onClick={() => {
+                                            setNotePromptModal({ isOpen: true, batch: plantDetailModal.batch });
+                                            setPlantDetailModal({ ...plantDetailModal, isOpen: false });
+                                        }}
+                                        style={{
+                                            width: '100%', padding: '0.75rem', borderRadius: '0.375rem', border: '1px solid rgba(253, 224, 71, 0.4)', background: 'rgba(253, 224, 71, 0.1)',
+                                            color: '#fde047', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', cursor: 'pointer', fontWeight: 600,
+                                            transition: 'all 0.2s', marginBottom: '0.5rem'
+                                        }}
+                                        onMouseEnter={e => e.currentTarget.style.background = 'rgba(253, 224, 71, 0.2)'}
+                                        onMouseLeave={e => e.currentTarget.style.background = 'rgba(253, 224, 71, 0.1)'}
+                                    >
+                                        <FaStickyNote /> Observación
+                                    </button>
 
                                     <div style={{ display: 'flex', gap: '0.5rem' }}>
                                         <button
@@ -5918,6 +5960,23 @@ const RoomDetail: React.FC = () => {
                 )
             }
 
+
+            {/* Note Prompt Modal */}
+            {notePromptModal.isOpen && notePromptModal.batch && (
+                <PromptModal
+                    isOpen={notePromptModal.isOpen}
+                    title={`Observación - ${notePromptModal.batch.tracking_code || notePromptModal.batch.name}`}
+                    placeholder="Escribe una observación para esta planta..."
+                    initialValue={notePromptModal.batch.notes || ''}
+                    onClose={() => setNotePromptModal({ isOpen: false, batch: null })}
+                    onConfirm={(notes) => {
+                        if (notePromptModal.batch) {
+                            handleSaveNotes(notePromptModal.batch, notes);
+                        }
+                    }}
+                    confirmButtonColor="primary"
+                />
+            )}
 
             {/* Custom Delete Confirmation Modal */}
             {

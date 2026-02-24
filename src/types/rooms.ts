@@ -1,7 +1,7 @@
 import { Genetic } from './genetics';
 
 export type RoomType = 'vegetation' | 'flowering' | 'drying' | 'curing' | 'mother' | 'clones' | 'general' | 'germination' | 'living_soil';
-export type BatchStage = 'seedling' | 'vegetation' | 'flowering' | 'drying' | 'curing' | 'completed';
+export type BatchStage = 'seedling' | 'vegetation' | 'flowering' | 'drying' | 'curing' | 'completed' | 'clones';
 
 export interface Room {
     id: string;
@@ -49,6 +49,7 @@ export interface Batch {
     grid_position?: string | null; // E.g., "A1", "B5" for Esquejera Grid
     table_number?: number;
     notes?: string;
+    group_name?: string | null; // Multi-genetic logical grouping
     created_at: string;
     discarded_at?: string | null;
     discard_reason?: string | null;
