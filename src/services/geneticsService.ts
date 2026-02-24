@@ -63,18 +63,18 @@ export const geneticsService = {
         return true;
     },
 
-    async getActiveBatchesCountForGenetic(geneticId: string): Promise<number> {
-        const { data, error, count } = await getClient()
+    async getActiveBatchesForGenetic(geneticId: string): Promise<any[]> {
+        const { data, error } = await getClient()
             .from('batches')
-            .select('*', { count: 'exact', head: true })
+            .select('quantity, room:rooms(name, spot:chakra_crops(name))')
             .eq('genetic_id', geneticId)
             // exclude 'completed' or strictly count any existing relation
             .neq('stage', 'completed');
 
         if (error) {
-            console.error('Error counting active batches for genetic:', error);
-            return 0; // Return 0 on error to not block UI unnecessarily, though ideally we'd throw or return a status
+            console.error('Error fetching active batches for genetic:', error);
+            return []; // Return empty array on error
         }
-        return count || 0;
+        return data || [];
     }
 };

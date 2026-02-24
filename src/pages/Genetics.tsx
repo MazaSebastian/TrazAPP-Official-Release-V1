@@ -330,9 +330,19 @@ const Genetics: React.FC = () => {
 
     const handleDeleteClick = async (genetic: Genetic) => {
         // Prevent deletion if active clones exist
-        const activeCount = await geneticsService.getActiveBatchesCountForGenetic(genetic.id);
-        if (activeCount > 0) {
-            setToastMessage(`No puedes eliminar "${genetic.name}". Tienes ${activeCount} lote(s) activos de esta madre. Elimínalos o finalízalos primero.`);
+        const activeBatches = await geneticsService.getActiveBatchesForGenetic(genetic.id);
+
+        if (activeBatches && activeBatches.length > 0) {
+            // Format the list of locations
+            const locationsList = activeBatches.slice(0, 3).map((b: any) => {
+                const roomName = b.room?.name || 'Sala Desconocida';
+                const spotName = b.room?.spot?.name ? ` - Cultivo: ${b.room.spot.name}` : '';
+                return `• ${b.quantity}u${spotName} - Sala: ${roomName}`;
+            }).join('\n');
+
+            const moreText = activeBatches.length > 3 ? `\n...y ${activeBatches.length - 3} lote(s) más.` : '';
+
+            setToastMessage(`No puedes eliminar "${genetic.name}". Tienes ${activeBatches.length} lote(s) activos de esta madre. Elimínalos o finalízalos primero:\n${locationsList}${moreText}`);
             setToastType('error');
             setToastAnimate(true);
             setToastOpen(true);
