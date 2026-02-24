@@ -349,7 +349,15 @@ const BatchGroupRow = ({ group, onBarcodeClick, onMoveClick, onDiscardClick, onE
 
     // Aggregates
     const totalQty = root.quantity + children.reduce((acc: number, child: any) => acc + child.quantity, 0);
-    const displayDate = new Date(root.start_date || root.created_at).toLocaleDateString();
+
+    // Formatting Date to match "DD/MM/YY HH:MM"
+    const parsedDate = new Date(root.start_date || root.created_at);
+    const day = parsedDate.getDate().toString().padStart(2, '0');
+    const month = (parsedDate.getMonth() + 1).toString().padStart(2, '0');
+    const year = parsedDate.getFullYear().toString().slice(-2);
+    const hours = parsedDate.getHours().toString().padStart(2, '0');
+    const minutes = parsedDate.getMinutes().toString().padStart(2, '0');
+    const formattedDate = `${day}/${month}/${year} ${hours}:${minutes}`;
 
     const units: { batch: any, unitIndex: number, isVirtual: boolean, totalInBatch: number }[] = [];
     let absoluteIndex = 1;
@@ -382,10 +390,24 @@ const BatchGroupRow = ({ group, onBarcodeClick, onMoveClick, onDiscardClick, onE
         );
 
         const geneticName = root.genetic?.name || 'Desconocida';
+        const nomenclature = root.genetic?.nomenclatura || geneticName.substring(0, 3).toUpperCase();
+
+        // Exact format requirement: Lote 7684 - PRU - 24/02/26 11:42
+        // We use the last 4 digits of the uuid as the "number" or just the name if it's already "Lote XXXX"
         let displayName = root.name;
-        if (units.length > 1 && !displayName.startsWith('Lote')) {
-            const prefix = geneticName.substring(0, 6).toUpperCase();
-            displayName = `Lote ${prefix} - ${displayDate}`;
+
+        if (displayName && displayName.toLowerCase().includes('lote') && displayName.includes('-')) {
+            // If it's already the long format, keep it (fallback)
+            // But we want to enforce the exact format asked by the user.
+            // Let's parse the ID part. Usually root.name is something like "Lote XXXX"
+            const idPart = displayName.split('-')[0].trim();
+            displayName = `${idPart} - ${nomenclature} - ${formattedDate}`;
+        } else if (displayName && displayName.toLowerCase().startsWith('lote')) {
+            displayName = `${displayName} - ${nomenclature} - ${formattedDate}`;
+        } else {
+            // Fallback if the name is entirely different
+            const shortId = root.id ? root.id.substring(0, 4).toUpperCase() : '0000';
+            displayName = `Lote ${shortId} - ${nomenclature} - ${formattedDate}`;
         }
 
         const nameDisplay = (
@@ -405,7 +427,7 @@ const BatchGroupRow = ({ group, onBarcodeClick, onMoveClick, onDiscardClick, onE
 
         return (
             <tr key={`root-${root.id}`} style={rowStyle}>
-                <td style={cellStyle}>{displayDate}</td>
+                <td style={cellStyle}>{formattedDate}</td>
                 <td style={cellStyle}>{nameDisplay}</td>
                 <td style={cellStyle}>{geneticName}</td>
                 <td style={cellStyle}>{quantityDisplay}</td>
@@ -454,7 +476,7 @@ const BatchGroupRow = ({ group, onBarcodeClick, onMoveClick, onDiscardClick, onE
 
         return (
             <tr key={`unit-${batch.id}-${unitIndex}`} style={rowStyle}>
-                <td style={cellStyle}>{displayDate}</td>
+                <td style={cellStyle}>{formattedDate}</td>
                 <td style={cellStyle}>{nameDisplay}</td>
                 <td style={cellStyle}>{batch.genetic?.name || 'Desconocida'}</td>
                 <td style={cellStyle}>1 u.</td>
