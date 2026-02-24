@@ -11,7 +11,7 @@ import { useAuth } from '../context/AuthContext';
 import { organizationService } from '../services/organizationService';
 import { planService } from '../services/planService';
 import { Plan } from '../types';
-import { FaUserPlus, FaUserShield, FaTrash, FaCopy, FaExclamationTriangle } from 'react-icons/fa';
+import { FaUserPlus, FaUserShield, FaTrash } from 'react-icons/fa';
 
 const PageContainer = styled.div`
   padding: 1rem;
@@ -135,6 +135,7 @@ const Settings: React.FC = () => {
 
   useEffect(() => {
     loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentOrganization]);
 
   const loadData = async () => {
@@ -268,30 +269,33 @@ const Settings: React.FC = () => {
 
 
 
-      <Section>
-        <SectionHeader>
-          <FaDna /> Precios por Genética
-        </SectionHeader>
+      {/* Ocultado temporalmente según solicitud */}
+      {false && (
+        <Section>
+          <SectionHeader>
+            <FaDna /> Precios por Genética
+          </SectionHeader>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
-          {genetics.map(gen => (
-            <div key={gen.id} style={{ border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '0.5rem', padding: '1rem', background: 'rgba(30, 41, 59, 0.5)' }}>
-              <div style={{ fontWeight: 'bold', marginBottom: '0.5rem', color: '#f8fafc' }}>{gen.name}</div>
-              <input
-                type="number"
-                placeholder="Precio ($)"
-                value={gen.default_price_per_gram || ''}
-                onChange={e => updateGeneticPrice(gen.id, e.target.value)}
-                style={{ width: '100%', padding: '0.5rem', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '0.25rem', background: 'rgba(15, 23, 42, 0.5)', color: '#f8fafc', outline: 'none' }}
-              />
-            </div>
-          ))}
-        </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
+            {genetics.map(gen => (
+              <div key={gen.id} style={{ border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '0.5rem', padding: '1rem', background: 'rgba(30, 41, 59, 0.5)' }}>
+                <div style={{ fontWeight: 'bold', marginBottom: '0.5rem', color: '#f8fafc' }}>{gen.name}</div>
+                <input
+                  type="number"
+                  placeholder="Precio ($)"
+                  value={gen.default_price_per_gram || ''}
+                  onChange={e => updateGeneticPrice(gen.id, e.target.value)}
+                  style={{ width: '100%', padding: '0.5rem', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '0.25rem', background: 'rgba(15, 23, 42, 0.5)', color: '#f8fafc', outline: 'none' }}
+                />
+              </div>
+            ))}
+          </div>
 
-        <SaveButton onClick={handleSaveGenetics} disabled={saving}>
-          <FaSave /> {saving ? 'Guardando...' : 'Guardar Precios Genéticas'}
-        </SaveButton>
-      </Section>
+          <SaveButton onClick={handleSaveGenetics} disabled={saving}>
+            <FaSave /> {saving ? 'Guardando...' : 'Guardar Precios Genéticas'}
+          </SaveButton>
+        </Section>
+      )}
 
       {currentOrganization && (
         <Section>

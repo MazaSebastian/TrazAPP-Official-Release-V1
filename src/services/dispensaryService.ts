@@ -332,30 +332,11 @@ export const dispensaryService = {
         // 2. Update Source
         const newSourceWeight = source.current_weight - amount;
 
-        // If source becomes empty, update status to depleted? Or keep it 'curing'/'storage' but empty (Red color)?
-        // User said: "cuando se dispense la totalidad se coloreara a color rojo... debe eliminarlo".
-        // Use 'depleted' or just weight 0. Weight 0 is fine.
-
         await supabase.from('chakra_dispensary_batches').update({ current_weight: newSourceWeight }).eq('id', sourceBatchId);
 
-        // 3. Create Shop Batch
-        const { data: newBatch } = await supabase.from('chakra_dispensary_batches').insert([{
-            strain_name: source.strain_name,
-            batch_code: `${source.batch_code} - Dispensando`, // Updated naming convention
-            initial_weight: amount,
-            current_weight: amount,
-            quality_grade: source.quality_grade,
-            status: 'available',
-            location: 'Dispensario / Shop',
-            notes: `Transferido desde stock: ${source.batch_code}`,
-            harvest_log_id: source.harvest_log_id,
-            organization_id: getSelectedOrgId()
-        }]).select().single();
-
-        // 4. Log Movements
         const { data: { user } } = await supabase.auth.getUser();
 
-        // Out from Stock (Use 'adjustment' or 'transfer_out' if allowed, defaulting to adjustment)
+        // 3. Log Movement Out
         await supabase.from('chakra_dispensary_movements').insert([{
             batch_id: sourceBatchId,
             type: 'adjustment',
@@ -366,17 +347,63 @@ export const dispensaryService = {
             new_weight: newSourceWeight
         }]);
 
-        // In to Shop
-        if (newBatch) {
+        // 4. Find existing Shop pool for this strain
+        const { data: existingShopBatches } = await supabase.from('chakra_dispensary_batches')
+            .select('*')
+            .eq('organization_id', getSelectedOrgId())
+            .eq('strain_name', source.strain_name)
+            .eq('status', 'available')
+            .eq('location', 'Dispensario / Shop')
+            .order('created_at', { ascending: false });
+
+        if (existingShopBatches && existingShopBatches.length > 0) {
+            // Upsert into existing pool
+            const shopBatch = existingShopBatches[0];
+            const newCurrent = shopBatch.current_weight + amount;
+            const newInitial = shopBatch.initial_weight + amount;
+
+            await supabase.from('chakra_dispensary_batches').update({
+                current_weight: newCurrent,
+                initial_weight: newInitial
+            }).eq('id', shopBatch.id);
+
+            // Log Movement In
             await supabase.from('chakra_dispensary_movements').insert([{
-                batch_id: newBatch.id,
+                batch_id: shopBatch.id,
                 type: 'restock',
                 amount: amount,
-                reason: 'Recepción desde Stock',
+                reason: `Recepción desde Stock: ${source.batch_code}`,
                 performed_by: user?.id,
-                previous_weight: 0,
-                new_weight: amount
+                previous_weight: shopBatch.current_weight,
+                new_weight: newCurrent
             }]);
+        } else {
+            // 5. Create new Shop Batch (Pool)
+            const { data: newBatch } = await supabase.from('chakra_dispensary_batches').insert([{
+                strain_name: source.strain_name,
+                batch_code: `${source.strain_name} - Dispensario`, // Clean, unified naming
+                initial_weight: amount,
+                current_weight: amount,
+                quality_grade: source.quality_grade,
+                status: 'available',
+                location: 'Dispensario / Shop',
+                notes: `Transferido desde stock: ${source.batch_code}`,
+                harvest_log_id: source.harvest_log_id,
+                organization_id: getSelectedOrgId()
+            }]).select().single();
+
+            // Log Movement In
+            if (newBatch) {
+                await supabase.from('chakra_dispensary_movements').insert([{
+                    batch_id: newBatch.id,
+                    type: 'restock',
+                    amount: amount,
+                    reason: `Recepción desde Stock inicial: ${source.batch_code}`,
+                    performed_by: user?.id,
+                    previous_weight: 0,
+                    new_weight: amount
+                }]);
+            }
         }
 
         return true;

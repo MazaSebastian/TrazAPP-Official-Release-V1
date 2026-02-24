@@ -921,19 +921,8 @@ const CropDetail: React.FC = () => {
         return data;
       };
 
-      const minTimePromise = isInitial
-        ? new Promise(resolve => setTimeout(resolve, 1500))
-        : Promise.resolve();
-
-      // Run fetching and timer in parallel
-      const [data] = await Promise.all([
-        loadPromise(),
-        // Load rooms in parallel too if we want, or sequentially?
-        // Previous logic: load rooms BEFORE setting crop.
-        // Let's keep loadRooms separate or inside?
-        // To ensure 3s *total* wait, we should include the timer in the main wait.
-        minTimePromise
-      ]);
+      // Run fetching
+      const data = await loadPromise();
 
       console.log("Crop data loaded:", data);
 

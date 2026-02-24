@@ -466,12 +466,7 @@ const Stock: React.FC = () => {
 
     setAggregatedStock(Object.values(items).sort((a, b) => b.totalWeight - a.totalWeight));
 
-    // Minimum Loading Delay to show logo (3 seconds)
-    const elapsedTime = Date.now() - startTime;
-    const minimumLoadingTime = 3000; // ms
-    if (elapsedTime < minimumLoadingTime) {
-      await new Promise(resolve => setTimeout(resolve, minimumLoadingTime - elapsedTime));
-    }
+
 
     setIsLoading(false);
   };

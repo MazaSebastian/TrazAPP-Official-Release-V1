@@ -543,10 +543,10 @@ const CreateMapDropZone = ({ children }: { children: React.ReactNode }) => {
                 <div style={{
                     position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    background: 'rgba(255,255,255,0.8)', zIndex: 10,
-                    pointerEvents: 'none'
+                    background: 'rgba(15, 23, 42, 0.85)', backdropFilter: 'blur(4px)', zIndex: 10,
+                    pointerEvents: 'none', borderRadius: '0.5rem'
                 }}>
-                    <div style={{ color: '#2f855a', fontWeight: 'bold', fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <div style={{ color: '#4ade80', fontWeight: 'bold', fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                         <FaPlus /> Soltar para crear Mesa
                     </div>
                 </div>
@@ -1884,18 +1884,12 @@ const RoomDetail: React.FC = () => {
         if (!editBatchForm.id) return;
         setIsUpdatingBatch(true);
         try {
-            // Artificial delay for UX
-            const minDelay = new Promise(resolve => setTimeout(resolve, 800));
-
-            await Promise.all([
-                roomsService.updateBatch(editBatchForm.id, {
-                    name: editBatchForm.name,
-                    quantity: Number(editBatchForm.quantity),
-                    notes: editBatchForm.notes,
-                    current_room_id: room?.id
-                }, user?.id, 'Edición Manual de Lote'),
-                minDelay
-            ]);
+            await roomsService.updateBatch(editBatchForm.id, {
+                name: editBatchForm.name,
+                quantity: Number(editBatchForm.quantity),
+                notes: editBatchForm.notes,
+                current_room_id: room?.id
+            }, user?.id, 'Edición Manual de Lote');
 
             // Refresh
             if (id) {
@@ -1948,9 +1942,6 @@ const RoomDetail: React.FC = () => {
 
         setIsCreatingMap(true); // Local loading
         try {
-            // Artificial delay for smoother UX
-            await new Promise(resolve => setTimeout(resolve, 1000));
-
             const newMap = await roomsService.createCloneMap({
                 room_id: room?.id || '',
                 name: newMapName,
@@ -2033,13 +2024,8 @@ const RoomDetail: React.FC = () => {
                 return { roomData, tasksData, usersData, stickiesData, mapsData, metricsResult, geneticsData };
             };
 
-            const minTimePromise = (showLoading || isInitial)
-                ? new Promise(resolve => setTimeout(resolve, 3000))
-                : Promise.resolve();
-
             const [results] = await Promise.all([
-                loadPromise(),
-                minTimePromise
+                loadPromise()
             ]);
 
             const { roomData, tasksData, usersData, stickiesData, mapsData, metricsResult, geneticsData } = results;
@@ -2478,13 +2464,7 @@ const RoomDetail: React.FC = () => {
 
         setIsDeletingBatch(true);
         try {
-            // Artificial delay for UX
-            const minDelay = new Promise(resolve => setTimeout(resolve, 800));
-
-            await Promise.all([
-                roomsService.deleteBatch(batch.id),
-                minDelay
-            ]);
+            await roomsService.deleteBatch(batch.id);
 
             closeDeleteConfirm();
             if (id) {
@@ -3265,13 +3245,7 @@ const RoomDetail: React.FC = () => {
         };
 
         try {
-            // Artificial delay for better UX (1 second)
-            const minDelay = new Promise(resolve => setTimeout(resolve, 1000));
-
-            const [created] = await Promise.all([
-                roomsService.createBatch(batchData, user?.id),
-                minDelay
-            ]);
+            const created = await roomsService.createBatch(batchData, user?.id);
 
             if (created) {
                 // Silent reload (no full screen spinner)
@@ -3893,30 +3867,32 @@ const RoomDetail: React.FC = () => {
                                                             </button>
 
                                                             {/* 1.5. CAMBIAR FASE (New) */}
-                                                            <button
-                                                                onClick={() => {
-                                                                    setIsBulkActionsOpen(false);
-                                                                    // Pre-fill logic
-                                                                    let initialStage = '';
-                                                                    let initialNotes = '';
-                                                                    if (selectedBatchIds.size === 1) {
-                                                                        const batchId = Array.from(selectedBatchIds)[0];
-                                                                        const batch = room?.batches?.find(b => b.id === batchId);
-                                                                        if (batch) {
-                                                                            initialStage = batch.stage || '';
-                                                                            initialNotes = batch.notes || '';
+                                                            {room?.type === 'living_soil' && (
+                                                                <button
+                                                                    onClick={() => {
+                                                                        setIsBulkActionsOpen(false);
+                                                                        // Pre-fill logic
+                                                                        let initialStage = '';
+                                                                        let initialNotes = '';
+                                                                        if (selectedBatchIds.size === 1) {
+                                                                            const batchId = Array.from(selectedBatchIds)[0];
+                                                                            const batch = room?.batches?.find(b => b.id === batchId);
+                                                                            if (batch) {
+                                                                                initialStage = batch.stage || '';
+                                                                                initialNotes = batch.notes || '';
+                                                                            }
                                                                         }
-                                                                    }
-                                                                    setChangePhaseForm({ stage: initialStage as BatchStage, notes: initialNotes });
-                                                                    setIsChangePhaseModalOpen(true);
-                                                                }}
-                                                                style={{ width: '100%', textAlign: 'left', padding: '0.75rem 1rem', background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.75rem', color: '#cbd5e1', fontSize: '0.9rem', transition: 'background 0.1s' }}
-                                                                onMouseEnter={e => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'}
-                                                                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                                                            >
-                                                                <div style={{ background: 'rgba(74, 222, 128, 0.1)', padding: '0.4rem', borderRadius: '0.375rem', color: '#4ade80', display: 'flex' }}><FaLeaf size={12} /></div>
-                                                                <span>Cambiar Fase de Cultivo</span>
-                                                            </button>
+                                                                        setChangePhaseForm({ stage: initialStage as BatchStage, notes: initialNotes });
+                                                                        setIsChangePhaseModalOpen(true);
+                                                                    }}
+                                                                    style={{ width: '100%', textAlign: 'left', padding: '0.75rem 1rem', background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.75rem', color: '#cbd5e1', fontSize: '0.9rem', transition: 'background 0.1s' }}
+                                                                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'}
+                                                                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                                                                >
+                                                                    <div style={{ background: 'rgba(74, 222, 128, 0.1)', padding: '0.4rem', borderRadius: '0.375rem', color: '#4ade80', display: 'flex' }}><FaLeaf size={12} /></div>
+                                                                    <span>Cambiar Fase de Cultivo</span>
+                                                                </button>
+                                                            )}
 
                                                             {/* 2. REUBICAR */}
                                                             <button
@@ -6291,13 +6267,15 @@ const RoomDetail: React.FC = () => {
                 (isCreateMapFromGroupConfirmOpen || isClosingCreateMapFromGroup) && pendingMapGroup && (
                     <PortalModalOverlay isClosing={isClosingCreateMapFromGroup}>
                         <ModalContent onClick={e => e.stopPropagation()} isClosing={isClosingCreateMapFromGroup}>
-                            <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '1rem' }}>Crear Mapa desde Grupo</h2>
+                            <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#f8fafc', margin: 0, paddingBottom: '1rem' }}>
+                                <FaMapMarkedAlt /> Crear Mapa desde Grupo
+                            </h2>
                             {(() => {
                                 // PRIORITIZE VIRTUAL GROUP NAME
                                 if (pendingMapGroup.root._virtualGroupName) {
                                     return (
-                                        <p style={{ marginBottom: '1rem', color: '#4a5568' }}>
-                                            Vas a crear un nuevo mapa para el lote <strong>{pendingMapGroup.root._virtualGroupName}</strong> y sus variantes.
+                                        <p style={{ color: '#cbd5e1', marginBottom: '1rem', fontSize: '1.05rem', lineHeight: '1.5' }}>
+                                            Vas a crear un nuevo mapa para el lote <strong style={{ color: '#f8fafc' }}>{pendingMapGroup.root._virtualGroupName}</strong> y sus variantes.
                                         </p>
                                     );
                                 }
@@ -6308,58 +6286,47 @@ const RoomDetail: React.FC = () => {
                                 const displayName = `Lote ${prefix} ${displayDate} `;
 
                                 return (
-                                    <p style={{ marginBottom: '1rem', color: '#4a5568' }}>
-                                        Vas a crear un nuevo mapa para el lote <strong>{displayName}</strong> y sus variantes.
+                                    <p style={{ color: '#cbd5e1', marginBottom: '1rem', fontSize: '1.05rem', lineHeight: '1.5' }}>
+                                        Vas a crear un nuevo mapa para el lote <strong style={{ color: '#f8fafc' }}>{displayName}</strong> y sus variantes.
                                     </p>
                                 );
                             })()}
 
-                            <p style={{ marginBottom: '1rem', color: '#4a5568' }}>
-                                Total de plantas: <strong>{pendingMapGroup.root.quantity + pendingMapGroup.children.reduce((acc: number, c: any) => acc + c.quantity, 0)}</strong>
-                            </p>
-                            <p style={{ marginBottom: '1.5rem', fontSize: '0.9rem', color: '#718096' }}>
-                                Se creará una mesa automática y se distribuirán todas las plantas individualmente.
+                            <p style={{ color: '#94a3b8', marginBottom: '1.5rem', fontSize: '0.95rem' }}>
+                                Total de plantas: <strong style={{ color: '#4ade80' }}>{pendingMapGroup.root.quantity + pendingMapGroup.children.reduce((acc: number, c: any) => acc + c.quantity, 0)}</strong>
                             </p>
 
+                            <div style={{ padding: '1rem', background: 'rgba(56, 189, 248, 0.1)', border: '1px solid rgba(56, 189, 248, 0.2)', borderRadius: '0.5rem', marginBottom: '2rem' }}>
+                                <p style={{ color: '#bae6fd', margin: 0, fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                    <FaCheck style={{ color: '#38bdf8' }} /> Se creará una mesa automática y se distribuirán todas las plantas individualmente.
+                                </p>
+                            </div>
+
                             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
-                                <button
+                                <CancelButton
                                     onClick={closeCreateMapFromGroupModal}
-                                    disabled={isCreatingMapFromGroup}
-                                    style={{
-                                        padding: '0.5rem 1rem',
-                                        borderRadius: '0.375rem',
-                                        border: '1px solid #cbd5e0',
-                                        background: 'white',
-                                        color: '#4a5568',
-                                        cursor: isCreatingMapFromGroup ? 'not-allowed' : 'pointer',
-                                        opacity: isCreatingMapFromGroup ? 0.7 : 1
-                                    }}
+                                    style={{ flex: 'none', padding: '0.75rem 1.5rem' }}
                                 >
                                     Cancelar
-                                </button>
-                                <button
+                                </CancelButton>
+                                <ActionButton
                                     onClick={handleConfirmCreateMapFromGroup}
                                     disabled={isCreatingMapFromGroup}
-                                    style={{
-                                        padding: '0.5rem 1rem',
-                                        borderRadius: '0.375rem',
-                                        background: '#48bb78',
-                                        color: 'white',
-                                        border: 'none',
-                                        cursor: isCreatingMapFromGroup ? 'not-allowed' : 'pointer',
-                                        fontWeight: 600,
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '0.5rem',
-                                        opacity: isCreatingMapFromGroup ? 0.7 : 1
-                                    }}
+                                    $variant="success"
                                 >
-                                    {isCreatingMapFromGroup && <FaCircleNotch className="spin" />}
-                                    {isCreatingMapFromGroup ? 'Creando...' : 'Crear Mapa'}
-                                </button>
+                                    {isCreatingMapFromGroup ? (
+                                        <>
+                                            <FaCircleNotch className="spin" /> Creando...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <FaPlus /> Crear Mapa
+                                        </>
+                                    )}
+                                </ActionButton>
                             </div>
                         </ModalContent>
-                    </PortalModalOverlay >
+                    </PortalModalOverlay>
                 )
             }
 
@@ -6703,9 +6670,11 @@ const RoomDetail: React.FC = () => {
                 (isObservationModalOpen || isClosingObservation) && (
                     <PortalModalOverlay isClosing={isClosingObservation}>
                         <ModalContent isClosing={isClosingObservation} style={{ maxWidth: '400px' }}>
-                            <h3 style={{ marginTop: 0, color: '#2d3748', marginBottom: '0.5rem' }}>Registrar Observación</h3>
-                            <p style={{ color: '#718096', fontSize: '0.9rem', marginBottom: '1rem' }}>
-                                Esto agregará una nota y una alerta a los {selectedBatchIds.size} lotes seleccionados.
+                            <h3 style={{ marginTop: 0, color: '#f8fafc', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                <FaExclamationTriangle style={{ color: '#fbbf24' }} /> Registrar Observación
+                            </h3>
+                            <p style={{ color: '#cbd5e1', fontSize: '0.95rem', marginBottom: '1rem' }}>
+                                Esto agregará una nota y una alerta a los <strong style={{ color: '#4ade80' }}>{selectedBatchIds.size}</strong> lotes seleccionados.
                             </p>
                             <textarea
                                 value={observationText}
@@ -6715,34 +6684,32 @@ const RoomDetail: React.FC = () => {
                                     width: '100%',
                                     minHeight: '100px',
                                     padding: '0.75rem',
-                                    borderRadius: '0.375rem',
-                                    border: '1px solid #e2e8f0',
+                                    borderRadius: '0.5rem',
+                                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                                    background: 'rgba(15, 23, 42, 0.6)',
+                                    color: '#f8fafc',
                                     marginBottom: '0.5rem',
                                     fontFamily: 'inherit',
                                     resize: 'vertical'
                                 }}
                                 autoFocus
                             />
-                            <div style={{ fontSize: '0.8rem', color: '#a0aec0', marginBottom: '1rem', fontStyle: 'italic' }}>
+                            <div style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '1.5rem', fontStyle: 'italic' }}>
                                 (Elimina esta nota por completo para desactivar la alerta de observación)
                             </div>
-                            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
-                                <button
+                            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
+                                <CancelButton
                                     onClick={handleCloseObservation}
-                                    style={{ padding: '0.5rem 1rem', background: 'white', border: '1px solid #e2e8f0', borderRadius: '0.375rem', cursor: 'pointer', color: '#4a5568', transition: 'background 0.2s' }}
-                                    onMouseEnter={e => e.currentTarget.style.background = '#f7fafc'}
-                                    onMouseLeave={e => e.currentTarget.style.background = 'white'}
+                                    style={{ flex: 'none', padding: '0.75rem 1.5rem' }}
                                 >
                                     Cancelar
-                                </button>
-                                <button
+                                </CancelButton>
+                                <ActionButton
                                     onClick={handleRegisterObservation}
-                                    style={{ padding: '0.5rem 1rem', background: '#48bb78', border: 'none', borderRadius: '0.375rem', cursor: 'pointer', color: 'white', fontWeight: 600, transition: 'background 0.2s', boxShadow: '0 2px 4px rgba(72, 187, 120, 0.3)' }}
-                                    onMouseEnter={e => e.currentTarget.style.background = '#38a169'}
-                                    onMouseLeave={e => e.currentTarget.style.background = '#48bb78'}
+                                    $variant="success"
                                 >
                                     Guardar Observación
-                                </button>
+                                </ActionButton>
                             </div>
                         </ModalContent>
                     </PortalModalOverlay>
@@ -6869,41 +6836,41 @@ const RoomDetail: React.FC = () => {
 
 
 const BatchActionButton = styled.button<{ $variant?: 'delete' }>`
-    background: white;
-    border: 1px solid #e2e8f0;
-    border-radius: 6px;
-    color: ${props => props.$variant === 'delete' ? '#e53e3e' : '#3182ce'};
-    cursor: pointer;
-    width: 28px;
-    height: 28px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+                            background: white;
+                            border: 1px solid #e2e8f0;
+                            border-radius: 6px;
+                            color: ${props => props.$variant === 'delete' ? '#e53e3e' : '#3182ce'};
+                            cursor: pointer;
+                            width: 28px;
+                            height: 28px;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+                            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
 
-    &:hover {
-        transform: translateY(-2px) scale(1.05);
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        background: ${props => props.$variant === 'delete' ? '#fff5f5' : '#ebf8ff'};
-        border-color: ${props => props.$variant === 'delete' ? '#fc8181' : '#63b3ed'};
-        z-index: 2;
+                            &:hover {
+                                transform: translateY(-2px) scale(1.05);
+                            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                            background: ${props => props.$variant === 'delete' ? '#fff5f5' : '#ebf8ff'};
+                            border-color: ${props => props.$variant === 'delete' ? '#fc8181' : '#63b3ed'};
+                            z-index: 2;
     }
 
-    &:active {
-        transform: translateY(0) scale(1);
-        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+                            &:active {
+                                transform: translateY(0) scale(1);
+                            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
     }
-`;
+                            `;
 
 const ExpandableContainer = styled.div<{ $expanded: boolean }>`
-    display: grid;
-    grid-template-rows: ${props => props.$expanded ? '1fr' : '0fr'};
-    transition: grid-template-rows 0.3s ease-out;
-`;
+                            display: grid;
+                            grid-template-rows: ${props => props.$expanded ? '1fr' : '0fr'};
+                            transition: grid-template-rows 0.3s ease-out;
+                            `;
 
 const ExpandableInner = styled.div`
-    overflow: hidden;
-`;
+                            overflow: hidden;
+                            `;
 
 export default RoomDetail;

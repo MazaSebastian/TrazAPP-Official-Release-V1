@@ -378,20 +378,8 @@ const Crops: React.FC = () => {
   const loadCrops = React.useCallback(async (isInitial = false, silent = false) => {
     if (!silent) setLoading(true);
 
-    const fetchPromise = async () => {
-      const data = await cropsService.getCrops();
-      await loadLastActivities(data);
-      return data;
-    };
-
-    const minTimePromise = isInitial
-      ? new Promise(resolve => setTimeout(resolve, 1500))
-      : Promise.resolve();
-
-    const [data] = await Promise.all([
-      fetchPromise(),
-      minTimePromise
-    ]);
+    const data = await cropsService.getCrops();
+    await loadLastActivities(data);
 
     setCrops(data);
     if (!silent) setLoading(false);

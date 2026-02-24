@@ -265,22 +265,18 @@ const Rooms: React.FC = () => {
     const loadRooms = async (isInitial = false) => {
         setLoading(true);
 
-        const fetchPromise = async () => {
+        try {
             const data = await roomsService.getRooms();
-            return data;
-        };
-
-        const minTimePromise = isInitial
-            ? new Promise(resolve => setTimeout(resolve, 1500))
-            : Promise.resolve();
-
-        const [data] = await Promise.all([
-            fetchPromise(),
-            minTimePromise
-        ]);
-
-        setRooms(data);
-        setLoading(false);
+            setRooms(data);
+        } catch (error) {
+            console.error("Error loading rooms", error);
+            // Fallback for user feedback since setError isn't a state here
+            setToastMessage("Error al cargar las salas. Por favor, intenta de nuevo.");
+            setToastType('error');
+            setToastOpen(true);
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleCreateOrUpdateRoom = async () => {

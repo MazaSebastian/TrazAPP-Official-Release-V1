@@ -268,7 +268,7 @@ export const roomsService = {
     async getBatches(): Promise<Batch[]> {
         const { data, error } = await getClient()
             .from('batches')
-            .select('*, room:rooms(id, name, type), genetic:genetics(name, type)')
+            .select('*, room:rooms(id, name, type, spot:chakra_crops(name)), genetic:genetics(name, type)')
             .eq('organization_id', getSelectedOrgId())
             .is('discarded_at', null) // Only active batches
             .order('created_at', { ascending: false });
@@ -706,7 +706,7 @@ export const roomsService = {
                 // If not, use source ID (we are the root).
                 parent_batch_id: sourceBatch.parent_batch_id || sourceBatchId,
                 tracking_code: trackingCode,
-                notes: sourceBatch.notes?.match(/\[Grupo:.*?\]/)?.[0] || '',
+                notes: sourceBatch.notes || '',
                 organization_id: sourceBatch.organization_id || getSelectedOrgId()
             };
         });
@@ -929,7 +929,8 @@ export const roomsService = {
                         grid_position: pos,
                         parent_batch_id: batch.parent_batch_id || batch.id,
                         tracking_code: trackingCode,
-                        notes: batch.notes?.match(/\[Grupo:.*?\]/)?.[0] || ''
+                        notes: batch.notes || '',
+                        organization_id: batch.organization_id || getSelectedOrgId()
                     });
                 }
                 // Update seq for next batch of same genetic
@@ -1183,57 +1184,37 @@ export const roomsService = {
         return true;
     },
 
-    async harvestBatches(selectedBatches: { id: string, weight: number }[], toRoomId?: string, userId?: string): Promise<boolean> {
-        if (!selectedBatches.length) return false;
+    async harvestBatches(batchesData: { id: string, weight: number }[], toRoomId?: string, userId?: string): Promise<boolean> {
+        if (!batchesData.length) return false;
 
-        const batchIds = selectedBatches.map(b => b.id);
+        const batchIds = batchesData.map(b => b.id);
+        const updates: any = {
+            stage: 'drying',
+            clone_map_id: null,
+            grid_position: null
+        };
 
-        // Fetch existing notes to append to them
-        const { data: existingBatches } = await getClient()
-            .from('batches')
-            .select('id, notes')
-            .in('id', batchIds);
-
-        const existingNotesMap = new Map(existingBatches?.map(b => [b.id, b.notes || '']));
-
-        // Perform individual updates because each batch has a different weight and note
-        const updatePromises = selectedBatches.map(batchData => {
-            const currentNotes = existingNotesMap.get(batchData.id) || '';
-            const newNoteStr = currentNotes ? `${currentNotes} | Peso Húmedo: ${batchData.weight}g` : `Peso Húmedo: ${batchData.weight}g`;
-
-            const updates: any = {
-                stage: 'drying',
-                clone_map_id: null,
-                grid_position: null,
-                notes: newNoteStr
-            };
-
-            if (toRoomId) {
-                updates.current_room_id = toRoomId;
-            }
-
-            return getClient()
-                .from('batches')
-                .update(updates)
-                .eq('id', batchData.id);
-        });
-
-        const results = await Promise.all(updatePromises);
-        const hasErrors = results.some(r => r.error);
-
-        if (hasErrors) {
-            console.error('Error harvesting some batches:', results.filter(r => r.error));
-            throw new Error('Some batches failed to harvest');
+        if (toRoomId) {
+            updates.current_room_id = toRoomId;
         }
 
-        // Log Harvest Movement with weight
-        const movements = selectedBatches.map(b => ({
-            batch_id: b.id,
-            from_room_id: null, // Unknown without fetch, but allowable in log? Or we leave null.
+        const { error } = await getClient()
+            .from('batches')
+            .update(updates)
+            .in('id', batchIds);
+
+        if (error) {
+            console.error('Error harvesting batches:', error);
+            throw new Error('Failed to harvest batches');
+        }
+
+        // Log Harvest Movement
+        const movements = batchIds.map(id => ({
+            batch_id: id,
+            from_room_id: null, // Depending on where they come from, but usually they stay in room or move explicitly
             to_room_id: toRoomId || null,
-            notes: `Cosecha: Planta procesada. Peso Húmedo: ${b.weight}g`,
-            created_by: userId,
-            moved_at: new Date().toISOString()
+            notes: `Cosechado y movido a Secado`,
+            created_by: userId
         }));
 
         const { error: logError } = await getClient().from('batch_movements').insert(movements);
@@ -1244,6 +1225,29 @@ export const roomsService = {
 
     async mergeBatches(sourceBatchIds: string[], intoNewBatchData: Partial<Batch>): Promise<boolean> {
         if (!sourceBatchIds.length) return false;
+
+        let trackingCode = intoNewBatchData.tracking_code;
+
+        // Generate tracking code if not provided
+        if (!trackingCode && intoNewBatchData.genetic_id) {
+            const { data: genetic } = await getClient()
+                .from('genetics')
+                .select('nomenclatura')
+                .eq('id', intoNewBatchData.genetic_id)
+                .single();
+
+            const prefix = genetic?.nomenclatura || 'GEN';
+
+            const { count } = await getClient()
+                .from('batches')
+                .select('*', { count: 'exact', head: true })
+                .eq('genetic_id', intoNewBatchData.genetic_id)
+                .not('tracking_code', 'is', null);
+
+            let sequenceStart = (count || 0) + 1;
+            trackingCode = `${prefix}-${String(sequenceStart).padStart(3, '0')}`;
+            intoNewBatchData.tracking_code = trackingCode;
+        }
 
         // 1. Create the new batch
         const { data: newBatch, error: createError } = await getClient()

@@ -363,7 +363,9 @@ const Dispensary: React.FC = () => {
             if (success) {
                 await loadDispensaryStock();
                 setDeleteDispensaryModalOpen(false);
-                setBatchToDeleteDispensary(null);
+                setTimeout(() => {
+                    setBatchToDeleteDispensary(null);
+                }, 300);
             } else {
                 alert("Error al eliminar el lote del dispensario");
             }
@@ -614,9 +616,11 @@ const Dispensary: React.FC = () => {
                 isOpen={deleteDispensaryModalOpen}
                 title="Eliminar Lote del Dispensario"
                 message={`¿Estás seguro de que deseas eliminar el lote ${batchToDeleteDispensary?.strain_name} (${batchToDeleteDispensary?.batch_code})? Esta acción no se puede deshacer.`}
-                confirmText="Eliminar"
                 isDanger
-                onClose={() => setDeleteDispensaryModalOpen(false)}
+                onClose={() => {
+                    setDeleteDispensaryModalOpen(false);
+                    setTimeout(() => setBatchToDeleteDispensary(null), 300);
+                }}
                 onConfirm={confirmDeleteDispensary}
             />
 

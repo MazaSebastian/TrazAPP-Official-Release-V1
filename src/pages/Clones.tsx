@@ -3,7 +3,7 @@ import styled, { createGlobalStyle, keyframes } from 'styled-components';
 import {
     FaHistory, FaBarcode, FaExchangeAlt, FaMinusCircle, FaEdit, FaTrash,
     FaCut, FaTimes, FaLevelUpAlt, FaPlus, FaAngleRight, FaAngleDown,
-    FaCheckCircle, FaDna
+    FaCheckCircle, FaDna, FaPrint
 } from 'react-icons/fa';
 import { Tooltip } from '../components/Tooltip';
 import { roomsService } from '../services/roomsService';
@@ -343,47 +343,54 @@ const PrintStyles = createGlobalStyle`
   }
 `;
 
-const BatchGroupRow = ({ group, onBarcodeClick, onMoveClick, onDiscardClick, onEditClick, onDeleteClick }: any) => {
+const BatchGroupRow = ({ group, onBarcodeClick, onMoveClick, onDiscardClick, onEditClick, onDeleteClick, onUnitPrintClick, onUnitDeleteClick }: any) => {
     const { root, children } = group;
     const [isExpanded, setIsExpanded] = useState(false);
-    const hasChildren = children.length > 0;
 
     // Aggregates
     const totalQty = root.quantity + children.reduce((acc: number, child: any) => acc + child.quantity, 0);
     const displayDate = new Date(root.start_date || root.created_at).toLocaleDateString();
 
-    const renderBatchRow = (batch: any, isRoot: boolean, isLast: boolean, isChild: boolean) => {
-        const rowStyle: React.CSSProperties = {
-            borderBottom: isLast && !isExpanded ? '1px solid rgba(255, 255, 255, 0.05)' : 'none', // Only show border if collapsed or last child
-            fontSize: isChild ? '0.9rem' : undefined,
-            color: isChild ? '#94a3b8' : undefined,
-            background: isChild ? 'rgba(255, 255, 255, 0.02)' : undefined
-        };
-        const cellStyle = !isLast ? { borderBottom: 'none' } : undefined;
+    const units: { batch: any, unitIndex: number, isVirtual: boolean, totalInBatch: number }[] = [];
+    let absoluteIndex = 1;
 
-        // For Root Row (Aggregated View)
-        const quantityDisplay = isRoot ? (
+    for (let i = 0; i < root.quantity; i++) {
+        units.push({ batch: root, unitIndex: absoluteIndex++, isVirtual: root.quantity > 1, totalInBatch: root.quantity });
+    }
+
+    children.forEach((child: any) => {
+        for (let i = 0; i < child.quantity; i++) {
+            units.push({ batch: child, unitIndex: absoluteIndex++, isVirtual: child.quantity > 1, totalInBatch: child.quantity });
+        }
+    });
+
+    const isExpandable = units.length > 0;
+
+    const renderRootRow = () => {
+        const rowStyle: React.CSSProperties = {
+            borderBottom: !isExpanded ? '1px solid rgba(255, 255, 255, 0.05)' : 'none',
+        };
+        const cellStyle: React.CSSProperties = {};
+
+        const quantityDisplay = (
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <strong>{totalQty} u.</strong>
-                {hasChildren && <span style={{ fontSize: '0.75rem', color: '#718096', fontWeight: 'normal' }}>({children.length + 1} lotes)</span>}
+                {units.length > 1 && (
+                    <span style={{ fontSize: '0.75rem', color: '#718096', fontWeight: 'normal' }}>({units.length} un.)</span>
+                )}
             </div>
-        ) : `${batch.quantity} u.`;
+        );
 
-        // Determine Name Dislay
-        let displayName = batch.name;
-        if (isRoot && hasChildren) {
-            // Custom Group Name: "Lote [Genetic Code/Prefix] - [Date]"
-            // Try to extract genetic prefix from batch name or Use Genetic Name
-            const geneticName = batch.genetic?.name || 'Desconocida';
-            const prefix = geneticName.substring(0, 6).toUpperCase(); // e.g. BTTORA
+        const geneticName = root.genetic?.name || 'Desconocida';
+        let displayName = root.name;
+        if (units.length > 1 && !displayName.startsWith('Lote')) {
+            const prefix = geneticName.substring(0, 6).toUpperCase();
             displayName = `Lote ${prefix} - ${displayDate}`;
         }
 
-
-        // Expand Toggle
         const nameDisplay = (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', paddingLeft: isChild ? '2rem' : '0' }}>
-                {isRoot && hasChildren && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', paddingLeft: '0' }}>
+                {isExpandable && (
                     <button
                         onClick={(e) => { e.stopPropagation(); setIsExpanded(!isExpanded); }}
                         style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#319795', display: 'flex', alignItems: 'center', padding: 0 }}
@@ -391,41 +398,78 @@ const BatchGroupRow = ({ group, onBarcodeClick, onMoveClick, onDiscardClick, onE
                         {isExpanded ? <FaAngleDown /> : <FaAngleRight />}
                     </button>
                 )}
-                {isChild && (
-                    <FaLevelUpAlt
-                        style={{ transform: 'rotate(90deg)', color: '#a0aec0', fontSize: '1rem', minWidth: '1rem' }}
-                        title="Sub-lote derivado"
-                    />
-                )}
-                <FaBarcode style={{ color: isChild ? '#94a3b8' : '#f8fafc' }} />
+                <FaBarcode style={{ color: '#f8fafc' }} />
                 <strong>{displayName}</strong>
-                {isChild && <span style={{ fontSize: '0.7rem', color: '#64748b', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '4px', padding: '0 4px' }}>Sub-lote</span>}
             </div>
         );
 
         return (
-            <tr key={batch.id} style={rowStyle}>
-                <td style={cellStyle}>{isRoot || isChild ? displayDate : ''}</td>
+            <tr key={`root-${root.id}`} style={rowStyle}>
+                <td style={cellStyle}>{displayDate}</td>
                 <td style={cellStyle}>{nameDisplay}</td>
-                <td style={cellStyle}>{batch.genetic?.name || 'Desconocida'}</td>
+                <td style={cellStyle}>{geneticName}</td>
                 <td style={cellStyle}>{quantityDisplay}</td>
-                <td style={cellStyle}>{batch.room?.name || 'Desconocido'}</td>
+                <td style={cellStyle}>{root.room?.spot?.name || '---'}</td>
+                <td style={cellStyle}>{root.room?.name || 'Desconocido'}</td>
                 <td style={{ textAlign: 'center', ...cellStyle }}>
                     <div style={{ display: 'flex', justifyContent: 'center' }}>
                         <Tooltip text="Ver Código de Barras">
-                            <ActionButton color="#4a5568" onClick={() => onBarcodeClick(batch)}><FaBarcode /></ActionButton>
+                            <ActionButton color="#4a5568" onClick={() => onBarcodeClick(root)}><FaBarcode /></ActionButton>
                         </Tooltip>
                         <Tooltip text="Mover a Sala (Transplante)">
-                            <ActionButton color="#ed8936" onClick={() => onMoveClick(batch)}><FaExchangeAlt /></ActionButton>
+                            <ActionButton color="#ed8936" onClick={() => onMoveClick(root)}><FaExchangeAlt /></ActionButton>
                         </Tooltip>
                         <Tooltip text="Dar de Baja (Descarte)">
-                            <ActionButton color="#e53e3e" onClick={() => onDiscardClick(batch)}><FaMinusCircle /></ActionButton>
+                            <ActionButton color="#e53e3e" onClick={() => onDiscardClick(root)}><FaMinusCircle /></ActionButton>
                         </Tooltip>
                         <Tooltip text="Editar Lote">
-                            <ActionButton color="#3182ce" onClick={() => onEditClick(batch)}><FaEdit /></ActionButton>
+                            <ActionButton color="#3182ce" onClick={() => onEditClick(root)}><FaEdit /></ActionButton>
                         </Tooltip>
                         <Tooltip text="Eliminar Lote">
-                            <ActionButton color="#e53e3e" onClick={() => onDeleteClick(batch)}><FaTrash /></ActionButton>
+                            <ActionButton color="#e53e3e" onClick={() => onDeleteClick(root)}><FaTrash /></ActionButton>
+                        </Tooltip>
+                    </div>
+                </td>
+            </tr>
+        );
+    };
+
+    const renderUnitRow = (unit: any, isLast: boolean) => {
+        const { batch, unitIndex } = unit;
+        const rowStyle: React.CSSProperties = {
+            borderBottom: isLast ? '1px solid rgba(255, 255, 255, 0.05)' : 'none',
+            fontSize: '0.9rem',
+            color: '#94a3b8',
+            background: 'rgba(255, 255, 255, 0.02)'
+        };
+        const cellStyle: React.CSSProperties = !isLast ? { borderBottom: 'none' } : {};
+
+        const nameDisplay = (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', paddingLeft: '2rem' }}>
+                <FaLevelUpAlt style={{ transform: 'rotate(90deg)', color: '#a0aec0', fontSize: '1rem', minWidth: '1rem' }} title="Unidad" />
+                <FaBarcode style={{ color: '#94a3b8' }} />
+                <span>{batch.name} - U#{unitIndex.toString().padStart(3, '0')}</span>
+            </div>
+        );
+
+        return (
+            <tr key={`unit-${batch.id}-${unitIndex}`} style={rowStyle}>
+                <td style={cellStyle}>{displayDate}</td>
+                <td style={cellStyle}>{nameDisplay}</td>
+                <td style={cellStyle}>{batch.genetic?.name || 'Desconocida'}</td>
+                <td style={cellStyle}>1 u.</td>
+                <td style={cellStyle}>{batch.room?.spot?.name || '---'}</td>
+                <td style={cellStyle}>{batch.room?.name || 'Desconocido'}</td>
+                <td style={{ textAlign: 'center', ...cellStyle }}>
+                    <div style={{ display: 'flex', justifyContent: 'center' }}>
+                        <Tooltip text="Ver QR de Unidad">
+                            <ActionButton color="#4a5568" onClick={(e: any) => { e.stopPropagation(); onUnitPrintClick(batch, unitIndex); }}><FaBarcode /></ActionButton>
+                        </Tooltip>
+                        <Tooltip text="Imprimir Etiqueta">
+                            <ActionButton color="#4ade80" onClick={(e: any) => { e.stopPropagation(); onUnitPrintClick(batch, unitIndex, true); }}><FaPrint /></ActionButton>
+                        </Tooltip>
+                        <Tooltip text="Eliminar Unidad">
+                            <ActionButton color="#e53e3e" onClick={(e: any) => { e.stopPropagation(); onUnitDeleteClick(batch, unitIndex); }}><FaTrash /></ActionButton>
                         </Tooltip>
                     </div>
                 </td>
@@ -435,13 +479,8 @@ const BatchGroupRow = ({ group, onBarcodeClick, onMoveClick, onDiscardClick, onE
 
     return (
         <React.Fragment>
-            {/* Root Row */}
-            {renderBatchRow(root, true, false, false)}
-
-            {/* Children Rows (Expanded) */}
-            {isExpanded && children.map((child: any, index: number) => (
-                renderBatchRow(child, false, index === children.length - 1, true)
-            ))}
+            {renderRootRow()}
+            {isExpanded && units.map((unit, index) => renderUnitRow(unit, index === units.length - 1))}
         </React.Fragment>
     );
 };
@@ -549,7 +588,6 @@ const Clones: React.FC = () => {
 
     const loadData = async (silent = false) => {
         if (!silent) setLoading(true);
-        const startTime = Date.now();
 
         // Parallel data loading
         const [genetics, batches, allRooms] = await Promise.all([
@@ -678,13 +716,6 @@ const Clones: React.FC = () => {
         setAllBatchesHistory(batches); // Store full history
 
         if (!silent) {
-            // Minimum Loading Delay
-            const elapsedTime = Date.now() - startTime;
-            const minimumLoadingTime = 3000; // ms
-            if (elapsedTime < minimumLoadingTime) {
-                await new Promise(resolve => setTimeout(resolve, minimumLoadingTime - elapsedTime));
-            }
-
             setLoading(false);
         }
     };
@@ -884,6 +915,38 @@ const Clones: React.FC = () => {
         }
     };
 
+    const handleUnitDeleteClick = async (batch: any, unitIndex: number) => {
+        if (window.confirm(`¿Seguro que deseas eliminar la unidad #${unitIndex.toString().padStart(3, '0')} del lote ${batch.name}?`)) {
+            setLoading(true);
+            try {
+                if (batch.quantity <= 1) {
+                    await roomsService.deleteBatches([batch.id], "Eliminación de unidad individual");
+                } else {
+                    await roomsService.updateBatch(batch.id, { quantity: batch.quantity - 1 }, undefined, "Eliminación de unidad individual");
+                }
+                loadData(true);
+                showToast("Unidad eliminada correctamente.", "success");
+            } catch (e) {
+                console.error(e);
+                showToast("Error al eliminar la unidad.", "error");
+            } finally {
+                setLoading(false);
+            }
+        }
+    };
+
+    const handleUnitPrintClick = (batch: any, unitIndex: number, autoPrint: boolean = false) => {
+        const customBatchName = `${batch.name} - U#${unitIndex.toString().padStart(3, '0')}`;
+        setViewingBatch({ ...batch, name: customBatchName, quantity: 1 });
+        setPrintQuantity(1);
+        setIsBarcodeModalOpen(true);
+        if (autoPrint) {
+            setTimeout(() => {
+                window.print();
+            }, 500);
+        }
+    };
+
     const handleBarcodeClick = (batch: any) => {
         setViewingBatch(batch);
         setPrintQuantity(1); // Reset default
@@ -1014,9 +1077,12 @@ const Clones: React.FC = () => {
                                 <FaTrash /> BORRAR TODO
                             </DeleteAllButton>
                         )}
-                        <CreateButton onClick={() => setIsCreateModalOpen(true)} style={{ margin: 0 }}>
-                            <FaPlus /> Agregar Esquejes
-                        </CreateButton>
+                        {/* Ocultado temporalmente según solicitud */}
+                        {false && (
+                            <CreateButton onClick={() => setIsCreateModalOpen(true)} style={{ margin: 0 }}>
+                                <FaPlus /> Agregar Esquejes
+                            </CreateButton>
+                        )}
                     </div>
                 </HistoryHeader>
                 <div style={{ overflowX: 'auto' }}>
@@ -1027,6 +1093,7 @@ const Clones: React.FC = () => {
                                 <th>Lote (Código)</th>
                                 <th>Genética</th>
                                 <th>Cantidad</th>
+                                <th>Cultivo</th>
                                 <th>Destino</th>
                                 <th style={{ textAlign: 'center' }}>Acciones</th>
                             </tr>
@@ -1046,6 +1113,8 @@ const Clones: React.FC = () => {
                                         onDiscardClick={handleDiscardClick}
                                         onEditClick={handleEditClick}
                                         onDeleteClick={handleDeleteClick}
+                                        onUnitPrintClick={handleUnitPrintClick}
+                                        onUnitDeleteClick={handleUnitDeleteClick}
                                     />
                                 );
                             })}
@@ -1078,6 +1147,7 @@ const Clones: React.FC = () => {
                                             <th>Lote (Código)</th>
                                             <th>Genética</th>
                                             <th>Cantidad</th>
+                                            <th>Cultivo</th>
                                             <th>Destino</th>
                                             <th style={{ textAlign: 'center' }}>Acciones</th>
                                         </tr>
@@ -1114,6 +1184,7 @@ const Clones: React.FC = () => {
                                                                 </td>
                                                                 <td style={cellStyle}>{batch.genetic?.name || 'Desconocida'}</td>
                                                                 <td style={cellStyle}>{batch.quantity} u.</td>
+                                                                <td style={cellStyle}>{batch.room?.spot?.name || '---'}</td>
                                                                 <td style={cellStyle}>{batch.room?.name || 'Desconocido'}</td>
                                                                 <td style={{ textAlign: 'center', ...cellStyle }}>
                                                                     <div style={{ display: 'flex', justifyContent: 'center' }}>
