@@ -19,12 +19,12 @@ const Overlay = styled.div<{ $visible: boolean }>`
   pointer-events: ${p => p.$visible ? 'auto' : 'none'};
 `;
 
-const Content = styled.div<{ $visible: boolean }>`
+const Content = styled.div<{ $visible: boolean; $maxWidth?: string }>`
   background: rgba(15, 23, 42, 0.95);
   padding: 2rem;
   border-radius: 1rem;
   width: 90%;
-  max-width: 400px;
+  max-width: ${p => p.$maxWidth || '400px'};
   border: 1px solid rgba(255, 255, 255, 0.1);
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
   text-align: center;
@@ -138,6 +138,7 @@ interface ConfirmModalProps {
   cancelText?: string;
   isDanger?: boolean;
   isLoading?: boolean;
+  maxWidth?: string;
 }
 
 export const ConfirmModal: React.FC<ConfirmModalProps> = ({
@@ -149,7 +150,8 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
   confirmText = 'Confirmar',
   cancelText = 'Cancelar',
   isDanger = false,
-  isLoading = false
+  isLoading = false,
+  maxWidth
 }) => {
   const [shouldRender, setShouldRender] = useState(isOpen);
   const [isVisible, setIsVisible] = useState(false);
@@ -180,7 +182,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
 
   return (
     <Overlay $visible={isVisible} onClick={onClose}>
-      <Content $visible={isVisible} onClick={e => e.stopPropagation()}>
+      <Content $visible={isVisible} $maxWidth={maxWidth} onClick={e => e.stopPropagation()}>
         <IconWrapper>
           <FaExclamationTriangle />
         </IconWrapper>

@@ -354,15 +354,15 @@ const Genetics: React.FC = () => {
 
             const locationsListNode = (
                 <ul style={{ textAlign: 'left', background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: '0.5rem', marginTop: '1rem', marginBottom: '1rem', listStyle: 'none' }}>
-                    {locationEntries.slice(0, 3).map(([location, qty], idx) => (
-                        <li key={idx} style={{ marginBottom: '0.5rem', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <FaLeaf color="#4ade80" size={12} />
-                            <strong>{qty as number}</strong> plantas en {location}
+                    {locationEntries.slice(0, 5).map(([location, qty], idx) => (
+                        <li key={idx} style={{ marginBottom: '0.5rem', fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <FaLeaf color="#4ade80" size={14} style={{ minWidth: '14px' }} />
+                            <span><strong>{qty as number}</strong> plantas en {location}</span>
                         </li>
                     ))}
-                    {locationEntries.length > 3 && (
+                    {locationEntries.length > 5 && (
                         <li style={{ fontSize: '0.8rem', color: '#94a3b8', fontStyle: 'italic', marginTop: '0.5rem' }}>
-                            ...y en {locationEntries.length - 3} ubicación(es) más.
+                            ...y en {locationEntries.length - 5} ubicación(es) más.
                         </li>
                     )}
                 </ul>
@@ -754,6 +754,7 @@ const Genetics: React.FC = () => {
                     cancelText={deleteValidationError ? "" : "Cancelar"}
                     isDanger={!deleteValidationError}
                     isLoading={isDeleting}
+                    maxWidth={deleteValidationError ? "550px" : "400px"}
                 />
 
                 <ToastModal
