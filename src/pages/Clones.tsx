@@ -350,14 +350,18 @@ const BatchGroupRow = ({ group, onBarcodeClick, onMoveClick, onDiscardClick, onE
     // Aggregates
     const totalQty = root.quantity + children.reduce((acc: number, child: any) => acc + child.quantity, 0);
 
-    // Formatting Date to match "DD/MM/YY HH:MM"
-    const parsedDate = new Date(root.start_date || root.created_at);
-    const day = parsedDate.getDate().toString().padStart(2, '0');
-    const month = (parsedDate.getMonth() + 1).toString().padStart(2, '0');
-    const year = parsedDate.getFullYear().toString().slice(-2);
-    const hours = parsedDate.getHours().toString().padStart(2, '0');
-    const minutes = parsedDate.getMinutes().toString().padStart(2, '0');
-    const formattedDate = `${day}/${month}/${year} ${hours}:${minutes}`;
+    // Formatting Date to match "DD/MM/YY HH:MM" taking the precise creation timestamp (avoids YYYY-MM-DD timezone shift)
+    const formatBatchDate = (batchToFormat: any) => {
+        const d = new Date(batchToFormat.created_at);
+        const day = d.getDate().toString().padStart(2, '0');
+        const month = (d.getMonth() + 1).toString().padStart(2, '0');
+        const year = d.getFullYear().toString().slice(-2);
+        const hours = d.getHours().toString().padStart(2, '0');
+        const minutes = d.getMinutes().toString().padStart(2, '0');
+        return `${day}/${month}/${year} ${hours}:${minutes}`;
+    };
+
+    const rootFormattedDate = formatBatchDate(root);
 
     const units: { batch: any, unitIndex: number, isVirtual: boolean, totalInBatch: number }[] = [];
     let absoluteIndex = 1;
@@ -401,13 +405,13 @@ const BatchGroupRow = ({ group, onBarcodeClick, onMoveClick, onDiscardClick, onE
             // But we want to enforce the exact format asked by the user.
             // Let's parse the ID part. Usually root.name is something like "Lote XXXX"
             const idPart = displayName.split('-')[0].trim();
-            displayName = `${idPart} - ${nomenclature} - ${formattedDate}`;
+            displayName = `${idPart} - ${nomenclature} - ${rootFormattedDate}`;
         } else if (displayName && displayName.toLowerCase().startsWith('lote')) {
-            displayName = `${displayName} - ${nomenclature} - ${formattedDate}`;
+            displayName = `${displayName} - ${nomenclature} - ${rootFormattedDate}`;
         } else {
             // Fallback if the name is entirely different
             const shortId = root.id ? root.id.substring(0, 4).toUpperCase() : '0000';
-            displayName = `Lote ${shortId} - ${nomenclature} - ${formattedDate}`;
+            displayName = `Lote ${shortId} - ${nomenclature} - ${rootFormattedDate}`;
         }
 
         const nameDisplay = (
@@ -427,7 +431,7 @@ const BatchGroupRow = ({ group, onBarcodeClick, onMoveClick, onDiscardClick, onE
 
         return (
             <tr key={`root-${root.id}`} style={rowStyle}>
-                <td style={cellStyle}>{formattedDate}</td>
+                <td style={cellStyle}>{rootFormattedDate}</td>
                 <td style={cellStyle}>{nameDisplay}</td>
                 <td style={cellStyle}>{geneticName}</td>
                 <td style={cellStyle}>{quantityDisplay}</td>
@@ -474,9 +478,11 @@ const BatchGroupRow = ({ group, onBarcodeClick, onMoveClick, onDiscardClick, onE
             </div>
         );
 
+        const unitFormattedDate = formatBatchDate(batch);
+
         return (
             <tr key={`unit-${batch.id}-${unitIndex}`} style={rowStyle}>
-                <td style={cellStyle}>{formattedDate}</td>
+                <td style={cellStyle}>{unitFormattedDate}</td>
                 <td style={cellStyle}>{nameDisplay}</td>
                 <td style={cellStyle}>{batch.genetic?.name || 'Desconocida'}</td>
                 <td style={cellStyle}>1 u.</td>
