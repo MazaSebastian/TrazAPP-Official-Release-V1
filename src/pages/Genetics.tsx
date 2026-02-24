@@ -333,16 +333,30 @@ const Genetics: React.FC = () => {
         const activeBatches = await geneticsService.getActiveBatchesForGenetic(genetic.id);
 
         if (activeBatches && activeBatches.length > 0) {
-            // Format the list of locations
-            const locationsList = activeBatches.slice(0, 3).map((b: any) => {
+            // Calculate total plants
+            const totalPlants = activeBatches.reduce((acc: number, b: any) => acc + (b.quantity || 1), 0);
+
+            // Group by location
+            const groupedLocations = activeBatches.reduce((acc: any, b: any) => {
                 const roomName = b.room?.name || 'Sala Desconocida';
-                const spotName = b.room?.spot?.name ? ` - Cultivo: ${b.room.spot.name}` : '';
-                return `• ${b.quantity}u${spotName} - Sala: ${roomName}`;
+                const spotName = b.room?.spot?.name ? `Cultivo: ${b.room.spot.name}` : 'Sin Cultivo Asignado';
+                const key = `${spotName} - Sala: ${roomName}`;
+
+                if (!acc[key]) acc[key] = 0;
+                acc[key] += (b.quantity || 1);
+
+                return acc;
+            }, {});
+
+            const locationEntries = Object.entries(groupedLocations);
+
+            const locationsList = locationEntries.slice(0, 3).map(([location, qty]) => {
+                return `• ${qty} plantas - ${location}`;
             }).join('\n');
 
-            const moreText = activeBatches.length > 3 ? `\n...y ${activeBatches.length - 3} lote(s) más.` : '';
+            const moreText = locationEntries.length > 3 ? `\n...y en ${locationEntries.length - 3} ubicación(es) más.` : '';
 
-            setToastMessage(`No puedes eliminar "${genetic.name}". Tienes ${activeBatches.length} lote(s) activos de esta madre. Elimínalos o finalízalos primero:\n${locationsList}${moreText}`);
+            setToastMessage(`No puedes eliminar "${genetic.name}". Tienes ${totalPlants} plantas activas de esta madre. Elimínalas o finalízalas primero:\n${locationsList}${moreText}`);
             setToastType('error');
             setToastAnimate(true);
             setToastOpen(true);
