@@ -1,5 +1,5 @@
 // Predefined palette of soft, distinct colors suitable for backgrounds with dark text
-const GENETIC_PALETTE = [
+export const GENETIC_PALETTE = [
     '#F0FFF4', // Mint Green
     '#EBF8FF', // Light Blue
     '#FAF5FF', // Light Purple
@@ -64,4 +64,28 @@ export const getGeneticColor = (name?: string, dbColor?: string) => {
         bg: GENETIC_PALETTE[index],
         border: BORDER_PALETTE[index] || BORDER_PALETTE[index % BORDER_PALETTE.length]
     };
+};
+
+export const generateUniqueColor = (existingColors: string[]): string => {
+    const used = new Set(existingColors.map(c => c?.toUpperCase()));
+
+    // 1. Try to find an unused color from our predefined beautiful palette
+    const shuffledPalette = [...GENETIC_PALETTE].sort(() => 0.5 - Math.random());
+    for (const color of shuffledPalette) {
+        if (!used.has(color.toUpperCase())) {
+            return color;
+        }
+    }
+
+    // 2. If all predefined colors are used, safely fallback to a random pleasant hex color
+    let randomColor;
+    do {
+        // Generate a lighter color suitable for backgrounds
+        const r = Math.floor(Math.random() * 127 + 128).toString(16).padStart(2, '0');
+        const g = Math.floor(Math.random() * 127 + 128).toString(16).padStart(2, '0');
+        const b = Math.floor(Math.random() * 127 + 128).toString(16).padStart(2, '0');
+        randomColor = `#${r}${g}${b}`.toUpperCase();
+    } while (used.has(randomColor));
+
+    return randomColor;
 };

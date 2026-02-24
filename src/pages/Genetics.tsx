@@ -3,6 +3,7 @@ import styled, { keyframes } from 'styled-components';
 import { FaDna, FaPlus, FaClock, FaCalendarAlt, FaLeaf, FaEdit, FaTrash, FaTag } from 'react-icons/fa';
 import { geneticsService } from '../services/geneticsService';
 import { Genetic, GeneticType } from '../types/genetics';
+import { generateUniqueColor } from '../utils/geneticColors';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ConfirmModal } from '../components/ConfirmModal';
 import { ToastModal } from '../components/ToastModal';
@@ -392,6 +393,25 @@ const Genetics: React.FC = () => {
         }, 300);
     };
 
+    const handleOpenCreateModal = () => {
+        const existingColors = genetics.map(g => g.color || '');
+        const newColor = generateUniqueColor(existingColors);
+
+        setNewGenetic({
+            name: '',
+            type: 'photoperiodic',
+            vegetative_weeks: 4,
+            flowering_weeks: 9,
+            description: '',
+            acquisition_date: '',
+            thc_percent: 0,
+            cbd_percent: 0,
+            estimated_yield_g: 0,
+            color: newColor
+        });
+        setIsModalOpen(true);
+    };
+
     if (loading) return <LoadingSpinner text="Cargando madres..." fullScreen />;
 
     return (
@@ -488,7 +508,7 @@ const Genetics: React.FC = () => {
                             </CardBody>
                         </GeneticCard>
                     ))}
-                    <CreateCard onClick={() => setIsModalOpen(true)}>
+                    <CreateCard onClick={handleOpenCreateModal}>
                         <DashedCircle>
                             <FaPlus />
                         </DashedCircle>
