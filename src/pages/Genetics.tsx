@@ -161,11 +161,29 @@ const ModalContent = styled.div<{ $isClosing?: boolean }>`
   border-radius: 1rem;
   width: 90%;
   max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
   box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5);
   border: 1px solid rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(16px);
   color: #f8fafc;
   animation: ${props => props.$isClosing ? modalSlideOut : modalSlideIn} 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  
+  /* Styling the scrollbar inside the modal for a consistent dark theme look */
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  &::-webkit-scrollbar-track {
+    background: rgba(15, 23, 42, 0.5);
+    border-radius: 4px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: rgba(71, 85, 105, 0.8);
+    border-radius: 4px;
+  }
+  &::-webkit-scrollbar-thumb:hover {
+    background: rgba(100, 116, 139, 1);
+  }
 `;
 
 const FormGroup = styled.div`
