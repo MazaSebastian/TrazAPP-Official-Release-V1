@@ -272,7 +272,8 @@ const Genetics: React.FC = () => {
         type: 'photoperiodic',
         vegetative_weeks: 4,
         flowering_weeks: 9,
-        description: ''
+        description: '',
+        color: '#48BB78' // default hex
     });
 
     useEffect(() => {
@@ -351,7 +352,8 @@ const Genetics: React.FC = () => {
             thc_percent: newGenetic.thc_percent,
             cbd_percent: newGenetic.cbd_percent,
             estimated_yield_g: newGenetic.estimated_yield_g,
-            default_price_per_gram: newGenetic.default_price_per_gram
+            default_price_per_gram: newGenetic.default_price_per_gram,
+            color: newGenetic.color || '#48BB78'
         };
 
         if (editingId) {
@@ -384,7 +386,8 @@ const Genetics: React.FC = () => {
                 acquisition_date: '',
                 thc_percent: 0,
                 cbd_percent: 0,
-                estimated_yield_g: 0
+                estimated_yield_g: 0,
+                color: '#48BB78'
             });
         }, 300);
     };
@@ -414,7 +417,12 @@ const Genetics: React.FC = () => {
                     {genetics.map(gen => (
                         <GeneticCard key={gen.id}>
                             <CardHeader>
-                                <h3>{gen.name}</h3>
+                                <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                    {gen.color && (
+                                        <div style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: gen.color, border: '1px solid rgba(255,255,255,0.2)' }} title="Color de Genética" />
+                                    )}
+                                    {gen.name}
+                                </h3>
                                 <div style={{ display: 'flex', gap: '0.5rem' }}>
                                     <button
                                         onClick={() => handleEdit(gen)}
@@ -521,6 +529,20 @@ const Genetics: React.FC = () => {
                                         onChange={(date: Date | null) => setNewGenetic({ ...newGenetic, acquisition_date: date ? date.toISOString().split('T')[0] : '' })}
                                         placeholderText="Seleccionar fecha"
                                     />
+                                </FormGroup>
+
+                                <FormGroup>
+                                    <label>Color en Mapa/Gráficos</label>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                        <input
+                                            type="color"
+                                            value={newGenetic.color || '#48BB78'}
+                                            onChange={e => setNewGenetic({ ...newGenetic, color: e.target.value })}
+                                            style={{ width: '50px', height: '40px', padding: '0', cursor: 'pointer', border: 'none', background: 'transparent' }}
+                                        />
+                                        <span style={{ color: '#cbd5e1', fontSize: '0.9rem', fontFamily: 'monospace' }}>{newGenetic.color?.toUpperCase() || '#48BB78'}</span>
+                                    </div>
+                                    <div className="hint">Este será el color con el que los lotes de esta madre aparecerán en el mapa de Esquejes.</div>
                                 </FormGroup>
 
                                 <div style={{ display: 'flex', gap: '1rem' }}>

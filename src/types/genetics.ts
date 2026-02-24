@@ -14,5 +14,6 @@ export interface Genetic {
     estimated_yield_g?: number;
     default_price_per_gram?: number;
     nomenclatura?: string;
+    color?: string; // Hex color for distinct chart/map displays
     created_at: string;
 }

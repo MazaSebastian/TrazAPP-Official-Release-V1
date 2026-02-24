@@ -282,7 +282,7 @@ const BatchItem = ({ batch, onClick, cellSize }: { batch: Batch; onClick?: (e: R
                     onMouseEnter={handleMouseEnter}
                     onMouseLeave={handleMouseLeave}
                 >
-                    <div style={{ width: '80%', height: '80%', background: getGeneticColor(batch.genetic?.name || '').bg, borderRadius: '50%' }} />
+                    <div style={{ width: '80%', height: '80%', background: getGeneticColor(batch.genetic?.name || '', batch.genetic?.color).bg, borderRadius: '50%' }} />
                 </BatchItemStyled>
                 {tooltip && createPortal(
                     <TooltipContainer visible={tooltip.visible} x={tooltip.x} y={tooltip.y}>
@@ -379,7 +379,7 @@ const GridCell = ({ row, col, batch, onClick, isPainting, isSelected, renderActi
             ref={setNodeRef}
             $isOver={isOver}
             $isOccupied={!!batch}
-            $geneticColor={batch ? getGeneticColor(batch.genetic?.name || batch.name).bg : undefined}
+            $geneticColor={batch ? getGeneticColor(batch.genetic?.name || batch.name, batch.genetic?.color).bg : undefined}
             $isSelected={isSelected}
             $hasAlert={!!batch?.notes}
             cellSize={cellSize}

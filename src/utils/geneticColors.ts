@@ -49,7 +49,8 @@ const BORDER_PALETTE = [
     '#ED64A6', // Dark Pink
 ];
 
-export const getGeneticColor = (name?: string) => {
+export const getGeneticColor = (name?: string, dbColor?: string) => {
+    if (dbColor) return { bg: dbColor, border: dbColor };
     if (!name) return { bg: '#F0FFF4', border: '#48BB78' }; // Default Green
 
     let hash = 5381;
