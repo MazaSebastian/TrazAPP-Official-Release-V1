@@ -73,7 +73,7 @@ const WelcomeHeader = styled.div`
   margin-bottom: 2.5rem;
   
   h1 {
-    font-size: 2.5rem;
+    font-size: clamp(1.5rem, 5vw, 2.5rem);
     font-weight: 800;
     color: #e2e8f0; /* Softer premium white/slate */
     margin: 0;
@@ -81,7 +81,7 @@ const WelcomeHeader = styled.div`
   }
 
   p {
-    font-size: 1.1rem;
+    font-size: clamp(0.9rem, 3vw, 1.1rem);
     color: #94a3b8;
     margin-top: 0.5rem;
     font-weight: 500;
@@ -91,10 +91,11 @@ const WelcomeHeader = styled.div`
 const DateDisplay = styled.div`
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 0.75rem;
   margin-top: 1rem;
   color: #cbd5e1; /* Lighter, more premium slate */
-  font-size: 1.25rem; /* Larger font size */
+  font-size: clamp(1rem, 3vw, 1.25rem); /* Responsive font size */
   font-weight: 500;
   letter-spacing: 0.025em;
   
@@ -106,9 +107,13 @@ const DateDisplay = styled.div`
 
 const KPISection = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
   gap: 1.5rem;
   margin-bottom: 3rem;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
 `;
 
 const KPICard = styled.div<{ active?: boolean, alert?: boolean }>`
@@ -199,9 +204,13 @@ const heartbeat = keyframes`
 
 const CountdownGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
   gap: 1rem;
   margin-bottom: 2rem;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
 `;
 
 interface CountdownCardProps {
@@ -263,7 +272,7 @@ const CountdownCard = styled.div<CountdownCardProps>`
 `;
 
 const SectionTitle = styled.h2`
-  font-size: 1.5rem;
+  font-size: clamp(1.25rem, 4vw, 1.5rem);
   color: #cbd5e1; /* Elegant slate instead of harsh white */
   font-weight: 700;
   margin-bottom: 1.5rem;

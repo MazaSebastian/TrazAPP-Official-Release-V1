@@ -23,6 +23,11 @@ export const ModalContent = styled.div<{ $visible?: boolean; wide?: boolean; all
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   max-height: 85vh;
   overflow-y: ${p => p.allowOverflow ? 'visible' : 'auto'};
+
+  @media (max-width: 768px) {
+    padding: 1.25rem;
+    width: 95%;
+  }
 `;
 
 export const CloseIcon = styled.button`

@@ -21,7 +21,7 @@ const WelcomeHeader = styled.div`
   margin-bottom: 2.5rem;
   
   h1 {
-    font-size: 2.5rem;
+    font-size: clamp(1.5rem, 5vw, 2.5rem);
     font-weight: 800;
     margin: 0 0 0.5rem 0;
     background: linear-gradient(135deg, #f8fafc 0%, #94a3b8 100%);
@@ -34,10 +34,11 @@ const WelcomeHeader = styled.div`
 const DateDisplay = styled.div`
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 0.75rem;
   margin-top: 1rem;
   color: #cbd5e1;
-  font-size: 1.25rem;
+  font-size: clamp(1rem, 3vw, 1.25rem);
   font-weight: 500;
   letter-spacing: 0.025em;
   
@@ -49,9 +50,13 @@ const DateDisplay = styled.div`
 
 const KPISection = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
   gap: 1.5rem;
   margin-bottom: 3rem;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
 `;
 
 const KPICard = styled.div<{ alert?: boolean }>`
@@ -124,7 +129,7 @@ const SectionTitle = styled.h2`
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  font-size: 1.25rem;
+  font-size: clamp(1.1rem, 3vw, 1.25rem);
   color: #f8fafc;
   margin: 0 0 1.5rem 0;
   

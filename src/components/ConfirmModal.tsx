@@ -32,6 +32,11 @@ const Content = styled.div<{ $visible: boolean; $maxWidth?: string }>`
   opacity: ${p => p.$visible ? 1 : 0};
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
+  @media (max-width: 768px) {
+    padding: 1.5rem;
+    width: 95%;
+  }
+
   h3 {
     margin-top: 1rem;
     color: #f8fafc;
@@ -66,6 +71,13 @@ const ButtonGroup = styled.div`
   display: flex;
   justify-content: center;
   gap: 0.75rem;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    button {
+      width: 100%;
+    }
+  }
 `;
 
 const Button = styled.button<{ variant?: 'primary' | 'danger' | 'secondary' }>`

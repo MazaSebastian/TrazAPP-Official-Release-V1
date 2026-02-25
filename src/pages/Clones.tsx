@@ -240,6 +240,58 @@ const HistoryTable = styled.table`
     tr:hover td {
         background-color: rgba(255, 255, 255, 0.015);
     }
+
+    @media (max-width: 768px) {
+        display: block;
+        
+        thead {
+            display: none;
+        }
+
+        tbody {
+            display: block;
+        }
+
+        tr {
+            display: block;
+            margin-bottom: 1rem;
+            background: rgba(15, 23, 42, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 0.75rem;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        }
+
+        td {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.85rem 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            text-align: right;
+            border-top: none;
+            border-left: none;
+            border-right: none;
+        }
+
+        td:last-child {
+            border-bottom: none;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.02);
+            padding: 1rem;
+        }
+
+        td::before {
+            content: attr(data-label);
+            font-weight: 600;
+            color: #94a3b8;
+            margin-right: 1rem;
+            text-align: left;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+        }
+    }
 `;
 
 const ActionButton = styled.button<{ color: string }>`
@@ -247,8 +299,8 @@ const ActionButton = styled.button<{ color: string }>`
     backdrop-filter: blur(4px);
     border: 1px solid rgba(255, 255, 255, 0.05);
     color: ${p => p.color};
-    width: 32px;
-    height: 32px;
+    width: 40px;
+    height: 40px;
     border-radius: 0.5rem;
     display: flex;
     align-items: center;
@@ -326,6 +378,39 @@ const GlassToastContent = styled.div`
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 20px rgba(56, 189, 248, 0.1);
     position: relative;
     color: #f8fafc;
+
+    @media (max-width: 768px) {
+        padding: 1.25rem;
+        width: 95%;
+    }
+`;
+
+const ModalRow = styled.div`
+    display: flex;
+    gap: 1rem;
+    width: 100%;
+
+    @media (max-width: 768px) {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+`;
+
+const ModalActions = styled.div`
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 2rem;
+
+    @media (max-width: 768px) {
+        flex-direction: column;
+        gap: 0.5rem;
+
+        button {
+            width: 100%;
+            justify-content: center;
+        }
+    }
 `;
 
 
@@ -613,12 +698,12 @@ const BatchGroupRow = ({ group, onBarcodeClick, onMoveClick, onDiscardClick, onE
         );
 
         return (
-            <tr key={`root - ${root.id} `} style={rowStyle}>
-                <td style={cellStyle}>{rootFormattedDate}</td>
-                <td style={cellStyle}>{nameDisplay}</td>
-                <td style={cellStyle}>{geneticName}</td>
-                <td style={cellStyle}>{quantityDisplay}</td>
-                <td style={cellStyle}>
+            <tr key={`root-${root.id}`} style={rowStyle}>
+                <td data-label="Fecha" style={cellStyle}>{rootFormattedDate}</td>
+                <td data-label="Lote (Código)" style={cellStyle}>{nameDisplay}</td>
+                <td data-label="Genética" style={cellStyle}>{geneticName}</td>
+                <td data-label="Cantidad" style={cellStyle}>{quantityDisplay}</td>
+                <td data-label="Cultivo" style={cellStyle}>
                     {root.room?.spot?.id ? (
                         <BadgeLink
                             color="#38bdf8"
@@ -629,7 +714,7 @@ const BatchGroupRow = ({ group, onBarcodeClick, onMoveClick, onDiscardClick, onE
                         </BadgeLink>
                     ) : '---'}
                 </td>
-                <td style={cellStyle}>
+                <td data-label="Destino" style={cellStyle}>
                     {root.room?.id ? (
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '6px' }}>
                             <BadgeLink
@@ -643,8 +728,8 @@ const BatchGroupRow = ({ group, onBarcodeClick, onMoveClick, onDiscardClick, onE
                         </div>
                     ) : 'Desconocido'}
                 </td>
-                <td style={cellStyle}>{getStatusBadge(root, onNavigate)}</td>
-                <td style={{ textAlign: 'center', ...cellStyle }}>
+                <td data-label="Estado" style={cellStyle}>{getStatusBadge(root, onNavigate)}</td>
+                <td data-label="Acciones" style={{ textAlign: 'center', ...cellStyle, justifyContent: 'center' }}>
                     <div style={{ display: 'flex', justifyContent: 'center' }}>
                         <Tooltip text="Ver Código de Barras">
                             <ActionButton color="#4a5568" onClick={(e) => { e.stopPropagation(); onBarcodeClick({ ...root, clone_units: children, displayName: displayName }); }}><FaBarcode /></ActionButton>
@@ -715,12 +800,12 @@ const BatchGroupRow = ({ group, onBarcodeClick, onMoveClick, onDiscardClick, onE
         const unitFormattedDate = formatBatchDate(batch);
 
         return (
-            <tr key={`unit - ${batch.id} -${unitIndex} `} style={rowStyle}>
-                <td style={cellStyle}>{unitFormattedDate}</td>
-                <td style={cellStyle}>{nameDisplay}</td>
-                <td style={cellStyle}>{batch.genetic?.name || 'Desconocida'}</td>
-                <td style={{ ...cellStyle, whiteSpace: 'nowrap' }}>1 u.</td>
-                <td style={cellStyle}>
+            <tr key={`unit-${batch.id}-${unitIndex}`} style={rowStyle}>
+                <td data-label="Fecha" style={cellStyle}>{unitFormattedDate}</td>
+                <td data-label="Lote (Código)" style={cellStyle}>{nameDisplay}</td>
+                <td data-label="Genética" style={cellStyle}>{batch.genetic?.name || 'Desconocida'}</td>
+                <td data-label="Cantidad" style={{ ...cellStyle, whiteSpace: 'nowrap' }}>1 u.</td>
+                <td data-label="Cultivo" style={cellStyle}>
                     {batch.room?.spot?.id ? (
                         <BadgeLink
                             color="#38bdf8"
@@ -731,7 +816,7 @@ const BatchGroupRow = ({ group, onBarcodeClick, onMoveClick, onDiscardClick, onE
                         </BadgeLink>
                     ) : '---'}
                 </td>
-                <td style={cellStyle}>
+                <td data-label="Destino" style={cellStyle}>
                     {batch.room?.id ? (
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '6px' }}>
                             <BadgeLink
@@ -745,8 +830,8 @@ const BatchGroupRow = ({ group, onBarcodeClick, onMoveClick, onDiscardClick, onE
                         </div>
                     ) : 'Desconocido'}
                 </td>
-                <td style={cellStyle}>{getStatusBadge(batch, onNavigate)}</td>
-                <td style={{ textAlign: 'center', ...cellStyle }}>
+                <td data-label="Estado" style={cellStyle}>{getStatusBadge(batch, onNavigate)}</td>
+                <td data-label="Acciones" style={{ textAlign: 'center', ...cellStyle, justifyContent: 'center' }}>
                     <div style={{ display: 'flex', justifyContent: 'center' }}>
                         <Tooltip text="Ver QR de Genética">
                             <ActionButton color="#4a5568" onClick={(e: any) => { e.stopPropagation(); onUnitPrintClick(batch, unitIndex); }}><FaBarcode /></ActionButton>
@@ -1541,8 +1626,8 @@ const Clones: React.FC = () => {
 
                                                         return (
                                                             <tr key={batch.id} style={rowStyle}>
-                                                                <td style={cellStyle}>{new Date(batch.start_date || batch.created_at).toLocaleDateString()}</td>
-                                                                <td style={cellStyle}>
+                                                                <td data-label="Fecha" style={cellStyle}>{new Date(batch.start_date || batch.created_at).toLocaleDateString()}</td>
+                                                                <td data-label="Lote (Código)" style={cellStyle}>
                                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', paddingLeft: batch.parent_batch_id ? '1.5rem' : '0' }}>
                                                                         {batch.parent_batch_id && (
                                                                             <FaLevelUpAlt style={{ transform: 'rotate(90deg)', color: '#64748b', fontSize: '1rem', minWidth: '1rem' }} />
@@ -1552,9 +1637,9 @@ const Clones: React.FC = () => {
                                                                         {batch.parent_batch_id && <span style={{ fontSize: '0.7rem', color: '#64748b', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '4px', padding: '0 4px' }}>Sub-lote</span>}
                                                                     </div>
                                                                 </td>
-                                                                <td style={cellStyle}>{batch.genetic?.name || 'Desconocida'}</td>
-                                                                <td style={{ ...cellStyle, whiteSpace: 'nowrap' }}>{batch.quantity} u.</td>
-                                                                <td style={cellStyle}>
+                                                                <td data-label="Genética" style={cellStyle}>{batch.genetic?.name || 'Desconocida'}</td>
+                                                                <td data-label="Cantidad" style={{ ...cellStyle, whiteSpace: 'nowrap' }}>{batch.quantity} u.</td>
+                                                                <td data-label="Cultivo" style={cellStyle}>
                                                                     {batch.room?.spot?.id ? (
                                                                         <BadgeLink
                                                                             color="#38bdf8"
@@ -1565,7 +1650,7 @@ const Clones: React.FC = () => {
                                                                         </BadgeLink>
                                                                     ) : '---'}
                                                                 </td>
-                                                                <td style={cellStyle}>
+                                                                <td data-label="Destino" style={cellStyle}>
                                                                     {batch.room?.id ? (
                                                                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '6px' }}>
                                                                             <BadgeLink
@@ -1579,8 +1664,8 @@ const Clones: React.FC = () => {
                                                                         </div>
                                                                     ) : 'Desconocido'}
                                                                 </td>
-                                                                <td style={cellStyle}>{getStatusBadge(batch, navigate)}</td>
-                                                                <td style={{ textAlign: 'center', ...cellStyle }}>
+                                                                <td data-label="Estado" style={cellStyle}>{getStatusBadge(batch, navigate)}</td>
+                                                                <td data-label="Acciones" style={{ textAlign: 'center', ...cellStyle, justifyContent: 'center' }}>
                                                                     <div style={{ display: 'flex', justifyContent: 'center' }}>
                                                                         <Tooltip text="Ver Código de Barras">
                                                                             <ActionButton color="#4a5568" onClick={(e) => { e.stopPropagation(); handleBarcodeClick(batch); }}><FaBarcode /></ActionButton>
@@ -1633,7 +1718,7 @@ const Clones: React.FC = () => {
                     />
                 </FormGroup>
 
-                <div style={{ display: 'flex', gap: '1rem' }}>
+                <ModalRow>
                     <FormGroup style={{ flex: 1 }}>
                         <label>Cantidad</label>
                         <input
@@ -1655,9 +1740,9 @@ const Clones: React.FC = () => {
                             placeholderText="Fecha de inicio"
                         />
                     </FormGroup>
-                </div>
+                </ModalRow>
 
-                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '2rem' }}>
+                <ModalActions>
                     <button
                         onClick={() => setIsCreateModalOpen(false)}
                         style={{
@@ -1704,7 +1789,7 @@ const Clones: React.FC = () => {
                             'Crear Lote'
                         )}
                     </button>
-                </div>
+                </ModalActions>
             </AnimatedModal>
 
             {/* Edit Batch Modal */}
@@ -1734,7 +1819,7 @@ const Clones: React.FC = () => {
                                 />
                             </FormGroup>
 
-                            <div style={{ display: 'flex', gap: '1rem', marginBottom: '0.5rem' }}>
+                            <ModalRow style={{ marginBottom: '0.5rem' }}>
                                 <FormGroup style={{ flex: 1 }}>
                                     <label style={{ color: '#cbd5e1' }}>Cantidad Total <span style={{ color: '#38bdf8' }}>*</span></label>
                                     <input
@@ -1754,9 +1839,9 @@ const Clones: React.FC = () => {
                                         style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', width: '100%', padding: '0.75rem', borderRadius: '0.5rem' }}
                                     />
                                 </FormGroup>
-                            </div>
+                            </ModalRow>
 
-                            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '2rem' }}>
+                            <ModalActions>
                                 <button
                                     onClick={() => setIsEditModalOpen(false)}
                                     style={{ padding: '0.75rem 1.5rem', background: 'rgba(255,255,255,0.05)', color: '#cbd5e1', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '0.5rem', cursor: 'pointer', transition: 'all 0.2s' }}
@@ -1781,7 +1866,7 @@ const Clones: React.FC = () => {
                                 >
                                     Guardar Cambios
                                 </button>
-                            </div>
+                            </ModalActions>
                         </GlassToastContent>
                     </GlassToastOverlay>
                 )
@@ -1828,7 +1913,7 @@ const Clones: React.FC = () => {
                                 </div>
                             </FormGroup>
 
-                            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '2rem' }}>
+                            <ModalActions>
                                 <button
                                     onClick={() => setIsMoveModalOpen(false)}
                                     style={{ padding: '0.75rem', background: 'none', border: '1px solid #e2e8f0', borderRadius: '0.5rem', cursor: 'pointer' }}
@@ -1841,7 +1926,7 @@ const Clones: React.FC = () => {
                                 >
                                     Mover Lote
                                 </button>
-                            </div>
+                            </ModalActions>
                         </ModalContent>
                     </ModalOverlay>
                 )
@@ -1902,14 +1987,14 @@ const Clones: React.FC = () => {
                                     />
                                 </div>
 
-                                <div style={{ display: 'flex', gap: '1rem' }}>
+                                <ModalActions style={{ marginTop: '1rem' }}>
                                     <button onClick={() => setIsBarcodeModalOpen(false)} style={{ flex: 1, padding: '0.75rem', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '0.5rem', cursor: 'pointer', color: '#94a3b8', fontWeight: 600, transition: 'all 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'} onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}>
                                         Volver
                                     </button>
                                     <button onClick={handlePrintTickets} style={{ flex: 1, padding: '0.75rem', background: 'rgba(56, 189, 248, 0.2)', color: '#38bdf8', border: '1px solid rgba(56, 189, 248, 0.3)', borderRadius: '0.5rem', cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', transition: 'all 0.2s', boxShadow: '0 4px 6px rgba(0,0,0,0.2)' }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(56, 189, 248, 0.3)'} onMouseLeave={e => e.currentTarget.style.background = 'rgba(56, 189, 248, 0.2)'}>
                                         <FaPrint /> Imprimir Etiquetas
                                     </button>
-                                </div>
+                                </ModalActions>
                             </div>
                         </GlassToastContent>
                     </GlassToastOverlay>
@@ -1967,7 +2052,7 @@ const Clones: React.FC = () => {
                                 />
                             </FormGroup>
 
-                            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '2rem' }}>
+                            <ModalActions>
                                 <button
                                     onClick={() => setIsDiscardModalOpen(false)}
                                     style={{ padding: '0.75rem 1.5rem', background: 'rgba(255,255,255,0.05)', color: '#cbd5e1', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '0.5rem', cursor: 'pointer', transition: 'all 0.2s' }}
@@ -1992,7 +2077,7 @@ const Clones: React.FC = () => {
                                 >
                                     Confirmar Baja
                                 </button>
-                            </div>
+                            </ModalActions>
                         </GlassToastContent>
                     </GlassToastOverlay>
                 )
@@ -2028,7 +2113,7 @@ const Clones: React.FC = () => {
                                 />
                             </FormGroup>
 
-                            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '2rem' }}>
+                            <ModalActions>
                                 <button
                                     onClick={() => setIsDeleteModalOpen(false)}
                                     style={{ padding: '0.75rem 1.5rem', background: 'rgba(255,255,255,0.05)', color: '#cbd5e1', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '0.5rem', cursor: 'pointer', transition: 'all 0.2s' }}
@@ -2053,7 +2138,7 @@ const Clones: React.FC = () => {
                                 >
                                     Eliminar Lote
                                 </button>
-                            </div>
+                            </ModalActions>
                         </GlassToastContent>
                     </GlassToastOverlay>
                 )
