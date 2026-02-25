@@ -339,18 +339,26 @@ const Rooms: React.FC = () => {
         if (!roomToDelete) return;
 
         setIsDeleting(true);
-        const success = await roomsService.deleteRoom(roomToDelete);
-        setIsDeleting(false);
+        try {
+            const success = await roomsService.deleteRoom(roomToDelete);
+            setIsDeleting(false);
 
-        if (success) {
-            setRooms(rooms.filter(r => r.id !== roomToDelete));
-            // Show Success Toast
-            setToastMessage(`La sala ha sido eliminada correctamente.`);
-            setToastType('success');
-            setToastAnimate(false);
-            setToastOpen(true);
-        } else {
-            setToastMessage("Error al eliminar la Sala. Inténtalo de nuevo.");
+            if (success) {
+                setRooms(rooms.filter(r => r.id !== roomToDelete));
+                // Show Success Toast
+                setToastMessage(`La sala ha sido eliminada correctamente.`);
+                setToastType('success');
+                setToastAnimate(false);
+                setToastOpen(true);
+            } else {
+                setToastMessage("Error al eliminar la Sala. Inténtalo de nuevo.");
+                setToastType('error');
+                setToastAnimate(true);
+                setToastOpen(true);
+            }
+        } catch (error: any) {
+            setIsDeleting(false);
+            setToastMessage(error.message || "Error al eliminar la Sala. Inténtalo de nuevo.");
             setToastType('error');
             setToastAnimate(true);
             setToastOpen(true);

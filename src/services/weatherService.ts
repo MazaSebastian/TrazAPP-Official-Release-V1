@@ -13,6 +13,7 @@ export interface WeatherData {
     current: {
         temp: number;
         code: number;
+        humidity: number;
     };
     daily: DailyWeather[];
 }
@@ -24,11 +25,11 @@ export const weatherService = {
     async getForecast(): Promise<WeatherData | null> {
         try {
             const response = await fetch(
-                `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&current_weather=true&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=America%2FArgentina%2FBuenos_Aires`
+                `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&current=temperature_2m,relative_humidity_2m,weather_code&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=America%2FArgentina%2FBuenos_Aires`
             );
             const data = await response.json();
 
-            if (!data || !data.daily || !data.current_weather) return null;
+            if (!data || !data.daily || !data.current) return null;
 
             const { time, temperature_2m_max, temperature_2m_min, weathercode, precipitation_sum } = data.daily;
 
@@ -42,8 +43,9 @@ export const weatherService = {
 
             return {
                 current: {
-                    temp: data.current_weather.temperature,
-                    code: data.current_weather.weathercode
+                    temp: data.current.temperature_2m,
+                    humidity: data.current.relative_humidity_2m,
+                    code: data.current.weather_code
                 },
                 daily
             };

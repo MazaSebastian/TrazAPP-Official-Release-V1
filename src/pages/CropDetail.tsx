@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { DeleteProtectionModal } from '../components/DeleteProtectionModal';
 import { QRCodeModal } from '../components/QRCodeModal';
 import { Tooltip } from '../components/Tooltip';
@@ -183,6 +183,12 @@ const BackButton = styled.button`
     background: rgba(255, 255, 255, 0.1);
     border-color: rgba(255, 255, 255, 0.2);
   }
+
+  @media (max-width: 768px) {
+    margin: 0 auto 1rem auto;
+    justify-content: center;
+    width: max-content;
+  }
 `;
 
 const TitleSection = styled.div`
@@ -192,7 +198,8 @@ const TitleSection = styled.div`
 
   @media (max-width: 768px) {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: center;
+    text-align: center;
     gap: 1rem;
   }
 `;
@@ -207,6 +214,10 @@ const CropTitle = styled.h1`
   gap: 0.75rem;
 
   svg { color: #4ade80; }
+
+  @media (max-width: 768px) {
+    justify-content: center;
+  }
 `;
 
 // Removing duplicate styled components if they exist here.
@@ -234,6 +245,39 @@ const MetaGrid = styled.div`
     display: flex;
     align-items: center;
     gap: 0.4rem;
+  }
+
+  @media (max-width: 768px) {
+    justify-content: center;
+    width: 100%;
+  }
+`;
+
+const SectionHeaderContainer = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    gap: 1rem;
+  }
+`;
+
+const SectionTitle = styled.h2`
+  font-size: 1.5rem;
+  color: #2d3748;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  @media (max-width: 768px) {
+    justify-content: center;
   }
 `;
 
@@ -363,6 +407,10 @@ const GridContainer = styled.div`
   grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
   gap: 1.5rem;
   align-items: start;
+
+  @media (max-width: 768px) {
+    gap: 1rem;
+  }
 `;
 
 const PrimaryButton = styled.button`
@@ -499,6 +547,15 @@ const VisualStageBadge = styled.div<{ $type: string }>`
   z-index: 5;
 
   svg { width: 1.2em; height: 1.2em; }
+
+  @media (max-width: 768px) {
+    padding: 0.25rem 0.6rem;
+    font-size: 0.75rem;
+    top: 0.5rem;
+    right: 0.5rem;
+    gap: 0.25rem;
+    svg { width: 1em; height: 1em; }
+  }
 `;
 
 const FileUploadBox = styled.div`
@@ -531,6 +588,23 @@ const RoomCard = styled.div<{ $type?: string; $alertLevel?: number }>`
   position: relative;
   overflow: hidden;
 
+  .desktop-layout { display: block; }
+  .mobile-layout { display: none; }
+
+  // Mobile Compression
+  @media (max-width: 768px) {
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    
+    .desktop-layout { display: none !important; }
+    .mobile-layout { 
+      display: flex; 
+      flex-direction: column; 
+      gap: 0.5rem; 
+      width: 100%;
+    }
+  }
+
   // Level 2 Alert: Red Border
   ${p => p.$alertLevel && p.$alertLevel >= 2 && css`
       border: 2px solid #e53e3e;
@@ -540,6 +614,168 @@ const RoomCard = styled.div<{ $type?: string; $alertLevel?: number }>`
   ${p => p.$alertLevel && p.$alertLevel >= 3 && css`
       animation: ${heartbeat} 2s infinite;
   `}
+`;
+
+const RoomCardInner = styled.div`
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 1rem;
+  margin-top: 3.5rem;
+
+  @media (max-width: 768px) {
+    margin-top: 2rem;
+    margin-bottom: 0.5rem;
+  }
+`;
+
+const RoomCardTitle = styled.h3`
+  margin: 0;
+  color: #f8fafc;
+  font-size: 1.25rem;
+  font-weight: 800;
+  padding-right: 140px;
+  word-break: break-word;
+
+  @media (max-width: 768px) {
+    font-size: 1.1rem;
+    padding-right: 90px;
+  }
+`;
+
+const WeekBadgeObj = styled.span`
+  position: absolute;
+  top: 3.5rem;
+  right: 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.25rem 0.6rem;
+  border-radius: 4px;
+  background: rgba(56, 189, 248, 0.1);
+  border: 1px solid rgba(56, 189, 248, 0.2);
+  color: #38bdf8;
+  width: fit-content;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  z-index: 5;
+
+  @media (max-width: 768px) {
+    top: 2.25rem;
+    right: 0.5rem;
+    padding: 0.15rem 0.4rem;
+    font-size: 0.7rem;
+  }
+`;
+
+const StartDateContainer = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #94a3b8;
+  font-size: 0.9rem;
+
+  @media (max-width: 768px) {
+    font-size: 0.8rem;
+    gap: 0.25rem;
+  }
+`;
+
+const RoomAlertBadge = styled.div<{ $alertLevel: number, $isPeriodOver: boolean }>`
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  background: ${p => p.$alertLevel >= 1 || p.$isPeriodOver ? 'rgba(239, 68, 68, 0.1)' : 'rgba(74, 222, 128, 0.05)'};
+  color: ${p => p.$alertLevel >= 1 || p.$isPeriodOver ? '#f87171' : '#4ade80'};
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+  font-size: 0.9rem;
+  border: 1px solid ${p => p.$alertLevel >= 1 || p.$isPeriodOver ? 'rgba(239, 68, 68, 0.3)' : 'rgba(74, 222, 128, 0.2)'};
+
+  @media (max-width: 768px) {
+    margin-top: 0.25rem;
+    padding: 0.35rem 0.5rem;
+    font-size: 0.8rem;
+    gap: 0.25rem;
+  }
+`;
+
+const EnvDataContainer = styled.div`
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px dashed rgba(255, 255, 255, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  @media (max-width: 768px) {
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    gap: 0.25rem;
+    
+    div {
+      font-size: 0.8rem !important;
+    }
+  }
+`;
+
+const FooterActions = styled.div`
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px dashed rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+
+  @media (max-width: 768px) {
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    
+    button {
+      padding: 6px !important;
+      svg {
+        width: 12px;
+        height: 12px;
+      }
+    }
+  }
+`;
+
+const SummaryBox = styled.div`
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  background: rgba(30, 41, 59, 0.5);
+  border-radius: 0.5rem;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+
+  .metric-val {
+    font-size: 1.25rem;
+    font-weight: 800;
+  }
+  .metric-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: #94a3b8;
+  }
+
+  @media (max-width: 768px) {
+    margin-top: 0.5rem;
+    padding: 0.5rem;
+    
+    .metric-val {
+      font-size: 1rem;
+      color: inherit;
+    }
+    .metric-label {
+      font-size: 0.65rem;
+    }
+  }
 `;
 
 const getColorHex = (colorName?: string) => {
@@ -593,6 +829,23 @@ const RoomCardContainer = ({ room, children, isOver, $alertLevel }: { room: any,
   );
 };
 
+export const DragPropsContext = React.createContext<any>(null);
+
+export const MobileDragWrapper = ({ onClick, children, className, style }: any) => {
+  const dragProps = useContext(DragPropsContext);
+  return (
+    <div
+      className={className}
+      {...(dragProps?.attributes || {})}
+      {...(dragProps?.listeners || {})}
+      style={{ ...style, touchAction: 'none' }}
+      onClick={onClick}
+    >
+      {children}
+    </div>
+  );
+};
+
 const SortableRoomItem = ({ room, children }: { room: any, children: React.ReactNode }) => {
   const {
     attributes,
@@ -613,45 +866,46 @@ const SortableRoomItem = ({ room, children }: { room: any, children: React.React
   };
 
   return (
-    <div ref={setNodeRef} style={style}>
-      {/* Drag Handle Component - Positioned Absolute Top Right or similar */}
-      <div
-        {...attributes}
-        {...listeners}
-        style={{
-          position: 'absolute',
-          top: '0.5rem',
-          left: '1rem',
-          marginTop: '0.25rem',
-          zIndex: 20,
-          cursor: 'grab',
-          padding: '0.5rem',
-          background: 'rgba(15, 23, 42, 0.6)',
-          backdropFilter: 'blur(8px)',
-          borderRadius: '50%',
-          color: '#94a3b8',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
-          transition: 'all 0.2s',
-        }}
-        className="drag-handle"
-        onMouseEnter={(e) => {
-          e.currentTarget.style.transform = 'scale(1.1)';
-          e.currentTarget.style.background = 'rgba(74, 222, 128, 0.2)';
-          e.currentTarget.style.borderColor = 'rgba(74, 222, 128, 0.5)';
-          e.currentTarget.style.color = '#4ade80';
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.transform = 'scale(1)';
-          e.currentTarget.style.background = 'rgba(15, 23, 42, 0.6)';
-          e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
-          e.currentTarget.style.color = '#94a3b8';
-        }}
-      >
-        <FaExchangeAlt size={16} style={{ transform: 'rotate(90deg)' }} />
-      </div>
-
+    <div ref={setNodeRef} style={style} className="sortable-room-container">
       <RoomCardContainer room={room} isOver={isOver}>
-        {children}
+        {/* Desktop Drag Handle - Positioned Absolute Top Right or similar */}
+        <div
+          {...attributes}
+          {...listeners}
+          style={{
+            position: 'absolute',
+            top: '0.5rem',
+            left: '1rem',
+            marginTop: '0.25rem',
+            zIndex: 20,
+            cursor: 'grab',
+            padding: '0.5rem',
+            background: 'rgba(15, 23, 42, 0.6)',
+            backdropFilter: 'blur(8px)',
+            borderRadius: '50%',
+            color: '#94a3b8',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            transition: 'all 0.2s',
+          }}
+          className="drag-handle desktop-layout"
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'scale(1.1)';
+            e.currentTarget.style.background = 'rgba(74, 222, 128, 0.2)';
+            e.currentTarget.style.borderColor = 'rgba(74, 222, 128, 0.5)';
+            e.currentTarget.style.color = '#4ade80';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'scale(1)';
+            e.currentTarget.style.background = 'rgba(15, 23, 42, 0.6)';
+            e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+            e.currentTarget.style.color = '#94a3b8';
+          }}
+        >
+          <FaExchangeAlt size={16} className="desktop-layout" style={{ transform: 'rotate(90deg)' }} />
+        </div>
+        <DragPropsContext.Provider value={{ attributes, listeners }}>
+          {children}
+        </DragPropsContext.Provider>
       </RoomCardContainer>
     </div>
   );
@@ -1551,15 +1805,15 @@ const CropDetail: React.FC = () => {
 
       {/* --- ROOMS SECTION --- */}
       <div style={{ marginBottom: '3rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-          <h2 style={{ fontSize: '1.5rem', color: '#2d3748', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        <SectionHeaderContainer>
+          <SectionTitle>
             Salas de Cultivo Activas
-          </h2>
+          </SectionTitle>
           <div style={{ display: 'flex', gap: '0.5rem' }}>
 
 
           </div>
-        </div>
+        </SectionHeaderContainer>
 
         {isLoadingRooms ? (
           <div style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>
@@ -1668,7 +1922,6 @@ const CropDetail: React.FC = () => {
                           <div
                             onClick={() => navigate(`/rooms/${room.id}`)}
                             style={{
-                              // Removed wrapping explicit div styles as they are now handled by RoomCard or moved
                               cursor: 'pointer'
                             }}
                           >
@@ -1687,170 +1940,134 @@ const CropDetail: React.FC = () => {
                                           : '#ecc94b' // Yellow (Default)
                             }} />
 
-                            <div style={{ display: 'flex', flexDirection: 'column', marginBottom: '1rem', marginTop: '3.5rem' }}>
-                              <h3 style={{ margin: 0, color: '#f8fafc', fontSize: '1.25rem', fontWeight: 800, paddingRight: '140px', wordBreak: 'break-word' }}>{room.name}</h3>
+                            <div className="desktop-layout">
+                              <RoomCardInner>
+                                <RoomCardTitle>{room.name}</RoomCardTitle>
 
-                              {/* Visual Stage Badge - Replaces old small badge */}
-                              <VisualStageBadge $type={room.type}>
-                                {room.type === 'vegetation' ? <FaLeaf />
-                                  : room.type === 'flowering' ? <span>🌸</span>
-                                    : room.type === 'mother' ? <FaSeedling />
-                                      : room.type === 'clones' ? <span>🧬</span>
-                                        : room.type === 'germination' ? <span>🌱</span>
-                                          : room.type === 'living_soil' ? <span>🌍</span>
-                                            : <FaWarehouse />}
-                                <span>
-                                  {room.type === 'vegetation' ? 'VEGETACIÓN'
-                                    : room.type === 'flowering' ? 'FLORA'
-                                      : room.type === 'mother' ? 'MADRES'
-                                        : room.type === 'clones' ? 'ESQUEJERA'
-                                          : room.type === 'germination' ? 'GERMINACIÓN'
-                                            : room.type === 'living_soil' ? 'LIVING SOIL'
-                                              : 'SECADO'}
-                                </span>
-                              </VisualStageBadge>
-                            </div>
+                                {/* Visual Stage Badge - Replaces old small badge */}
+                                <VisualStageBadge $type={room.type}>
+                                  {room.type === 'vegetation' ? <FaLeaf />
+                                    : room.type === 'flowering' ? <span>🌸</span>
+                                      : room.type === 'mother' ? <FaSeedling />
+                                        : room.type === 'clones' ? <span>🧬</span>
+                                          : room.type === 'germination' ? <span>🌱</span>
+                                            : room.type === 'living_soil' ? <span>🌍</span>
+                                              : <FaWarehouse />}
+                                  <span>
+                                    {room.type === 'vegetation' ? 'VEGETACIÓN'
+                                      : room.type === 'flowering' ? 'FLORA'
+                                        : room.type === 'mother' ? 'MADRES'
+                                          : room.type === 'clones' ? 'ESQUEJERA'
+                                            : room.type === 'germination' ? 'GERMINACIÓN'
+                                              : room.type === 'living_soil' ? 'LIVING SOIL'
+                                                : 'SECADO'}
+                                  </span>
+                                </VisualStageBadge>
+                              </RoomCardInner>
 
-                            {weekInfo && (
-                              <span style={{
-                                position: 'absolute',
-                                top: '3.5rem',
-                                right: '0.75rem',
-                                fontSize: '0.75rem',
-                                fontWeight: 700,
-                                padding: '0.25rem 0.6rem',
-                                borderRadius: '4px',
-                                background: 'rgba(56, 189, 248, 0.1)',
-                                border: '1px solid rgba(56, 189, 248, 0.2)',
-                                color: '#38bdf8',
-                                width: 'fit-content',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '0.25rem',
-                                zIndex: 5
-                              }}>
-                                <FaRegCircle size={8} /> {weekInfo}
-                              </span>
-                            )}
-
-
-
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                              {/* Start Date */}
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#94a3b8', fontSize: '0.9rem' }}>
-                                <FaCalendarAlt size={14} color="#64748b" />
-                                <span>Iniciado: <strong style={{ color: '#f8fafc' }}>{startDateDisplay}</strong></span>
-                              </div>
-
-                              {/* OPERATIONAL DAYS ALERT/COUNTDOWN */}
-                              {room.operational_days && daysRemainingString && (
-                                <div style={{
-                                  marginTop: '0.5rem',
-                                  padding: '0.5rem',
-                                  borderRadius: '0.5rem',
-                                  background: alertLevel >= 1 || isPeriodOver ? 'rgba(239, 68, 68, 0.1)' : 'rgba(74, 222, 128, 0.05)',
-                                  color: alertLevel >= 1 || isPeriodOver ? '#f87171' : '#4ade80',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  gap: '0.5rem',
-                                  fontWeight: 700,
-                                  fontSize: '0.9rem',
-                                  border: alertLevel >= 1 || isPeriodOver ? '1px solid rgba(239, 68, 68, 0.3)' : '1px solid rgba(74, 222, 128, 0.2)'
-                                }}>
-                                  {alertLevel >= 1 || isPeriodOver ? <FaExclamationTriangle /> : <FaClock />}
-                                  <span>{daysRemainingString}</span>
-                                </div>
+                              {weekInfo && (
+                                <WeekBadgeObj>
+                                  <FaRegCircle size={8} /> {weekInfo}
+                                </WeekBadgeObj>
                               )}
 
-                              {/* ESQUEJERA SUMMARY */}
-                              {geneticBreakdown && room.type !== 'clones' && (
-                                <div style={{ marginTop: '0.5rem', padding: '0.5rem', background: 'rgba(56, 189, 248, 0.05)', borderRadius: '0.5rem', border: '1px solid rgba(56, 189, 248, 0.2)' }}>
-                                  <strong style={{ display: 'block', fontSize: '0.8rem', color: '#38bdf8', marginBottom: '0.25rem' }}>Resumen por Genética:</strong>
-                                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                                    {Object.entries(geneticBreakdown as Record<string, number>).map(([name, count]) => (
-                                      <span key={name} style={{ fontSize: '0.8.5rem', background: 'rgba(255, 255, 255, 0.05)', padding: '0.1rem 0.4rem', borderRadius: '4px', border: '1px solid rgba(255, 255, 255, 0.1)', color: '#cbd5e1' }}>
-                                        <strong>{count}</strong> {name}
-                                      </span>
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
 
-                              {/* Summary Info: Plants & Genetics/Batches */}
-                              {room.batches && room.batches.length > 0 && (() => {
-                                const isDrying = room.type === 'drying' || room.type === 'drying_room' || room.type === 'curing'; // Check both just in case
-                                // For drying, we count all batches in the room (assuming active). For others, only those assigned to a map position.
-                                const activeBatches = isDrying
-                                  ? room.batches
-                                  : room.batches.filter((b: any) => b.clone_map_id);
 
-                                const totalPlants = activeBatches.reduce((acc: number, b: any) => acc + (b.quantity || 0), 0);
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                {/* Start Date */}
+                                <StartDateContainer>
+                                  <FaCalendarAlt size={14} color="#64748b" />
+                                  <span>Iniciado: <strong style={{ color: '#f8fafc' }}>{startDateDisplay}</strong></span>
+                                </StartDateContainer>
 
-                                const secondMetricValue = isDrying
-                                  ? (() => {
-                                    const uniqueBatches = new Set();
-                                    activeBatches.forEach((b: any) => {
-                                      const date = b.created_at ? new Date(b.created_at).toISOString().slice(0, 16) : 'unknown';
-                                      uniqueBatches.add(`${b.genetic?.id || b.name}-${date}`);
-                                    });
-                                    return uniqueBatches.size;
-                                  })()
-                                  : new Set(activeBatches.map((b: any) => b.genetic?.name || b.genetic_name || 'Desconocida')).size;
+                                {/* OPERATIONAL DAYS ALERT/COUNTDOWN */}
+                                {room.operational_days && daysRemainingString && (
+                                  <RoomAlertBadge $alertLevel={alertLevel} $isPeriodOver={isPeriodOver}>
+                                    {alertLevel >= 1 || isPeriodOver ? <FaExclamationTriangle /> : <FaClock />}
+                                    <span>{daysRemainingString}</span>
+                                  </RoomAlertBadge>
+                                )}
 
-                                const secondMetricLabel = isDrying ? 'Lotes' : 'Variedades';
-
-                                return (
-                                  <div style={{
-                                    marginTop: '0.75rem',
-                                    padding: '0.75rem',
-                                    background: 'rgba(30, 41, 59, 0.5)',
-                                    borderRadius: '0.5rem',
-                                    display: 'flex',
-                                    justifyContent: 'space-around',
-                                    alignItems: 'center',
-                                    border: '1px solid rgba(255, 255, 255, 0.05)'
-                                  }}>
-                                    {/* Total Plants */}
-                                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                                      <span style={{ fontSize: '1.25rem', fontWeight: 800, color: '#4ade80' }}>
-                                        {totalPlants}
-                                      </span>
-                                      <span style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase' }}>Plantas</span>
-                                    </div>
-
-                                    <div style={{ width: '1px', height: '24px', background: 'rgba(255, 255, 255, 0.1)' }}></div>
-
-                                    {/* Total Varieties or Batches */}
-                                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                                      <span style={{ fontSize: '1.25rem', fontWeight: 800, color: '#fb923c' }}>
-                                        {secondMetricValue}
-                                      </span>
-                                      <span style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase' }}>{secondMetricLabel}</span>
+                                {/* ESQUEJERA SUMMARY */}
+                                {geneticBreakdown && room.type !== 'clones' && (
+                                  <div style={{ marginTop: '0.5rem', padding: '0.5rem', background: 'rgba(56, 189, 248, 0.05)', borderRadius: '0.5rem', border: '1px solid rgba(56, 189, 248, 0.2)' }}>
+                                    <strong style={{ display: 'block', fontSize: '0.8rem', color: '#38bdf8', marginBottom: '0.25rem' }}>Resumen por Genética:</strong>
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                                      {Object.entries(geneticBreakdown as Record<string, number>).map(([name, count]) => (
+                                        <span key={name} style={{ fontSize: '0.8.5rem', background: 'rgba(255, 255, 255, 0.05)', padding: '0.1rem 0.4rem', borderRadius: '4px', border: '1px solid rgba(255, 255, 255, 0.1)', color: '#cbd5e1' }}>
+                                          <strong>{count}</strong> {name}
+                                        </span>
+                                      ))}
                                     </div>
                                   </div>
-                                );
-                              })()}
+                                )}
 
-                              {/* Environmental Data (Placeholders for TUYA API) */}
-                              <div style={{ marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px dashed rgba(255, 255, 255, 0.1)', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#94a3b8', fontSize: '0.85rem' }}>
-                                  <FaTemperatureHigh size={12} color="#f87171" />
-                                  <span>Temp. Actual <span style={{ float: 'right', fontWeight: 'bold', color: '#f8fafc' }}>--</span></span>
-                                </div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#94a3b8', fontSize: '0.85rem' }}>
-                                  <FaTint size={12} color="#38bdf8" />
-                                  <span>Humedad <span style={{ float: 'right', fontWeight: 'bold', color: '#f8fafc' }}>--</span></span>
-                                </div>
-                              </div>
+                                {/* Summary Info: Plants & Genetics/Batches */}
+                                {room.batches && room.batches.length > 0 && (() => {
+                                  const isDrying = room.type === 'drying' || room.type === 'drying_room' || room.type === 'curing'; // Check both just in case
+                                  // For drying, we count all batches in the room (assuming active). For others, only those assigned to a map position.
+                                  const activeBatches = isDrying
+                                    ? room.batches
+                                    : room.batches.filter((b: any) => b.clone_map_id);
 
-                              {/* Countdown and Progress Bar hidden per user request */}
+                                  const totalPlants = activeBatches.reduce((acc: number, b: any) => acc + (b.quantity || 0), 0);
 
-                              {/* Footer Actions: Stage Controls + Utility Buttons */}
-                              <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px dashed rgba(255, 255, 255, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
+                                  const secondMetricValue = isDrying
+                                    ? (() => {
+                                      const uniqueBatches = new Set();
+                                      activeBatches.forEach((b: any) => {
+                                        const date = b.created_at ? new Date(b.created_at).toISOString().slice(0, 16) : 'unknown';
+                                        uniqueBatches.add(`${b.genetic?.id || b.name}-${date}`);
+                                      });
+                                      return uniqueBatches.size;
+                                    })()
+                                    : new Set(activeBatches.map((b: any) => b.genetic?.name || b.genetic_name || 'Desconocida')).size;
 
-                                {/* Left: Stage Action (or empty spacer if none) */}
-                                <div style={{ flex: 1 }}>
-                                  {/* {room.type === 'vegetation' && (
+                                  const secondMetricLabel = isDrying ? 'Lotes' : 'Variedades';
+
+                                  return (
+                                    <SummaryBox>
+                                      {/* Total Plants */}
+                                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                        <span className="metric-val" style={{ color: '#4ade80' }}>
+                                          {totalPlants}
+                                        </span>
+                                        <span className="metric-label">Plantas</span>
+                                      </div>
+
+                                      <div style={{ width: '1px', height: '24px', background: 'rgba(255, 255, 255, 0.1)' }}></div>
+
+                                      {/* Total Varieties or Batches */}
+                                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                        <span className="metric-val" style={{ color: '#fb923c' }}>
+                                          {secondMetricValue}
+                                        </span>
+                                        <span className="metric-label">{secondMetricLabel}</span>
+                                      </div>
+                                    </SummaryBox>
+                                  );
+                                })()}
+
+                                {/* Environmental Data (Placeholders for TUYA API) */}
+                                <EnvDataContainer>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#94a3b8' }} className="env-row">
+                                    <FaTemperatureHigh size={12} color="#f87171" />
+                                    <span>Temp. Actual <span style={{ float: 'right', fontWeight: 'bold', color: '#f8fafc' }}>--</span></span>
+                                  </div>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#94a3b8' }} className="env-row">
+                                    <FaTint size={12} color="#38bdf8" />
+                                    <span>Humedad <span style={{ float: 'right', fontWeight: 'bold', color: '#f8fafc' }}>--</span></span>
+                                  </div>
+                                </EnvDataContainer>
+
+                                {/* Countdown and Progress Bar hidden per user request */}
+
+                                {/* Footer Actions: Stage Controls + Utility Buttons */}
+                                <FooterActions>
+
+                                  {/* Left: Stage Action (or empty spacer if none) */}
+                                  <div style={{ flex: 1 }}>
+                                    {/* {room.type === 'vegetation' && (
                                 <button
                                   onClick={(e) => handleForceStage(e, room, 'flowering')}
                                   style={{
@@ -1878,13 +2095,13 @@ const CropDetail: React.FC = () => {
 
 
 
-                                </div>
+                                  </div>
 
-                                {/* Right: Utility Buttons (Moved from Absolute Position) */}
-                                <div style={{ display: 'flex', gap: '5px' }}>
-                                  {/* Removed "Asignar Nuevo Lote" button as per request, since it is handled in the map */}
-                                  {/* Removed Transplant Button as per request */}
-                                  {/* <Tooltip text="Transplantar">
+                                  {/* Right: Utility Buttons (Moved from Absolute Position) */}
+                                  <div style={{ display: 'flex', gap: '5px' }}>
+                                    {/* Removed "Asignar Nuevo Lote" button as per request, since it is handled in the map */}
+                                    {/* Removed Transplant Button as per request */}
+                                    {/* <Tooltip text="Transplantar">
                                 <button
                                   onClick={(e) => handleOpenTransplant(e, room)}
                                   style={{
@@ -1896,36 +2113,80 @@ const CropDetail: React.FC = () => {
                                   <FaExchangeAlt size={14} />
                                 </button>
                               </Tooltip> */}
-                                  <Tooltip text="Editar Nombre de Sala">
-                                    <button
-                                      onClick={(e) => handleEditRoomName(e, room)}
-                                      style={{
-                                        background: 'rgba(30, 41, 59, 0.5)', border: '1px solid rgba(255, 255, 255, 0.1)', cursor: 'pointer', color: '#94a3b8', padding: '8px', borderRadius: '6px', display: 'flex', alignItems: 'center', transition: 'all 0.2s', boxShadow: '0 1px 2px rgba(0,0,0,0.2)'
-                                      }}
-                                      onMouseEnter={(e) => { e.currentTarget.style.color = '#38bdf8'; e.currentTarget.style.borderColor = 'rgba(56, 189, 248, 0.5)'; e.currentTarget.style.background = 'rgba(56, 189, 248, 0.1)'; }}
-                                      onMouseLeave={(e) => { e.currentTarget.style.color = '#94a3b8'; e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)'; e.currentTarget.style.background = 'rgba(30, 41, 59, 0.5)'; }}
-                                    >
-                                      <FaEdit size={14} />
-                                    </button>
-                                  </Tooltip>
-                                  <Tooltip text="Eliminar Sala">
-                                    <button
-                                      onClick={(e) => handleDeleteRoom(e, room.id, room.name)}
-                                      style={{
-                                        background: 'rgba(30, 41, 59, 0.5)', border: '1px solid rgba(255, 255, 255, 0.1)', cursor: 'pointer', color: '#94a3b8', padding: '8px', borderRadius: '6px', display: 'flex', alignItems: 'center', transition: 'all 0.2s', boxShadow: '0 1px 2px rgba(0,0,0,0.2)'
-                                      }}
-                                      onMouseEnter={(e) => { e.currentTarget.style.color = '#f87171'; e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.5)'; e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)'; }}
-                                      onMouseLeave={(e) => { e.currentTarget.style.color = '#94a3b8'; e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)'; e.currentTarget.style.background = 'rgba(30, 41, 59, 0.5)'; }}
-                                    >
-                                      <FaTrash size={14} />
-                                    </button>
-                                  </Tooltip>
-                                </div>
+                                    <Tooltip text="Editar Nombre de Sala">
+                                      <button
+                                        onClick={(e) => handleEditRoomName(e, room)}
+                                        style={{
+                                          background: 'rgba(30, 41, 59, 0.5)', border: '1px solid rgba(255, 255, 255, 0.1)', cursor: 'pointer', color: '#94a3b8', padding: '8px', borderRadius: '6px', display: 'flex', alignItems: 'center', transition: 'all 0.2s', boxShadow: '0 1px 2px rgba(0,0,0,0.2)'
+                                        }}
+                                        onMouseEnter={(e) => { e.currentTarget.style.color = '#38bdf8'; e.currentTarget.style.borderColor = 'rgba(56, 189, 248, 0.5)'; e.currentTarget.style.background = 'rgba(56, 189, 248, 0.1)'; }}
+                                        onMouseLeave={(e) => { e.currentTarget.style.color = '#94a3b8'; e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)'; e.currentTarget.style.background = 'rgba(30, 41, 59, 0.5)'; }}
+                                      >
+                                        <FaEdit size={14} />
+                                      </button>
+                                    </Tooltip>
+                                    <Tooltip text="Eliminar Sala">
+                                      <button
+                                        onClick={(e) => handleDeleteRoom(e, room.id, room.name)}
+                                        style={{
+                                          background: 'rgba(30, 41, 59, 0.5)', border: '1px solid rgba(255, 255, 255, 0.1)', cursor: 'pointer', color: '#94a3b8', padding: '8px', borderRadius: '6px', display: 'flex', alignItems: 'center', transition: 'all 0.2s', boxShadow: '0 1px 2px rgba(0,0,0,0.2)'
+                                        }}
+                                        onMouseEnter={(e) => { e.currentTarget.style.color = '#f87171'; e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.5)'; e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)'; }}
+                                        onMouseLeave={(e) => { e.currentTarget.style.color = '#94a3b8'; e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)'; e.currentTarget.style.background = 'rgba(30, 41, 59, 0.5)'; }}
+                                      >
+                                        <FaTrash size={14} />
+                                      </button>
+                                    </Tooltip>
+                                  </div>
+                                </FooterActions>
                               </div>
                             </div>
+
+                            {/* --- MOBILE COMPACT RIBBON LAYOUT --- */}
+                            <MobileDragWrapper className="mobile-layout"
+                              onClick={() => navigate(`/rooms/${room.id}`)}>
+                              <div style={{ display: 'flex', flexWrap: 'nowrap', alignItems: 'center', gap: '0.4rem', fontSize: '0.8rem', fontWeight: 800, color: '#f8fafc', justifyContent: 'space-between', paddingBottom: '0.4rem', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', flex: 1, minWidth: 0 }}>
+                                  <VisualStageBadge $type={room.type} style={{ padding: '0.15rem 0.3rem', fontSize: '0.6rem', marginTop: 0, border: 'none' }}>
+                                    <span>
+                                      {room.type === 'vegetation' ? 'VEGE'
+                                        : room.type === 'flowering' ? 'FLORA'
+                                          : room.type === 'mother' ? 'MADRES'
+                                            : room.type === 'clones' ? 'ESQUEJERA'
+                                              : room.type === 'germination' ? 'GERMINACIÓN'
+                                                : room.type === 'living_soil' ? 'LIVING SOIL'
+                                                  : 'SECADO'}
+                                    </span>
+                                  </VisualStageBadge>
+                                  {weekInfo && <span style={{ color: '#38bdf8', fontSize: '0.65rem', whiteSpace: 'nowrap' }}>{weekInfo}</span>}
+                                  <span style={{ fontSize: '0.8rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginLeft: '0.2rem' }}>{room.name}</span>
+                                </div>
+                              </div>
+
+                              <div style={{ display: 'flex', flexWrap: 'nowrap', alignItems: 'center', gap: '0.4rem', color: '#94a3b8', fontSize: '0.7rem', justifyContent: 'space-between', paddingTop: '0.2rem' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.2rem', whiteSpace: 'nowrap' }}>
+                                  <FaCalendarAlt size={9} /> {startDateDisplay}
+                                </div>
+
+                                {daysRemainingString && (
+                                  <div style={{
+                                    color: alertLevel >= 1 || isPeriodOver ? '#f87171' : '#4ade80',
+                                    display: 'flex', alignItems: 'center', gap: '0.2rem', fontWeight: 600, whiteSpace: 'nowrap'
+                                  }}>
+                                    {alertLevel >= 1 || isPeriodOver ? <FaExclamationTriangle size={9} /> : <FaClock size={9} />}
+                                    {daysRemainingString.replace(' días restantes', 'd')}
+                                  </div>
+                                )}
+
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', whiteSpace: 'nowrap' }}>
+                                  <span style={{ display: 'flex', alignItems: 'center', gap: '2px' }}><FaTemperatureHigh size={9} color="#f87171" /> --</span>
+                                  <span style={{ display: 'flex', alignItems: 'center', gap: '2px' }}><FaTint size={9} color="#38bdf8" /> --</span>
+                                </div>
+                              </div>
+                            </MobileDragWrapper>
                           </div>
                         </SortableRoomItem>
-                      )
+                      );
                     })}
 
                     {/* Add New Room Card */}
@@ -1954,7 +2215,7 @@ const CropDetail: React.FC = () => {
                                because dragging a huge list is heavy. 
                                But the user expects the card.
                            */}
-                        <div style={{ padding: '1rem' }}>
+                        <div style={{ padding: '1rem' }} className="desktop-layout">
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                               <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#2d3748' }}>{activeDragRoom.name}</h3>
@@ -1979,8 +2240,12 @@ const CropDetail: React.FC = () => {
                             })()}
                           </div>
                           <div style={{ fontSize: '0.9rem', color: '#718096' }}>
-                            <FaClock style={{ marginRight: '0.4rem' }} /> Arrastra y soltá para reordenar las salas
+                            <FaClock style={{ marginRight: '0.4rem' }} /> Suelta para reubicar.
                           </div>
+                        </div>
+
+                        <div className="mobile-layout" style={{ padding: '0.5rem' }}>
+                          <span style={{ fontSize: '0.9rem', fontWeight: 'bold' }}>Reubicando: {activeDragRoom.name}</span>
                         </div>
                       </RoomCardContainer>
                     </div>
@@ -1999,7 +2264,7 @@ const CropDetail: React.FC = () => {
             )}
           </FadeInWrapper>
         )}
-      </div >
+      </div>
 
       {/* Move Confirmation Modal */}
       < ConfirmModal
@@ -2228,7 +2493,8 @@ const CropDetail: React.FC = () => {
               </ModalActions>
             </Modal>
           </ModalOverlay>
-        )}
+        )
+      }
 
       {/* Color Picker Modal */}
       {

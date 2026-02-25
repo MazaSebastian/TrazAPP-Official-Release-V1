@@ -124,16 +124,31 @@ export const roomsService = {
     },
 
     async deleteRoom(id: string): Promise<boolean> {
-        // 1. Unassign Batches currently in this room
+        // 1. Check for active batches
+        const { data: activeBatches, error: checkError } = await getClient()
+            .from('batches')
+            .select('id')
+            .eq('current_room_id', id)
+            .is('discarded_at', null)
+            .limit(1);
+
+        if (checkError) {
+            console.error('Error checking active batches:', checkError);
+            throw new Error("Error al verificar las unidades activas en la sala.");
+        }
+
+        if (activeBatches && activeBatches.length > 0) {
+            throw new Error("No se puede eliminar la sala porque contiene unidades (esquejes/plantas) activas. Por favor, elimine o mueva las unidades primero.");
+        }
+
+        // 2. Unassign discarded Batches currently in this room (soft deleted ones)
         const { error: batchError } = await getClient()
             .from('batches')
             .update({ current_room_id: null })
             .eq('current_room_id', id);
 
         if (batchError) {
-            console.error('Error unassigning batches:', batchError);
-            // Proceeding cautiously, or return false? Usually better to try proceed or fail.
-            // If this fails, delete will likely fail too.
+            console.error('Error unassigning discarded batches:', batchError);
         }
 
         // 2. Clear history references (Movements)

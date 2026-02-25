@@ -15,10 +15,21 @@ const Container = styled.div`
   max-width: 1400px;
   margin: 0 auto;
   color: #f8fafc;
+
+  @media (max-width: 768px) {
+    padding: 6rem 1rem 2rem 1rem;
+  }
 `;
 
 const WelcomeHeader = styled.div`
   margin-bottom: 2.5rem;
+
+  @media (max-width: 768px) {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
   
   h1 {
     font-size: clamp(1.5rem, 5vw, 2.5rem);
@@ -41,6 +52,19 @@ const DateDisplay = styled.div`
   font-size: clamp(1rem, 3vw, 1.25rem);
   font-weight: 500;
   letter-spacing: 0.025em;
+
+  @media (max-width: 768px) {
+    justify-content: center;
+  }
+
+  .separator {
+    margin: 0 0.5rem;
+    opacity: 0.5;
+
+    @media (max-width: 768px) {
+      display: none;
+    }
+  }
   
   svg { 
     color: #38bdf8;
@@ -133,6 +157,11 @@ const SectionTitle = styled.h2`
   color: #f8fafc;
   margin: 0 0 1.5rem 0;
   
+  @media (max-width: 768px) {
+    justify-content: center;
+    text-align: center;
+  }
+
   svg {
     color: #38bdf8;
   }
@@ -318,7 +347,7 @@ export const MedicoDashboard: React.FC = () => {
         <DateDisplay>
           <FaCalendarCheck />
           {format(currentTime, "EEEE, d 'de' MMMM 'de' yyyy", { locale: es })}
-          <span style={{ margin: '0 0.5rem', opacity: 0.5 }}>|</span>
+          <span className="separator">|</span>
           <FaClock />
           {format(currentTime, "HH:mm")}
         </DateDisplay>

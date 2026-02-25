@@ -51,6 +51,12 @@ const Container = styled.div`
   min-height: 100vh;
   background-color: transparent; /* Inherit global dark */
   animation: ${fadeIn} 0.5s ease-in-out;
+  
+  @media (max-width: 768px) {
+    padding-top: 5.5rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
 `;
 
 const Header = styled.div`
@@ -65,6 +71,13 @@ const Header = styled.div`
     color: #e2e8f0; /* Softer premium white/slate */
     letter-spacing: -0.05rem;
     margin: 0;
+  }
+
+  @media (max-width: 768px) {
+    justify-content: center;
+    h1 {
+      text-align: center;
+    }
   }
 `;
 
@@ -90,6 +103,83 @@ const Card = styled.div<{ forceHover?: boolean }>`
   &:hover {
     transform: translateY(-4px);
     box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.4);
+  }
+
+  .desktop-view {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    @media (max-width: 768px) {
+      display: none;
+    }
+  }
+
+  .mobile-view {
+    display: none;
+    @media (max-width: 768px) {
+      display: flex;
+      flex-direction: column;
+      padding: 0.75rem 1rem;
+      gap: 0.5rem;
+    }
+
+    .m-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    .m-title-group {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .m-icon {
+      width: 28px;
+      height: 28px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 0.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.9rem;
+    }
+
+    .m-title {
+      font-weight: 700;
+      color: #f8fafc;
+      font-size: 0.95rem;
+    }
+
+    .m-actions {
+      display: flex;
+      gap: 0.25rem;
+      button {
+        background: none; border: none; padding: 0.2rem; margin: 0; color: #718096;
+      }
+    }
+
+    .m-body {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    
+    .m-info-row {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      color: #cbd5e1;
+      font-size: 0.75rem;
+      svg { color: #94a3b8; }
+    }
+  }
+
+  @media (max-width: 768px) {
+    padding: 0;
   }
 `;
 
@@ -283,6 +373,11 @@ const CreateCard = styled.div`
     color: #4ade80;
     background: rgba(20, 83, 45, 0.2);
     opacity: 1;
+  }
+
+  @media (max-width: 768px) {
+    min-height: 120px;
+    padding: 1.5rem;
   }
 `;
 
@@ -592,82 +687,139 @@ const Crops: React.FC = () => {
             }
             style={{ cursor: 'pointer', borderTop: `4px solid ${getColorHex(crop.color)}` }}
           >
-            <CardHeader style={{ background: `${getColorHex(crop.color)}15`, justifyContent: 'space-between' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                <div className="icon" style={{ color: getColorHex(crop.color) }}><FaSeedling /></div>
-                <div className="title">{crop.name}</div>
-              </div>
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
-                <button
-                  onClick={(e) => handleOpenColorPicker(e, crop)}
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#718096', padding: '0.25rem', display: 'flex' }}
-                  title="Cambiar Color"
-                >
-                  <FaPalette />
-                </button>
-                <button
-                  onClick={(e) => handleEditCropName(e, crop)}
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#718096', padding: '0.25rem', display: 'flex' }}
-                  title="Editar Nombre"
-                >
-                  <FaEdit />
-                </button>
-                <button
-                  onClick={(e) => handleDeleteCrop(e, crop.id, crop.name)}
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#718096', padding: '0.25rem', display: 'flex' }}
-                  title="Eliminar Spot"
-                >
-                  <FaTrash />
-                </button>
-              </div>
-            </CardHeader>
-            <CardBody>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Badge variant={statusVariant(crop.status)}>{crop.status}</Badge>
-              </div>
-
-
-
-              {crop.estimatedHarvestDate && (
-                <InfoRow>
-                  <FaCalendarAlt /> Fin Previsto: {new Date(crop.estimatedHarvestDate).toLocaleDateString('es-AR')}
-                </InfoRow>
-              )}
-              <InfoRow style={{ marginTop: '0.5rem', borderTop: '1px solid rgba(255, 255, 255, 0.05)', paddingTop: '0.5rem' }}>
-                <FaClock /> Última actividad: {lastActivityMap[crop.id] || '-'}
-              </InfoRow>
-
-              {/* Rooms Summary */}
-              {crop.rooms && crop.rooms.length > 0 && (
-                <div style={{ marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid rgba(255, 255, 255, 0.05)', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                  {(() => {
-                    const vegeCount = crop.rooms.filter(r => r.type === 'vegetation').length;
-                    const floraCount = crop.rooms.filter(r => r.type === 'flowering').length;
-                    const dryingCount = crop.rooms.filter(r => r.type === 'drying').length;
-
-                    return (
-                      <>
-                        {vegeCount > 0 && (
-                          <span style={{ fontSize: '0.75rem', background: 'rgba(34, 197, 94, 0.2)', color: '#4ade80', padding: '2px 6px', borderRadius: '4px', fontWeight: 600 }}>
-                            {vegeCount} Vege
-                          </span>
-                        )}
-                        {floraCount > 0 && (
-                          <span style={{ fontSize: '0.75rem', background: 'rgba(234, 179, 8, 0.2)', color: '#fde047', padding: '2px 6px', borderRadius: '4px', fontWeight: 600 }}>
-                            {floraCount} Flora
-                          </span>
-                        )}
-                        {dryingCount > 0 && (
-                          <span style={{ fontSize: '0.75rem', background: 'rgba(56, 189, 248, 0.2)', color: '#7dd3fc', padding: '2px 6px', borderRadius: '4px', fontWeight: 600 }}>
-                            {dryingCount} Secado
-                          </span>
-                        )}
-                      </>
-                    );
-                  })()}
+            {/* --- Desktop View --- */}
+            <div className="desktop-view">
+              <CardHeader style={{ background: `${getColorHex(crop.color)}15`, justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  <div className="icon" style={{ color: getColorHex(crop.color) }}><FaSeedling /></div>
+                  <div className="title">{crop.name}</div>
                 </div>
-              )}
-            </CardBody>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <button
+                    onClick={(e) => handleOpenColorPicker(e, crop)}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#718096', padding: '0.25rem', display: 'flex' }}
+                    title="Cambiar Color"
+                  >
+                    <FaPalette />
+                  </button>
+                  <button
+                    onClick={(e) => handleEditCropName(e, crop)}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#718096', padding: '0.25rem', display: 'flex' }}
+                    title="Editar Nombre"
+                  >
+                    <FaEdit />
+                  </button>
+                  <button
+                    onClick={(e) => handleDeleteCrop(e, crop.id, crop.name)}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#718096', padding: '0.25rem', display: 'flex' }}
+                    title="Eliminar Spot"
+                  >
+                    <FaTrash />
+                  </button>
+                </div>
+              </CardHeader>
+              <CardBody>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Badge variant={statusVariant(crop.status)}>{crop.status}</Badge>
+                </div>
+
+
+
+                {crop.estimatedHarvestDate && (
+                  <InfoRow>
+                    <FaCalendarAlt /> Fin Previsto: {new Date(crop.estimatedHarvestDate).toLocaleDateString('es-AR')}
+                  </InfoRow>
+                )}
+                <InfoRow style={{ marginTop: '0.5rem', borderTop: '1px solid rgba(255, 255, 255, 0.05)', paddingTop: '0.5rem' }}>
+                  <FaClock /> Última actividad: {lastActivityMap[crop.id] || '-'}
+                </InfoRow>
+
+                {/* Rooms Summary */}
+                {crop.rooms && crop.rooms.length > 0 && (
+                  <div style={{ marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid rgba(255, 255, 255, 0.05)', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                    {(() => {
+                      const vegeCount = crop.rooms.filter(r => r.type === 'vegetation').length;
+                      const floraCount = crop.rooms.filter(r => r.type === 'flowering').length;
+                      const dryingCount = crop.rooms.filter(r => r.type === 'drying').length;
+
+                      return (
+                        <>
+                          {vegeCount > 0 && (
+                            <span style={{ fontSize: '0.75rem', background: 'rgba(34, 197, 94, 0.2)', color: '#4ade80', padding: '2px 6px', borderRadius: '4px', fontWeight: 600 }}>
+                              {vegeCount} Vege
+                            </span>
+                          )}
+                          {floraCount > 0 && (
+                            <span style={{ fontSize: '0.75rem', background: 'rgba(234, 179, 8, 0.2)', color: '#fde047', padding: '2px 6px', borderRadius: '4px', fontWeight: 600 }}>
+                              {floraCount} Flora
+                            </span>
+                          )}
+                          {dryingCount > 0 && (
+                            <span style={{ fontSize: '0.75rem', background: 'rgba(56, 189, 248, 0.2)', color: '#7dd3fc', padding: '2px 6px', borderRadius: '4px', fontWeight: 600 }}>
+                              {dryingCount} Secado
+                            </span>
+                          )}
+                        </>
+                      );
+                    })()}
+                  </div>
+                )}
+              </CardBody>
+            </div>
+
+            {/* --- Mobile View --- */}
+            <div className="mobile-view" style={{ background: `${getColorHex(crop.color)}08` }}>
+              <div className="m-header">
+                <div className="m-title-group">
+                  <div className="m-icon" style={{ color: getColorHex(crop.color) }}><FaSeedling /></div>
+                  <div className="m-title">{crop.name}</div>
+                </div>
+                <div className="m-actions">
+                  <button onClick={(e) => handleOpenColorPicker(e, crop)}><FaPalette /></button>
+                  <button onClick={(e) => handleEditCropName(e, crop)}><FaEdit /></button>
+                  <button onClick={(e) => handleDeleteCrop(e, crop.id, crop.name)}><FaTrash /></button>
+                </div>
+              </div>
+              <div className="m-body">
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                  <Badge variant={statusVariant(crop.status)} style={{ fontSize: '0.65rem', padding: '0.15rem 0.4rem' }}>{crop.status}</Badge>
+
+                  {crop.rooms && crop.rooms.length > 0 && (
+                    <div style={{ display: 'flex', gap: '0.25rem' }}>
+                      {(() => {
+                        const vegeCount = crop.rooms.filter(r => r.type === 'vegetation').length;
+                        const floraCount = crop.rooms.filter(r => r.type === 'flowering').length;
+                        const dryingCount = crop.rooms.filter(r => r.type === 'drying').length;
+
+                        return (
+                          <>
+                            {vegeCount > 0 && (
+                              <span style={{ fontSize: '0.65rem', background: 'rgba(34, 197, 94, 0.2)', color: '#4ade80', padding: '2px 4px', borderRadius: '4px', fontWeight: 600 }}>
+                                {vegeCount} V
+                              </span>
+                            )}
+                            {floraCount > 0 && (
+                              <span style={{ fontSize: '0.65rem', background: 'rgba(234, 179, 8, 0.2)', color: '#fde047', padding: '2px 4px', borderRadius: '4px', fontWeight: 600 }}>
+                                {floraCount} F
+                              </span>
+                            )}
+                            {dryingCount > 0 && (
+                              <span style={{ fontSize: '0.65rem', background: 'rgba(56, 189, 248, 0.2)', color: '#7dd3fc', padding: '2px 4px', borderRadius: '4px', fontWeight: 600 }}>
+                                {dryingCount} S
+                              </span>
+                            )}
+                          </>
+                        );
+                      })()}
+                    </div>
+                  )}
+                </div>
+
+                <div className="m-info-row">
+                  <FaClock /> Act: {lastActivityMap[crop.id] || '-'}
+                </div>
+              </div>
+            </div>
           </Card>
         ))}
         {/* Add New Crop Card */}

@@ -12,6 +12,7 @@ import {
   WiSnow,
   WiFog
 } from 'react-icons/wi';
+import { FaChevronDown, FaTint } from 'react-icons/fa';
 
 const WidgetContainer = styled.div`
   background: rgba(15, 23, 42, 0.75);
@@ -22,17 +23,97 @@ const WidgetContainer = styled.div`
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
   border: 1px solid rgba(255, 255, 255, 0.05);
   color: #f8fafc;
+  overflow: hidden;
+  transition: all 0.3s ease;
 `;
 
 const Title = styled.h3`
-  margin: 0 0 1rem 0;
+  margin: 0;
   font-size: 1.1rem;
   color: #f8fafc;
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  white-space: nowrap;
 
-  svg { font-size: 1.5rem; }
+  @media (max-width: 600px) {
+    font-size: 1rem;
+    white-space: normal;
+    text-align: center;
+    justify-content: center;
+  }
+
+  svg { font-size: 1.5rem; flex-shrink: 0; }
+`;
+
+const HeaderContainer = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0;
+  gap: 1rem;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+
+  @media (max-width: 600px) {
+    flex-direction: column;
+    justify-content: center;
+    text-align: center;
+  }
+`;
+
+const CurrentTempBadge = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: rgba(20, 83, 45, 0.3);
+  color: #4ade80;
+  padding: 0.5rem 1rem;
+  border-radius: 999px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  border: 1px solid rgba(74, 222, 128, 0.2);
+  white-space: nowrap;
+
+  .metric {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  .divider {
+    width: 1px;
+    height: 1.2rem;
+    background: rgba(74, 222, 128, 0.3);
+  }
+
+  @media (max-width: 600px) {
+    font-size: 1rem;
+    padding: 0.4rem 0.8rem;
+    gap: 0.75rem;
+  }
+`;
+
+const AccordionContent = styled.div<{ $isOpen: boolean }>`
+  display: grid;
+  grid-template-rows: ${p => p.$isOpen ? '1fr' : '0fr'};
+  transition: grid-template-rows 0.3s ease-in-out;
+  
+  & > div {
+    overflow: hidden;
+  }
+`;
+
+const ChevronIcon = styled(FaChevronDown) <{ $isOpen: boolean }>`
+  transition: transform 0.3s ease;
+  transform: ${p => p.$isOpen ? 'rotate(180deg)' : 'rotate(0)'};
+  color: #94a3b8;
+  font-size: 1.25rem;
+
+  @media (max-width: 600px) {
+    margin-top: 0.5rem;
+  }
 `;
 
 const ForecastGrid = styled.div`
@@ -41,9 +122,11 @@ const ForecastGrid = styled.div`
   gap: 0.5rem;
 
   @media (max-width: 600px) {
-    grid-template-columns: repeat(4, 1fr); // Show 4 on very small screens, scroll or wrap
+    display: flex;
     overflow-x: auto;
     padding-bottom: 0.5rem;
+    gap: 0.5rem;
+    scroll-behavior: smooth;
     
     // Hide scrollbar but keep functionality
     &::-webkit-scrollbar { display: none; }
@@ -64,6 +147,11 @@ const DayCard = styled.div<{ isRainy?: boolean }>`
   transition: all 0.2s;
   position: relative;
   overflow: hidden;
+
+  @media (max-width: 600px) {
+    min-width: 75px; /* Force minimum width to prevent squishing in flex */
+    flexShrink: 0;
+  }
 
   // Rain visual effect if needed
   ${props => props.isRainy && `
@@ -138,8 +226,16 @@ const getWeatherIcon = (code: number, precip?: number) => {
 };
 
 export const WeatherWidget: React.FC = () => {
-  const [weather, setWeather] = useState<{ current: { temp: number; code: number }; daily: DailyWeather[] } | null>(null);
+  const [weather, setWeather] = useState<{ current: { temp: number; humidity: number; code: number }; daily: DailyWeather[] } | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isOpen, setIsOpen] = useState(false); // Default closed on mobile, open on desktop? Let's just default to open on desktop, but closed entirely on mobile.
+
+  // Use a media query in JS to set initial state to closed if mobile
+  useEffect(() => {
+    if (window.innerWidth > 600) {
+      setIsOpen(true);
+    }
+  }, []);
 
   useEffect(() => {
     async function load() {
@@ -154,39 +250,53 @@ export const WeatherWidget: React.FC = () => {
 
   return (
     <WidgetContainer>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-        <Title style={{ margin: 0 }}><WiDaySunny /> Pronóstico (Munro/Olivos)</Title>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(20, 83, 45, 0.3)', color: '#4ade80', padding: '0.5rem 1rem', borderRadius: '999px', fontSize: '1.2rem', fontWeight: 'bold', border: '1px solid rgba(74, 222, 128, 0.2)' }}>
-          {getWeatherIcon(weather.current.code)}
-          <span>{Math.round(weather.current.temp)}°C Ahora</span>
+      <HeaderContainer onClick={() => setIsOpen(!isOpen)} style={{ marginBottom: isOpen ? '1.5rem' : '0' }}>
+        <Title><WiDaySunny /> Pronóstico (Munro/Olivos)</Title>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexDirection: window.innerWidth > 600 ? 'row' : 'column' }}>
+          <CurrentTempBadge>
+            <div className="metric">
+              {getWeatherIcon(weather.current.code)}
+              <span>{Math.round(weather.current.temp)}°C</span>
+            </div>
+            <div className="divider" />
+            <div className="metric" style={{ color: '#7dd3fc' }}>
+              <FaTint size={14} />
+              <span>{Math.round(weather.current.humidity)}%</span>
+            </div>
+          </CurrentTempBadge>
+          <ChevronIcon $isOpen={isOpen} />
         </div>
-      </div>
+      </HeaderContainer>
 
-      <ForecastGrid>
-        {weather.daily.map((day) => {
-          // Strict visual alarm: ONLY if precipitation is significant (> 1.5mm)
-          // We ignore the code here to avoid "bordering" drizzle days
-          const isRainy = day.precipitation >= 1.5;
+      <AccordionContent $isOpen={isOpen}>
+        <div>
+          <ForecastGrid>
+            {weather.daily.map((day) => {
+              // Strict visual alarm: ONLY if precipitation is significant (> 1.5mm)
+              // We ignore the code here to avoid "bordering" drizzle days
+              const isRainy = day.precipitation >= 1.5;
 
-          return (
-            <DayCard key={day.date} isRainy={isRainy}>
-              <div className="day-name">
-                {format(new Date(day.date + 'T00:00:00'), 'EEE', { locale: es })}
-              </div>
-              <div className="icon">
-                {getWeatherIcon(day.weatherCode, day.precipitation)}
-              </div>
-              <div className="temps">
-                <span className="max">{Math.round(day.maxTemp)}°</span>
-                <span className="min">{Math.round(day.minTemp)}°</span>
-              </div>
-              {day.precipitation >= 1.0 && (
-                <div className="precip">{day.precipitation}mm</div>
-              )}
-            </DayCard>
-          );
-        })}
-      </ForecastGrid>
+              return (
+                <DayCard key={day.date} isRainy={isRainy}>
+                  <div className="day-name">
+                    {format(new Date(day.date + 'T00:00:00'), 'EEE', { locale: es })}
+                  </div>
+                  <div className="icon">
+                    {getWeatherIcon(day.weatherCode, day.precipitation)}
+                  </div>
+                  <div className="temps">
+                    <span className="max">{Math.round(day.maxTemp)}°</span>
+                    <span className="min">{Math.round(day.minTemp)}°</span>
+                  </div>
+                  {day.precipitation >= 1.0 && (
+                    <div className="precip">{day.precipitation}mm</div>
+                  )}
+                </DayCard>
+              );
+            })}
+          </ForecastGrid>
+        </div>
+      </AccordionContent>
     </WidgetContainer>
   );
 };

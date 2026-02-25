@@ -234,7 +234,7 @@ const Sidebar: React.FC = () => {
     <>
       <MobileHeader>
         <div className="brand">
-          <img src="/logotrazappfix.png" alt="Logo" style={{ height: '28px', filter: 'drop-shadow(0 2px 3px rgba(0,0,0,0.4))' }} />
+          <img src="/trazappletras.png" alt="TrazApp" style={{ height: '32px', filter: 'drop-shadow(0 2px 3px rgba(0,0,0,0.4))' }} />
         </div>
         <HamburgerButton onClick={() => setIsOpen(true)}>
           <FaBars />

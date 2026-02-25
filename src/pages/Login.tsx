@@ -15,14 +15,15 @@ import StarBorder from '../components/StarBorder';
 
 
 const LoginContainer = styled.div`
-  min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   align-items: center;
   justify-content: center;
   background: #020617; /* Very dark slate to make logo pop */
   padding: 1rem;
   position: relative;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
   animation: fadeIn 0.5s ease-out forwards;
 
   @keyframes fadeIn {
@@ -58,6 +59,10 @@ const LoginCardWrapper = styled.div`
     box-shadow: none !important;
     padding: 3rem !important;
     text-align: left !important;
+
+    @media (max-width: 640px) {
+      padding: 1.75rem 1rem !important;
+    }
   }
 `;
 
@@ -78,6 +83,12 @@ const Logo = styled.div`
       height: 100%;
       object-fit: contain;
     }
+
+    @media (max-width: 640px) {
+      width: 130px;
+      height: 130px;
+      margin: 0 auto 1rem;
+    }
   }
   
   h1 {
@@ -86,11 +97,19 @@ const Logo = styled.div`
     color: #4ade80; /* Bright Green */
     margin-bottom: 0.5rem;
     letter-spacing: -0.025em;
+
+    @media (max-width: 640px) {
+      font-size: 1.5rem;
+    }
   }
   
   p.welcome-subtitle {
     color: #94a3b8;
     font-size: 0.95rem;
+
+    @media (max-width: 640px) {
+      font-size: 0.85rem;
+    }
   }
   
   .blur-text-container p {
@@ -100,6 +119,10 @@ const Logo = styled.div`
     color: #4ade80;
     margin-bottom: 0.5rem;
     letter-spacing: -0.025em;
+
+    @media (max-width: 640px) {
+      font-size: 1.5rem;
+    }
   }
 `;
 

@@ -71,6 +71,13 @@ const Container = styled.div`
 
 const WelcomeHeader = styled.div`
   margin-bottom: 2.5rem;
+
+  @media (max-width: 768px) {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
   
   h1 {
     font-size: clamp(1.5rem, 5vw, 2.5rem);
@@ -98,6 +105,19 @@ const DateDisplay = styled.div`
   font-size: clamp(1rem, 3vw, 1.25rem); /* Responsive font size */
   font-weight: 500;
   letter-spacing: 0.025em;
+
+  @media (max-width: 768px) {
+    justify-content: center;
+  }
+
+  .separator {
+    margin: 0 0.5rem;
+    opacity: 0.5;
+
+    @media (max-width: 768px) {
+      display: none;
+    }
+  }
   
   svg { 
     color: #38bdf8; /* Brighter accent blue */
@@ -184,6 +204,75 @@ const KPICard = styled.div<{ active?: boolean, alert?: boolean }>`
     align-items: center;
     gap: 0.35rem;
   }
+
+  .desktop-view {
+    display: block;
+    @media (max-width: 768px) {
+      display: none;
+    }
+  }
+
+  .mobile-view {
+    display: none;
+    @media (max-width: 768px) {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+    }
+
+    .m-left {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .m-icon {
+      display: inline-flex;
+      padding: 0.5rem;
+      border-radius: 0.5rem;
+      background: ${props => props.alert ? 'rgba(127, 29, 29, 0.3)' : 'rgba(20, 83, 45, 0.3)'};
+      color: ${props => props.alert ? '#fca5a5' : '#4ade80'};
+      font-size: 1.25rem;
+    }
+
+    .m-text-group {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .m-label {
+      font-size: 0.75rem;
+      color: #94a3b8;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+
+    .m-subtext {
+      font-size: 0.7rem;
+      color: ${props => props.alert ? '#fca5a5' : '#64748b'};
+    }
+
+    .m-value {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: ${props => props.alert ? '#f8fafc' : '#4ade80'};
+      display: flex;
+      align-items: baseline;
+      gap: 0.25rem;
+      margin-right: 0.5rem;
+
+      .m-unit {
+        font-size: 0.75rem;
+        color: #64748b;
+        font-weight: 500;
+      }
+    }
+  }
+
+  @media (max-width: 768px) {
+    padding: 0.75rem 1rem;
+  }
 `;
 
 const ContentGrid = styled.div`
@@ -228,6 +317,11 @@ const CountdownCard = styled.div<CountdownCardProps>`
   box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2);
   transition: all 0.3s ease;
 
+  @media (max-width: 768px) {
+    padding: 0.75rem 1rem;
+    border-left: 4px solid ${p => p.stage === 'vegetation' ? '#4ade80' : p.stage === 'flowering' ? '#f97316' : (p.stage === 'drying' || p.stage === 'curing') ? '#ea580c' : '#475569'};
+  }
+
   // Level 2 Alert: Red Border
   ${p => p.$alertLevel && p.$alertLevel >= 2 && css`
       border: 2px solid rgba(239, 68, 68, 0.5);
@@ -250,6 +344,48 @@ const CountdownCard = styled.div<CountdownCardProps>`
     font-size: 0.75rem; font-weight: 700; text-transform: uppercase; padding: 0.25rem 0.5rem; border-radius: 999px;
     background: ${p => p.stage === 'vegetation' ? 'rgba(34, 197, 94, 0.2)' : p.stage === 'flowering' ? 'rgba(56, 189, 248, 0.2)' : (p.stage === 'drying' || p.stage === 'curing') ? 'rgba(251, 146, 60, 0.2)' : 'rgba(255, 255, 255, 0.1)'};
     color: ${p => p.stage === 'vegetation' ? '#4ade80' : p.stage === 'flowering' ? '#38bdf8' : (p.stage === 'drying' || p.stage === 'curing') ? '#fb923c' : '#94a3b8'};
+  }
+
+  .desktop-view {
+    display: block;
+    @media (max-width: 768px) {
+      display: none;
+    }
+  }
+
+  .mobile-view {
+    display: none;
+    @media (max-width: 768px) {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+    
+    .m-row {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.25rem;
+      font-size: 0.85rem;
+      line-height: 1.2;
+    }
+    
+    .m-room { font-weight: 700; color: #f8fafc; font-size: 0.95rem; }
+    .m-crop { color: #94a3b8; font-weight: 500; font-size: 0.85rem; }
+    
+    .m-stage {
+      font-size: 0.7rem; font-weight: 700; text-transform: uppercase; padding: 0.2rem 0.4rem; border-radius: 999px;
+      background: ${p => p.stage === 'vegetation' ? 'rgba(34, 197, 94, 0.2)' : p.stage === 'flowering' ? 'rgba(56, 189, 248, 0.2)' : 'rgba(255, 255, 255, 0.1)'};
+      color: ${p => p.stage === 'vegetation' ? '#4ade80' : p.stage === 'flowering' ? '#38bdf8' : '#94a3b8'};
+    }
+    
+    .m-days-text { color: #cbd5e1; }
+    .m-days-number {
+      font-weight: 800; font-size: 1rem;
+      color: ${p => p.stage === 'vegetation' ? '#4ade80' : p.stage === 'flowering' ? '#f97316' : '#cbd5e1'};
+    }
+    .m-genetic { color: #64748b; font-style: italic; }
+    .m-separator { color: #475569; font-weight: 400; margin: 0 0.1rem; }
   }
 
   // Level 1 Alert: Red Badge for "Days Remaining"
@@ -280,6 +416,11 @@ const SectionTitle = styled.h2`
   align-items: center;
   gap: 0.75rem;
 
+  @media (max-width: 768px) {
+    justify-content: center;
+    text-align: center;
+  }
+
   svg {
     color: #4ade80; /* TrazAPP Neon Green */
   }
@@ -302,11 +443,51 @@ const AlertItem = styled.div`
   align-items: start;
   gap: 0.75rem;
 
+  @media (max-width: 768px) {
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+    gap: 0.5rem;
+  }
+
   .icon { color: #f97316; margin-top: 0.2rem; }
   
   .content {
     h5 { margin: 0; color: #f8fafc; font-weight: 600; }
     p { margin: 0.25rem 0 0; color: #94a3b8; font-size: 0.85rem; }
+
+    @media (max-width: 768px) {
+      h5 { font-size: 0.9rem; }
+      p { font-size: 0.75rem; }
+    }
+  }
+`;
+
+const EmptyStateCard = styled.div`
+  text-align: center;
+  padding: 2rem;
+  color: #94a3b8;
+  background: rgba(15, 23, 42, 0.4);
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+
+  .icon {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    color: #4ade80;
+  }
+
+  @media (max-width: 768px) {
+    padding: 1rem;
+    
+    .icon {
+      font-size: 1.5rem;
+      margin-bottom: 0.25rem;
+    }
+
+    p {
+      margin: 0;
+      font-size: 0.9rem;
+    }
   }
 `;
 
@@ -355,6 +536,11 @@ const StickyNoteCard = styled.div<{ color: string }>`
   flex-direction: column;
   position: relative;
   transition: transform 0.2s;
+  
+  @media (max-width: 768px) {
+    min-height: 120px;
+    padding: 1rem;
+  }
   
   &:hover {
     transform: scale(1.02) rotate(1deg);
@@ -419,6 +605,10 @@ const AddStickyParams = styled.div`
   cursor: pointer;
   color: #64748b;
   transition: all 0.2s;
+
+  @media (max-width: 768px) {
+    min-height: 120px;
+  }
 
   &:hover {
     border-color: rgba(74, 222, 128, 0.5);
@@ -703,7 +893,7 @@ const Dashboard: React.FC = () => {
         <DateDisplay>
           <FaCalendarCheck />
           {format(currentTime, "EEEE, d 'de' MMMM 'de' yyyy", { locale: es })}
-          <span style={{ margin: '0 0.5rem', opacity: 0.5 }}>|</span>
+          <span className="separator">|</span>
           <FaClock />
           {format(currentTime, "HH:mm")}
         </DateDisplay>
@@ -798,32 +988,53 @@ const Dashboard: React.FC = () => {
 
                 return (
                   <CountdownCard key={room.id} stage={room.type} $alertLevel={alertLevel}>
-                    <div className="header">
-                      <div style={{ display: 'flex', flexDirection: 'column' }}>
-                        <span className="room-name">{room.name}</span>
-                        <span style={{ fontSize: '0.75rem', color: '#718096', fontWeight: 500 }}>
-                          {crops.find(c => c.id === room.spot_id)?.name || 'Sin Crop Asignado'}
-                        </span>
-                      </div>
-                      <div className="active-badges">
-                        {alertLevel >= 1 && (
-                          <span className="warning-badge">
-                            <FaExclamationTriangle /> Faltan {Math.max(0, daysRemaining)} días
+                    {/* Desktop View (Standard layout, hidden on mobile) */}
+                    <div className="desktop-view">
+                      <div className="header">
+                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                          <span className="room-name">{room.name}</span>
+                          <span style={{ fontSize: '0.75rem', color: '#718096', fontWeight: 500 }}>
+                            {crops.find(c => c.id === room.spot_id)?.name || 'Sin Crop Asignado'}
                           </span>
-                        )}
-                        <span className="stage-badge">{room.type === 'vegetation' ? 'Vegetativo' : 'Floración'}</span>
+                        </div>
+                        <div className="active-badges">
+                          {alertLevel >= 1 && (
+                            <span className="warning-badge">
+                              <FaExclamationTriangle /> Faltan {Math.max(0, daysRemaining)} días
+                            </span>
+                          )}
+                          <span className="stage-badge">{room.type === 'vegetation' ? 'Vegetativo' : 'Floración'}</span>
+                        </div>
+                      </div>
+
+                      <div className="countdown">
+                        Van <span className="days">{daysElapsed}</span> días de {room.type === 'vegetation' ? 'Vegetativo' : 'Floración'}
+                      </div>
+
+                      <div className="progress-bar">
+                        <div className="progress-fill" style={{ width: `${progress}%` }}></div>
+                      </div>
+                      <div style={{ fontSize: '0.75rem', color: '#a0aec0', marginTop: '0.5rem', textAlign: 'right' }}>
+                        Base: {genetic?.name || 'Genética Estándar'} ({room.type === 'vegetation' ? vegWeeks : floraWeeks} sem)
                       </div>
                     </div>
 
-                    <div className="countdown">
-                      Van <span className="days">{daysElapsed}</span> días de {room.type === 'vegetation' ? 'Vegetativo' : 'Floración'}
-                    </div>
-
-                    <div className="progress-bar">
-                      <div className="progress-fill" style={{ width: `${progress}%` }}></div>
-                    </div>
-                    <div style={{ fontSize: '0.75rem', color: '#a0aec0', marginTop: '0.5rem', textAlign: 'right' }}>
-                      Base: {genetic?.name || 'Genética Estándar'} ({room.type === 'vegetation' ? vegWeeks : floraWeeks} sem)
+                    {/* Mobile View (Extremely compressed, hidden on desktop) */}
+                    <div className="mobile-view">
+                      <div className="m-row">
+                        <span className="m-room">{room.name}</span>
+                        <span className="m-separator">-</span>
+                        <span className="m-crop">{crops.find(c => c.id === room.spot_id)?.name || 'Sin Crop'}</span>
+                        <span className="m-separator">-</span>
+                        <span className="m-stage">{room.type === 'vegetation' ? 'Vegetativo' : 'Floración'}</span>
+                        <span className="m-separator">-</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
+                          <span className="m-days-number">{daysElapsed}</span>
+                          <span className="m-days-text">/{totalDays} días</span>
+                        </div>
+                        <span className="m-separator">-</span>
+                        <span className="m-genetic">{genetic?.name || 'Estándar'}</span>
+                      </div>
                     </div>
                   </CountdownCard>
                 );
@@ -835,21 +1046,48 @@ const Dashboard: React.FC = () => {
       <KPISection>
         <Link to="/crops" style={{ textDecoration: 'none', color: 'inherit' }}>
           <KPICard active>
-            <div className="icon-wrapper"><FaSeedling /></div>
-            <div className="label">Cultivos Activos</div>
-            <div className="value">{activeCrops.length} <span className="unit">variedades</span></div>
-            <div className="subtext"><FaChartLine /> En curso</div>
+            <div className="desktop-view">
+              <div className="icon-wrapper"><FaSeedling /></div>
+              <div className="label">Cultivos Activos</div>
+              <div className="value">{activeCrops.length} <span className="unit">variedades</span></div>
+              <div className="subtext"><FaChartLine /> En curso</div>
+            </div>
+            <div className="mobile-view">
+              <div className="m-left">
+                <div className="m-icon"><FaSeedling /></div>
+                <div className="m-text-group">
+                  <span className="m-label">Cultivos Activos</span>
+                  <span className="m-subtext">En curso</span>
+                </div>
+              </div>
+              <div className="m-value">
+                {activeCrops.length} <span className="m-unit">var.</span>
+              </div>
+            </div>
           </KPICard>
         </Link>
 
         {/* Removed Temperature and Humidity cards as requested */}
 
-        <KPICard alert>
-          <div className="icon-wrapper"><FaExclamationTriangle /></div>
-          <div className="label">Alertas</div>
-          <div className="value">{alerts.length} <span className="unit">pendientes</span></div>
+        <KPICard alert={alerts.length > 0}>
+          <div className="desktop-view">
+            <div className="icon-wrapper"><FaExclamationTriangle /></div>
+            <div className="label">Alertas</div>
+            <div className="value">{alerts.length} <span className="unit">pendientes</span></div>
+          </div>
+          <div className="mobile-view">
+            <div className="m-left">
+              <div className="m-icon"><FaExclamationTriangle /></div>
+              <div className="m-text-group">
+                <span className="m-label">Alertas</span>
+                <span className="m-subtext">{alerts.length > 0 ? 'Requieren atención' : 'Todo al día'}</span>
+              </div>
+            </div>
+            <div className="m-value">
+              {alerts.length} <span className="m-unit">pend.</span>
+            </div>
+          </div>
 
-          <div className="subtext">Requiere atención</div>
         </KPICard>
       </KPISection>
 
@@ -884,10 +1122,10 @@ const Dashboard: React.FC = () => {
             ))}
 
             {alerts.length === 0 && (
-              <div style={{ textAlign: 'center', padding: '2rem', color: '#94a3b8', background: 'rgba(15, 23, 42, 0.4)', borderRadius: '1rem', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
-                <FaCheckCircle style={{ fontSize: '2rem', marginBottom: '0.5rem', color: '#4ade80' }} />
+              <EmptyStateCard>
+                <FaCheckCircle className="icon" />
                 <p>¡Todo al día!</p>
-              </div>
+              </EmptyStateCard>
             )}
 
 

@@ -148,6 +148,45 @@ const HistorySection = styled.div`
     box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
 `;
 
+const FilterContainer = styled.div`
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    align-items: center;
+    flex-wrap: wrap;
+
+    input {
+        flex: 1;
+        min-width: 200px;
+        padding: 0.75rem 1rem;
+        background: rgba(15, 23, 42, 0.6);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 0.75rem;
+        color: #f8fafc;
+        font-size: 0.9rem;
+        outline: none;
+        transition: all 0.2s ease;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+
+        &:focus {
+            border-color: rgba(56, 189, 248, 0.5);
+            box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
+        }
+        
+        &:hover {
+            background: rgba(15, 23, 42, 0.8);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+    }
+
+    /* Container for the custom selects to match input width behavior if needed */
+    .filter-select {
+        min-width: 180px;
+    }
+`;
+
 const DeleteAllButton = styled.button`
     background: rgba(229, 62, 62, 0.1);
     backdrop-filter: blur(4px);
@@ -724,9 +763,11 @@ const BatchGroupRow = ({ group, onBarcodeClick, onMoveClick, onDiscardClick, onE
                             >
                                 {root.room?.name}
                             </BadgeLink>
-                            {getStageBadge(root.room?.type)}
                         </div>
                     ) : 'Desconocido'}
+                </td>
+                <td data-label="Fase de Cultivo" style={cellStyle}>
+                    {root.room?.id ? getStageBadge(root.room?.type) : '---'}
                 </td>
                 <td data-label="Estado" style={cellStyle}>{getStatusBadge(root, onNavigate)}</td>
                 <td data-label="Acciones" style={{ textAlign: 'center', ...cellStyle, justifyContent: 'center' }}>
@@ -826,9 +867,11 @@ const BatchGroupRow = ({ group, onBarcodeClick, onMoveClick, onDiscardClick, onE
                             >
                                 {batch.room?.name}
                             </BadgeLink>
-                            {getStageBadge(batch.room?.type)}
                         </div>
                     ) : 'Desconocido'}
+                </td>
+                <td data-label="Fase de Cultivo" style={cellStyle}>
+                    {batch.room?.id ? getStageBadge(batch.room?.type) : '---'}
                 </td>
                 <td data-label="Estado" style={cellStyle}>{getStatusBadge(batch, onNavigate)}</td>
                 <td data-label="Acciones" style={{ textAlign: 'center', ...cellStyle, justifyContent: 'center' }}>
@@ -920,6 +963,11 @@ const Clones: React.FC = () => {
 
     const [clonesRoomId, setClonesRoomId] = useState<string | undefined>(undefined);
     const [selectedGeneticFilter, setSelectedGeneticFilter] = useState<string | null>(null);
+
+    // Filter and Search States
+    const [searchTerm, setSearchTerm] = useState('');
+    const [statusFilter, setStatusFilter] = useState('');
+    const [stageFilter, setStageFilter] = useState('');
 
     // Breakdown Modal Logic
     const [isBreakdownModalOpen, setIsBreakdownModalOpen] = useState(false);
@@ -1459,6 +1507,21 @@ const Clones: React.FC = () => {
         ? cloneBatches.filter(g => g.root.genetic?.name === selectedGeneticFilter)
         : cloneBatches;
 
+    const displayedBatches = cloneBatches.filter(group => {
+        const root = group.root;
+        const matchesSearch = searchTerm === '' ||
+            root.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (root.genetic?.name || '').toLowerCase().includes(searchTerm.toLowerCase());
+
+        const matchesStatus = statusFilter === '' ||
+            (statusFilter === 'Disponible' && !root.clone_map_id) ||
+            (statusFilter === 'En mapa' && !!root.clone_map_id);
+        const matchesStage = stageFilter === '' ||
+            root.room?.type === stageFilter ||
+            (stageFilter === 'clones' && root.room?.type === 'esquejera');
+
+        return matchesSearch && matchesStatus && matchesStage;
+    });
 
     if (loading) {
         return (
@@ -1493,25 +1556,11 @@ const Clones: React.FC = () => {
                     <div className="value">{stats.total}</div>
                     <div className="icon"><FaCut /></div>
                 </SummaryCard>
-                <SummaryCard isTotal onClick={() => setSelectedGeneticFilter(null)} style={{ cursor: 'pointer', background: 'rgba(56, 189, 248, 0.1)', borderColor: 'rgba(56, 189, 248, 0.3)' }}>
+                <SummaryCard isTotal onClick={() => setIsBreakdownModalOpen(true)} style={{ cursor: 'pointer', background: 'rgba(56, 189, 248, 0.1)', borderColor: 'rgba(56, 189, 248, 0.3)' }}>
                     <h3>Variedades Totales</h3>
                     <div className="value">{Object.keys(stats.byGenetic).length}</div>
                     <div className="icon"><FaDna style={{ color: '#7dd3fc' }} /></div>
                 </SummaryCard>
-                {Object.entries(stats.byGenetic).map(([name, qty]) => (
-                    <SummaryCard
-                        key={name}
-                        onClick={() => setSelectedGeneticFilter(prev => prev === name ? null : name)}
-                        style={{
-                            cursor: 'pointer',
-                            border: selectedGeneticFilter === name ? '2px solid #4ade80' : '1px solid rgba(255, 255, 255, 0.05)',
-                            background: selectedGeneticFilter === name ? 'rgba(20, 83, 45, 0.4)' : 'transparent'
-                        }}
-                    >
-                        <h3>{name}</h3>
-                        <div className="value">{qty}</div>
-                    </SummaryCard>
-                ))}
             </SummaryGrid>
 
             <HistorySection>
@@ -1536,6 +1585,51 @@ const Clones: React.FC = () => {
                         )}
                     </div>
                 </HistoryHeader>
+
+                <FilterContainer>
+                    <input
+                        type="text"
+                        placeholder="Buscar por lote o genética..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                    <div className="filter-select">
+                        <CustomSelect
+                            value={statusFilter}
+                            onChange={setStatusFilter}
+                            placeholder="Todos los Estados"
+                            options={[
+                                { value: '', label: 'Todos los Estados' },
+                                { value: 'Disponible', label: 'Disponible' },
+                                { value: 'En mapa', label: 'En mapa' }
+                            ]}
+                            triggerStyle={{
+                                background: 'rgba(15, 23, 42, 0.6)',
+                                backdropFilter: 'blur(12px)',
+                                borderColor: 'rgba(255, 255, 255, 0.08)'
+                            }}
+                        />
+                    </div>
+                    <div className="filter-select">
+                        <CustomSelect
+                            value={stageFilter}
+                            onChange={setStageFilter}
+                            placeholder="Todas las Etapas"
+                            options={[
+                                { value: '', label: 'Todas las Etapas' },
+                                { value: 'clones', label: 'Plántula/Esqueje' },
+                                { value: 'vegetation', label: 'Vegetativo' },
+                                { value: 'flowering', label: 'Floración' }
+                            ]}
+                            triggerStyle={{
+                                background: 'rgba(15, 23, 42, 0.6)',
+                                backdropFilter: 'blur(12px)',
+                                borderColor: 'rgba(255, 255, 255, 0.08)'
+                            }}
+                        />
+                    </div>
+                </FilterContainer>
+
                 <div style={{ overflowX: 'auto' }}>
                     <HistoryTable>
                         <thead>
@@ -1546,13 +1640,14 @@ const Clones: React.FC = () => {
                                 <th>Cantidad</th>
                                 <th>Cultivo</th>
                                 <th>Destino</th>
+                                <th>Fase de Cultivo</th>
                                 <th>Estado</th>
                                 <th style={{ textAlign: 'center' }}>Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
                             {/* RENDER BY GROUPS (ALL) - Aggregated View */}
-                            {cloneBatches.map(group => {
+                            {displayedBatches.map(group => {
                                 const { root } = group;
 
                                 console.log("🔍 Renderizando BatchGroupRow:", { name: root.name, room: root.room, current_room_id: root.current_room_id });
@@ -1572,9 +1667,9 @@ const Clones: React.FC = () => {
                                     />
                                 );
                             })}
-                            {cloneBatches.length === 0 && (
+                            {displayedBatches.length === 0 && (
                                 <tr>
-                                    <td colSpan={8} style={{ textAlign: 'center', color: '#94a3b8', padding: '3rem 1rem' }}>
+                                    <td colSpan={9} style={{ textAlign: 'center', color: '#94a3b8', padding: '3rem 1rem' }}>
                                         No hay registros de esquejes.
                                     </td>
                                 </tr>
@@ -1603,6 +1698,7 @@ const Clones: React.FC = () => {
                                             <th>Cantidad</th>
                                             <th>Cultivo</th>
                                             <th>Destino</th>
+                                            <th>Fase de Cultivo</th>
                                             <th>Estado</th>
                                             <th style={{ textAlign: 'center' }}>Acciones</th>
                                         </tr>
@@ -1660,9 +1756,11 @@ const Clones: React.FC = () => {
                                                                             >
                                                                                 {batch.room?.name}
                                                                             </BadgeLink>
-                                                                            {getStageBadge(batch.room?.type)}
                                                                         </div>
                                                                     ) : 'Desconocido'}
+                                                                </td>
+                                                                <td data-label="Fase de Cultivo" style={cellStyle}>
+                                                                    {batch.room?.id ? getStageBadge(batch.room?.type) : '---'}
                                                                 </td>
                                                                 <td data-label="Estado" style={cellStyle}>{getStatusBadge(batch, navigate)}</td>
                                                                 <td data-label="Acciones" style={{ textAlign: 'center', ...cellStyle, justifyContent: 'center' }}>
@@ -1691,7 +1789,7 @@ const Clones: React.FC = () => {
                                             );
                                         })}
                                         {filteredGroups.length === 0 && (
-                                            <tr><td colSpan={8} style={{ textAlign: 'center', color: '#94a3b8', padding: '3rem 1rem' }}>No hay lotes activos para esta genética.</td></tr>
+                                            <tr><td colSpan={9} style={{ textAlign: 'center', color: '#94a3b8', padding: '3rem 1rem' }}>No hay lotes activos para esta genética.</td></tr>
                                         )}
                                     </tbody>
                                 </HistoryTable>
