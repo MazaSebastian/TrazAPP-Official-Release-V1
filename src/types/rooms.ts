@@ -54,11 +54,15 @@ export interface Batch {
     discarded_at?: string | null;
     discard_reason?: string | null;
     has_alert?: boolean; // New Field
+    updated_at?: string; // Added based on snippet context
+    clone_units?: any[];
+    status?: string;
 
     // Joins (optional, depending on query)
     room?: Room;
     genetic?: Genetic;
     parent_batch?: { name: string };
+    spot?: { id: string; name: string }; // Added based on snippet context
 }
 
 export interface BatchMovement {

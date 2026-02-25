@@ -11,7 +11,9 @@ import CropDetail from './pages/CropDetail';
 import Rooms from './pages/Rooms';
 import RoomDetail from './pages/RoomDetail';
 import Genetics from './pages/Genetics';
+import { GeneticDetail } from './pages/GeneticDetail';
 import Clones from './pages/Clones';
+import { BatchDetail } from './pages/BatchDetail';
 import Devices from './pages/Devices';
 import { LaboratoryPage } from './pages/LaboratoryPage';
 import { ExtractionsPage as Extractions } from './pages/Extractions';
@@ -184,11 +186,29 @@ function App() {
                 </RoleGuard>
               </RequireAuth>
             } />
+            <Route path="/genetic/:id" element={
+              <RequireAuth>
+                <RoleGuard allowedRoles={['grower', 'staff']}>
+                  <MainContent>
+                    <GeneticDetail />
+                  </MainContent>
+                </RoleGuard>
+              </RequireAuth>
+            } />
             <Route path="/clones" element={
               <RequireAuth>
                 <RoleGuard allowedRoles={['grower', 'staff']}>
                   <MainContent>
                     <Clones />
+                  </MainContent>
+                </RoleGuard>
+              </RequireAuth>
+            } />
+            <Route path="/clones/:id" element={
+              <RequireAuth>
+                <RoleGuard allowedRoles={['grower', 'staff']}>
+                  <MainContent>
+                    <BatchDetail />
                   </MainContent>
                 </RoleGuard>
               </RequireAuth>

@@ -280,6 +280,70 @@ export const roomsService = {
         return data || [];
     },
 
+    async getBatchById(id: string): Promise<Batch | null> {
+        const { data, error } = await getClient()
+            .from('batches')
+            .select('*, room:rooms(id, name, type, spot_id, spot:chakra_crops(id, name)), genetic:genetics(name, type)')
+            .eq('id', id)
+            .single();
+
+        if (error) {
+            console.error('Error fetching batch by id:', error);
+            return null;
+        }
+        return data;
+    },
+
+    async getChildBatches(parentId: string): Promise<Batch[]> {
+        const { data, error } = await getClient()
+            .from('batches')
+            .select('*')
+            .eq('parent_batch_id', parentId)
+            .order('created_at', { ascending: true });
+
+        if (error) {
+            console.error('Error fetching child batches:', error);
+            return [];
+        }
+        return data || [];
+    },
+
+    async getSmartGroupUnits(referenceBatch: Batch): Promise<Batch[]> {
+        // In the Clones page, clones are visually grouped if they share the same genetic, room, and creation date.
+        // This function fetches all those "brother" units to form the Lote on the traceability page.
+
+        // Start date or created at (date only)
+        const dateStr = new Date(referenceBatch.start_date || referenceBatch.created_at).toISOString().split('T')[0];
+
+        // Ensure we cover the full day from 00:00:00 to 23:59:59
+        const gte = `${dateStr}T00:00:00.000Z`;
+        const lte = `${dateStr}T23:59:59.999Z`;
+
+        let query = getClient()
+            .from('batches')
+            .select('*')
+            .eq('genetic_id', referenceBatch.genetic_id)
+            .in('stage', ['seedling', 'clones', 'vegetation']); // typical clone stages
+
+        // Depending on if they are assigned to a room or unassigned
+        if (referenceBatch.current_room_id) {
+            query = query.eq('current_room_id', referenceBatch.current_room_id);
+        }
+
+        // Compare by date range
+        const { data, error } = await query
+            .gte('created_at', gte)
+            .lte('created_at', lte)
+            .order('name', { ascending: true });
+
+        if (error) {
+            console.error('Error fetching smart group units:', error);
+            return [];
+        }
+
+        return data || [];
+    },
+
     async getBatchesByRoom(roomId: string): Promise<Batch[]> {
         const { data, error } = await getClient()
             .from('batches')

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styled, { createGlobalStyle, keyframes } from 'styled-components';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import {
     FaSearch, FaHistory, FaBarcode, FaExchangeAlt, FaMinusCircle, FaEdit, FaTrash,
     FaCut, FaTimes, FaLevelUpAlt, FaPlus, FaAngleRight, FaAngleDown,
@@ -29,11 +29,12 @@ const fadeIn = keyframes`
 
 
 const Container = styled.div`
-padding: 2rem;
-padding - top: 5rem;
-max - width: 1400px;
-margin: 0 auto;
-animation: ${fadeIn} 0.5s ease -in -out;
+    padding: 2rem;
+    padding-top: 5rem;
+    max-width: 1400px;
+    margin: 0 auto;
+    animation: ${fadeIn} 0.5s ease-in-out;
+    background: transparent; /* Rely on global body background */
 `;
 
 // --- New Environment Components ---
@@ -42,58 +43,60 @@ animation: ${fadeIn} 0.5s ease -in -out;
 
 
 const SummaryGrid = styled.div`
-display: grid;
-grid - template - columns: repeat(auto - fill, minmax(220px, 1fr));
-gap: 1.5rem;
-margin - bottom: 2rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 300px));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
 `;
 
 const SummaryCard = styled.div<{ isTotal?: boolean }>`
-background: rgba(15, 23, 42, 0.75);
-backdrop - filter: blur(12px);
-padding: 1.25rem;
-border - radius: 1rem;
-box - shadow: 0 4px 6px - 1px rgba(0, 0, 0, 0.3);
-border: 1px solid ${p => p.isTotal ? 'rgba(74, 222, 128, 0.3)' : 'rgba(255, 255, 255, 0.05)'};
-position: relative;
-overflow: hidden;
-transition: transform 0.2s ease -in -out, box - shadow 0.2s ease -in -out, border - color 0.2s;
-cursor: default ;
+    background: rgba(15, 23, 42, 0.4);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    padding: 1.25rem;
+    border-radius: 1rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+    border: 1px solid ${p => p.isTotal ? 'rgba(74, 222, 128, 0.15)' : 'rgba(255, 255, 255, 0.05)'};
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.3s;
+    cursor: default;
 
-  &:hover {
-    transform: translateY(-5px);
-    box - shadow: 0 10px 15px - 3px rgba(0, 0, 0, 0.4), 0 4px 6px - 2px rgba(0, 0, 0, 0.2);
-}
+    &:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.6), 0 0 15px 0 ${p => p.isTotal ? 'rgba(74, 222, 128, 0.15)' : 'rgba(148, 163, 184, 0.1)'};
+        border: 1px solid ${p => p.isTotal ? 'rgba(74, 222, 128, 0.3)' : 'rgba(255, 255, 255, 0.1)'};
+    }
 
-  ${p => p.isTotal && `
-    background: rgba(20, 83, 45, 0.3);
-  `}
+    ${p => p.isTotal && `
+        background: rgba(20, 83, 45, 0.15);
+    `}
 
-  h3 {
-    margin: 0 0 0.25rem 0;
-    font - size: 0.75rem;
-    text - transform: uppercase;
-    letter - spacing: 0.05em;
-    color: #94a3b8;
-    font - weight: 700;
-}
+    h3 {
+        margin: 0 0 0.25rem 0;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #94a3b8;
+        font-weight: 700;
+    }
 
-  .value {
-    font - size: 1.5rem;
-    font - weight: 800;
-    color: ${p => p.isTotal ? '#4ade80' : '#f8fafc'};
-    line - height: 1.2;
-}
+    .value {
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: ${p => p.isTotal ? '#4ade80' : '#f8fafc'};
+        line-height: 1.2;
+    }
 
-  .icon {
-    position: absolute;
-    right: 1.25rem;
-    top: 50 %;
-    transform: translateY(-50 %);
-    font - size: 1.75rem;
-    opacity: 0.15;
-    color: ${p => p.isTotal ? '#4ade80' : '#cbd5e1'};
-}
+    .icon {
+        position: absolute;
+        right: 1.25rem;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 1.75rem;
+        opacity: 0.15;
+        color: ${p => p.isTotal ? '#4ade80' : '#cbd5e1'};
+    }
 `;
 
 const Header = styled.div`
@@ -136,40 +139,44 @@ backdrop - filter: blur(8px);
 `;
 
 const HistorySection = styled.div`
-background: rgba(15, 23, 42, 0.75);
-backdrop - filter: blur(12px);
-border: 1px solid rgba(255, 255, 255, 0.05);
-border - radius: 1rem;
-padding: 1.5rem;
-box - shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
 `;
 
 const DeleteAllButton = styled.button`
-background: #fff5f5;
-color: #e53e3e;
-border: 1px solid #fc8181;
-padding: 0.5rem 1rem;
-border - radius: 0.5rem;
-font - size: 0.8rem;
-font - weight: 700;
-cursor: pointer;
-display: flex;
-align - items: center;
-gap: 0.5rem;
-transition: all 0.2s ease -in -out;
-box - shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    background: rgba(229, 62, 62, 0.1);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    color: #fc8181;
+    border: 1px solid rgba(229, 62, 62, 0.2);
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 
-  &:hover {
-    background: #fed7d7;
-    border - color: #f56565;
-    transform: translateY(-1px);
-    box - shadow: 0 4px 6px - 1px rgba(0, 0, 0, 0.1);
-}
+    &:hover {
+        background: rgba(229, 62, 62, 0.25);
+        border-color: rgba(229, 62, 62, 0.4);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(229, 62, 62, 0.2);
+        color: #fff;
+    }
 
-  &:active {
-    transform: translateY(0);
-    box - shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-}
+    &:active {
+        transform: translateY(0);
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    }
 `;
 
 const ButtonSpinner = styled.div`
@@ -196,64 +203,173 @@ gap: 0.75rem;
 `;
 
 const HistoryTable = styled.table`
-width: 100 %;
-border - collapse: collapse;
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
 
-  th {
-    text - align: left;
-    padding: 1rem;
-    background: rgba(255, 255, 255, 0.05);
-    color: #94a3b8;
-    font - weight: 600;
-    border - bottom: 2px solid rgba(255, 255, 255, 0.1);
-}
+    th {
+        text-align: left;
+        padding: 1rem;
+        background: rgba(15, 23, 42, 0.8);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        color: #94a3b8;
+        font-weight: 600;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
 
-  td {
-    padding: 1rem;
-    border - bottom: 1px solid rgba(255, 255, 255, 0.05);
-    color: #f8fafc;
-    vertical - align: middle;
-}
+    th:first-child {
+        border-top-left-radius: 0.5rem;
+    }
+
+    th:last-child {
+        border-top-right-radius: 0.5rem;
+    }
+
+    td {
+        padding: 1rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        color: #f8fafc;
+        vertical-align: middle;
+        transition: background-color 0.2s;
+    }
+
+    tr:hover td {
+        background-color: rgba(255, 255, 255, 0.015);
+    }
 `;
 
 const ActionButton = styled.button<{ color: string }>`
-background: transparent;
-border: 1px solid transparent;
-color: ${p => p.color};
-width: 32px;
-height: 32px;
-border - radius: 0.5rem;
-display: flex;
-align - items: center;
-justify - content: center;
-cursor: pointer;
-transition: all 0.2s;
-margin - right: 0.5rem;
+    background: rgba(15, 23, 42, 0.5);
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    color: ${p => p.color};
+    width: 32px;
+    height: 32px;
+    border-radius: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    margin-right: 0.5rem;
 
     &:hover {
-    background: ${p => p.color} 15;
-    border - color: ${p => p.color} 30;
-}
+        background: ${p => `${p.color}25`};
+        border-color: ${p => `${p.color}50`};
+        box-shadow: 0 0 12px ${p => `${p.color}30`};
+        transform: translateY(-2px) scale(1.05);
+        color: #fff;
+    }
 `;
 
 
 
 
+const BadgeLink = styled.span<{ color: string }>`
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    background: ${p => `${p.color}15`};
+    color: ${p => p.color};
+    border: 1px solid ${p => `${p.color}30`};
+    border-radius: 0.5rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    white-space: nowrap;
+
+    &:hover {
+        background: ${p => `${p.color}25`};
+        border-color: ${p => `${p.color}50`};
+        transform: translateY(-1px);
+        box-shadow: 0 4px 6px ${p => `${p.color}20`};
+    }
+
+    &:active {
+        transform: translateY(0);
+        box-shadow: none;
+    }
+`;
+
+const GlassToastOverlay = styled.div`
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    animation: ${fadeIn} 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+`;
+
+const GlassToastContent = styled.div`
+    background: rgba(15, 23, 42, 0.7);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 1.5rem;
+    padding: 2rem;
+    width: 90%;
+    max-width: 450px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 20px rgba(56, 189, 248, 0.1);
+    position: relative;
+    color: #f8fafc;
+`;
+
+
 const FormGroup = styled.div`
-margin - bottom: 1rem;
-  label { display: block; margin - bottom: 0.5rem; font - weight: 600; color: #cbd5e1; }
-input, select, textarea { width: 100 %; padding: 0.75rem; background: rgba(30, 41, 59, 0.5); color: #f8fafc; border: 1px solid rgba(255, 255, 255, 0.1); border - radius: 0.5rem; font - size: 0.95rem; }
+    margin-bottom: 1.25rem;
+    label { 
+        display: block; 
+        margin-bottom: 0.5rem; 
+        font-weight: 600; 
+        color: #94a3b8; 
+        font-size: 0.9rem;
+    }
+    input, select, textarea { 
+        width: 100%; 
+        padding: 0.75rem; 
+        background: rgba(15, 23, 42, 0.5); 
+        color: #f8fafc; 
+        border: 1px solid rgba(255, 255, 255, 0.05); 
+        border-radius: 0.5rem; 
+        font-size: 0.95rem;
+        transition: all 0.2s;
+
+        &:focus {
+            outline: none;
+            border-color: rgba(56, 189, 248, 0.5);
+            box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.1);
+            background: rgba(15, 23, 42, 0.8);
+        }
+    }
 `;
 
 
 
 const BarcodeDisplay = styled.div`
-background: rgba(15, 23, 42, 0.4);
-padding: 2rem;
-text - align: center;
-border - radius: 0.5rem;
-border: 2px dashed rgba(255, 255, 255, 0.1);
-margin: 1rem 0;
+    background: rgba(15, 23, 42, 0.4);
+    padding: 2rem;
+    text-align: center;
+    border-radius: 0.5rem;
+    border: 2px dashed rgba(255, 255, 255, 0.1);
+    margin: 1rem 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
 
     .code {
     font - family: 'Courier New', monospace;
@@ -354,7 +470,7 @@ const getStatusBadge = (batch: any, onNavigate?: (path: string) => void) => {
                 onClick={(e) => {
                     if (isClickable) {
                         e.stopPropagation();
-                        onNavigate(`/ rooms / ${roomId}?mapId = ${batch.clone_map_id} `);
+                        onNavigate(`/rooms/${roomId}?mapId=${batch.clone_map_id}`);
                     }
                 }}
                 style={{
@@ -362,7 +478,8 @@ const getStatusBadge = (batch: any, onNavigate?: (path: string) => void) => {
                     background: 'rgba(72, 187, 120, 0.1)', color: '#48bb78',
                     padding: '2px 8px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 600, border: '1px solid rgba(72, 187, 120, 0.2)',
                     cursor: isClickable ? 'pointer' : 'default',
-                    transition: 'all 0.2s'
+                    transition: 'all 0.2s',
+                    whiteSpace: 'nowrap'
                 }}
                 title={isClickable ? "Abrir Mapa Activo" : "En Mapa"}
             >
@@ -375,7 +492,7 @@ const getStatusBadge = (batch: any, onNavigate?: (path: string) => void) => {
         <span style={{
             display: 'inline-flex', alignItems: 'center', gap: '4px',
             background: 'rgba(236, 201, 75, 0.1)', color: '#ecc94b',
-            padding: '2px 8px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 600, border: '1px solid rgba(236, 201, 75, 0.2)'
+            padding: '2px 8px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 600, border: '1px solid rgba(236, 201, 75, 0.2)', whiteSpace: 'nowrap'
         }}>
             <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#ecc94b' }} />
             Disponible
@@ -451,7 +568,7 @@ const BatchGroupRow = ({ group, onBarcodeClick, onMoveClick, onDiscardClick, onE
         const cellStyle: React.CSSProperties = {};
 
         const quantityDisplay = (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', whiteSpace: 'nowrap' }}>
                 <strong>{totalQty} u.</strong>
                 {units.length > 1 && (
                     <span style={{ fontSize: '0.75rem', color: '#718096', fontWeight: 'normal' }}>({units.length} un.)</span>
@@ -503,25 +620,25 @@ const BatchGroupRow = ({ group, onBarcodeClick, onMoveClick, onDiscardClick, onE
                 <td style={cellStyle}>{quantityDisplay}</td>
                 <td style={cellStyle}>
                     {root.room?.spot?.id ? (
-                        <span
-                            onClick={(e) => { e.stopPropagation(); onNavigate(`/ crops / ${root.room.spot_id} `); }}
-                            style={{ cursor: 'pointer', color: '#38bdf8', textDecoration: 'underline', fontWeight: 500 }}
+                        <BadgeLink
+                            color="#38bdf8"
+                            onClick={(e) => { e.stopPropagation(); onNavigate(`/crops/${root.room.spot_id}`); }}
                             title="Ver Cultivo"
                         >
                             {root.room?.spot?.name}
-                        </span>
+                        </BadgeLink>
                     ) : '---'}
                 </td>
                 <td style={cellStyle}>
                     {root.room?.id ? (
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '4px' }}>
-                            <span
-                                onClick={(e) => { e.stopPropagation(); onNavigate(`/ rooms / ${root.room.id} `); }}
-                                style={{ cursor: 'pointer', color: '#c084fc', textDecoration: 'underline', fontWeight: 500 }}
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '6px' }}>
+                            <BadgeLink
+                                color="#c084fc"
+                                onClick={(e) => { e.stopPropagation(); onNavigate(`/rooms/${root.room.id}`); }}
                                 title="Ver Sala"
                             >
                                 {root.room?.name}
-                            </span>
+                            </BadgeLink>
                             {getStageBadge(root.room?.type)}
                         </div>
                     ) : 'Desconocido'}
@@ -530,19 +647,41 @@ const BatchGroupRow = ({ group, onBarcodeClick, onMoveClick, onDiscardClick, onE
                 <td style={{ textAlign: 'center', ...cellStyle }}>
                     <div style={{ display: 'flex', justifyContent: 'center' }}>
                         <Tooltip text="Ver Código de Barras">
-                            <ActionButton color="#4a5568" onClick={() => onBarcodeClick(root)}><FaBarcode /></ActionButton>
+                            <ActionButton color="#4a5568" onClick={(e) => { e.stopPropagation(); onBarcodeClick({ ...root, clone_units: children, displayName: displayName }); }}><FaBarcode /></ActionButton>
                         </Tooltip>
+                        {/* 
                         <Tooltip text="Mover a Sala (Transplante)">
-                            <ActionButton color="#ed8936" onClick={() => onMoveClick(root)}><FaExchangeAlt /></ActionButton>
-                        </Tooltip>
+                            <ActionButton color="#ed8936" onClick={(e) => { e.stopPropagation(); onMoveClick(root); }}><FaExchangeAlt /></ActionButton>
+                        </Tooltip> 
+                        */}
                         <Tooltip text="Dar de Baja (Descarte)">
-                            <ActionButton color="#e53e3e" onClick={() => onDiscardClick(root)}><FaMinusCircle /></ActionButton>
+                            <ActionButton color="#e53e3e" onClick={(e) => {
+                                e.stopPropagation();
+                                onDiscardClick({
+                                    ...root,
+                                    isGroup: true,
+                                    name: displayName || root.name,
+                                    quantity: totalQty,
+                                    originalRoot: root,
+                                    groupChildren: children
+                                });
+                            }}><FaMinusCircle /></ActionButton>
                         </Tooltip>
                         <Tooltip text="Editar Lote">
-                            <ActionButton color="#3182ce" onClick={() => onEditClick(root)}><FaEdit /></ActionButton>
+                            <ActionButton color="#3182ce" onClick={(e) => {
+                                e.stopPropagation();
+                                onEditClick({
+                                    ...root,
+                                    isGroup: true,
+                                    name: displayName || root.name,
+                                    quantity: totalQty,
+                                    originalRoot: root,
+                                    groupChildren: children
+                                });
+                            }}><FaEdit /></ActionButton>
                         </Tooltip>
                         <Tooltip text="Eliminar Lote">
-                            <ActionButton color="#e53e3e" onClick={() => onDeleteClick(root)}><FaTrash /></ActionButton>
+                            <ActionButton color="#e53e3e" onClick={(e) => { e.stopPropagation(); onDeleteClick(root); }}><FaTrash /></ActionButton>
                         </Tooltip>
                     </div>
                 </td>
@@ -580,28 +719,28 @@ const BatchGroupRow = ({ group, onBarcodeClick, onMoveClick, onDiscardClick, onE
                 <td style={cellStyle}>{unitFormattedDate}</td>
                 <td style={cellStyle}>{nameDisplay}</td>
                 <td style={cellStyle}>{batch.genetic?.name || 'Desconocida'}</td>
-                <td style={cellStyle}>1 u.</td>
+                <td style={{ ...cellStyle, whiteSpace: 'nowrap' }}>1 u.</td>
                 <td style={cellStyle}>
                     {batch.room?.spot?.id ? (
-                        <span
-                            onClick={(e) => { e.stopPropagation(); onNavigate(`/ crops / ${batch.room.spot_id} `); }}
-                            style={{ cursor: 'pointer', color: '#38bdf8', textDecoration: 'underline', fontWeight: 500 }}
+                        <BadgeLink
+                            color="#38bdf8"
+                            onClick={(e) => { e.stopPropagation(); onNavigate(`/crops/${batch.room.spot_id}`); }}
                             title="Ver Cultivo"
                         >
                             {batch.room?.spot?.name}
-                        </span>
+                        </BadgeLink>
                     ) : '---'}
                 </td>
                 <td style={cellStyle}>
                     {batch.room?.id ? (
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '4px' }}>
-                            <span
-                                onClick={(e) => { e.stopPropagation(); onNavigate(`/ rooms / ${batch.room.id} `); }}
-                                style={{ cursor: 'pointer', color: '#c084fc', textDecoration: 'underline', fontWeight: 500 }}
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '6px' }}>
+                            <BadgeLink
+                                color="#c084fc"
+                                onClick={(e) => { e.stopPropagation(); onNavigate(`/rooms/${batch.room.id}`); }}
                                 title="Ver Sala"
                             >
                                 {batch.room?.name}
-                            </span>
+                            </BadgeLink>
                             {getStageBadge(batch.room?.type)}
                         </div>
                     ) : 'Desconocido'}
@@ -609,7 +748,7 @@ const BatchGroupRow = ({ group, onBarcodeClick, onMoveClick, onDiscardClick, onE
                 <td style={cellStyle}>{getStatusBadge(batch, onNavigate)}</td>
                 <td style={{ textAlign: 'center', ...cellStyle }}>
                     <div style={{ display: 'flex', justifyContent: 'center' }}>
-                        <Tooltip text="Ver QR de Unidad">
+                        <Tooltip text="Ver QR de Genética">
                             <ActionButton color="#4a5568" onClick={(e: any) => { e.stopPropagation(); onUnitPrintClick(batch, unitIndex); }}><FaBarcode /></ActionButton>
                         </Tooltip>
                         <Tooltip text="Imprimir Etiqueta">
@@ -654,11 +793,12 @@ const Clones: React.FC = () => {
     // Edit Modal State
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [editingBatch, setEditingBatch] = useState<any>(null);
-    const [editForm, setEditForm] = useState({ quantity: '', date: '' });
+    const [editForm, setEditForm] = useState({ name: '', quantity: '', date: '' });
 
     // Delete Modal State
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [batchToDelete, setBatchToDelete] = useState<any>(null);
+    const [deleteReason, setDeleteReason] = useState("");
     const [isDeleteAllModalOpen, setIsDeleteAllModalOpen] = useState(false);
 
     // Barcode Modal State
@@ -934,6 +1074,7 @@ const Clones: React.FC = () => {
     const handleEditClick = (batch: any) => {
         setEditingBatch(batch);
         setEditForm({
+            name: batch.name || '',
             quantity: batch.quantity.toString(),
             date: batch.start_date ? batch.start_date.split('T')[0] : ''
         });
@@ -943,16 +1084,67 @@ const Clones: React.FC = () => {
     const handleSaveEdit = async () => {
         if (!editingBatch) return;
 
-        const success = await roomsService.updateBatch(editingBatch.id, {
-            quantity: parseInt(editForm.quantity),
-            start_date: editForm.date
-        });
+        const newQuantity = parseInt(editForm.quantity);
+        let success = true;
+
+        if (editingBatch.isGroup) {
+            const difference = newQuantity - editingBatch.quantity;
+
+            // 1. Update Name and Date for the root
+            await roomsService.updateBatch(editingBatch.originalRoot.id, {
+                name: editForm.name,
+                start_date: editForm.date
+            });
+
+            // If name changed, we update all children as well (append their specific suffix maybe? Or just leave them)
+            // It's probably best to only touch the root's name, or set base name for children if needed. 
+            // We'll update children's start_date at least:
+            if (editingBatch.groupChildren && editingBatch.groupChildren.length > 0) {
+                for (const child of editingBatch.groupChildren) {
+                    await roomsService.updateBatch(child.id, { start_date: editForm.date });
+                }
+            }
+
+            // 2. Handle Quantity changes
+            if (difference > 0) {
+                // Increase: Add to the root batch
+                await roomsService.updateBatch(editingBatch.originalRoot.id, {
+                    quantity: editingBatch.originalRoot.quantity + difference
+                });
+            } else if (difference < 0) {
+                // Decrease: Same logic as discard
+                let remainingToDiscard = Math.abs(difference);
+                const allUnits = [editingBatch.originalRoot, ...(editingBatch.groupChildren || [])];
+
+                for (let i = 0; i < allUnits.length && remainingToDiscard > 0; i++) {
+                    const unit = allUnits[i];
+                    if (unit && unit.quantity > 0) {
+                        const toDiscardFromThisUnit = Math.min(unit.quantity, remainingToDiscard);
+                        const newQty = unit.quantity - toDiscardFromThisUnit;
+
+                        await roomsService.updateBatch(unit.id, {
+                            quantity: newQty,
+                            ...(newQty === 0 ? { status: 'Descartado' } : {})
+                        });
+
+                        remainingToDiscard -= toDiscardFromThisUnit;
+                    }
+                }
+            }
+        } else {
+            // Standard single batch update
+            success = await roomsService.updateBatch(editingBatch.id, {
+                name: editForm.name,
+                quantity: newQuantity,
+                start_date: editForm.date
+            });
+        }
 
         if (success) {
             loadData(true);
             setIsEditModalOpen(false);
             setEditingBatch(null);
-            setEditingBatch(null);
+            showToast("Lote actualizado correctamente.", 'success');
         } else {
             showToast("Error al actualizar el lote.", 'error');
         }
@@ -983,19 +1175,23 @@ const Clones: React.FC = () => {
             // If it's a child row, just delete it.
             setBatchToDelete({ ...batch, idsToDelete: [batch.id], isGroup: false });
         }
+        setDeleteReason('');
         setIsDeleteModalOpen(true);
     };
 
     const handleConfirmDelete = async () => {
-        if (!batchToDelete || !batchToDelete.idsToDelete) return;
+        if (!batchToDelete || !batchToDelete.idsToDelete || !deleteReason.trim()) return;
 
-        const success = await roomsService.deleteBatches(batchToDelete.idsToDelete, "Eliminación Manual desde Esquejera");
+        const actionDetail = `Eliminar Lote. Motivo: ${deleteReason}`;
+        const success = await roomsService.deleteBatches(batchToDelete.idsToDelete, actionDetail);
         if (success) {
             loadData();
             setIsDeleteModalOpen(false);
             setBatchToDelete(null);
+            setDeleteReason('');
+            showToast("Lote eliminado correctamente.", 'success');
         } else {
-            showToast("Error al eliminar los lotes.", 'error');
+            showToast("Error al eliminar el lote.", 'error');
         }
     };
 
@@ -1128,32 +1324,47 @@ const Clones: React.FC = () => {
             return;
         }
 
-        const newQuantity = batchToDiscard.quantity - discardQuantity;
         let success = false;
+        const actionDetail = discardReason
+            ? `Baja manual de ${discardQuantity} unidades. Motivo: ${discardReason}`
+            : `Baja manual de ${discardQuantity} unidades.`;
 
-        if (newQuantity === 0) {
-            // Option: Delete batch if 0? Or just set to 0. 
-            // Let's set to 0 strictly, or ask user?
-            // For now, update to 0. It might disappear from list if filter > 0, but here we don't filter > 0 strictly in active lists usually?
-            // Actually, usually 0 means empty. Let's update.
-            success = await roomsService.updateBatch(batchToDiscard.id, {
-                quantity: newQuantity
-            });
+        if (batchToDiscard.isGroup) {
+            const allUnits = [batchToDiscard.originalRoot, ...(batchToDiscard.groupChildren || [])];
+            let remainingToDiscard = discardQuantity;
+
+            for (let i = 0; i < allUnits.length && remainingToDiscard > 0; i++) {
+                const unit = allUnits[i];
+                if (unit && unit.quantity > 0) {
+                    const toDiscardFromThisUnit = Math.min(unit.quantity, remainingToDiscard);
+                    const newQty = unit.quantity - toDiscardFromThisUnit;
+
+                    await roomsService.updateBatch(unit.id, {
+                        quantity: newQty,
+                        ...(newQty === 0 ? { status: 'Descartado' } : {})
+                    }, undefined, actionDetail);
+
+                    remainingToDiscard -= toDiscardFromThisUnit;
+                }
+            }
+            success = true;
         } else {
+            const newQuantity = batchToDiscard.quantity - discardQuantity;
             success = await roomsService.updateBatch(batchToDiscard.id, {
-                quantity: newQuantity
-            });
+                quantity: newQuantity,
+                ...(newQuantity === 0 ? { status: 'Descartado' } : {})
+            }, undefined, actionDetail);
         }
 
         if (success) {
-            // Ideally log the reason
-            console.log(`Discarded ${discardQuantity} from ${batchToDiscard.name}.Reason: ${discardReason} `);
             loadData();
             setIsDiscardModalOpen(false);
             setBatchToDiscard(null);
-            setBatchToDiscard(null);
+            setDiscardQuantity(0);
+            setDiscardReason('');
+            showToast("Unidades descartadas correctamente", "success");
         } else {
-            showToast("Error al descartar esquejes.", 'error');
+            showToast("Error al descartar unidades", "error");
         }
     };
 
@@ -1278,7 +1489,7 @@ const Clones: React.FC = () => {
                             })}
                             {cloneBatches.length === 0 && (
                                 <tr>
-                                    <td colSpan={6} style={{ textAlign: 'center', color: '#a0aec0', padding: '2rem' }}>
+                                    <td colSpan={8} style={{ textAlign: 'center', color: '#94a3b8', padding: '3rem 1rem' }}>
                                         No hay registros de esquejes.
                                     </td>
                                 </tr>
@@ -1342,28 +1553,28 @@ const Clones: React.FC = () => {
                                                                     </div>
                                                                 </td>
                                                                 <td style={cellStyle}>{batch.genetic?.name || 'Desconocida'}</td>
-                                                                <td style={cellStyle}>{batch.quantity} u.</td>
+                                                                <td style={{ ...cellStyle, whiteSpace: 'nowrap' }}>{batch.quantity} u.</td>
                                                                 <td style={cellStyle}>
                                                                     {batch.room?.spot?.id ? (
-                                                                        <span
-                                                                            onClick={(e) => { e.stopPropagation(); navigate(`/ crops / ${batch.room.spot_id} `); }}
-                                                                            style={{ cursor: 'pointer', color: '#38bdf8', textDecoration: 'underline', fontWeight: 500 }}
+                                                                        <BadgeLink
+                                                                            color="#38bdf8"
+                                                                            onClick={(e) => { e.stopPropagation(); navigate(`/crops/${batch.room.spot_id}`); }}
                                                                             title="Ver Cultivo"
                                                                         >
                                                                             {batch.room?.spot?.name}
-                                                                        </span>
+                                                                        </BadgeLink>
                                                                     ) : '---'}
                                                                 </td>
                                                                 <td style={cellStyle}>
                                                                     {batch.room?.id ? (
-                                                                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '4px' }}>
-                                                                            <span
-                                                                                onClick={(e) => { e.stopPropagation(); navigate(`/ rooms / ${batch.room.id} `); }}
-                                                                                style={{ cursor: 'pointer', color: '#c084fc', textDecoration: 'underline', fontWeight: 500 }}
+                                                                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '6px' }}>
+                                                                            <BadgeLink
+                                                                                color="#c084fc"
+                                                                                onClick={(e) => { e.stopPropagation(); navigate(`/rooms/${batch.room.id}`); }}
                                                                                 title="Ver Sala"
                                                                             >
                                                                                 {batch.room?.name}
-                                                                            </span>
+                                                                            </BadgeLink>
                                                                             {getStageBadge(batch.room?.type)}
                                                                         </div>
                                                                     ) : 'Desconocido'}
@@ -1372,19 +1583,19 @@ const Clones: React.FC = () => {
                                                                 <td style={{ textAlign: 'center', ...cellStyle }}>
                                                                     <div style={{ display: 'flex', justifyContent: 'center' }}>
                                                                         <Tooltip text="Ver Código de Barras">
-                                                                            <ActionButton color="#4a5568" onClick={() => handleBarcodeClick(batch)}><FaBarcode /></ActionButton>
+                                                                            <ActionButton color="#4a5568" onClick={(e) => { e.stopPropagation(); handleBarcodeClick(batch); }}><FaBarcode /></ActionButton>
                                                                         </Tooltip>
                                                                         <Tooltip text="Mover a Sala (Transplante)">
-                                                                            <ActionButton color="#ed8936" onClick={() => handleMoveClick(batch)}><FaExchangeAlt /></ActionButton>
+                                                                            <ActionButton color="#ed8936" onClick={(e) => { e.stopPropagation(); handleMoveClick(batch); }}><FaExchangeAlt /></ActionButton>
                                                                         </Tooltip>
                                                                         <Tooltip text="Dar de Baja (Descarte)">
-                                                                            <ActionButton color="#e53e3e" onClick={() => handleDiscardClick(batch)}><FaMinusCircle /></ActionButton>
+                                                                            <ActionButton color="#e53e3e" onClick={(e) => { e.stopPropagation(); handleDiscardClick(batch); }}><FaMinusCircle /></ActionButton>
                                                                         </Tooltip>
                                                                         <Tooltip text="Editar Lote">
-                                                                            <ActionButton color="#3182ce" onClick={() => handleEditClick(batch)}><FaEdit /></ActionButton>
+                                                                            <ActionButton color="#3182ce" onClick={(e) => { e.stopPropagation(); handleEditClick(batch); }}><FaEdit /></ActionButton>
                                                                         </Tooltip>
                                                                         <Tooltip text="Eliminar Lote">
-                                                                            <ActionButton color="#e53e3e" onClick={() => handleDeleteClick(batch)}><FaTrash /></ActionButton>
+                                                                            <ActionButton color="#e53e3e" onClick={(e) => { e.stopPropagation(); handleDeleteClick(batch); }}><FaTrash /></ActionButton>
                                                                         </Tooltip>
                                                                     </div>
                                                                 </td>
@@ -1395,7 +1606,7 @@ const Clones: React.FC = () => {
                                             );
                                         })}
                                         {filteredGroups.length === 0 && (
-                                            <tr><td colSpan={6} style={{ textAlign: 'center', color: '#a0aec0', padding: '2rem' }}>No hay lotes activos para esta genética.</td></tr>
+                                            <tr><td colSpan={8} style={{ textAlign: 'center', color: '#94a3b8', padding: '3rem 1rem' }}>No hay lotes activos para esta genética.</td></tr>
                                         )}
                                     </tbody>
                                 </HistoryTable>
@@ -1499,42 +1710,80 @@ const Clones: React.FC = () => {
             {/* Edit Batch Modal */}
             {
                 isEditModalOpen && (
-                    <ModalOverlay>
-                        <ModalContent>
-                            <CloseIcon onClick={() => setIsEditModalOpen(false)}><FaTimes /></CloseIcon>
-                            <h2 style={{ marginBottom: '1.5rem' }}>Editar Lote</h2>
-
-                            <div style={{ marginBottom: '1rem', padding: '0.75rem', background: '#ebf8ff', borderRadius: '0.5rem', color: '#2c5282', fontSize: '0.9rem' }}>
-                                <strong>Genética:</strong> {editingBatch?.genetic?.name || 'Desconocida'} <br />
-                                <small>Para cambiar la genética, elimine este lote y cree uno nuevo.</small>
+                    <GlassToastOverlay onClick={() => setIsEditModalOpen(false)}>
+                        <GlassToastContent onClick={e => e.stopPropagation()}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '1rem' }}>
+                                <h2 style={{ margin: 0, color: '#38bdf8', display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '1.25rem' }}>
+                                    <FaEdit /> Editar Lote
+                                </h2>
+                                <button onClick={() => setIsEditModalOpen(false)} style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: '1.25rem' }}><FaTimes /></button>
                             </div>
 
-                            <div style={{ display: 'flex', gap: '1rem' }}>
+                            <div style={{ marginBottom: '1.5rem', padding: '1rem', background: 'rgba(56, 189, 248, 0.05)', borderRadius: '0.75rem', color: '#bae6fd', fontSize: '0.9rem', border: '1px solid rgba(56, 189, 248, 0.2)' }}>
+                                <strong style={{ color: '#38bdf8' }}>Genética asignada:</strong> {editingBatch?.genetic?.name || 'Desconocida'} <br />
+                                <span style={{ color: '#7dd3fc', opacity: 0.8, fontSize: '0.8rem', marginTop: '0.5rem', display: 'block' }}>Para cambiar la genética, debes eliminar este lote y registrar uno nuevo.</span>
+                            </div>
+
+                            <FormGroup style={{ marginBottom: '1rem' }}>
+                                <label style={{ color: '#cbd5e1' }}>Nombre del Lote</label>
+                                <input
+                                    type="text"
+                                    value={editForm.name}
+                                    onChange={e => setEditForm(prev => ({ ...prev, name: e.target.value }))}
+                                    style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', width: '100%', padding: '0.75rem', borderRadius: '0.5rem' }}
+                                />
+                            </FormGroup>
+
+                            <div style={{ display: 'flex', gap: '1rem', marginBottom: '0.5rem' }}>
                                 <FormGroup style={{ flex: 1 }}>
-                                    <label>Cantidad</label>
+                                    <label style={{ color: '#cbd5e1' }}>Cantidad Total <span style={{ color: '#38bdf8' }}>*</span></label>
                                     <input
                                         type="number"
+                                        min="0"
                                         value={editForm.quantity}
-                                        onChange={e => setEditForm({ ...editForm, quantity: e.target.value })}
+                                        onChange={e => setEditForm(prev => ({ ...prev, quantity: e.target.value }))}
+                                        style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', width: '100%', padding: '0.75rem', borderRadius: '0.5rem' }}
                                     />
                                 </FormGroup>
                                 <FormGroup style={{ flex: 1 }}>
-                                    <label>Fecha</label>
+                                    <label style={{ color: '#cbd5e1' }}>Fecha de Inicio</label>
                                     <input
                                         type="date"
                                         value={editForm.date}
-                                        onChange={e => setEditForm({ ...editForm, date: e.target.value })}
+                                        onChange={e => setEditForm(prev => ({ ...prev, date: e.target.value }))}
+                                        style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', width: '100%', padding: '0.75rem', borderRadius: '0.5rem' }}
                                     />
                                 </FormGroup>
                             </div>
+
                             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '2rem' }}>
-                                <button onClick={() => setIsEditModalOpen(false)} style={{ padding: '0.75rem', background: 'none', border: '1px solid #e2e8f0', borderRadius: '0.5rem', cursor: 'pointer' }}>Cancelar</button>
-                                <button onClick={handleSaveEdit} style={{ padding: '0.75rem 1.5rem', background: '#3182ce', color: 'white', border: 'none', borderRadius: '0.5rem', cursor: 'pointer', fontWeight: 'bold' }}>
+                                <button
+                                    onClick={() => setIsEditModalOpen(false)}
+                                    style={{ padding: '0.75rem 1.5rem', background: 'rgba(255,255,255,0.05)', color: '#cbd5e1', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '0.5rem', cursor: 'pointer', transition: 'all 0.2s' }}
+                                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+                                    onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+                                >
+                                    Cancelar
+                                </button>
+                                <button
+                                    onClick={handleSaveEdit}
+                                    disabled={!editForm.quantity || parseInt(editForm.quantity) < 0}
+                                    style={{
+                                        padding: '0.75rem 1.5rem',
+                                        background: editForm.quantity && parseInt(editForm.quantity) >= 0 ? '#38bdf8' : 'rgba(56, 189, 248, 0.3)',
+                                        color: editForm.quantity && parseInt(editForm.quantity) >= 0 ? '#0f172a' : 'rgba(255,255,255,0.5)',
+                                        border: 'none',
+                                        borderRadius: '0.5rem',
+                                        cursor: editForm.quantity && parseInt(editForm.quantity) >= 0 ? 'pointer' : 'not-allowed',
+                                        fontWeight: 'bold',
+                                        transition: 'all 0.2s'
+                                    }}
+                                >
                                     Guardar Cambios
                                 </button>
                             </div>
-                        </ModalContent>
-                    </ModalOverlay>
+                        </GlassToastContent>
+                    </GlassToastOverlay>
                 )
             }
 
@@ -1598,65 +1847,93 @@ const Clones: React.FC = () => {
                 )
             }
 
-            {/* Barcode Modal */
-            }
+            {/* Barcode Modal */}
             {
                 isBarcodeModalOpen && viewingBatch && (
-                    <ModalOverlay onClick={() => setIsBarcodeModalOpen(false)}>
-                        <ModalContent onClick={e => e.stopPropagation()}>
-                            <CloseIcon onClick={() => setIsBarcodeModalOpen(false)}><FaTimes /></CloseIcon>
-                            <h2 style={{ textAlign: 'center', marginBottom: '0.5rem' }}>Identificador de Lote</h2>
-                            <p style={{ textAlign: 'center', color: '#718096', marginBottom: '1.5rem' }}>Utilice este código para seguimiento </p>
+                    <GlassToastOverlay onClick={() => setIsBarcodeModalOpen(false)}>
+                        <GlassToastContent onClick={e => e.stopPropagation()}>
+                            <CloseIcon onClick={() => setIsBarcodeModalOpen(false)} style={{ color: '#94a3b8' }}><FaTimes /></CloseIcon>
+                            <h2 style={{ textAlign: 'center', marginBottom: '0.5rem', color: '#f8fafc', fontSize: '1.4rem' }}>
+                                Ficha del Lote
+                            </h2>
+                            <p style={{ textAlign: 'center', color: '#94a3b8', marginBottom: '1.5rem', fontSize: '0.9rem' }}>
+                                Escanee para hacer seguimiento a este lote o sus unidades
+                            </p>
 
-                            <BarcodeDisplay>
-                                <FaBarcode size={60} />
-                                <span className="code">{viewingBatch.name}</span>
-                                <div className="label">
-                                    {viewingBatch.genetic?.name} • {viewingBatch.quantity}u • {new Date(viewingBatch.start_date || viewingBatch.created_at).toLocaleDateString()}
-                                </div>
+                            <BarcodeDisplay style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '1rem', padding: '1.5rem', margin: '0 auto 1.5rem' }}>
+                                <Link to={`/clones/${viewingBatch.id}`} style={{ textDecoration: 'none' }} title="Clic para ir a la Ficha del Lote">
+                                    <div style={{ background: 'white', padding: '1rem', borderRadius: '0.5rem', display: 'inline-block', marginBottom: '1rem', cursor: 'pointer', transition: 'transform 0.2s' }} onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'} onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}>
+                                        <QRCode value={`${window.location.origin}/clones/${viewingBatch.id}`} size={100} />
+                                    </div>
+                                    <div style={{ textAlign: 'center' }}>
+                                        <h3 style={{ margin: '0 0 0.5rem 0', color: '#f8fafc', fontSize: '1.25rem', letterSpacing: '0.05em' }}>
+                                            {viewingBatch.displayName || viewingBatch.name}
+                                        </h3>
+                                        <p style={{ margin: '0 0 1.5rem 0', color: '#38bdf8', fontSize: '0.875rem' }}>
+                                            {viewingBatch.genetic?.nomenclatura ? `${viewingBatch.genetic.nomenclatura} - ` : ''}
+                                            {viewingBatch.genetic?.name || 'Desconocida'} • {(viewingBatch.quantity || 1) + (viewingBatch.clone_units?.length || 0)}u • {new Date(viewingBatch.start_date || viewingBatch.created_at).toLocaleDateString()}
+                                        </p>
+                                    </div>
+                                </Link>
                             </BarcodeDisplay>
 
-                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                    <label style={{ fontWeight: 600, color: '#4a5568' }}>Copias:</label>
+                            {viewingBatch.clone_units && viewingBatch.clone_units.length > 0 && (
+                                <div style={{ marginBottom: '1.5rem', padding: '1rem', background: 'rgba(255,255,255,0.02)', borderRadius: '0.75rem', border: '1px solid rgba(255,255,255,0.05)', maxHeight: '150px', overflowY: 'auto' }}>
+                                    <h4 style={{ color: '#cbd5e1', fontSize: '0.9rem', marginBottom: '0.5rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem' }}>Unidades ({viewingBatch.clone_units.length})</h4>
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: '0.5rem' }}>
+                                        {[viewingBatch, ...(viewingBatch.clone_units || [])].map((unit: any) => (
+                                            <div key={unit.id} style={{ fontSize: '0.75rem', color: '#94a3b8', padding: '0.25rem 0.5rem', background: 'rgba(0,0,0,0.2)', borderRadius: '0.25rem', textAlign: 'center' }}>
+                                                {unit.name}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.75rem 1rem', background: 'rgba(0,0,0,0.2)', borderRadius: '0.5rem' }}>
+                                    <label style={{ fontWeight: 600, color: '#cbd5e1', fontSize: '0.9rem' }}>Copias a Imprimir:</label>
                                     <input
                                         type="number"
                                         min="1"
                                         value={printQuantity}
                                         onChange={(e) => setPrintQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                                        style={{ width: '60px', padding: '0.5rem', textAlign: 'center', borderRadius: '0.25rem', border: '1px solid #cbd5e0' }}
+                                        style={{ width: '60px', padding: '0.4rem', textAlign: 'center', borderRadius: '0.25rem', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.05)', color: '#f8fafc' }}
                                     />
                                 </div>
 
                                 <div style={{ display: 'flex', gap: '1rem' }}>
-                                    <button onClick={() => setIsBarcodeModalOpen(false)} style={{ padding: '0.75rem 2rem', background: 'none', border: '1px solid #cbd5e0', borderRadius: '0.5rem', cursor: 'pointer', color: '#718096' }}>
-                                        Cerrar
+                                    <button onClick={() => setIsBarcodeModalOpen(false)} style={{ flex: 1, padding: '0.75rem', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '0.5rem', cursor: 'pointer', color: '#94a3b8', fontWeight: 600, transition: 'all 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'} onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}>
+                                        Volver
                                     </button>
-                                    <button onClick={handlePrintTickets} style={{ padding: '0.75rem 2rem', background: '#2d3748', color: 'white', border: 'none', borderRadius: '0.5rem', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                        <FaBarcode /> Imprimir
+                                    <button onClick={handlePrintTickets} style={{ flex: 1, padding: '0.75rem', background: 'rgba(56, 189, 248, 0.2)', color: '#38bdf8', border: '1px solid rgba(56, 189, 248, 0.3)', borderRadius: '0.5rem', cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', transition: 'all 0.2s', boxShadow: '0 4px 6px rgba(0,0,0,0.2)' }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(56, 189, 248, 0.3)'} onMouseLeave={e => e.currentTarget.style.background = 'rgba(56, 189, 248, 0.2)'}>
+                                        <FaPrint /> Imprimir Etiquetas
                                     </button>
                                 </div>
                             </div>
-                        </ModalContent>
-                    </ModalOverlay>
+                        </GlassToastContent>
+                    </GlassToastOverlay>
                 )
             }
 
             {/* Discard Modal */}
             {
                 isDiscardModalOpen && batchToDiscard && (
-                    <ModalOverlay>
-                        <ModalContent>
-                            <CloseIcon onClick={() => setIsDiscardModalOpen(false)}><FaTimes /></CloseIcon>
-                            <h2 style={{ marginBottom: '1.5rem', color: '#e53e3e', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                <FaMinusCircle /> Descartar Esquejes
-                            </h2>
-                            <p style={{ marginBottom: '1rem', color: '#718096' }}>
-                                Registrar baja de esquejes para el lote <strong>{batchToDiscard.name}</strong>.
+                    <GlassToastOverlay onClick={() => setIsDiscardModalOpen(false)}>
+                        <GlassToastContent onClick={e => e.stopPropagation()}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '1rem' }}>
+                                <h2 style={{ margin: 0, color: '#e53e3e', display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '1.25rem' }}>
+                                    <FaMinusCircle /> Descartar Esquejes
+                                </h2>
+                                <button onClick={() => setIsDiscardModalOpen(false)} style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: '1.25rem' }}><FaTimes /></button>
+                            </div>
+
+                            <p style={{ marginBottom: '1.5rem', color: '#94a3b8', fontSize: '0.95rem' }}>
+                                Registrar baja de esquejes para el lote <strong style={{ color: '#f8fafc' }}>{batchToDiscard.name}</strong>.
                             </p>
 
-                            <div style={{ background: 'rgba(239, 68, 68, 0.1)', padding: '1rem', borderRadius: '0.5rem', marginBottom: '1.5rem', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', fontSize: '0.9rem', color: '#ef4444', fontWeight: 'bold' }}>
+                            <div style={{ background: 'rgba(239, 68, 68, 0.05)', padding: '1rem', borderRadius: '0.75rem', marginBottom: '1.5rem', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', fontSize: '0.9rem', color: '#fca5a5', fontWeight: 'bold' }}>
                                     <span>Cantidad Actual:</span>
                                     <span>{batchToDiscard.quantity} u.</span>
                                 </div>
@@ -1667,63 +1944,120 @@ const Clones: React.FC = () => {
                             </div>
 
                             <FormGroup>
-                                <label>Cantidad a Descartar</label>
+                                <label style={{ color: '#cbd5e1' }}>Cantidad a Descartar <span style={{ color: '#e53e3e' }}>*</span></label>
                                 <input
                                     type="number"
                                     min="1"
                                     max={batchToDiscard.quantity}
                                     value={discardQuantity}
                                     onChange={e => setDiscardQuantity(Math.min(batchToDiscard.quantity, Math.max(0, parseInt(e.target.value) || 0)))}
+                                    style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}
                                 />
                             </FormGroup>
 
                             <FormGroup>
-                                <label>Motivo (Opcional)</label>
+                                <label style={{ color: '#cbd5e1' }}>Motivo de la baja <span style={{ color: '#e53e3e' }}>*</span></label>
                                 <input
                                     type="text"
                                     placeholder="Ej: Hongos, Dañados, No enraizó..."
                                     value={discardReason}
                                     onChange={e => setDiscardReason(e.target.value)}
+                                    autoFocus
+                                    style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}
                                 />
                             </FormGroup>
 
                             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '2rem' }}>
                                 <button
                                     onClick={() => setIsDiscardModalOpen(false)}
-                                    style={{ padding: '0.75rem', background: 'none', border: '1px solid #e2e8f0', borderRadius: '0.5rem', cursor: 'pointer' }}
+                                    style={{ padding: '0.75rem 1.5rem', background: 'rgba(255,255,255,0.05)', color: '#cbd5e1', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '0.5rem', cursor: 'pointer', transition: 'all 0.2s' }}
+                                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+                                    onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
                                 >
                                     Cancelar
                                 </button>
                                 <button
                                     onClick={handleConfirmDiscard}
-                                    disabled={discardQuantity <= 0}
+                                    disabled={discardQuantity <= 0 || !discardReason.trim()}
                                     style={{
                                         padding: '0.75rem 1.5rem',
-                                        background: discardQuantity > 0 ? '#e53e3e' : '#feb2b2',
-                                        color: 'white', border: 'none', borderRadius: '0.5rem', cursor: discardQuantity > 0 ? 'pointer' : 'not-allowed', fontWeight: 'bold'
+                                        background: discardQuantity > 0 && discardReason.trim() ? '#e53e3e' : 'rgba(229, 62, 62, 0.3)',
+                                        color: discardQuantity > 0 && discardReason.trim() ? 'white' : 'rgba(255,255,255,0.5)',
+                                        border: 'none',
+                                        borderRadius: '0.5rem',
+                                        cursor: discardQuantity > 0 && discardReason.trim() ? 'pointer' : 'not-allowed',
+                                        fontWeight: 'bold',
+                                        transition: 'all 0.2s'
                                     }}
                                 >
                                     Confirmar Baja
                                 </button>
                             </div>
-                        </ModalContent>
-                    </ModalOverlay>
+                        </GlassToastContent>
+                    </GlassToastOverlay>
                 )
             }
 
             {/* Delete Confirmation */}
-            <ConfirmModal
-                isOpen={isDeleteModalOpen}
-                title="Eliminar Lote"
-                message={batchToDelete?.idsToDelete?.length > 1
-                    ? `¿Estás seguro de que deseas eliminar estos ${batchToDelete.idsToDelete.length} lotes ? Esta acción no se puede deshacer.`
-                    : `¿Estás seguro de que deseas eliminar el lote ${batchToDelete?.name}?`
-                }
-                confirmText="Eliminar"
-                isDanger
-                onClose={() => setIsDeleteModalOpen(false)}
-                onConfirm={handleConfirmDelete}
-            />
+            {
+                isDeleteModalOpen && (
+                    <GlassToastOverlay onClick={() => setIsDeleteModalOpen(false)}>
+                        <GlassToastContent onClick={e => e.stopPropagation()}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '1rem' }}>
+                                <h2 style={{ margin: 0, color: '#e53e3e', display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '1.25rem' }}>
+                                    <FaTrash /> Eliminar Lote
+                                </h2>
+                                <button onClick={() => setIsDeleteModalOpen(false)} style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: '1.25rem' }}><FaTimes /></button>
+                            </div>
+
+                            <p style={{ color: '#cbd5e1', marginBottom: '1.5rem', lineHeight: '1.5' }}>
+                                {batchToDelete?.idsToDelete?.length > 1
+                                    ? `¿Estás seguro de que deseas eliminar estos ${batchToDelete.idsToDelete.length} lotes? Esta acción no se puede deshacer.`
+                                    : `¿Estás seguro de que deseas eliminar el lote ${batchToDelete?.name}?`}
+                            </p>
+
+                            <FormGroup>
+                                <label style={{ color: '#cbd5e1' }}>Motivo de la Eliminación <span style={{ color: '#e53e3e' }}>*</span></label>
+                                <input
+                                    type="text"
+                                    placeholder="Ej: Error de carga, Lote duplicado..."
+                                    value={deleteReason}
+                                    onChange={e => setDeleteReason(e.target.value)}
+                                    autoFocus
+                                    style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', width: '100%', padding: '0.75rem', borderRadius: '0.5rem' }}
+                                />
+                            </FormGroup>
+
+                            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '2rem' }}>
+                                <button
+                                    onClick={() => setIsDeleteModalOpen(false)}
+                                    style={{ padding: '0.75rem 1.5rem', background: 'rgba(255,255,255,0.05)', color: '#cbd5e1', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '0.5rem', cursor: 'pointer', transition: 'all 0.2s' }}
+                                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+                                    onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+                                >
+                                    Cancelar
+                                </button>
+                                <button
+                                    onClick={handleConfirmDelete}
+                                    disabled={!deleteReason.trim()}
+                                    style={{
+                                        padding: '0.75rem 1.5rem',
+                                        background: deleteReason.trim() ? '#e53e3e' : 'rgba(229, 62, 62, 0.3)',
+                                        color: deleteReason.trim() ? 'white' : 'rgba(255,255,255,0.5)',
+                                        border: 'none',
+                                        borderRadius: '0.5rem',
+                                        cursor: deleteReason.trim() ? 'pointer' : 'not-allowed',
+                                        fontWeight: 'bold',
+                                        transition: 'all 0.2s'
+                                    }}
+                                >
+                                    Eliminar Lote
+                                </button>
+                            </div>
+                        </GlassToastContent>
+                    </GlassToastOverlay>
+                )
+            }
 
             {/* Delete All Confirmation */}
             <ConfirmModal
@@ -1800,7 +2134,7 @@ const Clones: React.FC = () => {
                     <PrintableCloneLabel key={i}>
                         <div className="qr-side">
                             <QRCode
-                                value={viewingBatch.name}
+                                value={viewingBatch.genetic_id ? `${window.location.origin}/genetic/${viewingBatch.genetic_id}` : viewingBatch.name}
                                 size={64} // sized for 22mm roughly (approx 80px)
                                 style={{ height: "auto", maxWidth: "100%", width: "100%" }}
                                 viewBox={`0 0 256 256`}

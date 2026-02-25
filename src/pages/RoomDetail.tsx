@@ -6895,29 +6895,32 @@ const RoomDetail: React.FC = () => {
 
 
 const BatchActionButton = styled.button<{ $variant?: 'delete' }>`
-                            background: white;
-                            border: 1px solid #e2e8f0;
-                            border-radius: 6px;
-                            color: ${props => props.$variant === 'delete' ? '#e53e3e' : '#3182ce'};
-                            cursor: pointer;
-                            width: 28px;
-                            height: 28px;
-                            display: flex;
-                            align-items: center;
-                            justify-content: center;
-                            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-                            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    background: rgba(15, 23, 42, 0.5);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 6px;
+    color: ${props => props.$variant === 'delete' ? '#f56565' : '#63b3ed'};
+    cursor: pointer;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.2);
 
-                            &:hover {
-                                transform: translateY(-2px) scale(1.05);
-                            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-                            background: ${props => props.$variant === 'delete' ? '#fff5f5' : '#ebf8ff'};
-                            border-color: ${props => props.$variant === 'delete' ? '#fc8181' : '#63b3ed'};
-                            z-index: 2;
+    &:hover {
+        transform: translateY(-2px) scale(1.05);
+        background: ${props => props.$variant === 'delete' ? 'rgba(229, 62, 62, 0.25)' : 'rgba(49, 130, 206, 0.25)'};
+        border-color: ${props => props.$variant === 'delete' ? 'rgba(229, 62, 62, 0.4)' : 'rgba(49, 130, 206, 0.4)'};
+        box-shadow: 0 4px 6px ${props => props.$variant === 'delete' ? 'rgba(229, 62, 62, 0.3)' : 'rgba(49, 130, 206, 0.3)'};
+        color: white;
+        z-index: 2;
     }
 
-                            &:active {
-                                transform: translateY(0) scale(1);
+    &:active {
+        transform: translateY(0) scale(1);
                             box-shadow: 0 1px 2px rgba(0,0,0,0.05);
     }
                             `;
