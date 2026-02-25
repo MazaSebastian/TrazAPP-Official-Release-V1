@@ -117,6 +117,16 @@ const CreateCard = styled.div`
     background: rgba(74, 222, 128, 0.05);
     opacity: 1;
   }
+
+  @media (max-width: 768px) {
+    min-height: 80px;
+    flex-direction: row;
+    padding: 1rem;
+    gap: 1rem;
+    span {
+      font-size: 0.9rem !important;
+    }
+  }
 `;
 
 const DashedCircle = styled.div`
@@ -141,6 +151,12 @@ const DashedCircle = styled.div`
 
   ${CreateCard}:hover &::before {
     animation: ${rotate} 10s linear infinite;
+  }
+
+  @media (max-width: 768px) {
+    width: 40px;
+    height: 40px;
+    font-size: 1.2rem;
   }
 `;
 

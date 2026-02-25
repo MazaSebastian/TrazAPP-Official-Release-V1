@@ -95,7 +95,8 @@ function App() {
             extraScale={0.9}
           />
           {!isPublicRoute && <Sidebar />}
-          {!isPublicRoute && <ChatWidget />}
+          {/* Temporarily hidden per user request */}
+          {/* {!isPublicRoute && <ChatWidget />} */}
 
           <Routes>
             <Route path="/login" element={<Login />} />

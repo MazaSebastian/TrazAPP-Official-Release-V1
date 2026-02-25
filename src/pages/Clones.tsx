@@ -4,7 +4,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import {
     FaSearch, FaHistory, FaBarcode, FaExchangeAlt, FaMinusCircle, FaEdit, FaTrash,
     FaCut, FaTimes, FaLevelUpAlt, FaPlus, FaAngleRight, FaAngleDown,
-    FaTint, FaLeaf, FaSun, FaCheckCircle, FaDna, FaPrint
+    FaTint, FaLeaf, FaSun, FaCheckCircle, FaDna, FaPrint, FaHashtag
 } from 'react-icons/fa';
 import { Tooltip } from '../components/Tooltip';
 import { roomsService } from '../services/roomsService';
@@ -97,23 +97,63 @@ const SummaryCard = styled.div<{ isTotal?: boolean }>`
         opacity: 0.15;
         color: ${p => p.isTotal ? '#4ade80' : '#cbd5e1'};
     }
+
+    @media (max-width: 768px) {
+        display: flex;
+        align-items: center;
+        justify-content: center; /* Center horizontally overall */
+        padding: 1rem;
+        gap: 1rem; /* Use gap instead of margins for distribution */
+        
+        h3 {
+            margin: 0;
+            font-size: 0.85rem;
+            text-align: right; /* To balance near the value */
+        }
+
+        .value {
+            font-size: 1.2rem;
+            margin: 0;
+        }
+        
+        .icon {
+            font-size: 1.25rem;
+            position: relative; /* Take it out of absolute so it flows inside the flexbox naturally */
+            right: auto;
+            top: auto;
+            transform: none;
+        }
+    }
 `;
 
 const Header = styled.div`
-display: flex;
-justify - content: space - between;
-align - items: center;
-margin - bottom: 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
 
   h1 {
-    font - size: 2rem;
-    font - weight: 800;
+    font-size: 2rem;
+    font-weight: 800;
     color: #e2e8f0;
     margin: 0;
     display: flex;
-    align - items: center;
+    align-items: center;
     gap: 0.75rem;
-}
+
+    @media (max-width: 768px) {
+        font-size: 1.5rem;
+        justify-content: center;
+        width: 100%;
+        margin-bottom: 1rem;
+    }
+  }
+
+  @media (max-width: 768px) {
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+  }
 `;
 
 const CreateButton = styled.button`
@@ -302,33 +342,26 @@ const HistoryTable = styled.table`
         }
 
         td {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0.85rem 1rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            text-align: right;
-            border-top: none;
-            border-left: none;
-            border-right: none;
+            display: none !important;
         }
 
-        td:last-child {
-            border-bottom: none;
+        td[data-label="Lote (Código)"] {
+            display: flex !important;
+            justify-content: center !important;
+            align-items: center !important;
+            padding: 1.25rem 1rem !important;
+            border: none !important;
+            text-align: center !important;
+            width: 100% !important;
+        }
+
+        td[data-label="Lote (Código)"]::before {
+            display: none !important;
+        }
+
+        td[data-label="Lote (Código)"] > div {
             justify-content: center;
-            background: rgba(255, 255, 255, 0.02);
-            padding: 1rem;
-        }
-
-        td::before {
-            content: attr(data-label);
-            font-weight: 600;
-            color: #94a3b8;
-            margin-right: 1rem;
-            text-align: left;
-            text-transform: uppercase;
-            font-size: 0.75rem;
-            letter-spacing: 0.05em;
+            width: 100%;
         }
     }
 `;
@@ -650,7 +683,7 @@ const getStageBadge = (roomType?: string) => {
     }
 };
 
-const BatchGroupRow = ({ group, onBarcodeClick, onMoveClick, onDiscardClick, onEditClick, onDeleteClick, onUnitPrintClick, onUnitDeleteClick, onNavigate }: any) => {
+const BatchGroupRow = ({ group, onBarcodeClick, onMoveClick, onDiscardClick, onEditClick, onDeleteClick, onUnitPrintClick, onUnitDeleteClick, onNavigate, onMobileClick }: any) => {
     const { root, children } = group;
     const [isExpanded, setIsExpanded] = useState(false);
 
@@ -737,7 +770,16 @@ const BatchGroupRow = ({ group, onBarcodeClick, onMoveClick, onDiscardClick, onE
         );
 
         return (
-            <tr key={`root-${root.id}`} style={rowStyle}>
+            <tr
+                key={`root-${root.id}`}
+                style={{ ...rowStyle, cursor: 'pointer' }}
+                onClick={(e) => {
+                    if (window.innerWidth <= 768 && onMobileClick) {
+                        e.stopPropagation();
+                        onMobileClick(group);
+                    }
+                }}
+            >
                 <td data-label="Fecha" style={cellStyle}>{rootFormattedDate}</td>
                 <td data-label="Lote (Código)" style={cellStyle}>{nameDisplay}</td>
                 <td data-label="Genética" style={cellStyle}>{geneticName}</td>
@@ -954,6 +996,9 @@ const Clones: React.FC = () => {
     const [toastOpen, setToastOpen] = useState(false);
     const [toastMessage, setToastMessage] = useState('');
     const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('info');
+
+    // Mobile Detail State
+    const [mobileDetailBatch, setMobileDetailBatch] = useState<any>(null);
 
     const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
         setToastMessage(message);
@@ -1664,6 +1709,7 @@ const Clones: React.FC = () => {
                                         onUnitPrintClick={handleUnitPrintClick}
                                         onUnitDeleteClick={handleUnitDeleteClick}
                                         onNavigate={(path: string) => navigate(path)}
+                                        onMobileClick={setMobileDetailBatch}
                                     />
                                 );
                             })}
@@ -1721,7 +1767,16 @@ const Clones: React.FC = () => {
                                                         const cellStyle = !isLast ? { borderBottom: 'none' } : undefined;
 
                                                         return (
-                                                            <tr key={batch.id} style={rowStyle}>
+                                                            <tr
+                                                                key={batch.id}
+                                                                style={{ ...rowStyle, cursor: 'pointer' }}
+                                                                onClick={(e) => {
+                                                                    if (window.innerWidth <= 768) {
+                                                                        e.stopPropagation();
+                                                                        setMobileDetailBatch({ root: batch, children: [] });
+                                                                    }
+                                                                }}
+                                                            >
                                                                 <td data-label="Fecha" style={cellStyle}>{new Date(batch.start_date || batch.created_at).toLocaleDateString()}</td>
                                                                 <td data-label="Lote (Código)" style={cellStyle}>
                                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', paddingLeft: batch.parent_batch_id ? '1.5rem' : '0' }}>
@@ -2331,6 +2386,84 @@ const Clones: React.FC = () => {
                     </PrintableCloneLabel>
                 ))}
             </div>
+
+            {/* Mobile Detail Modal */}
+            {mobileDetailBatch && (
+                <GlassToastOverlay onClick={() => setMobileDetailBatch(null)}>
+                    <GlassToastContent onClick={e => e.stopPropagation()} style={{ padding: '1.5rem', width: '90%', maxWidth: '400px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.75rem' }}>
+                            <h2 style={{ margin: 0, color: '#f8fafc', fontSize: '1.15rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                <FaHashtag style={{ color: '#38bdf8' }} /> Detalle de Lote
+                            </h2>
+                            <button onClick={() => setMobileDetailBatch(null)} style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: '1.25rem' }}><FaTimes /></button>
+                        </div>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1.5rem' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.5rem' }}>
+                                <span style={{ color: '#94a3b8', fontSize: '0.85rem' }}>Fecha</span>
+                                <strong style={{ color: '#e2e8f0', fontSize: '0.9rem' }}>{new Date(mobileDetailBatch.root.start_date || mobileDetailBatch.root.created_at).toLocaleDateString()}</strong>
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.5rem', alignItems: 'center' }}>
+                                <span style={{ color: '#94a3b8', fontSize: '0.85rem', width: '30%' }}>Lote</span>
+                                <strong style={{ color: '#e2e8f0', fontSize: '0.8rem', textAlign: 'right', whiteSpace: 'normal', wordBreak: 'break-all' }}>{mobileDetailBatch.root.name}</strong>
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.5rem' }}>
+                                <span style={{ color: '#94a3b8', fontSize: '0.85rem' }}>Genética</span>
+                                <strong style={{ color: '#e2e8f0', fontSize: '0.9rem' }}>{mobileDetailBatch.root.genetic?.name || 'Desconocida'}</strong>
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.5rem' }}>
+                                <span style={{ color: '#94a3b8', fontSize: '0.85rem' }}>Cantidad</span>
+                                <strong style={{ color: '#e2e8f0', fontSize: '0.9rem' }}>{mobileDetailBatch.root.quantity + (mobileDetailBatch.children?.reduce((acc: number, child: any) => acc + child.quantity, 0) || 0)} u.</strong>
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.5rem' }}>
+                                <span style={{ color: '#94a3b8', fontSize: '0.85rem' }}>Fase</span>
+                                <div>{getStageBadge(mobileDetailBatch.root.room?.type) || <span style={{ color: '#94a3b8', fontSize: '0.9rem' }}>---</span>}</div>
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '0.5rem' }}>
+                                <span style={{ color: '#94a3b8', fontSize: '0.85rem' }}>Estado</span>
+                                <div>{getStatusBadge(mobileDetailBatch.root, () => { })}</div>
+                            </div>
+                        </div>
+
+                        <div style={{ background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: '0.75rem', display: 'flex', justifyContent: 'center', gap: '1.5rem', flexWrap: 'wrap' }}>
+                            <Tooltip text="Código Barras">
+                                <ActionButton color="#4a5568" onClick={(e) => { e.stopPropagation(); handleBarcodeClick({ ...mobileDetailBatch.root, clone_units: mobileDetailBatch.children }); setMobileDetailBatch(null); }}><FaBarcode /></ActionButton>
+                            </Tooltip>
+                            <Tooltip text="Baja">
+                                <ActionButton color="#e53e3e" onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDiscardClick({
+                                        ...mobileDetailBatch.root,
+                                        isGroup: true,
+                                        name: mobileDetailBatch.root.name,
+                                        quantity: mobileDetailBatch.root.quantity + (mobileDetailBatch.children?.reduce((acc: number, child: any) => acc + child.quantity, 0) || 0),
+                                        originalRoot: mobileDetailBatch.root,
+                                        groupChildren: mobileDetailBatch.children
+                                    });
+                                    setMobileDetailBatch(null);
+                                }}><FaMinusCircle /></ActionButton>
+                            </Tooltip>
+                            <Tooltip text="Editar">
+                                <ActionButton color="#3182ce" onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleEditClick({
+                                        ...mobileDetailBatch.root,
+                                        isGroup: true,
+                                        name: mobileDetailBatch.root.name,
+                                        quantity: mobileDetailBatch.root.quantity + (mobileDetailBatch.children?.reduce((acc: number, child: any) => acc + child.quantity, 0) || 0),
+                                        originalRoot: mobileDetailBatch.root,
+                                        groupChildren: mobileDetailBatch.children
+                                    });
+                                    setMobileDetailBatch(null);
+                                }}><FaEdit /></ActionButton>
+                            </Tooltip>
+                            <Tooltip text="Eliminar">
+                                <ActionButton color="#e53e3e" onClick={(e) => { e.stopPropagation(); handleDeleteClick(mobileDetailBatch.root); setMobileDetailBatch(null); }}><FaTrash /></ActionButton>
+                            </Tooltip>
+                        </div>
+                    </GlassToastContent>
+                </GlassToastOverlay>
+            )}
 
             <ToastModal
                 isOpen={toastOpen}
