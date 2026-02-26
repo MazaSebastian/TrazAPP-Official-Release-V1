@@ -80,6 +80,7 @@ const KPISection = styled.div`
 
   @media (max-width: 768px) {
     grid-template-columns: 1fr;
+    gap: 0.75rem;
   }
 `;
 
@@ -129,6 +130,35 @@ const KPICard = styled.div<{ alert?: boolean }>`
     color: #f8fafc;
     margin: 0.25rem 0;
   }
+
+  @media (max-width: 768px) {
+    display: flex;
+    align-items: center;
+    padding: 1rem 1.25rem;
+    gap: 1rem;
+
+    &::before {
+      width: 4px;
+    }
+
+    .icon-wrapper {
+      margin-bottom: 0;
+      padding: 0.6rem;
+      font-size: 1.25rem;
+      border-radius: 0.75rem;
+    }
+
+    .label {
+      flex: 1;
+      font-size: 0.75rem;
+      line-height: 1.2;
+    }
+
+    .value {
+      font-size: 1.5rem;
+      margin: 0;
+    }
+  }
 `;
 
 const ContentGrid = styled.div`
@@ -171,6 +201,11 @@ const ActionGrid = styled.div`
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1rem;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
 `;
 
 const ActionButton = styled(Link)`
@@ -205,6 +240,22 @@ const ActionButton = styled(Link)`
 
     svg {
       transform: scale(1.1);
+    }
+  }
+
+  @media (max-width: 768px) {
+    flex-direction: row;
+    justify-content: flex-start;
+    padding: 1rem 1.25rem;
+    gap: 1rem;
+
+    svg {
+      font-size: 1.25rem;
+    }
+
+    span {
+      font-size: 0.875rem;
+      text-align: left;
     }
   }
 `;

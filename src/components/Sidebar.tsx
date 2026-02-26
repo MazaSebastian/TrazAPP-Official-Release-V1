@@ -34,7 +34,8 @@ const SidebarContainer = styled.div<{ isOpen: boolean }>`
   position: fixed;
   top: 0;
   left: 0;
-  height: 100vh;
+  height: 100vh; /* Fallback for older browsers */
+  height: 100dvh; /* Dynamic viewport height to account for mobile browser UI */
   width: 260px;
   background: rgba(15, 23, 42, 0.85); /* Dark Glassmorphism */
   backdrop-filter: blur(12px);
@@ -44,7 +45,7 @@ const SidebarContainer = styled.div<{ isOpen: boolean }>`
   display: flex;
   flex-direction: column;
   box-shadow: 4px 0 24px rgba(0,0,0,0.5);
-  overflow-y: auto;
+  box-sizing: border-box; /* Ensure paddings don't increase total height */
   padding-top: env(safe-area-inset-top);
   padding-bottom: env(safe-area-inset-bottom);
 
@@ -188,6 +189,8 @@ const UserSection = styled.div`
   padding: 1.5rem;
   border-top: 1px solid rgba(255, 255, 255, 0.05);
   background: rgba(15, 23, 42, 0.4);
+  margin-top: auto;
+  flex-shrink: 0;
 `;
 
 const LogoutButton = styled.button`
@@ -331,7 +334,9 @@ const Sidebar: React.FC = () => {
                 </>
               )}
 
-              <SectionTitle>Gestión</SectionTitle>
+              {['owner', 'admin', 'grower', 'staff'].includes(currentRole || '') && (
+                <SectionTitle>Gestión</SectionTitle>
+              )}
 
               {['owner', 'admin', 'grower', 'staff'].includes(currentRole || '') && (
                 <StyledNavLink to="/insumos" style={{ opacity: planLevel >= 2 ? 1 : 0.6 }}>

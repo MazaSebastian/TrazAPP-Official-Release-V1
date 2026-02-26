@@ -2163,10 +2163,10 @@ const CropDetail: React.FC = () => {
                               onClick={() => navigate(`/rooms/${room.id}`)}>
                               <div style={{ display: 'flex', flexWrap: 'nowrap', alignItems: 'center', gap: '0.4rem', fontSize: '0.8rem', fontWeight: 800, color: '#f8fafc', justifyContent: 'space-between', paddingBottom: '0.4rem', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', flex: 1, minWidth: 0 }}>
-                                  <VisualStageBadge $type={room.type} style={{ padding: '0.15rem 0.3rem', fontSize: '0.6rem', marginTop: 0, border: 'none' }}>
+                                  <VisualStageBadge $type={room.type} style={{ position: 'static', padding: '0.15rem 0.3rem', fontSize: '0.6rem', marginTop: 0, border: 'none' }}>
                                     <span>
-                                      {room.type === 'vegetation' ? 'VEGE'
-                                        : room.type === 'flowering' ? 'FLORA'
+                                      {room.type === 'vegetation' ? 'VEGETACIÓN'
+                                        : room.type === 'flowering' ? 'FLORACIÓN'
                                           : room.type === 'mother' ? 'MADRES'
                                             : room.type === 'clones' ? 'ESQUEJERA'
                                               : room.type === 'germination' ? 'GERMINACIÓN'
@@ -2176,6 +2176,26 @@ const CropDetail: React.FC = () => {
                                   </VisualStageBadge>
                                   {weekInfo && <span style={{ color: '#38bdf8', fontSize: '0.65rem', whiteSpace: 'nowrap' }}>{weekInfo}</span>}
                                   <span style={{ fontSize: '0.8rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginLeft: '0.2rem' }}>{room.name}</span>
+                                </div>
+
+                                {/* Acciones de Sala Móvil */}
+                                <div style={{ display: 'flex', gap: '6px', zIndex: 10 }}>
+                                  <button
+                                    onClick={(e) => { e.stopPropagation(); handleEditRoomName(e, room); }}
+                                    style={{
+                                      background: 'rgba(30, 41, 59, 0.5)', border: '1px solid rgba(255, 255, 255, 0.1)', cursor: 'pointer', color: '#94a3b8', padding: '6px', borderRadius: '6px', display: 'flex', alignItems: 'center'
+                                    }}
+                                  >
+                                    <FaEdit size={12} />
+                                  </button>
+                                  <button
+                                    onClick={(e) => { e.stopPropagation(); handleDeleteRoom(e, room.id, room.name); }}
+                                    style={{
+                                      background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)', cursor: 'pointer', color: '#f87171', padding: '6px', borderRadius: '6px', display: 'flex', alignItems: 'center'
+                                    }}
+                                  >
+                                    <FaTrash size={12} />
+                                  </button>
                                 </div>
                               </div>
 
