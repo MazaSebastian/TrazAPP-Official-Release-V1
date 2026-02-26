@@ -59,15 +59,16 @@ const MobileHeader = styled.div`
   top: 0;
   left: 0;
   right: 0;
-  height: calc(64px + env(safe-area-inset-top));
-  padding-top: env(safe-area-inset-top);
+  height: calc(72px + env(safe-area-inset-top)); /* Increased base height to give breathing room */
+  padding-top: calc(env(safe-area-inset-top) + 8px); /* Add 8px extra padding away from the notch */
   background: rgba(15, 23, 42, 0.85); /* Dark Glassmorphism */
   backdrop-filter: blur(12px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   z-index: 900;
   align-items: center;
   justify-content: center; /* Center horizontally overall */
-  padding: 0 1rem;
+  padding-left: 1rem;
+  padding-right: 1rem;
   box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 
   @media (max-width: 768px) {
@@ -87,9 +88,9 @@ const MobileHeader = styled.div`
     transform: translateX(-50%);
   }
 
-  /* Hamburger button needs to sit on the right without affecting center */
+  /* Hamburger button needs to sit on the left without affecting center */
   > button {
-    margin-left: auto;
+    margin-right: auto;
     z-index: 10;
   }
 `;
@@ -246,12 +247,12 @@ const Sidebar: React.FC = () => {
   return (
     <>
       <MobileHeader>
-        <div className="brand">
-          <img src="/trazappletras.png" alt="TrazApp" style={{ height: '24px', filter: 'drop-shadow(0 2px 3px rgba(0,0,0,0.4))' }} />
-        </div>
         <HamburgerButton onClick={() => setIsOpen(true)}>
           <FaBars />
         </HamburgerButton>
+        <div className="brand">
+          <img src="/trazappletras.png" alt="TrazApp" style={{ height: '24px', filter: 'drop-shadow(0 2px 3px rgba(0,0,0,0.4))' }} />
+        </div>
       </MobileHeader>
 
       <Overlay isOpen={isOpen} onClick={() => setIsOpen(false)} />
