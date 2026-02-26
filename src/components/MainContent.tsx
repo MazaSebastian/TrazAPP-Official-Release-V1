@@ -9,6 +9,6 @@ export const MainContent = styled.main`
   @media (max-width: 768px) {
     margin-left: 0;
     padding: 1rem;
-    padding-top: 5rem; /* Space for MobileHeader */
+    padding-top: calc(5rem + env(safe-area-inset-top)); /* Space for MobileHeader */
   }
 `;

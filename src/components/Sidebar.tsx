@@ -57,7 +57,8 @@ const MobileHeader = styled.div`
   top: 0;
   left: 0;
   right: 0;
-  height: 64px;
+  height: calc(64px + env(safe-area-inset-top));
+  padding-top: env(safe-area-inset-top);
   background: rgba(15, 23, 42, 0.85); /* Dark Glassmorphism */
   backdrop-filter: blur(12px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
