@@ -10,17 +10,19 @@
         {
             "src": "iconopwa.jpg",
             "type": "image/jpeg",
-            "sizes": "192x192"
+            "sizes": "192x192",
+            "purpose": "any maskable"
         },
         {
             "src": "iconopwa.jpg",
             "type": "image/jpeg",
-            "sizes": "512x512"
+            "sizes": "512x512",
+            "purpose": "any maskable"
         }
     ],
     "start_url": "/",
     "scope": "/",
     "display": "standalone",
-    "theme_color": "#111827",
-    "background_color": "#ffffff"
+    "theme_color": "#0f172a",
+    "background_color": "#0f172a"
 }
