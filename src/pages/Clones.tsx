@@ -30,7 +30,7 @@ const fadeIn = keyframes`
 
 const Container = styled.div`
     padding: 2rem;
-    padding-top: 5rem;
+    padding-top: 1.5rem;
     max-width: 1400px;
     margin: 0 auto;
     animation: ${fadeIn} 0.5s ease-in-out;
@@ -47,6 +47,10 @@ const SummaryGrid = styled.div`
     grid-template-columns: repeat(auto-fit, minmax(220px, 300px));
     gap: 1.5rem;
     margin-bottom: 2rem;
+    
+    @media (max-width: 768px) {
+        grid-template-columns: 1fr; /* Ensures cards take full width */
+    }
 `;
 
 const SummaryCard = styled.div<{ isTotal?: boolean }>`
@@ -224,6 +228,23 @@ const FilterContainer = styled.div`
     /* Container for the custom selects to match input width behavior if needed */
     .filter-select {
         min-width: 180px;
+        flex: 1; /* allow it to grow alongside search on desktop */
+    }
+
+    @media (max-width: 768px) {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1rem;
+
+        input {
+            width: 100%;
+            flex: none; /* remove flex stretch on mobile to just use width */
+        }
+
+        .filter-select {
+            width: 100%;
+            min-width: unset;
+        }
     }
 `;
 
@@ -273,12 +294,37 @@ animation: spin 1s linear infinite;
 `;
 
 const HistoryHeader = styled.div`
-font - size: 1.5rem;
-color: #f8fafc;
-margin - bottom: 1.5rem;
-display: flex;
-align - items: center;
-gap: 0.75rem;
+    font-size: 1.5rem;
+    color: #f8fafc;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+
+    @media (max-width: 768px) {
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 1.25rem;
+
+        > div:first-child {
+            justify-content: center;
+            width: 100%;
+            text-align: center;
+        }
+
+        > div:last-child {
+            margin-left: 0 !important;
+            width: 100%;
+            justify-content: center;
+        }
+        
+        button {
+            width: 100%;
+            justify-content: center;
+        }
+    }
 `;
 
 const HistoryTable = styled.table`
@@ -1611,7 +1657,7 @@ const Clones: React.FC = () => {
             <HistorySection>
                 <HistoryHeader>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                        <FaHistory /> Lotes de Esquejes Activos
+                        Lotes de Esquejes Activos
                     </div>
                     <div style={{ display: 'flex', gap: '1rem', marginLeft: 'auto' }}>
                         {cloneBatches.length > 0 && (
@@ -2104,13 +2150,17 @@ const Clones: React.FC = () => {
                                         <QRCode value={`${window.location.origin}/clones/${viewingBatch.id}`} size={100} />
                                     </div>
                                     <div style={{ textAlign: 'center' }}>
-                                        <h3 style={{ margin: '0 0 0.5rem 0', color: '#f8fafc', fontSize: '1.25rem', letterSpacing: '0.05em' }}>
-                                            {viewingBatch.displayName || viewingBatch.name}
-                                        </h3>
-                                        <p style={{ margin: '0 0 1.5rem 0', color: '#38bdf8', fontSize: '0.875rem' }}>
-                                            {viewingBatch.genetic?.nomenclatura ? `${viewingBatch.genetic.nomenclatura} - ` : ''}
-                                            {viewingBatch.genetic?.name || 'Desconocida'} • {(viewingBatch.quantity || 1) + (viewingBatch.clone_units?.length || 0)}u • {new Date(viewingBatch.start_date || viewingBatch.created_at).toLocaleDateString()}
-                                        </p>
+                                        <div style={{ margin: '0', display: 'flex', alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+                                            <span style={{ color: '#f8fafc', fontSize: '1.25rem', fontWeight: 700, letterSpacing: '0.02em' }}>
+                                                {viewingBatch.displayName || viewingBatch.name}
+                                            </span>
+                                            <span style={{ color: '#94a3b8', fontSize: '1.1rem' }}>
+                                                {new Date(viewingBatch.start_date || viewingBatch.created_at).toLocaleDateString()}
+                                            </span>
+                                            <span style={{ background: 'rgba(74, 222, 128, 0.1)', color: '#4ade80', border: '1px solid rgba(74, 222, 128, 0.3)', padding: '0.1rem 0.5rem', borderRadius: '4px', fontSize: '0.9rem', fontWeight: 'bold' }}>
+                                                {(viewingBatch.quantity || 1) + (viewingBatch.clone_units?.length || 0)}u
+                                            </span>
+                                        </div>
                                     </div>
                                 </Link>
                             </BarcodeDisplay>
@@ -2140,14 +2190,14 @@ const Clones: React.FC = () => {
                                     />
                                 </div>
 
-                                <ModalActions style={{ marginTop: '1rem' }}>
-                                    <button onClick={() => setIsBarcodeModalOpen(false)} style={{ flex: 1, padding: '0.75rem', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '0.5rem', cursor: 'pointer', color: '#94a3b8', fontWeight: 600, transition: 'all 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'} onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}>
-                                        Volver
-                                    </button>
+                                <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1rem', flexWrap: 'wrap' }}>
                                     <button onClick={handlePrintTickets} style={{ flex: 1, padding: '0.75rem', background: 'rgba(56, 189, 248, 0.2)', color: '#38bdf8', border: '1px solid rgba(56, 189, 248, 0.3)', borderRadius: '0.5rem', cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', transition: 'all 0.2s', boxShadow: '0 4px 6px rgba(0,0,0,0.2)' }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(56, 189, 248, 0.3)'} onMouseLeave={e => e.currentTarget.style.background = 'rgba(56, 189, 248, 0.2)'}>
-                                        <FaPrint /> Imprimir Etiquetas
+                                        <FaPrint /> Imprimir
                                     </button>
-                                </ModalActions>
+                                    <button onClick={() => setIsBarcodeModalOpen(false)} style={{ flex: 1, padding: '0.75rem', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '0.5rem', cursor: 'pointer', color: '#94a3b8', fontWeight: 600, transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center' }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'} onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}>
+                                        ← Volver
+                                    </button>
+                                </div>
                             </div>
                         </GlassToastContent>
                     </GlassToastOverlay>

@@ -18,7 +18,25 @@ const Header = styled.div`
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1rem;
-  h3 { margin: 0; color: #f8fafc; display: flex; align-items: center; gap: 0.5rem; }
+  
+  h3 { 
+    margin: 0; 
+    color: #f8fafc; 
+    display: flex; 
+    align-items: center; 
+    gap: 0.5rem; 
+  }
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    justify-content: center;
+    text-align: center;
+    gap: 0.75rem;
+
+    h3 {
+      justify-content: center;
+    }
+  }
 `;
 
 const RefreshButton = styled.button`
@@ -34,6 +52,11 @@ const DeviceGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   gap: 1rem;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+    /* On mobile, cards look better if they take full width or are centered */
+  }
 `;
 
 const DeviceCard = styled.div<{ $online: boolean }>`

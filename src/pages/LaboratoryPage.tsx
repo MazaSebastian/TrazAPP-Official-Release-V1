@@ -96,7 +96,7 @@ export const LaboratoryPage: React.FC = () => {
                         <FaFlask size={24} color="#805ad5" />
                         Laboratorio
                     </Title>
-                    <div style={{ display: 'flex', gap: '1rem' }}>
+                    <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }} className="mobile-center-tabs">
                         <TabButton $active={activeTab === 'raw'} onClick={() => setActiveTab('raw')}>
                             <FaLeaf /> Materia Prima ({rawMaterials.length})
                         </TabButton>
@@ -245,11 +245,17 @@ export const LaboratoryPage: React.FC = () => {
 // Styles
 const Container = styled.div`
     padding: 1rem;
-    padding-top: 5rem;
+    padding-top: 1.5rem;
     max-width: 1400px;
     margin: 0 auto;
     min-height: 100vh;
     color: #f8fafc;
+
+    .mobile-center-tabs {
+        @media (max-width: 768px) {
+            justify-content: center;
+        }
+    }
 
     @media (max-width: 768px) {
         padding: 0.5rem;
@@ -259,11 +265,17 @@ const Container = styled.div`
 
 const Header = styled.div`
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: flex-start;
     margin-bottom: 2rem;
     flex-wrap: wrap;
-    gap: 1rem;
+    gap: 1.5rem;
+
+    @media (max-width: 768px) {
+        justify-content: center;
+        align-items: center;
+    }
 `;
 
 const Title = styled.h1`
@@ -321,7 +333,7 @@ const NewButton = styled.button`
 const EmptyState = styled.div`
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
     padding: 4rem;
     background: rgba(15, 23, 42, 0.75);
@@ -331,6 +343,11 @@ const EmptyState = styled.div`
     gap: 1rem;
     grid-column: 1 / -1;
     backdrop-filter: blur(12px);
+
+    @media (max-width: 768px) {
+        align-items: center;
+        text-align: center;
+    }
 `;
 
 const Grid = styled.div`

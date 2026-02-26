@@ -6,9 +6,17 @@ import { FaPlug } from 'react-icons/fa';
 
 const Container = styled.div`
   padding: 2rem;
-  padding-top: 5rem;
+  padding-top: 1.5rem;
   max-width: 1200px;
   margin: 0 auto;
+
+  @media (max-width: 768px) {
+    padding: 1.5rem 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
 `;
 
 const Header = styled.div`
@@ -25,6 +33,15 @@ const Header = styled.div`
     display: flex;
     align-items: center;
     gap: 0.75rem;
+
+    @media (max-width: 768px) {
+      justify-content: center;
+      text-align: center;
+    }
+  }
+
+  @media (max-width: 768px) {
+    justify-content: center;
   }
 `;
 
@@ -41,7 +58,9 @@ const Devices: React.FC = () => {
         border: '1px solid rgba(255, 255, 255, 0.05)',
         padding: '1.5rem',
         borderRadius: '1rem',
-        boxShadow: '0 4px 6px -1px rgba(0,0,0,0.2)'
+        boxShadow: '0 4px 6px -1px rgba(0,0,0,0.2)',
+        width: '100%',
+        boxSizing: 'border-box'
       }}>
         <p style={{ marginBottom: '1.5rem', color: '#cbd5e1' }}>
           Gestión centralizada de dispositivos inteligentes Tuya. Controla luces, enchufes y monitorea sensores.

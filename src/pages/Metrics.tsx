@@ -9,12 +9,13 @@ import { useOrganization } from '../context/OrganizationContext';
 import UpgradeOverlay from '../components/common/UpgradeOverlay';
 
 const Container = styled.div`
-  padding: 2rem;
-  padding-top: 5rem;
+  padding: 1rem;
+  padding-top: 1.5rem;
   max-width: 1400px;
   margin: 0 auto;
   min-height: 100vh;
   color: #f8fafc;
+  box-sizing: border-box;
 `;
 
 const Header = styled.div`
@@ -28,6 +29,11 @@ const Grid = styled.div`
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 1.5rem;
   margin-bottom: 2rem;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
 `;
 
 const ChartsGrid = styled.div`
@@ -38,6 +44,21 @@ const ChartsGrid = styled.div`
   
   @media (max-width: 768px) {
       grid-template-columns: 1fr;
+      gap: 1.5rem;
+  }
+`;
+
+const StatsCard = styled.div`
+  background: rgba(30, 41, 59, 0.6);
+  padding: 1.5rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2);
+  backdrop-filter: blur(12px);
+
+  @media (max-width: 768px) {
+    padding: 1rem;
+    border-radius: 0.75rem;
   }
 `;
 
@@ -148,10 +169,10 @@ const Metrics: React.FC = () => {
                 {/* Secondary Analysis */}
                 <ChartsGrid>
                     {/* Top Genetics Table/List could go here */}
-                    <div style={{ background: 'rgba(30, 41, 59, 0.6)', padding: '1.5rem', borderRadius: '1rem', border: '1px solid rgba(255, 255, 255, 0.05)', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.2)', backdropFilter: 'blur(12px)' }}>
+                    <StatsCard>
                         <h3 style={{ marginBottom: '1rem', color: '#f8fafc' }}>Rendimiento por Genética</h3>
-                        <div style={{ overflowX: 'auto' }}>
-                            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                        <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+                            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '400px' }}>
                                 <thead>
                                     <tr style={{ borderBottom: '2px solid rgba(255, 255, 255, 0.1)', textAlign: 'left' }}>
                                         <th style={{ padding: '0.5rem', color: '#94a3b8' }}>Genética</th>
@@ -175,10 +196,10 @@ const Metrics: React.FC = () => {
                                 </tbody>
                             </table>
                         </div>
-                    </div>
+                    </StatsCard>
 
                     {/* Cost Breakdown */}
-                    <div style={{ background: 'rgba(30, 41, 59, 0.6)', padding: '1.5rem', borderRadius: '1rem', border: '1px solid rgba(255, 255, 255, 0.05)', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.2)', backdropFilter: 'blur(12px)' }}>
+                    <StatsCard>
                         <h3 style={{ marginBottom: '1rem', color: '#f8fafc' }}>Desglose de Gastos</h3>
                         {costs.map((c, i) => (
                             <div key={i} style={{ marginBottom: '0.75rem' }}>
@@ -194,7 +215,7 @@ const Metrics: React.FC = () => {
                         {costs.length === 0 && (
                             <div style={{ padding: '2rem', textAlign: 'center', color: '#64748b' }}>No hay gastos registrados este año</div>
                         )}
-                    </div>
+                    </StatsCard>
                 </ChartsGrid>
             </div>
         </Container>

@@ -63,7 +63,7 @@ const MobileHeader = styled.div`
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   z-index: 900;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center; /* Center horizontally overall */
   padding: 0 1rem;
   box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 
@@ -77,7 +77,17 @@ const MobileHeader = styled.div`
     font-size: 1.25rem;
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 0.5rem;
+    position: absolute; /* Keep it centered regardless of the hamburger button */
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  /* Hamburger button needs to sit on the right without affecting center */
+  > button {
+    margin-left: auto;
+    z-index: 10;
   }
 `;
 
@@ -234,7 +244,7 @@ const Sidebar: React.FC = () => {
     <>
       <MobileHeader>
         <div className="brand">
-          <img src="/trazappletras.png" alt="TrazApp" style={{ height: '32px', filter: 'drop-shadow(0 2px 3px rgba(0,0,0,0.4))' }} />
+          <img src="/trazappletras.png" alt="TrazApp" style={{ height: '24px', filter: 'drop-shadow(0 2px 3px rgba(0,0,0,0.4))' }} />
         </div>
         <HamburgerButton onClick={() => setIsOpen(true)}>
           <FaBars />

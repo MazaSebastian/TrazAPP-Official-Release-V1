@@ -12,6 +12,12 @@ const ChartContainer = styled.div`
   border: 1px solid rgba(255, 255, 255, 0.05);
   backdrop-filter: blur(12px);
   height: 400px;
+
+  @media (max-width: 768px) {
+    padding: 1rem;
+    border-radius: 0.75rem;
+    height: 300px; /* Reduce height on mobile for better fit */
+  }
 `;
 
 const Title = styled.h3`

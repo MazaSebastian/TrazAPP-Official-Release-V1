@@ -42,7 +42,7 @@ const slideDown = keyframes`
 
 const Page = styled.div`
   padding: 1rem;
-  padding-top: 5rem;
+  padding-top: 1.5rem;
   max-width: 1400px;
   margin: 0 auto;
   min-height: 100vh;
@@ -51,22 +51,24 @@ const Page = styled.div`
 
 const Header = styled.div`
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   margin-bottom: 2rem;
   flex-wrap: wrap;
-  gap: 1rem;
+  gap: 1.5rem;
 
   h1 {
-    font-size: 1.5rem;
+    font-size: 1.8rem;
     color: #f8fafc;
     margin: 0;
+    text-align: center;
   }
 `;
 
 const StatsGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   gap: 1rem;
   margin-bottom: 2rem;
 `;
@@ -87,7 +89,7 @@ const StatCard = styled.div`
   }
 
   .stat-value {
-    font-size: 2rem;
+    font-size: 1.8rem;
     font-weight: 700;
     color: #f8fafc;
     margin-bottom: 0.5rem;
@@ -95,7 +97,7 @@ const StatCard = styled.div`
 
   .stat-label {
     color: #94a3b8;
-    font-size: 0.875rem;
+    font-size: 0.8rem;
   }
 
   &.warning .stat-value {
@@ -113,10 +115,15 @@ const StatCard = styled.div`
 
 const Controls = styled.div`
   display: flex;
+  flex-direction: column;
   gap: 1rem;
   margin-bottom: 2rem;
-  flex-wrap: wrap;
-  align-items: center;
+  
+  @media (min-width: 768px) {
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+  }
 `;
 
 const Button = styled.button<{ variant?: 'primary' | 'secondary' | 'danger' | 'success' }>`
@@ -190,6 +197,12 @@ const SearchInput = styled.input`
 
 
 
+const TableContainer = styled.div`
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+`;
+
 const Table = styled.div`
   background: rgba(30, 41, 59, 0.6);
   border: 1px solid rgba(255, 255, 255, 0.05);
@@ -197,6 +210,7 @@ const Table = styled.div`
   overflow: hidden;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
   backdrop-filter: blur(12px);
+  min-width: 900px;
 `;
 
 const TableHeader = styled.div`
@@ -364,12 +378,8 @@ const FormGroup = styled.div`
 
 const FormRow = styled.div`
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 1rem;
-
-  @media (max-width: 768px) {
-    grid-template-columns: 1fr;
-  }
 `;
 
 const Insumos: React.FC = () => {
@@ -634,92 +644,94 @@ const Insumos: React.FC = () => {
           </Button>
         </Controls>
 
-        <Table>
-          <TableHeader>
-            <div>Nombre</div>
-            <div>Categoría</div>
-            <div>Precio</div>
-            <div>Variación</div>
-            <div>Stock</div>
-            <div>Proveedor</div>
-            <div>Última Compra</div>
-            <div>Acciones</div>
-          </TableHeader>
+        <TableContainer>
+          <Table>
+            <TableHeader>
+              <div>Nombre</div>
+              <div>Categoría</div>
+              <div>Precio</div>
+              <div>Variación</div>
+              <div>Stock</div>
+              <div>Proveedor</div>
+              <div>Última Compra</div>
+              <div>Acciones</div>
+            </TableHeader>
 
-          {filteredInsumos.map(insumo => {
-            const priceChange = getPriceChange(insumo);
-            const isStockLow = insumo.stock_actual <= insumo.stock_minimo;
+            {filteredInsumos.map(insumo => {
+              const priceChange = getPriceChange(insumo);
+              const isStockLow = insumo.stock_actual <= insumo.stock_minimo;
 
-            return (
-              <TableRow key={insumo.id}>
-                <div>
-                  <div style={{ fontWeight: 600 }}>{insumo.nombre}</div>
-                  <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
-                    {insumo.unidad_medida}
-                  </div>
-                </div>
-                <div>
-                  <Badge variant="gray">{insumo.categoria}</Badge>
-                </div>
-                <div>
-                  <div style={{ fontWeight: 600 }}>${insumo.precio_actual}</div>
-                  {insumo.precio_anterior && (
+              return (
+                <TableRow key={insumo.id}>
+                  <div>
+                    <div style={{ fontWeight: 600 }}>{insumo.nombre}</div>
                     <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
-                      Antes: ${insumo.precio_anterior}
+                      {insumo.unidad_medida}
                     </div>
-                  )}
-                </div>
-                <div>
-                  {priceChange ? (
-                    <PriceChange isPositive={priceChange.change >= 0}>
-                      {priceChange.change >= 0 ? '+' : ''}${priceChange.change.toFixed(2)}
-                      <span style={{ fontSize: '0.75rem' }}>
-                        ({priceChange.percentage >= 0 ? '+' : ''}{priceChange.percentage.toFixed(1)}%)
-                      </span>
-                    </PriceChange>
-                  ) : (
-                    <span style={{ color: '#64748b' }}>—</span>
-                  )}
-                </div>
-                <div>
-                  <div style={{ fontWeight: 600 }}>
-                    {insumo.stock_actual} {insumo.unidad_medida}
                   </div>
-                  {isStockLow && (
-                    <div style={{ fontSize: '0.75rem', color: '#ef4444' }}>
-                      Stock bajo
+                  <div>
+                    <Badge variant="gray">{insumo.categoria}</Badge>
+                  </div>
+                  <div>
+                    <div style={{ fontWeight: 600 }}>${insumo.precio_actual}</div>
+                    {insumo.precio_anterior && (
+                      <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
+                        Antes: ${insumo.precio_anterior}
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    {priceChange ? (
+                      <PriceChange isPositive={priceChange.change >= 0}>
+                        {priceChange.change >= 0 ? '+' : ''}${priceChange.change.toFixed(2)}
+                        <span style={{ fontSize: '0.75rem' }}>
+                          ({priceChange.percentage >= 0 ? '+' : ''}{priceChange.percentage.toFixed(1)}%)
+                        </span>
+                      </PriceChange>
+                    ) : (
+                      <span style={{ color: '#64748b' }}>—</span>
+                    )}
+                  </div>
+                  <div>
+                    <div style={{ fontWeight: 600 }}>
+                      {insumo.stock_actual} {insumo.unidad_medida}
                     </div>
-                  )}
-                </div>
-                <div>
-                  {insumo.proveedor || '—'}
-                </div>
-                <div>
-                  {insumo.fecha_ultima_compra ?
-                    new Date(insumo.fecha_ultima_compra).toLocaleDateString('es-AR') :
-                    '—'
-                  }
-                </div>
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
-                  <Button
-                    variant="secondary"
-                    onClick={() => handleOpenModal(insumo)}
-                    style={{ padding: '0.5rem' }}
-                  >
-                    <FaEdit />
-                  </Button>
-                  <Button
-                    variant="danger"
-                    onClick={() => handleDelete(insumo.id)}
-                    style={{ padding: '0.5rem' }}
-                  >
-                    <FaTrash />
-                  </Button>
-                </div>
-              </TableRow>
-            );
-          })}
-        </Table>
+                    {isStockLow && (
+                      <div style={{ fontSize: '0.75rem', color: '#ef4444' }}>
+                        Stock bajo
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    {insumo.proveedor || '—'}
+                  </div>
+                  <div>
+                    {insumo.fecha_ultima_compra ?
+                      new Date(insumo.fecha_ultima_compra).toLocaleDateString('es-AR') :
+                      '—'
+                    }
+                  </div>
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <Button
+                      variant="secondary"
+                      onClick={() => handleOpenModal(insumo)}
+                      style={{ padding: '0.5rem' }}
+                    >
+                      <FaEdit />
+                    </Button>
+                    <Button
+                      variant="danger"
+                      onClick={() => handleDelete(insumo.id)}
+                      style={{ padding: '0.5rem' }}
+                    >
+                      <FaTrash />
+                    </Button>
+                  </div>
+                </TableRow>
+              );
+            })}
+          </Table>
+        </TableContainer>
 
         {filteredInsumos.length === 0 && (
           <div style={{

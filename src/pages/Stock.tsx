@@ -40,7 +40,7 @@ const CollapsibleWrapper = ({ isOpen, children }: { isOpen: boolean; children: R
 
 const PageContainer = styled.div`
   padding: 1rem;
-  padding-top: 5rem;
+  padding-top: 1.5rem;
   max-width: 1400px;
   margin: 0 auto;
   min-height: 100vh;
@@ -201,9 +201,18 @@ const TableContainer = styled.div`
   background: rgba(15, 23, 42, 0.75);
   border-radius: 0.75rem;
   border: 1px solid rgba(255, 255, 255, 0.05);
-  overflow: hidden;
+  /* Changed from overflow: hidden to allow dropdowns to bleed out visually */
+  /* If horizontal scrolling is needed, we wrap the table in a secondary div, but for Stock it fits. */
   box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2);
   backdrop-filter: blur(12px);
+
+  @media (max-width: 768px) {
+    overflow-x: auto;
+    /* This allows the table to scroll horizontally, but can still clip dropdowns */
+    /* To fix clipping of the last column dropdowns, adding padding right helps */
+    padding-right: 1px;
+    border-radius: 0.5rem;
+  }
 `;
 
 const MainTable = styled.table`
@@ -221,14 +230,22 @@ const MainTable = styled.table`
   }
 
   td {
-    padding: 1rem;
+    padding: 1rem 0.75rem;
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     color: #cbd5e1;
     vertical-align: middle;
+    font-size: 0.85rem;
   }
   
   tr:last-child td {
     border-bottom: none;
+  }
+
+  @media (max-width: 768px) {
+    th, td {
+      padding: 0.75rem 0.5rem;
+      font-size: 0.75rem;
+    }
   }
 `;
 
@@ -247,14 +264,108 @@ const DetailTable = styled.table`
   background: transparent;
   
   td {
-    padding: 0.75rem 1rem;
-    font-size: 0.9rem;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8rem;
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     color: #e2e8f0;
   }
 
   tr:last-child td {
     border-bottom: none;
+  }
+
+  @media (max-width: 768px) {
+    td {
+      padding: 0.5rem;
+      font-size: 0.75rem;
+    }
+  }
+`;
+
+
+
+
+
+
+
+
+
+
+
+const ActionMenuContainer = styled.div`
+  position: relative;
+  display: inline-block;
+`;
+
+const ActionMenuToggle = styled.button`
+  background: rgba(30, 41, 59, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #cbd5e1;
+  width: 32px;
+  height: 32px;
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+  backdrop-filter: blur(8px);
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #f8fafc;
+  }
+`;
+
+const ActionMenuDropdown = styled.div<{ $isOpen: boolean }>`
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 0.5rem;
+  background: rgba(15, 23, 42, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.5rem;
+  min-width: 180px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(12px);
+  z-index: 100; /* Increased to ensure it's above everything */
+  display: ${props => props.$isOpen ? 'flex' : 'none'};
+  flex-direction: column;
+  padding: 0.5rem 0;
+  animation: fadeIn 0.2s ease-out;
+
+  /* Crucial for mobile: Ensure it drops to the left and doesn't push viewport width */
+  @media (max-width: 768px) {
+    right: 0; /* Anchors to the right edge of the toggle button */
+    left: auto; /* Ensure it never anchors left */
+    transform-origin: top right;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+`;
+
+const ActionMenuItem = styled.button<{ $color?: string }>`
+  background: transparent;
+  border: none;
+  width: 100%;
+  text-align: left;
+  padding: 0.75rem 1rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: ${props => props.$color || '#cbd5e1'};
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  transition: background 0.2s;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: ${props => props.$color || '#f8fafc'};
   }
 `;
 
@@ -315,6 +426,19 @@ const Stock: React.FC = () => {
   const [genetics, setGenetics] = useState<Genetic[]>([]);
   const [aggregatedStock, setAggregatedStock] = useState<AggregatedStock[]>([]);
   const [expandedStrains, setExpandedStrains] = useState<Set<string>>(new Set());
+  const [openActionMenuId, setOpenActionMenuId] = useState<string | null>(null);
+
+  // Close ActionMenu on outside click
+  useEffect(() => {
+    const handleOutsideClick = (e: MouseEvent) => {
+      // Very simple way to close menu if clicking anywhere else
+      if (!(e.target as Element).closest('button[title="Opciones"]')) {
+        setOpenActionMenuId(null);
+      }
+    };
+    document.addEventListener('click', handleOutsideClick);
+    return () => document.removeEventListener('click', handleOutsideClick);
+  }, []);
 
   // History State
   const [movements, setMovements] = useState<DispensaryMovement[]>([]);
@@ -899,37 +1023,40 @@ const Stock: React.FC = () => {
                       </td>
                       <td style={{ textAlign: 'center', fontSize: '0.85rem', color: '#cbd5e1' }}>{percent}%</td>
                       <td style={{ textAlign: 'right' }}>
-                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
-                          <IconButton color="#38a169" onClick={(e) => {
-                            e.stopPropagation();
-                            handleGroupDispense(item.strain);
-                          }} title="Dispensar">
-                            <FaHandHoldingMedical />
-                          </IconButton>
-                          <IconButton color="#3182ce" onClick={(e) => {
-                            e.stopPropagation();
-                            showToast("Edición masiva de genética próximamente.", 'info');
-                          }} title="Editar Genética">
-                            <FaEdit />
-                          </IconButton>
-                          <IconButton color="#805ad5" onClick={(e) => {
-                            e.stopPropagation();
-                            openGroupLabTransfer(item.strain);
-                          }} title="Enviar a Laboratorio (Selección Múltiple)">
-                            <FaFlask />
-                          </IconButton>
-                          <IconButton color="#e53e3e" onClick={(e) => {
-                            e.stopPropagation();
-                            setDeleteData({ batch: { strain_name: item.strain }, reason: '', isBulk: true });
-                            setIsDeleteOpen(true);
-                          }} title="Eliminar Todos">
-                            <FaTrash />
-                          </IconButton>
-                        </div>
+                        <ActionMenuContainer onClick={(e) => e.stopPropagation()}>
+                          <ActionMenuToggle onClick={() => setOpenActionMenuId(openActionMenuId === item.strain ? null : item.strain)} title="Opciones">
+                            <span style={{ fontSize: '1.2rem', lineHeight: 0, paddingBottom: '4px' }}>...</span>
+                          </ActionMenuToggle>
+                          <ActionMenuDropdown $isOpen={openActionMenuId === item.strain}>
+                            <ActionMenuItem $color="#4ade80" onClick={() => {
+                              setOpenActionMenuId(null);
+                              handleGroupDispense(item.strain);
+                            }}>
+                              <FaHandHoldingMedical /> Dispensar
+                            </ActionMenuItem>
+                            <ActionMenuItem $color="#38bdf8" onClick={() => {
+                              setOpenActionMenuId(null);
+                              showToast("Edición masiva de genética próximamente.", 'info');
+                            }}>
+                              <FaEdit /> Editar Genética
+                            </ActionMenuItem>
+                            <ActionMenuItem $color="#a855f7" onClick={() => {
+                              setOpenActionMenuId(null);
+                              openGroupLabTransfer(item.strain);
+                            }}>
+                              <FaFlask /> Enviar a Laboratorio
+                            </ActionMenuItem>
+                            <ActionMenuItem $color="#f87171" onClick={() => {
+                              setOpenActionMenuId(null);
+                              setDeleteData({ batch: { strain_name: item.strain }, reason: '', isBulk: true });
+                              setIsDeleteOpen(true);
+                            }}>
+                              <FaTrash /> Eliminar Todos
+                            </ActionMenuItem>
+                          </ActionMenuDropdown>
+                        </ActionMenuContainer>
                       </td>
                     </tr>
-
-
                     <ExpandedRow $expanded={isExpanded}>
                       <td colSpan={6}>
                         <CollapsibleWrapper isOpen={isExpanded}>
@@ -988,14 +1115,25 @@ const Stock: React.FC = () => {
                                       <td style={{ width: '30%', fontWeight: '600' }}>{batch.batch_code}</td>
                                       <td style={{ width: '25%', fontWeight: 'bold', color: '#f8fafc' }}>{Number(batch.current_weight).toFixed(2)}g / {Number(batch.initial_weight).toFixed(2)}g</td>
                                       <td style={{ width: '25%', textAlign: 'right' }}>
-                                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
-                                          <IconButton color="#3182ce" onClick={(e) => { e.stopPropagation(); openEdit(batch); }} title="Editar">
-                                            <FaEdit />
-                                          </IconButton>
-                                          <IconButton color="#e53e3e" onClick={(e) => { e.stopPropagation(); initDelete(batch); }} title="Eliminar">
-                                            <FaTrash />
-                                          </IconButton>
-                                        </div>
+                                        <ActionMenuContainer onClick={(e) => e.stopPropagation()}>
+                                          <ActionMenuToggle onClick={() => setOpenActionMenuId(openActionMenuId === batch.id ? null : batch.id)} title="Opciones">
+                                            <span style={{ fontSize: '1.2rem', lineHeight: 0, paddingBottom: '4px' }}>...</span>
+                                          </ActionMenuToggle>
+                                          <ActionMenuDropdown $isOpen={openActionMenuId === batch.id}>
+                                            <ActionMenuItem $color="#38bdf8" onClick={() => {
+                                              setOpenActionMenuId(null);
+                                              openEdit(batch);
+                                            }}>
+                                              <FaEdit /> Editar Lote
+                                            </ActionMenuItem>
+                                            <ActionMenuItem $color="#f87171" onClick={() => {
+                                              setOpenActionMenuId(null);
+                                              initDelete(batch);
+                                            }}>
+                                              <FaTrash /> Eliminar Lote
+                                            </ActionMenuItem>
+                                          </ActionMenuDropdown>
+                                        </ActionMenuContainer>
                                       </td>
                                     </tr>
                                   );
@@ -1010,7 +1148,7 @@ const Stock: React.FC = () => {
                 );
               })}
               {visibleStock.length === 0 && (
-                <tr><td colSpan={5} style={{ padding: '3rem', textAlign: 'center', color: '#94a3b8' }}>No hay stock disponible.</td></tr>
+                <tr><td colSpan={6} style={{ padding: '3rem', textAlign: 'center', color: '#94a3b8' }}>No hay stock disponible.</td></tr>
               )}
             </tbody>
           </MainTable>

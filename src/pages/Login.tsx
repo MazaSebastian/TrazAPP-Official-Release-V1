@@ -375,10 +375,6 @@ const Login: React.FC = () => {
             </LoginButton>
           </Form>
 
-          <FooterLink>
-            ¿No tienes acceso? <button onClick={() => alert('Contacta a Seba Maza o al administrador del sistema.')} style={{ background: 'none', border: 'none', color: '#16a34a', fontWeight: 600, cursor: 'pointer', padding: 0, fontSize: 'inherit' }}>Contacta al administrador</button>
-          </FooterLink>
-
         </StarBorder>
       </LoginCardWrapper>
     </LoginContainer>

@@ -13,7 +13,7 @@ const fadeIn = keyframes`
 
 const Container = styled.div`
     padding: 2rem;
-    padding-top: 5rem;
+    padding-top: 1.5rem;
     max-width: 1000px;
     margin: 0 auto;
     animation: ${fadeIn} 0.5s ease-in-out;

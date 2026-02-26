@@ -174,7 +174,7 @@ export const ExtractionForm: React.FC<ExtractionFormProps> = ({ onClose, onSucce
         switch (technique) {
             case 'Rosin':
                 return (
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))', gap: '1rem', marginBottom: '1rem', alignItems: 'flex-end' }}>
                         <div>
                             <label style={labelStyle}>Temperatura (°C)</label>
                             <input type="number" style={inputStyle} placeholder="ej. 85"
@@ -194,7 +194,7 @@ export const ExtractionForm: React.FC<ExtractionFormProps> = ({ onClose, onSucce
                 );
             case 'Ice':
                 return (
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '1rem', marginBottom: '1rem', alignItems: 'flex-end' }}>
                         <div>
                             <label style={labelStyle}>Lavados (#)</label>
                             <input type="number" style={inputStyle} placeholder="ej. 3"
@@ -227,14 +227,14 @@ export const ExtractionForm: React.FC<ExtractionFormProps> = ({ onClose, onSucce
 
                 {/* Header */}
                 <div style={{ padding: '1.5rem', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <h2 style={{ margin: 0, color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <h2 style={{ margin: 0, color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '1.25rem' }}>
                         <FaFlask color="#4ade80" /> {initialData ? 'Editar Extracción' : 'Nueva Extracción'}
                     </h2>
-                    <button onClick={handleClose} style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '1.5rem' }}><FaTimes /></button>
+                    <button onClick={handleClose} style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '1.5rem', padding: '0.5rem' }}><FaTimes /></button>
                 </div>
 
-                <div style={{ padding: '2rem' }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginBottom: '2rem' }}>
+                <div style={{ padding: 'max(1rem, 5%)' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '2rem', marginBottom: '2rem' }}>
 
                         {/* Left Column: Data */}
                         <div>
@@ -258,7 +258,7 @@ export const ExtractionForm: React.FC<ExtractionFormProps> = ({ onClose, onSucce
                             </div>
 
                             {/* Technique & Date */}
-                            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(200px, 2fr) 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem', marginBottom: '1.5rem', alignItems: 'flex-end' }}>
                                 <div>
                                     <label style={labelStyle}>Técnica</label>
                                     <CustomSelect
@@ -289,7 +289,7 @@ export const ExtractionForm: React.FC<ExtractionFormProps> = ({ onClose, onSucce
                                 <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem', gap: '0.5rem', color: '#facc15' }}>
                                     <FaCalculator /> <span style={{ fontWeight: 'bold' }}>Cálculo de Rendimiento</span>
                                 </div>
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '1rem', alignItems: 'flex-end' }}>
                                     <div>
                                         <label style={labelStyle}>Entrada (g)</label>
                                         <input type="number" style={{ ...inputStyle, borderColor: 'rgba(250, 204, 21, 0.5)' }}
@@ -327,11 +327,11 @@ export const ExtractionForm: React.FC<ExtractionFormProps> = ({ onClose, onSucce
 
                     </div>
 
-                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '2rem', paddingTop: '1rem', borderTop: '1px solid rgba(255, 255, 255, 0.1)' }}>
-                        <button onClick={handleClose} style={cancelButtonStyle}>Cancelar</button>
-                        <button onClick={handleSubmit} style={primaryButtonStyle}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '2rem', paddingTop: '1rem', borderTop: '1px solid rgba(255, 255, 255, 0.1)' }}>
+                        <button onClick={handleSubmit} style={{ ...primaryButtonStyle, width: '100%', justifyContent: 'center' }}>
                             <FaSave /> Guardar Extracción
                         </button>
+                        <button onClick={handleClose} style={{ ...cancelButtonStyle, width: '100%' }}>Cancelar</button>
                     </div>
                 </div>
 

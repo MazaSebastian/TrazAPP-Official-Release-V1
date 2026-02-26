@@ -4,6 +4,7 @@ import { FaFileMedical, FaPlus, FaPen, FaTrash, FaSave, FaTimes } from 'react-ic
 import { templatesService, ClinicalTemplate, FormField, FieldType } from '../services/templatesService';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ToastModal } from '../components/ToastModal';
+import { CustomSelect } from '../components/CustomSelect';
 
 const fadeIn = keyframes`
   from { opacity: 0; }
@@ -118,6 +119,65 @@ const TemplateCard = styled.div<{ $isNew?: boolean }>`
     margin: 0;
     flex-grow: 1;
   }
+
+  .desktop-content {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    
+    @media (max-width: 768px) {
+      display: none;
+    }
+  }
+
+  .mobile-content {
+    display: none;
+    @media (max-width: 768px) {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+    }
+
+    .m-info {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      font-size: 0.9rem;
+    }
+
+    .m-name {
+      font-weight: 700;
+      color: #f8fafc;
+      text-transform: capitalize;
+    }
+
+    .m-badge {
+      background: rgba(255,255,255,0.1);
+      padding: 0.2rem 0.5rem;
+      border-radius: 1rem;
+      font-size: 0.75rem;
+      color: #94a3b8;
+      white-space: nowrap;
+    }
+  }
+
+  @media (max-width: 768px) {
+    min-height: auto;
+    padding: 1rem;
+    
+    /* Small exception for the "New Template" card on mobile to look like a slim button */
+    ${props => props.$isNew && `
+      flex-direction: row;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 1rem;
+      h3 { margin: 0; font-size: 1rem; }
+      p { display: none; }
+      svg { margin-bottom: 0 !important; font-size: 1.2rem !important; }
+    `}
+  }
 `;
 
 const Modal = styled.div<{ isOpen: boolean; $isClosing?: boolean }>`
@@ -150,6 +210,11 @@ const ModalContent = styled.div<{ $isClosing?: boolean }>`
   backdrop-filter: blur(16px);
   color: #f8fafc;
   animation: ${props => props.$isClosing ? slideDown : slideUp} 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+
+  @media (max-width: 768px) {
+    padding: 1.5rem 1rem;
+    border-radius: 0.75rem;
+  }
 `;
 
 const FormGroup = styled.div`
@@ -193,281 +258,363 @@ const FieldBuilderRow = styled.div`
 
   @media (max-width: 600px) {
     grid-template-columns: 1fr;
+    gap: 0.75rem;
+    align-items: stretch;
+  }
+
+  input:not([type="checkbox"]), select {
+    width: 100%;
+    padding: 0.6rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0.375rem;
+    font-size: 0.95rem;
+    background: rgba(30, 41, 59, 0.5);
+    color: #f8fafc;
+    box-sizing: border-box;
+
+    &:focus {
+      outline: none;
+      border-color: rgba(168, 85, 247, 0.5);
+      box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.1);
+    }
+    
+    option {
+      background: #0f172a;
+      color: #f8fafc;
+    }
+  }
+
+  input[type="checkbox"] {
+    appearance: none;
+    background-color: rgba(30, 41, 59, 0.5);
+    margin: 0;
+    font: inherit;
+    color: currentColor;
+    width: 1.15em;
+    height: 1.15em;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 0.25em;
+    display: grid;
+    place-content: center;
+    cursor: pointer;
+
+    &::before {
+      content: "";
+      width: 0.65em;
+      height: 0.65em;
+      transform: scale(0);
+      transition: 120ms transform ease-in-out;
+      box-shadow: inset 1em 1em #38bdf8;
+      background-color: #38bdf8;
+      transform-origin: center;
+      clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+    }
+
+    &:checked::before {
+      transform: scale(1);
+    }
+
+    &:focus {
+      outline: max(2px, 0.15em) solid rgba(168, 85, 247, 0.5);
+      outline-offset: max(2px, 0.15em);
+    }
   }
 `;
 
 const Templates: React.FC = () => {
-    const [templates, setTemplates] = useState<ClinicalTemplate[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
+  const [templates, setTemplates] = useState<ClinicalTemplate[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-    // Modal state
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [isClosing, setIsClosing] = useState(false);
-    const [isSubmitting, setIsSubmitting] = useState(false);
+  // Modal state
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // Form builder state
-    const [formName, setFormName] = useState('');
-    const [formDesc, setFormDesc] = useState('');
-    const [fields, setFields] = useState<FormField[]>([]);
-    const [editingTemplateId, setEditingTemplateId] = useState<string | null>(null);
+  // Form builder state
+  const [formName, setFormName] = useState('');
+  const [formDesc, setFormDesc] = useState('');
+  const [fields, setFields] = useState<FormField[]>([]);
+  const [editingTemplateId, setEditingTemplateId] = useState<string | null>(null);
 
-    // Toast State
-    const [toastOpen, setToastOpen] = useState(false);
-    const [toastMessage, setToastMessage] = useState('');
-    const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('info');
+  // Toast State
+  const [toastOpen, setToastOpen] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('info');
 
-    const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
-        setToastMessage(message);
-        setToastType(type);
-        setToastOpen(true);
+  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
+    setToastMessage(message);
+    setToastType(type);
+    setToastOpen(true);
+  };
+
+  const loadData = async () => {
+    setIsLoading(true);
+    const data = await templatesService.getTemplates();
+    setTemplates(data);
+    setIsLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const openModal = (template?: ClinicalTemplate) => {
+    if (template) {
+      setEditingTemplateId(template.id);
+      setFormName(template.name);
+      setFormDesc(template.description || '');
+      setFields(template.fields || []);
+    } else {
+      setEditingTemplateId(null);
+      setFormName('');
+      setFormDesc('');
+      setFields([]);
+    }
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsClosing(true);
+    setTimeout(() => {
+      setIsModalOpen(false);
+      setIsClosing(false);
+    }, 300);
+  };
+
+  const handleAddField = () => {
+    const newField: FormField = {
+      id: `field_${Date.now()}`,
+      type: 'text',
+      label: '',
+      required: false,
+      options: []
     };
+    setFields([...fields, newField]);
+  };
 
-    const loadData = async () => {
-        setIsLoading(true);
-        const data = await templatesService.getTemplates();
-        setTemplates(data);
-        setIsLoading(false);
-    };
+  const handleUpdateField = (id: string, updates: Partial<FormField>) => {
+    setFields(fields.map(f => f.id === id ? { ...f, ...updates } : f));
+  };
 
-    useEffect(() => {
-        loadData();
-    }, []);
+  const handleRemoveField = (id: string) => {
+    setFields(fields.filter(f => f.id !== id));
+  };
 
-    const openModal = (template?: ClinicalTemplate) => {
-        if (template) {
-            setEditingTemplateId(template.id);
-            setFormName(template.name);
-            setFormDesc(template.description || '');
-            setFields(template.fields || []);
-        } else {
-            setEditingTemplateId(null);
-            setFormName('');
-            setFormDesc('');
-            setFields([]);
-        }
-        setIsModalOpen(true);
-    };
+  const handleSaveTemplate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formName.trim()) {
+      showToast('El nombre de la plantilla es obligatorio', 'error');
+      return;
+    }
 
-    const closeModal = () => {
-        setIsClosing(true);
-        setTimeout(() => {
-            setIsModalOpen(false);
-            setIsClosing(false);
-        }, 300);
-    };
+    setIsSubmitting(true);
+    try {
+      const payload = {
+        name: formName,
+        description: formDesc,
+        is_active: true,
+        fields: fields
+      };
 
-    const handleAddField = () => {
-        const newField: FormField = {
-            id: `field_${Date.now()}`,
-            type: 'text',
-            label: '',
-            required: false,
-            options: []
-        };
-        setFields([...fields, newField]);
-    };
+      if (editingTemplateId) {
+        await templatesService.updateTemplate(editingTemplateId, payload);
+        showToast('Plantilla actualizada', 'success');
+      } else {
+        await templatesService.createTemplate(payload);
+        showToast('Plantilla guardada', 'success');
+      }
 
-    const handleUpdateField = (id: string, updates: Partial<FormField>) => {
-        setFields(fields.map(f => f.id === id ? { ...f, ...updates } : f));
-    };
+      closeModal();
+      loadData();
+    } catch (error) {
+      console.error('Error:', error);
+      showToast('Hubo un error al guardar', 'error');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
-    const handleRemoveField = (id: string) => {
-        setFields(fields.filter(f => f.id !== id));
-    };
+  const handleDelete = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (window.confirm('¿Seguro que quieres eliminar esta plantilla?')) {
+      await templatesService.deleteTemplate(id);
+      showToast('Plantilla eliminada', 'success');
+      loadData();
+    }
+  };
 
-    const handleSaveTemplate = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!formName.trim()) {
-            showToast('El nombre de la plantilla es obligatorio', 'error');
-            return;
-        }
+  return (
+    <PageContainer>
+      <Header>
+        <Title><FaFileMedical /> Mis Plantillas Médicas</Title>
+      </Header>
 
-        setIsSubmitting(true);
-        try {
-            const payload = {
-                name: formName,
-                description: formDesc,
-                is_active: true,
-                fields: fields
-            };
+      {isLoading ? (
+        <LoadingSpinner text="Cargando plantillas..." />
+      ) : (
+        <CardGrid>
+          <TemplateCard $isNew onClick={() => openModal()}>
+            <FaPlus size={32} style={{ marginBottom: '1rem', color: '#38bdf8' }} />
+            <h3>Crear Nueva Plantilla</h3>
+            <p style={{ textAlign: 'center' }}>Diseña un nuevo formulario a la medida</p>
+          </TemplateCard>
 
-            if (editingTemplateId) {
-                await templatesService.updateTemplate(editingTemplateId, payload);
-                showToast('Plantilla actualizada', 'success');
-            } else {
-                await templatesService.createTemplate(payload);
-                showToast('Plantilla guardada', 'success');
-            }
+          {templates.map(template => (
+            <TemplateCard key={template.id} onClick={() => openModal(template)}>
+              {/* Desktop View */}
+              <div className="desktop-content">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <h3 style={{ textTransform: 'capitalize' }}>{template.name}</h3>
+                  <ActionButton
+                    style={{ background: 'transparent', border: 'none', padding: '0.2rem', color: '#f87171' }}
+                    onClick={(e) => handleDelete(template.id, e)}
+                    title="Eliminar plantilla"
+                  >
+                    <FaTrash size={14} />
+                  </ActionButton>
+                </div>
+                <p>{template.description || 'Sin descripción'}</p>
+                <div style={{ marginTop: '1rem', fontSize: '0.8rem', color: '#64748b', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                  <span style={{ background: 'rgba(255,255,255,0.1)', padding: '0.2rem 0.5rem', borderRadius: '1rem' }}>
+                    {template.fields.length} campos
+                  </span>
+                </div>
+              </div>
 
-            closeModal();
-            loadData();
-        } catch (error) {
-            console.error('Error:', error);
-            showToast('Hubo un error al guardar', 'error');
-        } finally {
-            setIsSubmitting(false);
-        }
-    };
+              {/* Mobile View */}
+              <div className="mobile-content">
+                <div className="m-info">
+                  <span className="m-name">{template.name}</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <span className="m-badge">{template.fields.length} campos</span>
+                  <ActionButton
+                    style={{ background: 'transparent', border: 'none', padding: '0.2rem', color: '#f87171' }}
+                    onClick={(e) => handleDelete(template.id, e)}
+                    title="Eliminar plantilla"
+                  >
+                    <FaTrash size={14} />
+                  </ActionButton>
+                </div>
+              </div>
+            </TemplateCard>
+          ))}
+        </CardGrid>
+      )}
 
-    const handleDelete = async (id: string, e: React.MouseEvent) => {
-        e.stopPropagation();
-        if (window.confirm('¿Seguro que quieres eliminar esta plantilla?')) {
-            await templatesService.deleteTemplate(id);
-            showToast('Plantilla eliminada', 'success');
-            loadData();
-        }
-    };
+      <Modal isOpen={isModalOpen || isClosing} $isClosing={isClosing} onMouseDown={closeModal}>
+        <ModalContent $isClosing={isClosing} onMouseDown={(e) => e.stopPropagation()}>
+          <h2 style={{ marginBottom: '1.5rem', color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <FaPen size={20} /> {editingTemplateId ? 'Editar Plantilla' : 'Nueva Plantilla Clínica'}
+          </h2>
 
-    return (
-        <PageContainer>
-            <Header>
-                <Title><FaFileMedical /> Mis Plantillas Médicas</Title>
-            </Header>
+          <form onSubmit={handleSaveTemplate}>
+            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+              <FormGroup style={{ flex: '1 1 300px' }}>
+                <label>Nombre de la Plantilla</label>
+                <input
+                  autoFocus
+                  placeholder="Ej: Evolución Semanal"
+                  value={formName}
+                  onChange={e => setFormName(e.target.value)}
+                  required
+                />
+              </FormGroup>
+              <FormGroup style={{ flex: '2 1 400px' }}>
+                <label>Descripción (Opcional)</label>
+                <input
+                  placeholder="Breve descripción de su propósito..."
+                  value={formDesc}
+                  onChange={e => setFormDesc(e.target.value)}
+                />
+              </FormGroup>
+            </div>
 
-            {isLoading ? (
-                <LoadingSpinner text="Cargando plantillas..." />
-            ) : (
-                <CardGrid>
-                    <TemplateCard $isNew onClick={() => openModal()}>
-                        <FaPlus size={32} style={{ marginBottom: '1rem', color: '#38bdf8' }} />
-                        <h3>Crear Nueva Plantilla</h3>
-                        <p style={{ textAlign: 'center' }}>Diseña un nuevo formulario a la medida</p>
-                    </TemplateCard>
+            <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', margin: '1.5rem 0', paddingTop: '1.5rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
+                <h3 style={{ margin: 0, fontSize: '1.2rem' }}>Constructor de Campos</h3>
+                <ActionButton type="button" onClick={handleAddField} style={{ padding: '0.5rem 1rem', fontSize: '0.9rem', width: '100%', justifyContent: 'center', '@media (minWidth: 600px)': { width: 'auto' } } as any}>
+                  <FaPlus /> Agregar Variante
+                </ActionButton>
+              </div>
 
-                    {templates.map(template => (
-                        <TemplateCard key={template.id} onClick={() => openModal(template)}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                                <h3 style={{ textTransform: 'capitalize' }}>{template.name}</h3>
-                                <ActionButton
-                                    style={{ background: 'transparent', border: 'none', padding: '0.2rem', color: '#f87171' }}
-                                    onClick={(e) => handleDelete(template.id, e)}
-                                    title="Eliminar plantilla"
-                                >
-                                    <FaTrash size={14} />
-                                </ActionButton>
-                            </div>
-                            <p>{template.description || 'Sin descripción'}</p>
-                            <div style={{ marginTop: '1rem', fontSize: '0.8rem', color: '#64748b', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                                <span style={{ background: 'rgba(255,255,255,0.1)', padding: '0.2rem 0.5rem', borderRadius: '1rem' }}>
-                                    {template.fields.length} campos
-                                </span>
-                            </div>
-                        </TemplateCard>
-                    ))}
-                </CardGrid>
-            )}
+              {fields.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '2rem', border: '1px dashed rgba(255,255,255,0.1)', borderRadius: '0.5rem', color: '#94a3b8' }}>
+                  No hay campos agregados aún. Agrega el primer input.
+                </div>
+              ) : (
+                fields.map((field, index) => (
+                  <FieldBuilderRow key={field.id}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                      <input
+                        placeholder="Pregunta / Etiqueta del campo..."
+                        value={field.label}
+                        onChange={e => handleUpdateField(field.id, { label: e.target.value })}
+                        required
+                      />
+                      {(field.type === 'select' || field.type === 'checkbox') && (
+                        <input
+                          style={{ fontSize: '0.85rem' }}
+                          placeholder="Opciones separadas por comas (Ej: Diario, Semanal, Mensual)"
+                          value={field.options?.join(', ')}
+                          onChange={e => handleUpdateField(field.id, { options: e.target.value.split(',').map(s => s.trim()) })}
+                        />
+                      )}
+                    </div>
 
-            <Modal isOpen={isModalOpen || isClosing} $isClosing={isClosing} onMouseDown={closeModal}>
-                <ModalContent $isClosing={isClosing} onMouseDown={(e) => e.stopPropagation()}>
-                    <h2 style={{ marginBottom: '1.5rem', color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <FaPen size={20} /> {editingTemplateId ? 'Editar Plantilla' : 'Nueva Plantilla Clínica'}
-                    </h2>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', position: 'relative', zIndex: 10 + fields.length - index }}>
+                      <CustomSelect
+                        value={field.type}
+                        onChange={val => handleUpdateField(field.id, { type: val as FieldType })}
+                        options={[
+                          { value: 'text', label: 'Texto Corto (Input)' },
+                          { value: 'textarea', label: 'Texto Largo (Área)' },
+                          { value: 'select', label: 'Lista Desplegable (Select)' },
+                          { value: 'checkbox', label: 'Opciones Múltiples (Checkboxes)' },
+                          { value: 'date', label: 'Selector de Fecha' },
+                          { value: 'eva', label: 'Escala EVA (Dolor Basal)' }
+                        ]}
+                        triggerStyle={{ padding: '0.6rem', paddingRight: '2.5rem' }}
+                      />
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', cursor: 'pointer', margin: 0 }}>
+                        <input
+                          type="checkbox"
+                          style={{ width: 'auto' }}
+                          checked={field.required}
+                          onChange={e => handleUpdateField(field.id, { required: e.target.checked })}
+                        />
+                        Campo Requerido
+                      </label>
+                    </div>
 
-                    <form onSubmit={handleSaveTemplate}>
-                        <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-                            <FormGroup style={{ flex: '1 1 300px' }}>
-                                <label>Nombre de la Plantilla</label>
-                                <input
-                                    autoFocus
-                                    placeholder="Ej: Evolución Semanal"
-                                    value={formName}
-                                    onChange={e => setFormName(e.target.value)}
-                                    required
-                                />
-                            </FormGroup>
-                            <FormGroup style={{ flex: '2 1 400px' }}>
-                                <label>Descripción (Opcional)</label>
-                                <input
-                                    placeholder="Breve descripción de su propósito..."
-                                    value={formDesc}
-                                    onChange={e => setFormDesc(e.target.value)}
-                                />
-                            </FormGroup>
-                        </div>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveField(field.id)}
+                      style={{ background: 'transparent', border: 'none', color: '#f87171', padding: '0.5rem', cursor: 'pointer', display: 'flex' }}
+                      title="Eliminar campo"
+                    >
+                      <FaTimes size={20} />
+                    </button>
+                  </FieldBuilderRow>
+                ))
+              )}
+            </div>
 
-                        <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', margin: '1.5rem 0', paddingTop: '1.5rem' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                                <h3 style={{ margin: 0, fontSize: '1.2rem' }}>Constructor de Campos</h3>
-                                <ActionButton type="button" onClick={handleAddField} style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }}>
-                                    <FaPlus /> Agregar Variante
-                                </ActionButton>
-                            </div>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '2rem' }}>
+              <ActionButton type="button" style={{ background: 'transparent', border: 'none', color: '#94a3b8' }} onClick={closeModal}>
+                Cancelar
+              </ActionButton>
+              <ActionButton type="submit" disabled={isSubmitting} style={{ background: '#38bdf8', color: '#0f172a', borderColor: '#38bdf8' }}>
+                <FaSave /> {isSubmitting ? 'Guardando...' : 'Guardar Plantilla'}
+              </ActionButton>
+            </div>
+          </form>
+        </ModalContent>
+      </Modal>
 
-                            {fields.length === 0 ? (
-                                <div style={{ textAlign: 'center', padding: '2rem', border: '1px dashed rgba(255,255,255,0.1)', borderRadius: '0.5rem', color: '#94a3b8' }}>
-                                    No hay campos agregados aún. Agrega el primer input.
-                                </div>
-                            ) : (
-                                fields.map((field, index) => (
-                                    <FieldBuilderRow key={field.id}>
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                                            <input
-                                                placeholder="Pregunta / Etiqueta del campo..."
-                                                value={field.label}
-                                                onChange={e => handleUpdateField(field.id, { label: e.target.value })}
-                                                required
-                                            />
-                                            {(field.type === 'select' || field.type === 'checkbox') && (
-                                                <input
-                                                    style={{ fontSize: '0.85rem' }}
-                                                    placeholder="Opciones separadas por comas (Ej: Diario, Semanal, Mensual)"
-                                                    value={field.options?.join(', ')}
-                                                    onChange={e => handleUpdateField(field.id, { options: e.target.value.split(',').map(s => s.trim()) })}
-                                                />
-                                            )}
-                                        </div>
-
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                                            <select
-                                                value={field.type}
-                                                onChange={e => handleUpdateField(field.id, { type: e.target.value as FieldType })}
-                                            >
-                                                <option value="text">Texto Corto (Input)</option>
-                                                <option value="textarea">Texto Largo (Área)</option>
-                                                <option value="select">Lista Desplegable (Select)</option>
-                                                <option value="checkbox">Opciones Múltiples (Checkboxes)</option>
-                                                <option value="date">Selector de Fecha</option>
-                                                <option value="eva">Escala EVA (Dolor Basal)</option>
-                                            </select>
-                                            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', cursor: 'pointer', margin: 0 }}>
-                                                <input
-                                                    type="checkbox"
-                                                    style={{ width: 'auto' }}
-                                                    checked={field.required}
-                                                    onChange={e => handleUpdateField(field.id, { required: e.target.checked })}
-                                                />
-                                                Campo Requerido
-                                            </label>
-                                        </div>
-
-                                        <button
-                                            type="button"
-                                            onClick={() => handleRemoveField(field.id)}
-                                            style={{ background: 'transparent', border: 'none', color: '#f87171', padding: '0.5rem', cursor: 'pointer', display: 'flex' }}
-                                            title="Eliminar campo"
-                                        >
-                                            <FaTimes size={20} />
-                                        </button>
-                                    </FieldBuilderRow>
-                                ))
-                            )}
-                        </div>
-
-                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '2rem' }}>
-                            <ActionButton type="button" style={{ background: 'transparent', border: 'none', color: '#94a3b8' }} onClick={closeModal}>
-                                Cancelar
-                            </ActionButton>
-                            <ActionButton type="submit" disabled={isSubmitting} style={{ background: '#38bdf8', color: '#0f172a', borderColor: '#38bdf8' }}>
-                                <FaSave /> {isSubmitting ? 'Guardando...' : 'Guardar Plantilla'}
-                            </ActionButton>
-                        </div>
-                    </form>
-                </ModalContent>
-            </Modal>
-
-            {toastOpen && <ToastModal isOpen={toastOpen} message={toastMessage} type={toastType} onClose={() => setToastOpen(false)} />}
-        </PageContainer>
-    );
+      {toastOpen && <ToastModal isOpen={toastOpen} message={toastMessage} type={toastType} onClose={() => setToastOpen(false)} />}
+    </PageContainer>
+  );
 };
 
 export default Templates;

@@ -63,11 +63,19 @@ const Content = styled.div<{ isClosing?: boolean }>`
   box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5);
   overflow: hidden;
   animation: ${p => p.isClosing ? scaleOut : scaleIn} 0.2s ease-in-out forwards;
+
+  @media (max-width: 768px) {
+    width: 100%; height: 100vh; border-radius: 0; max-height: 100vh;
+  }
 `;
 
 const ModalHeader = styled.div`
   padding: 1.5rem 2rem 0 2rem;
   flex-shrink: 0;
+
+  @media (max-width: 768px) {
+    padding: 1rem 1rem 0 1rem;
+  }
 `;
 
 const ModalBody = styled.div`
@@ -77,6 +85,11 @@ const ModalBody = styled.div`
   overflow: hidden;
   display: flex;
   flex-direction: column;
+
+  @media (max-width: 768px) {
+    padding: 1rem;
+    overflow-y: auto;
+  }
 `;
 
 const ModalFooter = styled.div`
@@ -87,6 +100,40 @@ const ModalFooter = styled.div`
   justify-content: flex-end;
   gap: 1rem;
   background: rgba(15, 23, 42, 0.6);
+
+  @media (max-width: 768px) {
+    padding: 1rem;
+    flex-direction: column-reverse;
+    button {
+      width: 100%;
+    }
+  }
+`;
+
+const StepFlexContainer = styled.div<{ $overflowHidden?: boolean }>`
+  display: flex; gap: 2rem; flex: 1; min-height: 0;
+  ${p => p.$overflowHidden && 'overflow: hidden;'}
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    gap: 1rem;
+    overflow: visible;
+  }
+`;
+
+const ColumnLeft = styled.div`
+  flex: 1; min-width: 250px;
+  @media (max-width: 768px) { min-width: 100%; flex: none; }
+`;
+
+const ColumnRight = styled.div`
+  flex: 3; display: flex; flex-direction: column; min-height: 0;
+  @media (max-width: 768px) { flex: none; min-height: 400px; }
+`;
+
+const Step2Column = styled.div`
+  flex: 1; display: flex; flex-direction: column; overflow: hidden;
+  @media (max-width: 768px) { flex: none; overflow: visible; min-height: 450px; }
 `;
 
 const Title = styled.h2`
@@ -562,8 +609,8 @@ export const TransplantModal: React.FC<TransplantModalProps> = ({ isOpen, onClos
                 <ModalBody>
                     {step === 1 && (
                         <StepContent key="step1" $isExiting={isTransitioning}>
-                            <div style={{ display: 'flex', gap: '2rem', flex: 1, minHeight: 0 }}>
-                                <div style={{ flex: 1, minWidth: '250px' }}>
+                            <StepFlexContainer>
+                                <ColumnLeft>
                                     <Section>
                                         <Label>Sala de Destino</Label>
                                         <CustomSelect
@@ -583,8 +630,8 @@ export const TransplantModal: React.FC<TransplantModalProps> = ({ isOpen, onClos
                                             <div style={{ color: '#cbd5e1', fontSize: '0.9rem' }}>Plantas seleccionadas</div>
                                         </div>
                                     </Section>
-                                </div>
-                                <div style={{ flex: 3, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+                                </ColumnLeft>
+                                <ColumnRight>
                                     <Label>Seleccionar Esquejes</Label>
                                     <TabContainer>
                                         {cloneMaps.map(map => (
@@ -622,8 +669,8 @@ export const TransplantModal: React.FC<TransplantModalProps> = ({ isOpen, onClos
                                             </div>
                                         );
                                     })()}
-                                </div>
-                            </div>
+                                </ColumnRight>
+                            </StepFlexContainer>
                         </StepContent>
                     )}
 
@@ -634,9 +681,9 @@ export const TransplantModal: React.FC<TransplantModalProps> = ({ isOpen, onClos
                             autoScroll={false} /* Disable auto-scroll to prevent infinite loop */
                         >
                             <StepContent key="step2" $isExiting={isTransitioning}>
-                                <div style={{ display: 'flex', gap: '2rem', flex: 1, minHeight: 0, overflow: 'hidden' }}>
+                                <StepFlexContainer $overflowHidden={true}>
                                     {/* Singles Column */}
-                                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                                    <Step2Column>
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
                                             <Label style={{ marginBottom: 0 }}>Esquejes Individuales ({singles.length})</Label>
                                             {singles.length > 0 && (
@@ -730,10 +777,10 @@ export const TransplantModal: React.FC<TransplantModalProps> = ({ isOpen, onClos
                                                 </div>
                                             </DroppableContainer>
                                         </div>
-                                    </div>
+                                    </Step2Column>
 
                                     {/* Groups Column */}
-                                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                                    <Step2Column>
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
                                             <Label style={{ marginBottom: 0 }}>Grupos Nuevos</Label>
                                             <button onClick={addGroup} style={{ background: '#4ade80', color: '#0f172a', border: 'none', borderRadius: '0.25rem', padding: '0.25rem 0.5rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.25rem', fontWeight: 600 }}>
@@ -789,8 +836,8 @@ export const TransplantModal: React.FC<TransplantModalProps> = ({ isOpen, onClos
                                                 </div>
                                             ))}
                                         </div>
-                                    </div>
-                                </div>
+                                    </Step2Column>
+                                </StepFlexContainer>
                             </StepContent>
                         </DndContext>
                     )}

@@ -14,7 +14,7 @@ interface CompraItem {
 
 const PageContainer = styled.div`
   padding: 1rem;
-  padding-top: 5rem;
+  padding-top: 1.5rem;
   max-width: 1200px;
   margin: 0 auto;
   min-height: 100vh;

@@ -43,6 +43,7 @@ const DropdownMenu = styled.div<{ $coords: { top: number; left: number; width: n
   z-index: 10005; /* Higher z-index to sit on top of everything, including modals (10001) */
   max-height: 250px;
   overflow-y: auto;
+  overscroll-behavior: contain;
   animation: fadeIn 0.1s ease-out;
 
   @keyframes fadeIn {

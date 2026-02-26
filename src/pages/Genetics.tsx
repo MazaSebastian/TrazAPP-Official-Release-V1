@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';
-import { FaDna, FaPlus, FaClock, FaCalendarAlt, FaLeaf, FaEdit, FaTrash, FaTag } from 'react-icons/fa';
+import { FaDna, FaPlus, FaClock, FaCalendarAlt, FaLeaf, FaEdit, FaTrash, FaTag, FaTimes } from 'react-icons/fa';
 import { geneticsService } from '../services/geneticsService';
 import { Genetic, GeneticType } from '../types/genetics';
 import { generateUniqueColor } from '../utils/geneticColors';
@@ -39,7 +39,7 @@ const modalSlideOut = keyframes`
 
 const Container = styled.div`
   padding: 2rem;
-  padding-top: 5rem;
+  padding-top: 1.5rem;
   max-width: 1400px;
   margin: 0 auto;
   animation: ${fadeIn} 0.5s ease-in-out;
@@ -59,6 +59,21 @@ const Header = styled.div`
     display: flex;
     align-items: center;
     gap: 0.75rem;
+
+    @media (max-width: 768px) {
+        font-size: 1.5rem;
+        justify-content: center;
+        width: 100%;
+        margin-bottom: 1rem;
+        flex-wrap: wrap;
+        text-align: center;
+    }
+  }
+
+  @media (max-width: 768px) {
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
   }
 `;
 
@@ -67,6 +82,10 @@ const ContentGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 1.5rem;
+
+  @media (max-width: 768px) {
+      grid-template-columns: 1fr;
+  }
 `;
 
 const StatsGrid = styled.div`
@@ -74,6 +93,10 @@ const StatsGrid = styled.div`
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 1.5rem;
   margin-bottom: 2rem;
+
+  @media (max-width: 768px) {
+      grid-template-columns: 1fr;
+  }
 `;
 
 const StatCard = styled.div`
@@ -109,6 +132,30 @@ const StatCard = styled.div`
     gap: 0.5rem;
     margin-bottom: 0.25rem;
     color: #a855f7;
+  }
+
+  @media (max-width: 768px) {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    gap: 1rem;
+    
+    .icon-wrapper {
+      margin: 0;
+      flex-direction: row; 
+      
+      h3 {
+          font-size: 0.85rem;
+          text-align: left; 
+      }
+    }
+
+    .value {
+        font-size: 1.25rem;
+        margin: 0;
+    }
   }
 `;
 
@@ -148,6 +195,48 @@ const CardBody = styled.div`
 
 
 // Simple Modal Components
+const GlassToastOverlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.2s ease-out;
+`;
+
+const GlassToastContent = styled.div`
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 1rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  color: #f8fafc;
+`;
+
+const DesktopView = styled.div`
+  display: contents;
+  @media (max-width: 768px) {
+    display: none;
+  }
+`;
+
+const MobileView = styled.div`
+  display: none;
+  @media (max-width: 768px) {
+    display: flex;
+    flex-direction: column;
+    padding: 1rem 1.25rem;
+    gap: 0.75rem;
+  }
+`;
+
 const ModalOverlay = styled.div<{ $isClosing?: boolean }>`
   position: fixed; top: 0; left: 0; right: 0; bottom: 0;
   background: rgba(0,0,0,0.7); z-index: 1000;
@@ -185,10 +274,25 @@ const ModalContent = styled.div<{ $isClosing?: boolean }>`
   &::-webkit-scrollbar-thumb:hover {
     background: rgba(100, 116, 139, 1);
   }
+
+  @media (max-width: 768px) {
+    width: 100%;
+    max-width: none;
+    height: 100%;
+    max-height: 100vh;
+    border-radius: 0;
+    padding: 1.5rem;
+    padding-top: 2rem;
+    padding-bottom: 5rem; /* Extra space for mobile scroll */
+  }
 `;
 
 const FormGroup = styled.div`
   margin-bottom: 1.5rem;
+
+  @media (max-width: 768px) {
+    margin-bottom: 1rem;
+  }
   label {
     display: block;
     margin-bottom: 0.5rem;
@@ -220,6 +324,34 @@ const FormGroup = styled.div`
   .hint { font-size: 0.8rem; color: #94a3b8; margin-top: 0.25rem; }
 `;
 
+const FormRow = styled.div`
+  display: flex;
+  gap: 1rem;
+  
+  @media (max-width: 768px) {
+    flex-direction: column;
+    gap: 0;
+  }
+`;
+
+const ModalActions = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1rem;
+
+  @media (max-width: 768px) {
+    flex-direction: column-reverse;
+    margin-top: 2rem;
+    
+    button {
+      width: 100%;
+      padding: 1rem !important;
+      font-size: 1rem;
+    }
+  }
+`;
+
 const rotate = keyframes`
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
@@ -248,6 +380,13 @@ const CreateCard = styled.div`
     background: rgba(30, 41, 59, 0.75);
     opacity: 1;
     transform: translateY(-2px);
+  }
+
+  @media (max-width: 768px) {
+    min-height: auto;
+    padding: 2rem;
+    flex-direction: row;
+    justify-content: center;
   }
 `;
 
@@ -445,6 +584,9 @@ const Genetics: React.FC = () => {
     const [deleteValidationError, setDeleteValidationError] = useState<React.ReactNode | null>(null);
 
     const [editingId, setEditingId] = useState<string | null>(null);
+
+    // Mobile Detail State
+    const [mobileDetailGenetic, setMobileDetailGenetic] = useState<Genetic | null>(null);
 
     const handleEdit = (genetic: Genetic) => {
         setEditingId(genetic.id);
@@ -658,77 +800,110 @@ const Genetics: React.FC = () => {
 
                 <ContentGrid>
                     {genetics.map(gen => (
-                        <GeneticCard key={gen.id}>
-                            <CardHeader>
-                                <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                    {gen.color && (
-                                        <div style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: gen.color, border: '1px solid rgba(255,255,255,0.2)' }} title="Color de Genética" />
-                                    )}
-                                    {gen.name}
-                                </h3>
-                                <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                    <button
-                                        onClick={() => handleEdit(gen)}
-                                        style={{ background: 'rgba(56, 189, 248, 0.1)', border: '1px solid rgba(56, 189, 248, 0.2)', cursor: 'pointer', color: '#38bdf8', padding: '0.4rem', borderRadius: '0.25rem', transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                                        title="Editar"
-                                        onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(56, 189, 248, 0.2)'; }}
-                                        onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(56, 189, 248, 0.1)'; }}
-                                    >
-                                        <FaEdit />
-                                    </button>
-                                    <button
-                                        onClick={() => handleDeleteClick(gen)}
-                                        style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)', cursor: 'pointer', color: '#f87171', padding: '0.4rem', borderRadius: '0.25rem', transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                                        title="Eliminar"
-                                        onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(239, 68, 68, 0.2)'; }}
-                                        onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)'; }}
-                                    >
-                                        <FaTrash />
-                                    </button>
-                                </div>
-                            </CardHeader>
-                            <CardBody>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: '#cbd5e1', fontSize: '0.95rem' }}>
-                                    <FaLeaf color="#a855f7" /> <strong>Vege:</strong> {gen.vegetative_weeks} semanas
-                                </div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: '#cbd5e1', fontSize: '0.95rem' }}>
-                                    <FaClock color="#a855f7" /> <strong>Flora:</strong> {gen.flowering_weeks} semanas
-                                </div>
-                                <div style={{ marginTop: '0.5rem', paddingTop: '0.5rem', borderTop: '1px solid rgba(255, 255, 255, 0.1)', fontSize: '0.85rem', color: '#94a3b8' }}>
-                                    <FaCalendarAlt style={{ marginRight: '0.5rem', color: '#64748b' }} />
-                                    Ciclo Total Est.: {gen.vegetative_weeks + gen.flowering_weeks} semanas
-                                </div>
-                                {gen.description && (
-                                    <p style={{ fontSize: '0.85rem', color: '#94a3b8', margin: 0 }}>{gen.description}</p>
-                                )}
-                                {gen.acquisition_date && (
-                                    <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '0.5rem', fontStyle: 'italic' }}>
-                                        Inicio: {gen.acquisition_date.split('-').reverse().join('/')}
+                        <GeneticCard key={gen.id} onClick={(e) => {
+                            if (window.innerWidth <= 768) {
+                                e.stopPropagation();
+                                setMobileDetailGenetic(gen);
+                            }
+                        }} style={{ cursor: window.innerWidth <= 768 ? 'pointer' : 'default' }}>
+                            <DesktopView>
+                                <CardHeader>
+                                    <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                        {gen.color && (
+                                            <div style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: gen.color, border: '1px solid rgba(255,255,255,0.2)' }} title="Color de Genética" />
+                                        )}
+                                        {gen.name}
+                                    </h3>
+                                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); handleEdit(gen); }}
+                                            style={{ background: 'rgba(56, 189, 248, 0.1)', border: '1px solid rgba(56, 189, 248, 0.2)', cursor: 'pointer', color: '#38bdf8', padding: '0.4rem', borderRadius: '0.25rem', transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                            title="Editar"
+                                            onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(56, 189, 248, 0.2)'; }}
+                                            onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(56, 189, 248, 0.1)'; }}
+                                        >
+                                            <FaEdit />
+                                        </button>
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); handleDeleteClick(gen); }}
+                                            style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)', cursor: 'pointer', color: '#f87171', padding: '0.4rem', borderRadius: '0.25rem', transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                            title="Eliminar"
+                                            onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(239, 68, 68, 0.2)'; }}
+                                            onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)'; }}
+                                        >
+                                            <FaTrash />
+                                        </button>
                                     </div>
-                                )}
-                                <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem', flexWrap: 'wrap' }}>
-                                    {(gen.thc_percent !== undefined) && (
-                                        <span style={{ fontSize: '0.7rem', background: 'rgba(74, 222, 128, 0.1)', color: '#4ade80', border: '1px solid rgba(74, 222, 128, 0.3)', padding: '0.1rem 0.4rem', borderRadius: '4px', fontWeight: 'bold' }}>
-                                            THC: {gen.thc_percent}%
-                                        </span>
+                                </CardHeader>
+                                <CardBody>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: '#cbd5e1', fontSize: '0.95rem' }}>
+                                        <FaLeaf color="#a855f7" /> <strong>Vege:</strong> {gen.vegetative_weeks} semanas
+                                    </div>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: '#cbd5e1', fontSize: '0.95rem' }}>
+                                        <FaClock color="#a855f7" /> <strong>Flora:</strong> {gen.flowering_weeks} semanas
+                                    </div>
+                                    <div style={{ marginTop: '0.5rem', paddingTop: '0.5rem', borderTop: '1px solid rgba(255, 255, 255, 0.1)', fontSize: '0.85rem', color: '#94a3b8' }}>
+                                        <FaCalendarAlt style={{ marginRight: '0.5rem', color: '#64748b' }} />
+                                        Ciclo Total Est.: {gen.vegetative_weeks + gen.flowering_weeks} semanas
+                                    </div>
+                                    {gen.description && (
+                                        <p style={{ fontSize: '0.85rem', color: '#94a3b8', margin: 0 }}>{gen.description}</p>
                                     )}
-                                    {(gen.cbd_percent !== undefined) && (
-                                        <span style={{ fontSize: '0.7rem', background: 'rgba(56, 189, 248, 0.1)', color: '#38bdf8', border: '1px solid rgba(56, 189, 248, 0.3)', padding: '0.1rem 0.4rem', borderRadius: '4px', fontWeight: 'bold' }}>
-                                            CBD: {gen.cbd_percent}%
-                                        </span>
+                                    {gen.acquisition_date && (
+                                        <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '0.5rem', fontStyle: 'italic' }}>
+                                            Inicio: {gen.acquisition_date.split('-').reverse().join('/')}
+                                        </div>
                                     )}
-                                    {(gen.estimated_yield_g !== undefined) && (
-                                        <span style={{ fontSize: '0.7rem', background: 'rgba(239, 68, 68, 0.1)', color: '#f87171', border: '1px solid rgba(239, 68, 68, 0.3)', padding: '0.1rem 0.4rem', borderRadius: '4px', fontWeight: 'bold' }}>
-                                            Prod: {gen.estimated_yield_g}g
-                                        </span>
-                                    )}
-                                    {gen.default_price_per_gram && (
-                                        <span style={{ fontSize: '0.7rem', background: 'rgba(250, 204, 21, 0.1)', color: '#facc15', border: '1px solid rgba(250, 204, 21, 0.3)', padding: '0.1rem 0.4rem', borderRadius: '4px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
-                                            <FaTag size={10} /> ${gen.default_price_per_gram}/g
-                                        </span>
-                                    )}
+                                    <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem', flexWrap: 'wrap' }}>
+                                        {(gen.thc_percent !== undefined) && (
+                                            <span style={{ fontSize: '0.7rem', background: 'rgba(74, 222, 128, 0.1)', color: '#4ade80', border: '1px solid rgba(74, 222, 128, 0.3)', padding: '0.1rem 0.4rem', borderRadius: '4px', fontWeight: 'bold' }}>
+                                                THC: {gen.thc_percent}%
+                                            </span>
+                                        )}
+                                        {(gen.cbd_percent !== undefined) && (
+                                            <span style={{ fontSize: '0.7rem', background: 'rgba(56, 189, 248, 0.1)', color: '#38bdf8', border: '1px solid rgba(56, 189, 248, 0.3)', padding: '0.1rem 0.4rem', borderRadius: '4px', fontWeight: 'bold' }}>
+                                                CBD: {gen.cbd_percent}%
+                                            </span>
+                                        )}
+                                        {(gen.estimated_yield_g !== undefined) && (
+                                            <span style={{ fontSize: '0.7rem', background: 'rgba(239, 68, 68, 0.1)', color: '#f87171', border: '1px solid rgba(239, 68, 68, 0.3)', padding: '0.1rem 0.4rem', borderRadius: '4px', fontWeight: 'bold' }}>
+                                                Prod: {gen.estimated_yield_g}g
+                                            </span>
+                                        )}
+                                        {gen.default_price_per_gram && (
+                                            <span style={{ fontSize: '0.7rem', background: 'rgba(250, 204, 21, 0.1)', color: '#facc15', border: '1px solid rgba(250, 204, 21, 0.3)', padding: '0.1rem 0.4rem', borderRadius: '4px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                                                <FaTag size={10} /> ${gen.default_price_per_gram}/g
+                                            </span>
+                                        )}
+                                    </div>
+                                </CardBody>
+                            </DesktopView>
+
+                            <MobileView>
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 700, color: '#f8fafc', fontSize: '1rem' }}>
+                                        {gen.color && (
+                                            <div style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: gen.color, border: '1px solid rgba(255,255,255,0.2)' }} />
+                                        )}
+                                        {gen.name}
+                                    </div>
                                 </div>
-                            </CardBody>
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.85rem' }}>
+                                    <span style={{ color: '#94a3b8' }}>{gen.acquisition_date ? `Inicio: ${gen.acquisition_date.split('-').reverse().join('/')}` : 'Sin fecha'}</span>
+
+                                    <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                                        {(gen.thc_percent !== undefined) && (
+                                            <span style={{ fontSize: '0.65rem', background: 'rgba(74, 222, 128, 0.1)', color: '#4ade80', border: '1px solid rgba(74, 222, 128, 0.3)', padding: '0.1rem 0.3rem', borderRadius: '4px', fontWeight: 'bold' }}>THC: {gen.thc_percent}%</span>
+                                        )}
+                                        {(gen.cbd_percent !== undefined) && (
+                                            <span style={{ fontSize: '0.65rem', background: 'rgba(56, 189, 248, 0.1)', color: '#38bdf8', border: '1px solid rgba(56, 189, 248, 0.3)', padding: '0.1rem 0.3rem', borderRadius: '4px', fontWeight: 'bold' }}>CBD: {gen.cbd_percent}%</span>
+                                        )}
+                                        {(gen.estimated_yield_g !== undefined) && (
+                                            <span style={{ fontSize: '0.65rem', background: 'rgba(239, 68, 68, 0.1)', color: '#f87171', border: '1px solid rgba(239, 68, 68, 0.3)', padding: '0.1rem 0.3rem', borderRadius: '4px', fontWeight: 'bold' }}>Prod: {gen.estimated_yield_g}g</span>
+                                        )}
+                                    </div>
+                                </div>
+                            </MobileView>
                         </GeneticCard>
                     ))}
                     <CreateCard onClick={handleOpenCreateModal}>
@@ -788,7 +963,7 @@ const Genetics: React.FC = () => {
                                     <div className="hint">Este será el color con el que los lotes de esta madre aparecerán en el mapa de Esquejes.</div>
                                 </FormGroup>
 
-                                <div style={{ display: 'flex', gap: '1rem' }}>
+                                <FormRow>
                                     <FormGroup style={{ flex: 1 }}>
                                         <label>Prod. Est. (g)</label>
                                         <input
@@ -798,9 +973,9 @@ const Genetics: React.FC = () => {
                                             placeholder="Ej: 500"
                                         />
                                     </FormGroup>
-                                </div>
+                                </FormRow>
 
-                                <div style={{ display: 'flex', gap: '1rem' }}>
+                                <FormRow>
                                     <FormGroup style={{ flex: 1 }}>
                                         <label>% THC (Opcional)</label>
                                         <input
@@ -821,9 +996,9 @@ const Genetics: React.FC = () => {
                                             placeholder="Ej: 0.5"
                                         />
                                     </FormGroup>
-                                </div>
+                                </FormRow>
 
-                                <div style={{ display: 'flex', gap: '1rem' }}>
+                                <FormRow>
                                     <FormGroup style={{ flex: 1 }}>
                                         <label>Semanas Vege</label>
                                         <input
@@ -842,7 +1017,7 @@ const Genetics: React.FC = () => {
                                         />
                                         <div className="hint">Duración de la fase de floración</div>
                                     </FormGroup>
-                                </div>
+                                </FormRow>
 
                                 <FormGroup>
                                     <label>Descripción / Notas</label>
@@ -854,7 +1029,7 @@ const Genetics: React.FC = () => {
                                     />
                                 </FormGroup>
 
-                                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1rem' }}>
+                                <ModalActions>
                                     <button
                                         onClick={closeModal}
                                         style={{
@@ -891,7 +1066,7 @@ const Genetics: React.FC = () => {
                                     >
                                         {editingId ? 'Actualizar' : 'Guardar Madre'}
                                     </button>
-                                </div>
+                                </ModalActions>
                             </ModalContent>
                         </ModalOverlay>
                     )}
@@ -920,6 +1095,84 @@ const Genetics: React.FC = () => {
                     onClose={() => setToastOpen(false)}
                     animateOverlay={toastAnimate}
                 />
+
+                {/* Mobile Detail Modal */}
+                {mobileDetailGenetic && (
+                    <GlassToastOverlay onClick={() => setMobileDetailGenetic(null)}>
+                        <GlassToastContent onClick={e => e.stopPropagation()} style={{ padding: '1.5rem', width: '90%', maxWidth: '400px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.75rem' }}>
+                                <h2 style={{ margin: 0, color: '#f8fafc', fontSize: '1.15rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                    <FaDna style={{ color: '#38bdf8' }} /> Detalle de Madre
+                                </h2>
+                                <button onClick={() => setMobileDetailGenetic(null)} style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: '1.25rem' }}><FaTimes /></button>
+                            </div>
+
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1.5rem' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.5rem' }}>
+                                    <span style={{ color: '#94a3b8', fontSize: '0.85rem' }}>Genética</span>
+                                    <strong style={{ color: '#e2e8f0', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                        {mobileDetailGenetic.color && (
+                                            <div style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: mobileDetailGenetic.color, border: '1px solid rgba(255,255,255,0.2)' }} />
+                                        )}
+                                        {mobileDetailGenetic.name}
+                                    </strong>
+                                </div>
+                                {mobileDetailGenetic.acquisition_date && (
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.5rem' }}>
+                                        <span style={{ color: '#94a3b8', fontSize: '0.85rem' }}>Inicio</span>
+                                        <strong style={{ color: '#e2e8f0', fontSize: '0.9rem' }}>{mobileDetailGenetic.acquisition_date.split('-').reverse().join('/')}</strong>
+                                    </div>
+                                )}
+                                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.5rem' }}>
+                                    <span style={{ color: '#94a3b8', fontSize: '0.85rem' }}>Vege / Flora</span>
+                                    <strong style={{ color: '#e2e8f0', fontSize: '0.9rem' }}>{mobileDetailGenetic.vegetative_weeks}sem / {mobileDetailGenetic.flowering_weeks}sem</strong>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.5rem' }}>
+                                    <span style={{ color: '#94a3b8', fontSize: '0.85rem' }}>Ciclo Total</span>
+                                    <strong style={{ color: '#e2e8f0', fontSize: '0.9rem' }}>{mobileDetailGenetic.vegetative_weeks + mobileDetailGenetic.flowering_weeks} semanas</strong>
+                                </div>
+                                {mobileDetailGenetic.description && (
+                                    <div style={{ display: 'flex', flexDirection: 'column', paddingBottom: '0.5rem' }}>
+                                        <span style={{ color: '#94a3b8', fontSize: '0.85rem', marginBottom: '0.25rem' }}>Descripción / Notas</span>
+                                        <p style={{ color: '#e2e8f0', fontSize: '0.9rem', margin: 0, fontStyle: 'italic' }}>{mobileDetailGenetic.description}</p>
+                                    </div>
+                                )}
+                                <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                                    {(mobileDetailGenetic.thc_percent !== undefined) && (
+                                        <span style={{ fontSize: '0.7rem', background: 'rgba(74, 222, 128, 0.1)', color: '#4ade80', border: '1px solid rgba(74, 222, 128, 0.3)', padding: '0.1rem 0.4rem', borderRadius: '4px', fontWeight: 'bold' }}>
+                                            THC: {mobileDetailGenetic.thc_percent}%
+                                        </span>
+                                    )}
+                                    {(mobileDetailGenetic.cbd_percent !== undefined) && (
+                                        <span style={{ fontSize: '0.7rem', background: 'rgba(56, 189, 248, 0.1)', color: '#38bdf8', border: '1px solid rgba(56, 189, 248, 0.3)', padding: '0.1rem 0.4rem', borderRadius: '4px', fontWeight: 'bold' }}>
+                                            CBD: {mobileDetailGenetic.cbd_percent}%
+                                        </span>
+                                    )}
+                                    {(mobileDetailGenetic.estimated_yield_g !== undefined) && (
+                                        <span style={{ fontSize: '0.7rem', background: 'rgba(239, 68, 68, 0.1)', color: '#f87171', border: '1px solid rgba(239, 68, 68, 0.3)', padding: '0.1rem 0.4rem', borderRadius: '4px', fontWeight: 'bold' }}>
+                                            Prod: {mobileDetailGenetic.estimated_yield_g}g
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div style={{ background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: '0.75rem', display: 'flex', justifyContent: 'center', gap: '1.5rem', flexWrap: 'wrap' }}>
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); handleEdit(mobileDetailGenetic); setMobileDetailGenetic(null); }}
+                                    style={{ background: 'rgba(56, 189, 248, 0.1)', border: '1px solid rgba(56, 189, 248, 0.2)', cursor: 'pointer', color: '#38bdf8', padding: '0.6rem 1rem', borderRadius: '0.5rem', transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', fontWeight: 600 }}
+                                >
+                                    <FaEdit /> Editar Madre
+                                </button>
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); handleDeleteClick(mobileDetailGenetic); setMobileDetailGenetic(null); }}
+                                    style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)', cursor: 'pointer', color: '#f87171', padding: '0.6rem 1rem', borderRadius: '0.5rem', transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', fontWeight: 600 }}
+                                >
+                                    <FaTrash /> Eliminar
+                                </button>
+                            </div>
+                        </GlassToastContent>
+                    </GlassToastOverlay>
+                )}
             </div>
         </Container >
     );

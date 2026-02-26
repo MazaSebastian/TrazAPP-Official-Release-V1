@@ -28,42 +28,63 @@ const Overlay = styled.div<{ $isClosing?: boolean }>`
 `;
 
 const Content = styled.div<{ $isClosing?: boolean }>`
-  background: white; padding: 0; border-radius: 1rem;
+  background: rgba(15, 23, 42, 0.95); padding: 0; border-radius: 1rem;
   width: 90%; max-width: 600px; max-height: 85vh;
   display: flex; flex-direction: column;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(12px);
   animation: ${p => p.$isClosing ? scaleOut : scaleIn} 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+
+  @media (max-width: 768px) {
+    width: 95%; /* More width on mobile */
+    max-height: 90vh;
+  }
 `;
 
 const Header = styled.div`
   padding: 1.5rem;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   display: flex; justify-content: space-between; align-items: center;
+
+  @media (max-width: 768px) {
+    padding: 1rem;
+  }
 `;
 
 const Title = styled.h2`
-  margin: 0; font-size: 1.25rem; color: #2d3748;
+  margin: 0; font-size: 1.25rem; color: #f8fafc;
   display: flex; align-items: center; gap: 0.5rem;
 `;
 
 const CloseButton = styled.button`
-  background: none; border: none; color: #a0aec0; cursor: pointer;
+  background: none; border: none; color: #94a3b8; cursor: pointer;
   font-size: 1.25rem; transition: color 0.2s;
-  &:hover { color: #e53e3e; }
+  &:hover { color: #f87171; }
 `;
 
 const Body = styled.div`
   padding: 1.5rem;
   overflow-y: auto;
   flex: 1;
+
+  @media (max-width: 768px) {
+    padding: 1rem;
+  }
 `;
 
 const Footer = styled.div`
   padding: 1rem 1.5rem;
-  border-top: 1px solid #e2e8f0;
-  background: #f7fafc;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(15, 23, 42, 0.6);
   display: flex; justify-content: flex-end; gap: 1rem;
   border-radius: 0 0 1rem 1rem;
+
+  @media (max-width: 768px) {
+    padding: 1rem;
+    flex-direction: column-reverse; /* Stack buttons with confirm on top/bottom based on design (usually cancel on bottom) */
+    gap: 0.75rem;
+  }
 `;
 
 const Button = styled.button<{ $variant?: 'primary' | 'secondary' | 'danger' }>`
@@ -71,17 +92,26 @@ const Button = styled.button<{ $variant?: 'primary' | 'secondary' | 'danger' }>`
   border-radius: 0.5rem;
   font-weight: 600;
   cursor: pointer;
-  border: ${p => p.$variant === 'secondary' ? '1px solid #cbd5e0' : 'none'};
-  background: ${p => p.$variant === 'primary' ? '#48bb78' : p.$variant === 'danger' ? '#e53e3e' : 'white'};
-  color: ${p => p.$variant === 'secondary' ? '#4a5568' : 'white'};
+  border: ${p => p.$variant === 'secondary' ? '1px solid rgba(255, 255, 255, 0.2)' : '1px solid transparent'};
+  background: ${p => p.$variant === 'primary' ? 'rgba(74, 222, 128, 0.2)' : p.$variant === 'danger' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(255, 255, 255, 0.05)'};
+  color: ${p => p.$variant === 'primary' ? '#4ade80' : p.$variant === 'danger' ? '#f87171' : '#cbd5e1'};
+  border-color: ${p => p.$variant === 'primary' ? 'rgba(74, 222, 128, 0.5)' : p.$variant === 'danger' ? 'rgba(239, 68, 68, 0.5)' : undefined};
   transition: all 0.2s;
+  backdrop-filter: blur(8px);
 
   &:hover {
-    filter: brightness(0.95);
+    background: ${p => p.$variant === 'primary' ? 'rgba(74, 222, 128, 0.3)' : p.$variant === 'danger' ? 'rgba(239, 68, 68, 0.3)' : 'rgba(255, 255, 255, 0.1)'};
     transform: translateY(-1px);
+    color: ${p => p.$variant === 'secondary' ? '#f8fafc' : undefined};
   }
   &:disabled {
-    opacity: 0.6; cursor: not-allowed; transform: none;
+    opacity: 0.5; cursor: not-allowed; transform: none;
+  }
+
+  @media (max-width: 768px) {
+    width: 100%; /* Full width buttons on mobile */
+    padding: 0.875rem 1rem;
+    font-size: 1rem;
   }
 `;
 
@@ -94,31 +124,32 @@ const GeneticGroup = styled.div`
 `;
 
 const GroupHeader = styled.div`
-  font-weight: 700; color: #2d3748; margin-bottom: 0.75rem;
+  font-weight: 700; color: #f8fafc; margin-bottom: 0.75rem;
   display: flex; align-items: center; justify-content: space-between;
-  background: #f7fafc; padding: 0.75rem 1rem; border-radius: 0.75rem;
-  border: 1px solid #edf2f7;
+  background: rgba(30, 41, 59, 0.6); padding: 0.75rem 1rem; border-radius: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.05);
   cursor: pointer;
   transition: all 0.2s;
+  backdrop-filter: blur(12px);
 
   &:hover {
-    background: #edf2f7;
+    background: rgba(255, 255, 255, 0.05);
   }
 `;
 
 const BatchItem = styled.div<{ $selected: boolean }>`
   display: flex; align-items: center; justify-content: space-between; gap: 1rem;
   padding: 0.5rem 1rem;
-  background: ${p => p.$selected ? '#f0fff4' : 'white'};
-  border: 1px solid ${p => p.$selected ? '#48bb78' : '#edf2f7'};
+  background: ${p => p.$selected ? 'rgba(74, 222, 128, 0.1)' : 'rgba(15, 23, 42, 0.4)'};
+  border: 1px solid ${p => p.$selected ? 'rgba(74, 222, 128, 0.5)' : 'rgba(255, 255, 255, 0.05)'};
   border-radius: 0.5rem;
   cursor: pointer;
   transition: all 0.1s ease;
   user-select: none; /* Important for Shift+Click to avoid text selection */
 
   &:hover {
-    background: ${p => p.$selected ? '#e6fffa' : '#f7fafc'};
-    border-color: #48bb78;
+    background: ${p => p.$selected ? 'rgba(74, 222, 128, 0.15)' : 'rgba(255, 255, 255, 0.05)'};
+    border-color: ${p => p.$selected ? '#4ade80' : 'rgba(255, 255, 255, 0.2)'};
   }
 `;
 
@@ -126,11 +157,11 @@ const BatchItem = styled.div<{ $selected: boolean }>`
 
 const Checkbox = styled.div<{ $checked: boolean }>`
   width: 20px; height: 20px;
-  border: 2px solid ${p => p.$checked ? '#48bb78' : '#cbd5e0'};
+  border: 2px solid ${p => p.$checked ? '#4ade80' : 'rgba(255, 255, 255, 0.2)'};
   border-radius: 4px;
   display: flex; align-items: center; justify-content: center;
-  background: ${p => p.$checked ? '#48bb78' : 'white'};
-  color: white; font-size: 0.8rem;
+  background: ${p => p.$checked ? '#4ade80' : 'rgba(15, 23, 42, 0.6)'};
+  color: #0f172a; font-size: 0.8rem;
 `;
 
 export const HarvestModal: React.FC<HarvestModalProps> = ({ isOpen, isClosing, onClose, batches, rooms, onConfirm, overrideGroupName }) => {
@@ -289,10 +320,10 @@ export const HarvestModal: React.FC<HarvestModalProps> = ({ isOpen, isClosing, o
                     <CloseButton onClick={onClose}><FaTimes /></CloseButton>
                 </Header>
                 <Body>
-                    <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '0.5rem', color: '#4a5568' }}>
+                    <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '0.5rem', color: '#94a3b8' }}>
                         Sala de Destino (Secado)
                     </label>
-                    <div style={{ marginBottom: '1.5rem' }}>
+                    <div style={{ marginBottom: '1.5rem', position: 'relative', zIndex: 10 }}>
                         <CustomSelect
                             value={targetRoomId}
                             onChange={setTargetRoomId}
@@ -302,7 +333,7 @@ export const HarvestModal: React.FC<HarvestModalProps> = ({ isOpen, isClosing, o
                     </div>
 
                     <div style={{ marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
-                        <div style={{ fontWeight: 'bold', color: '#2d3748' }}>
+                        <div style={{ fontWeight: 'bold', color: '#f8fafc' }}>
                             Seleccionadas: {selectedIds.size} de {batches.length}
                         </div>
                     </div>
@@ -316,7 +347,7 @@ export const HarvestModal: React.FC<HarvestModalProps> = ({ isOpen, isClosing, o
 
                             return (
                                 <GeneticGroup key={genName}>
-                                    <GroupHeader onClick={() => toggleGroupExpansion(genName)} style={{ cursor: 'pointer' }}>
+                                    <GroupHeader onClick={() => toggleGroupExpansion(genName)}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                             <span style={{ transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s', display: 'inline-block' }}>▶</span>
                                             <span>{genName} ({groupBatches.length})</span>
@@ -342,16 +373,16 @@ export const HarvestModal: React.FC<HarvestModalProps> = ({ isOpen, isClosing, o
                                                             <Checkbox $checked={isSelected}>
                                                                 {isSelected && <FaCheck />}
                                                             </Checkbox>
-                                                            <div style={{ fontWeight: 600, color: '#2d3748', fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                                                <FaLeaf color="#48bb78" size={12} />
+                                                            <div style={{ fontWeight: 600, color: '#f8fafc', fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                                                <FaLeaf color="#4ade80" size={12} />
                                                                 {batch.tracking_code || batch.name}
                                                             </div>
                                                         </div>
 
-                                                        <div style={{ fontSize: '0.85rem', color: '#718096', display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                                                            <span><strong>{batch.quantity}</strong> p.</span>
-                                                            <span style={{ color: '#cbd5e0' }}>|</span>
-                                                            <span style={{ opacity: 0.5 }}>{batch.stage}</span>
+                                                        <div style={{ fontSize: '0.85rem', color: '#94a3b8', display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                                                            <span><strong style={{ color: '#cbd5e1' }}>{batch.quantity}</strong> u.</span>
+                                                            <span style={{ color: 'rgba(255, 255, 255, 0.1)' }}>|</span>
+                                                            <span style={{ opacity: 0.5 }}>{batch.stage === 'flowering' ? 'Florando' : batch.stage}</span>
                                                         </div>
                                                     </BatchItem>
                                                 );

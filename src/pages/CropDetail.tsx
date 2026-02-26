@@ -165,13 +165,13 @@ const Container = styled.div`
   max-width: 1200px;
   margin: 0 auto;
   min-height: 100vh;
-  padding-top: 5rem;
+  padding-top: 1.5rem;
   background-color: transparent;
   animation: ${fadeIn} 0.5s ease-in-out;
 
   @media (max-width: 768px) {
     padding: 1rem;
-    padding-top: 5rem;
+    padding-top: 1.5rem;
   }
 `;
 
@@ -2439,7 +2439,7 @@ const CropDetail: React.FC = () => {
           <ModalOverlay isClosing={isRoomModalClosing}>
             <Modal isClosing={isRoomModalClosing}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 600, color: '#2d3748' }}>Nueva Sala</h3>
+                <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 600, color: '#f8fafc' }}>Nueva Sala</h3>
                 <button
                   onClick={handleCloseRoomModal}
                   style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: '#a0aec0' }}

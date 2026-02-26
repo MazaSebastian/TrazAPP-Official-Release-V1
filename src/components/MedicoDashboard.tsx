@@ -11,13 +11,13 @@ import { Link } from 'react-router-dom';
 import { supabase, getSelectedOrgId } from '../services/supabaseClient';
 
 const Container = styled.div`
-  padding: 2rem 3rem;
+  padding: 1.5rem 2rem;
   max-width: 1400px;
   margin: 0 auto;
   color: #f8fafc;
 
   @media (max-width: 768px) {
-    padding: 6rem 1rem 2rem 1rem;
+    padding: 1.5rem 1rem;
   }
 `;
 

@@ -6,7 +6,7 @@ import { FaEdit, FaPlus, FaCheck } from 'react-icons/fa';
 
 const Container = styled.div`
   padding: 2rem;
-  padding-top: 5rem;
+  padding-top: 1.5rem;
   max-width: 1200px;
   margin: 0 auto;
   min-height: 100vh;

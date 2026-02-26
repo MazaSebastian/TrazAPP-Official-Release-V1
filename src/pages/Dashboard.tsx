@@ -60,13 +60,18 @@ const scaleDown = keyframes`
 `;
 
 const Container = styled.div`
-  padding: 2rem;
+  padding: 1.5rem 2rem;
   max-width: 1400px;
   margin: 0 auto;
   min-height: 100vh;
-  padding-top: 5rem; // Space for TopNav
+  /* TopNav space is usually handled by a wrapper. If not, keeping it minimal: */
+  padding-top: 1.5rem; 
   background-color: transparent; /* Inherit global dark */
   animation: ${fadeIn} 0.5s ease-in-out;
+
+  @media (max-width: 768px) {
+    padding: 1.5rem 1rem;
+  }
 `;
 
 const WelcomeHeader = styled.div`

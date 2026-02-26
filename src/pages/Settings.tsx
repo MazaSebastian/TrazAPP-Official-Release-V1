@@ -11,19 +11,30 @@ import { useAuth } from '../context/AuthContext';
 import { organizationService } from '../services/organizationService';
 import { planService } from '../services/planService';
 import { Plan } from '../types';
-import { FaUserPlus, FaUserShield, FaTrash } from 'react-icons/fa';
+import { FaUserPlus, FaUserShield, FaTrash, FaTimes } from 'react-icons/fa';
+
+// Animación de aparición para modales
+import { keyframes } from 'styled-components';
+export const fadeIn = keyframes`
+  from { opacity: 0; backdrop-filter: blur(0px); }
+  to { opacity: 1; backdrop-filter: blur(8px); }
+`;
+export const scaleUp = keyframes`
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+`;
 
 const PageContainer = styled.div`
   padding: 1rem;
-  padding-top: 5rem;
+  padding-top: 1.5rem;
   max-width: 800px;
   margin: 0 auto;
   min-height: 100vh;
   color: #f8fafc;
   
   @media (max-width: 768px) {
-    padding: 0.5rem;
-    padding-top: 4rem;
+    padding: 1rem;
+    padding-top: 1.5rem; /* Ajustado para eliminar el padding superior excesivo */
   }
 `;
 
@@ -40,6 +51,11 @@ const Header = styled.div`
     display: flex;
     align-items: center;
     gap: 0.75rem;
+    
+    @media (max-width: 768px) {
+      justify-content: center;
+      width: 100%;
+    }
   }
 `;
 
@@ -62,7 +78,29 @@ const SectionHeader = styled.h2`
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 0.5rem;
+  flex-wrap: wrap;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: center;    /* Centrado global en móviles */
+    text-align: center;
+    justify-content: center;
+    gap: 1rem;
+  }
+`;
+
+const FormGrid = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  align-items: center;
+  margin-bottom: 1rem;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
 `;
 
 const SaveButton = styled.button`
@@ -106,6 +144,97 @@ const ActionButton = styled.button<{ $danger?: boolean }>`
   }
 `;
 
+// --- Nuevos estilos para la vista móvil de Usuarios ---
+const UserCardWrapper = styled.div`
+  background: rgba(30, 41, 59, 0.4);
+  padding: 1rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  margin-bottom: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  &:hover {
+    background: rgba(30, 41, 59, 0.6);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .userInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+  
+  .u-name {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #f8fafc;
+  }
+  
+  .u-email {
+    font-size: 0.8rem;
+    color: #94a3b8;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 200px;
+  }
+
+  .u-role {
+    font-size: 0.75rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 1rem;
+    background: rgba(168, 85, 247, 0.2);
+    color: #d8b4fe;
+    white-space: nowrap;
+  }
+`;
+
+const DesktopView = styled.div`
+  display: block;
+  @media (max-width: 768px) {
+    display: none;
+  }
+`;
+
+const MobileView = styled.div`
+  display: none;
+  @media (max-width: 768px) {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+`;
+
+const ModalOverlay = styled.div`
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.8);
+  backdrop-filter: blur(8px);
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  animation: ${fadeIn} 0.2s ease-out;
+`;
+
+const ModalContentDetail = styled.div`
+  background: rgba(30, 41, 59, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  border-radius: 1rem;
+  width: 100%;
+  max-width: 400px;
+  padding: 1.5rem;
+  animation: ${scaleUp} 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+`;
+// ----------------------------------------------------
+
 const Settings: React.FC = () => {
   const { user } = useAuth();
   const { currentOrganization } = useOrganization();
@@ -121,6 +250,7 @@ const Settings: React.FC = () => {
   const [newUserPassword, setNewUserPassword] = useState('');
 
   const [inviting, setInviting] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<any | null>(null); // Estado para Modal Móvil
 
   const [toast, setToast] = useState<{ isOpen: boolean, message: string, type: 'success' | 'error' }>({
     isOpen: false,
@@ -217,6 +347,9 @@ const Settings: React.FC = () => {
       setToast({ isOpen: true, message: 'Usuario eliminado', type: 'success' });
       const mData = await organizationService.getOrganizationMembers(currentOrganization.id);
       setMembers(mData || []);
+      if (selectedUser?.user_id === confirmDelete.userId) {
+        setSelectedUser(null);
+      }
     } catch (error: any) {
       setToast({ isOpen: true, message: error.message || 'Error al eliminar usuario', type: 'error' });
     } finally {
@@ -299,7 +432,7 @@ const Settings: React.FC = () => {
 
       {currentOrganization && (
         <Section>
-          <SectionHeader style={{ justifyContent: 'space-between' }}>
+          <SectionHeader>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <FaUserShield /> Roles y Usuarios
             </div>
@@ -315,27 +448,27 @@ const Settings: React.FC = () => {
                 <h3 style={{ margin: 0, fontSize: '1rem', color: '#cbd5e1' }}>Crear Usuario Directamente</h3>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', alignItems: 'center', marginBottom: '1rem' }}>
+              <FormGrid>
                 <input
                   type="text"
                   placeholder="Nombre completo"
                   value={newUserName}
                   onChange={e => setNewUserName(e.target.value)}
-                  style={{ width: '100%', padding: '0.5rem', borderRadius: '0.25rem', border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(30,41,59,0.5)', color: '#fff' }}
+                  style={{ width: '100%', padding: '0.5rem', borderRadius: '0.25rem', border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(30,41,59,0.5)', color: '#fff', boxSizing: 'border-box' }}
                 />
                 <input
                   type="email"
                   placeholder="Email del usuario"
                   value={newUserEmail}
                   onChange={e => setNewUserEmail(e.target.value)}
-                  style={{ width: '100%', padding: '0.5rem', borderRadius: '0.25rem', border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(30,41,59,0.5)', color: '#fff' }}
+                  style={{ width: '100%', padding: '0.5rem', borderRadius: '0.25rem', border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(30,41,59,0.5)', color: '#fff', boxSizing: 'border-box' }}
                 />
                 <input
                   type="password"
                   placeholder="Contraseña (Mín. 6 caracteres)"
                   value={newUserPassword}
                   onChange={e => setNewUserPassword(e.target.value)}
-                  style={{ width: '100%', padding: '0.5rem', borderRadius: '0.25rem', border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(30,41,59,0.5)', color: '#fff' }}
+                  style={{ width: '100%', padding: '0.5rem', borderRadius: '0.25rem', border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(30,41,59,0.5)', color: '#fff', boxSizing: 'border-box' }}
                 />
                 <CustomSelect
                   value={newUserRole}
@@ -347,15 +480,15 @@ const Settings: React.FC = () => {
                     { value: 'medico', label: 'Médico / Director Médico' },
                     { value: 'staff', label: 'Staff / Operario' }
                   ]}
-                  triggerStyle={{ padding: '0.625rem', borderRadius: '0.25rem', border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(30,41,59,0.5)', fontSize: '0.9rem' }}
+                  triggerStyle={{ padding: '0.625rem', borderRadius: '0.25rem', border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(30,41,59,0.5)', fontSize: '0.9rem', width: '100%', boxSizing: 'border-box' }}
                 />
-              </div>
+              </FormGrid>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginTop: '1.5rem' }}>
                 <SaveButton
                   onClick={handleCreateUser}
                   disabled={inviting || !newUserEmail || !newUserPassword || !newUserName || (orgPlan ? members.length >= orgPlan.limits.max_users : false)}
-                  style={{ background: '#22c55e', color: 'white', maxWidth: '250px' }}
+                  style={{ background: '#22c55e', color: 'white', maxWidth: '100%', width: '100%', justifyContent: 'center' }}
                 >
                   <FaUserPlus /> {inviting ? 'Creando...' : 'Crear Usuario y Añadir'}
                 </SaveButton>
@@ -363,64 +496,132 @@ const Settings: React.FC = () => {
             </div>
           )}
 
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', tableLayout: 'fixed', minWidth: '600px' }}>
-              <thead>
-                <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', color: '#94a3b8' }}>
-                  <th style={{ padding: '0.75rem', width: '22%' }}>Nombre</th>
-                  <th style={{ padding: '0.75rem', width: '30%' }}>Email</th>
-                  <th style={{ padding: '0.75rem', width: '13%' }}>Ingreso</th>
-                  <th style={{ padding: '0.75rem', width: '23%', textAlign: 'center' }}>Rol</th>
-                  {canManageUsers && <th style={{ padding: '0.75rem', width: '12%', textAlign: 'right' }}>Acciones</th>}
-                </tr>
-              </thead>
-              <tbody>
-                {members.map(member => (
-                  <tr key={member.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                    <td style={{ padding: '0.75rem', color: '#f8fafc', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{member.profile?.full_name || 'Sin nombre'}</td>
-                    <td style={{ padding: '0.75rem', color: '#cbd5e1', wordBreak: 'break-all' }}>{member.profile?.email || 'N/A'}</td>
-                    <td style={{ padding: '0.75rem', color: '#94a3b8' }}>{new Date(member.created_at).toLocaleDateString()}</td>
-                    <td style={{ padding: '0.75rem', textAlign: 'center' }}>
-                      {canManageUsers ? (
-                        <CustomSelect
-                          value={member.role}
-                          onChange={val => handleRoleChange(member.user_id, val)}
-                          options={[
-                            { value: 'owner', label: 'Dueño' },
-                            { value: 'admin', label: 'Administrador' },
-                            { value: 'grower', label: 'Grower' },
-                            { value: 'medico', label: 'Médico' },
-                            { value: 'staff', label: 'Staff' }
-                          ]}
-                          triggerStyle={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: '0.5rem', boxShadow: 'none', fontSize: '0.9rem', justifyContent: 'center' }}
-                        />
-                      ) : (
-                        <span style={{ color: '#cbd5e1' }}>
-                          {member.role === 'owner' ? 'Dueño' :
-                            member.role === 'admin' ? 'Administrador' :
-                              member.role === 'grower' ? 'Grower' :
-                                member.role === 'medico' ? 'Médico' : 'Staff'}
-                        </span>
-                      )}
-                    </td>
-                    {canManageUsers && (
-                      <td style={{ padding: '0.75rem', textAlign: 'right' }}>
-                        <ActionButton $danger onClick={() => handleRemoveMember(member.user_id)} title="Eliminar usuario">
-                          <FaTrash />
-                        </ActionButton>
+          <DesktopView>
+            <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch', margin: '0 -1rem', padding: '0 1rem' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', tableLayout: 'fixed', minWidth: '600px' }}>
+                <thead>
+                  <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', color: '#94a3b8' }}>
+                    <th style={{ padding: '0.75rem', width: '22%' }}>Nombre</th>
+                    <th style={{ padding: '0.75rem', width: '30%' }}>Email</th>
+                    <th style={{ padding: '0.75rem', width: '13%' }}>Ingreso</th>
+                    <th style={{ padding: '0.75rem', width: '23%', textAlign: 'center' }}>Rol</th>
+                    {canManageUsers && <th style={{ padding: '0.75rem', width: '12%', textAlign: 'right' }}>Acciones</th>}
+                  </tr>
+                </thead>
+                <tbody>
+                  {members.map(member => (
+                    <tr key={member.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                      <td style={{ padding: '0.75rem', color: '#f8fafc', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{member.profile?.full_name || 'Sin nombre'}</td>
+                      <td style={{ padding: '0.75rem', color: '#cbd5e1', wordBreak: 'break-all' }}>{member.profile?.email || 'N/A'}</td>
+                      <td style={{ padding: '0.75rem', color: '#94a3b8' }}>{new Date(member.created_at).toLocaleDateString()}</td>
+                      <td style={{ padding: '0.75rem', textAlign: 'center' }}>
+                        {canManageUsers ? (
+                          <CustomSelect
+                            value={member.role}
+                            onChange={val => handleRoleChange(member.user_id, val)}
+                            options={[
+                              { value: 'owner', label: 'Dueño' },
+                              { value: 'admin', label: 'Administrador' },
+                              { value: 'grower', label: 'Grower' },
+                              { value: 'medico', label: 'Médico' },
+                              { value: 'staff', label: 'Staff' }
+                            ]}
+                            triggerStyle={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: '0.5rem', boxShadow: 'none', fontSize: '0.9rem', justifyContent: 'center' }}
+                          />
+                        ) : (
+                          <span style={{ color: '#cbd5e1' }}>
+                            {member.role === 'owner' ? 'Dueño' :
+                              member.role === 'admin' ? 'Administrador' :
+                                member.role === 'grower' ? 'Grower' :
+                                  member.role === 'medico' ? 'Médico' : 'Staff'}
+                          </span>
+                        )}
                       </td>
-                    )}
-                  </tr>
-                ))}
-                {members.length === 0 && (
-                  <tr>
-                    <td colSpan={canManageUsers ? 5 : 4} style={{ padding: '1rem', textAlign: 'center', color: '#94a3b8' }}>No hay miembros registrados</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+                      {canManageUsers && (
+                        <td style={{ padding: '0.75rem', textAlign: 'right' }}>
+                          <ActionButton $danger onClick={() => handleRemoveMember(member.user_id)} title="Eliminar usuario">
+                            <FaTrash />
+                          </ActionButton>
+                        </td>
+                      )}
+                    </tr>
+                  ))}
+                  {members.length === 0 && (
+                    <tr>
+                      <td colSpan={canManageUsers ? 5 : 4} style={{ padding: '1rem', textAlign: 'center', color: '#94a3b8' }}>No hay miembros registrados</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </DesktopView>
+
+          <MobileView>
+            {members.map(member => (
+              <UserCardWrapper key={member.id} onClick={() => setSelectedUser(member)}>
+                <div className="userInfo">
+                  <span className="u-name">{member.profile?.full_name || 'Sin nombre'}</span>
+                  <span className="u-email">{member.profile?.email || 'N/A'}</span>
+                </div>
+                <span className="u-role">
+                  {member.role === 'owner' ? 'Dueño' : member.role === 'admin' ? 'Administrador' : member.role === 'grower' ? 'Grower' : member.role === 'medico' ? 'Médico' : 'Staff'}
+                </span>
+              </UserCardWrapper>
+            ))}
+            {members.length === 0 && (
+              <div style={{ padding: '1rem', textAlign: 'center', color: '#94a3b8' }}>No hay miembros registrados</div>
+            )}
+          </MobileView>
         </Section>
+      )}
+
+      {selectedUser && (
+        <ModalOverlay onClick={() => setSelectedUser(null)}>
+          <ModalContentDetail onClick={e => e.stopPropagation()}>
+            <button
+              onClick={() => setSelectedUser(null)}
+              style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer' }}
+            >
+              <FaTimes size={20} />
+            </button>
+            <h3 style={{ margin: '0 0 0.5rem 0', color: '#f8fafc', fontSize: '1.25rem' }}>{selectedUser.profile?.full_name || 'Sin nombre'}</h3>
+            <p style={{ margin: '0 0 1.5rem 0', color: '#94a3b8', fontSize: '0.9rem' }}>{selectedUser.profile?.email || 'N/A'}</p>
+
+            <div style={{ marginBottom: '1.5rem' }}>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.85rem', color: '#cbd5e1' }}>Rol del usuario</label>
+              {canManageUsers ? (
+                <CustomSelect
+                  value={selectedUser.role}
+                  onChange={val => {
+                    setSelectedUser({ ...selectedUser, role: val });
+                    handleRoleChange(selectedUser.user_id, val);
+                  }}
+                  options={[
+                    { value: 'owner', label: 'Dueño' },
+                    { value: 'admin', label: 'Administrador' },
+                    { value: 'grower', label: 'Grower / Director de Cultivo' },
+                    { value: 'medico', label: 'Médico / Director Médico' },
+                    { value: 'staff', label: 'Staff / Operario' }
+                  ]}
+                  triggerStyle={{ padding: '0.75rem', borderRadius: '0.5rem', background: 'rgba(15, 23, 42, 0.5)', border: '1px solid rgba(255,255,255,0.1)', width: '100%', boxSizing: 'border-box' }}
+                />
+              ) : (
+                <div style={{ padding: '0.75rem', borderRadius: '0.5rem', background: 'rgba(15, 23, 42, 0.5)', border: '1px solid rgba(255,255,255,0.05)', color: '#f8fafc' }}>
+                  {selectedUser.role === 'owner' ? 'Dueño' : selectedUser.role === 'admin' ? 'Administrador' : selectedUser.role === 'grower' ? 'Grower' : selectedUser.role === 'medico' ? 'Médico' : 'Staff'}
+                </div>
+              )}
+            </div>
+
+            {canManageUsers && selectedUser.role !== 'owner' && (
+              <button
+                onClick={() => handleRemoveMember(selectedUser.user_id)}
+                style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid rgba(239, 68, 68, 0.3)', background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+              >
+                <FaTrash /> Eliminar Usuario
+              </button>
+            )}
+          </ModalContentDetail>
+        </ModalOverlay>
       )}
 
       <ToastModal

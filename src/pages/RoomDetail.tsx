@@ -192,51 +192,83 @@ const RoomDetailContainer = styled.div`
       }
   }
 
+  .main-content-wrapper {
+      @media (max-width: 768px) {
+          display: contents !important;
+      }
+  }
+
+  .map-list-container {
+      @media (max-width: 768px) {
+          display: contents !important;
+      }
+  }
+
+  .mobile-maps-list-wrapper {
+      @media (max-width: 768px) {
+          order: 1 !important;
+          width: 100% !important;
+          margin-bottom: 0 !important;
+      }
+      &.empty-maps {
+          @media (max-width: 768px) {
+              order: 2 !important; /* Si no hay mapas, va despues de los lotes */
+          }
+      }
+  }
+
   .sidebar-container {
       @media (max-width: 768px) {
           width: 100% !important;
           max-height: 400px !important; /* Cap height to allow scrolling inner content */
           position: relative !important; /* Remove sticky to avoid overriding other content */
           top: auto !important;
-          margin-top: 1.5rem;
-          order: 1 !important; /* First on mobile as per user request */
+          margin-top: 0 !important;
+          order: 2 !important; /* Lotes van despues de mapas activos */
       }
-  }
-
-  .main-content-wrapper {
-      @media (max-width: 768px) {
-          order: 2 !important; /* Main content area (Mesas Activas) comes second */
-          width: 100% !important;
-          flex: none !important;
-      }
-  }
-
-  .map-list-container {
-      @media (max-width: 768px) {
-          display: flex !important;
-          flex-direction: column !important;
-          gap: 1.5rem !important;
-          width: 100% !important;
-      }
-  }
-  
-  .empty-map-state {
-      @media (max-width: 768px) {
-          order: 3 !important; /* Move the empty state hint message below */
+      &.empty-maps {
+          @media (max-width: 768px) {
+              order: 1 !important; /* Lotes van antes si no hay mapas activos */
+          }
       }
   }
 
   .map-drop-zone-wrapper {
       @media (max-width: 768px) {
-          order: 1 !important; /* Drop Zone first inside list container */
-          margin-top: 1rem !important;
+          order: 3 !important; /* Drop Zone en el lugar #3 */
+          margin-top: 0 !important;
+          width: 100% !important;
       }
   }
 
   .create-map-card-wrapper {
       @media (max-width: 768px) {
-          order: 2 !important; /* Create Card second inside list container */
-          margin-top: 1rem !important;
+          order: 4 !important; /* Create Card en el lugar #4 */
+          margin-top: 0 !important;
+          width: 100% !important;
+      }
+  }
+
+  .drying-group-header {
+      @media (max-width: 768px) {
+          flex-direction: column !important;
+          align-items: flex-start !important;
+          gap: 1rem !important;
+      }
+  }
+
+  .drying-group-actions {
+      @media (max-width: 768px) {
+          width: 100% !important;
+          justify-content: flex-end !important;
+      }
+  }
+
+  .drying-batch-card-header {
+      @media (max-width: 768px) {
+          flex-direction: column !important;
+          align-items: flex-start !important;
+          gap: 0.25rem !important;
       }
   }
 `;
@@ -262,8 +294,26 @@ const scaleOut = keyframes`
 `;
 
 const Container = styled.div`
+  .notes-header-container {
+      justify-content: flex-start !important;
+  }
+  
+  .notes-title {
+      margin: 0 !important;
+  }
+  
+  @media (max-width: 768px) {
+      .notes-header-container {
+          justify-content: center !important;
+      }
+      .notes-title {
+          margin: 0 auto !important;
+      }
+  }
+
+
 padding: 2rem;
-padding-top: 5rem;
+padding-top: 1.5rem;
 max-width: 1200px;
 margin: 0 auto;
 animation: ${fadeIn} 0.5s ease-in-out;
@@ -617,6 +667,80 @@ const ButtonSpinner = styled.div`
   animation: ${spin} 1s linear infinite;
 `;
 
+// Responsive Calendar Styled Components
+const CalendarContainer = styled.div`
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(12px);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+
+  @media (max-width: 768px) {
+    padding: 0.75rem;
+  }
+`;
+
+const CalendarHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+
+  @media (max-width: 768px) {
+    flex-wrap: wrap;
+    gap: 1rem;
+    
+    h2 {
+      order: 1;
+      width: 100%;
+      text-align: center;
+      font-size: 1.25rem !important;
+    }
+    
+    button:first-of-type {
+      order: 2;
+      flex: 1;
+      justify-content: center;
+    }
+
+    button:last-of-type {
+      order: 3;
+      flex: 1;
+      justify-content: center;
+    }
+  }
+`;
+
+const CalendarScrollWrapper = styled.div`
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 0.5rem;
+  
+  &::-webkit-scrollbar {
+    height: 6px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+  }
+`;
+
+const CalendarGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(7, minmax(60px, 1fr));
+  gap: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.5rem;
+  overflow: hidden;
+
+  @media (max-width: 768px) {
+    min-width: 600px; /* Force scroll on mobile for premium feel */
+  }
+`;
+
 const ModalActionButton = styled.button<{ variant?: 'primary' | 'danger' | 'secondary', disabled?: boolean }>`
   background: ${p => p.variant === 'primary' ? 'rgba(74, 222, 128, 0.2)' : p.variant === 'danger' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(255, 255, 255, 0.05)'};
   backdrop-filter: blur(8px);
@@ -654,8 +778,15 @@ const CreateMapDropZone = ({ children }: { children: React.ReactNode }) => {
             borderRadius: '0.5rem',
             border: isOver ? '2px dashed #48bb78' : '2px dashed transparent',
             background: isOver ? 'rgba(72, 187, 120, 0.1)' : 'transparent',
-            transition: 'all 0.2s'
-        }}>
+            transition: 'all 0.2s',
+            // Agregamos un minHeight condicional para móviles si es posible (via query param o asumiendo clase, pero al ser obj usa minHeight)
+            // Ya que style overrrides no soporta queries nativos lo forzamos con una class o bajamos el default
+        }} className="responsive-dropzone-container">
+            <style>{`
+                @media (max-width: 768px) {
+                    .responsive-dropzone-container { min-height: 80px !important; }
+                }
+            `}</style>
             {children}
             {isOver && (
                 <div style={{
@@ -853,7 +984,7 @@ const HeaderGrid = styled.div`
   margin-bottom: 2rem;
 
   @media (max-width: 768px) {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
     gap: 0.75rem;
     margin-bottom: 1.5rem;
   }
@@ -907,11 +1038,11 @@ const StatCard = styled.div`
   }
   
   @media (max-width: 768px) {
-    padding: 0.75rem 1rem;
+    padding: 1rem;
     border-radius: 0.75rem;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
     gap: 0.5rem;
     min-height: auto;
   }
@@ -928,10 +1059,11 @@ const StatCard = styled.div`
     font-weight: 600;
 
     @media (max-width: 768px) {
-      font-size: 0.7rem;
-      margin-bottom: 0;
-      flex: 1; /* Title takes available space on left */
-      white-space: nowrap;
+      font-size: 0.65rem;
+      margin-bottom: 0.25rem;
+      white-space: normal;
+      text-wrap: balance;
+      line-height: 1.2;
     }
   }
   .value {
@@ -941,11 +1073,12 @@ const StatCard = styled.div`
     line-height: 1.2;
 
     @media (max-width: 768px) {
-      font-size: 0.85rem;
-      line-height: 1;
+      font-size: 1.25rem;
+      line-height: 1.2;
       display: flex;
       align-items: center;
-      white-space: nowrap;
+      white-space: normal;
+      text-wrap: balance;
     }
   }
   .sub {
@@ -954,7 +1087,7 @@ const StatCard = styled.div`
     margin-top: 0.25rem;
 
     @media (max-width: 768px) {
-      font-size: 0.7rem;
+      font-size: 0.75rem;
       margin-top: 0;
       display: flex;
       align-items: center;
@@ -1217,6 +1350,16 @@ const SidebarBatchGroup = ({ group, expanded, onToggleExpand, childrenRender, on
                 touchAction: 'manipulation'
             }}
         >
+            <style>{`
+                @media (max-width: 768px) {
+                    .desktop-sidebar-header-${root.id} { display: none !important; }
+                    .mobile-sidebar-header-${root.id} { display: flex !important; }
+                }
+                @media (min-width: 769px) {
+                    .mobile-sidebar-header-${root.id} { display: none !important; }
+                }
+            `}</style>
+
             {/* Header */}
             <div
                 onClick={() => {
@@ -1237,27 +1380,48 @@ const SidebarBatchGroup = ({ group, expanded, onToggleExpand, childrenRender, on
                     gap: '1rem'
                 }}
             >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                {/* Desktop Version */}
+                <div className={`desktop-sidebar-header-${root.id}`} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%', justifyContent: 'space-between' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <span
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onToggleExpand();
+                            }}
+                            style={{ color: '#38bdf8', fontSize: '0.65rem', padding: '0.25rem', cursor: 'pointer' }}
+                        >
+                            {expanded ? '▼' : '▶'}
+                        </span>
+                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                            <strong style={{ fontSize: '0.8rem', color: '#f8fafc' }}>{displayName}</strong>
+                            <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Total: {totalQty} u.</span>
+                        </div>
+                    </div>
+                    {/* Header Actions for Groups or Single Batches */}
+                    {renderHeaderActions && (
+                        <div onClick={(e) => e.stopPropagation()} style={{ display: 'flex', gap: '0.25rem' }}>
+                            {renderHeaderActions(root)}
+                        </div>
+                    )}
+                </div>
+
+                {/* Mobile Version (Compressed Line) */}
+                <div className={`mobile-sidebar-header-${root.id}`} style={{ display: 'none', alignItems: 'center', width: '100%', gap: '0.5rem', overflow: 'hidden' }}>
                     <span
                         onClick={(e) => {
                             e.stopPropagation();
                             onToggleExpand();
                         }}
-                        style={{ color: '#38bdf8', fontSize: '0.65rem', padding: '0.25rem', cursor: 'pointer' }}
+                        style={{ color: '#38bdf8', fontSize: '0.65rem', padding: '0.25rem', cursor: 'pointer', flexShrink: 0 }}
                     >
                         {expanded ? '▼' : '▶'}
                     </span>
-                    <div style={{ display: 'flex', flexDirection: 'column' }}>
-                        <strong style={{ fontSize: '0.8rem', color: '#f8fafc' }}>{displayName}</strong>
-                        <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Total: {totalQty} u.</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', overflow: 'hidden', whiteSpace: 'nowrap', width: '100%' }}>
+                        <strong style={{ fontSize: '0.85rem', color: '#f8fafc', overflow: 'hidden', textOverflow: 'ellipsis' }}>{displayName}</strong>
+                        <span style={{ fontSize: '0.8rem', color: '#4ade80', fontWeight: 600, flexShrink: 0 }}>- {totalQty} u.</span>
                     </div>
                 </div>
-                {/* Header Actions for Groups or Single Batches */}
-                {renderHeaderActions && (
-                    <div onClick={(e) => e.stopPropagation()} style={{ display: 'flex', gap: '0.25rem' }}>
-                        {renderHeaderActions(root)}
-                    </div>
-                )}
+
             </div>
 
             {/* Content with internal scroll */}
@@ -3788,8 +3952,8 @@ const RoomDetail: React.FC = () => {
 
                 {/* Stickies Wall Section */}
                 <div style={{ marginBottom: '2rem' }} className="no-print">
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
-                        <h2 style={{ fontSize: '1.5rem', color: '#2d3748', display: 'flex', alignItems: 'center', gap: '0.5rem', margin: '0 auto' }}>
+                    <div style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }} className="notes-header-container">
+                        <h2 style={{ fontSize: '1.5rem', color: '#2d3748', display: 'flex', alignItems: 'center', gap: '0.5rem' }} className="notes-title">
                             <FaStickyNote color="#ecc94b" /> Pizarra de Notas
                         </h2>
                     </div>
@@ -3946,17 +4110,12 @@ const RoomDetail: React.FC = () => {
                                 activeMapId && activeMap && (
                                     <div className="no-print-map-header" ref={toolbarRef} style={{
                                         display: 'flex',
-                                        justifyContent: 'space-between',
+                                        flexDirection: 'column',
+                                        justifyContent: 'center',
                                         alignItems: 'center',
-                                        marginBottom: '1rem',
-                                        background: 'rgba(15, 23, 42, 0.4)',
-                                        backdropFilter: 'blur(12px)',
-                                        WebkitBackdropFilter: 'blur(12px)',
-                                        padding: '0.75rem 1rem',
-                                        borderRadius: '0.75rem',
-                                        border: '1px solid rgba(255, 255, 255, 0.1)',
-                                        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.3)',
-                                        height: '80px',
+                                        gap: '1.5rem',
+                                        marginBottom: '2rem',
+                                        padding: '0.5rem',
                                         width: '100%',
                                         boxSizing: 'border-box',
                                         position: 'relative',
@@ -3964,17 +4123,17 @@ const RoomDetail: React.FC = () => {
                                     }}>
                                         {/* LEFT: Map Title & Info */}
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexShrink: 0, overflow: 'hidden' }}>
-                                            <h3 style={{ margin: 0, fontSize: '1.25rem', color: '#f8fafc', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                            <h3 style={{ margin: 0, fontSize: '1.5rem', color: '#f8fafc', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontWeight: 700 }}>
                                                 {activeMap.name}
                                             </h3>
-                                            <span style={{ background: 'rgba(74, 222, 128, 0.1)', color: '#4ade80', border: '1px solid rgba(74, 222, 128, 0.2)', padding: '0.25rem 0.75rem', borderRadius: '999px', fontSize: '0.75rem', fontWeight: 700, whiteSpace: 'nowrap', flexShrink: 0 }}>
+                                            <span style={{ color: '#4ade80', border: '1px solid #4ade80', padding: '0.2rem 0.6rem', borderRadius: '999px', fontSize: '0.9rem', fontWeight: 700, whiteSpace: 'nowrap', flexShrink: 0 }}>
                                                 {activeMap.grid_rows} x {activeMap.grid_columns}
                                             </span>
                                         </div>
 
                                         {/* CENTER: Selection Status (New) */}
-                                        <div style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                                            {isSelectionMode && selectedBatchIds.size > 0 && (
+                                        {isSelectionMode && selectedBatchIds.size > 0 && (
+                                            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                                                 <span style={{
                                                     fontSize: '0.9rem',
                                                     color: '#4ade80',
@@ -3989,17 +4148,72 @@ const RoomDetail: React.FC = () => {
                                                 }}>
                                                     {selectedBatchIds.size} seleccionados
                                                 </span>
-                                            )}
-                                        </div>
+                                            </div>
+                                        )}
 
                                         {/* RIGHT: Actions Toolbar */}
-                                        <div className="no-print-map-controls" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexShrink: 1, height: '100%', justifyContent: 'flex-end' }}>
+                                        <div className="no-print-map-controls" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.75rem', justifyContent: 'center' }}>
 
+                                            <button
+                                                onClick={() => {
+                                                    document.body.classList.add('printing-map');
+                                                    window.onafterprint = () => {
+                                                        document.body.classList.remove('printing-map');
+                                                        window.onafterprint = null;
+                                                    };
+                                                    setTimeout(() => {
+                                                        window.print();
+                                                    }, 100);
+                                                }}
+                                                title="Imprimir Mapa"
+                                                style={{
+                                                    background: 'rgba(15, 23, 42, 0.4)',
+                                                    backdropFilter: 'blur(8px)',
+                                                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                                                    borderRadius: '0.375rem',
+                                                    padding: '0.5rem 0.75rem',
+                                                    fontSize: '0.85rem',
+                                                    cursor: 'pointer',
+                                                    color: '#cbd5e1',
+                                                    fontWeight: 600,
+                                                    display: 'flex', alignItems: 'center', gap: '0.5rem',
+                                                    transition: 'all 0.2s'
+                                                }}
+                                                onMouseEnter={e => {
+                                                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                                                    e.currentTarget.style.color = '#f8fafc';
+                                                }}
+                                                onMouseLeave={e => {
+                                                    e.currentTarget.style.background = 'rgba(15, 23, 42, 0.4)';
+                                                    e.currentTarget.style.color = '#cbd5e1';
+                                                }}
+                                            >
+                                                <FaPrint /> Imprimir
+                                            </button>
 
+                                            <button
+                                                onClick={() => setActiveMapId(null)}
+                                                style={{
+                                                    background: 'rgba(15, 23, 42, 0.4)',
+                                                    backdropFilter: 'blur(8px)',
+                                                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                                                    padding: '0.5rem 0.75rem',
+                                                    borderRadius: '0.5rem',
+                                                    color: '#f8fafc',
+                                                    fontWeight: 600,
+                                                    cursor: 'pointer',
+                                                    display: 'flex', alignItems: 'center', gap: '0.5rem',
+                                                    transition: 'all 0.2s'
+                                                }}
+                                                onMouseEnter={e => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'}
+                                                onMouseLeave={e => e.currentTarget.style.background = 'rgba(15, 23, 42, 0.4)'}
+                                            >
+                                                <FaArrowLeft /> Volver
+                                            </button>
 
                                             {/* 1. SELECTION ACTIONS */}
                                             {selectedBatchIds.size > 0 && (
-                                                <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '0.5rem', paddingRight: '0.5rem', borderRight: '1px solid #e2e8f0', flexShrink: 0 }}>
+                                                <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '0.5rem', paddingLeft: '0.5rem', borderLeft: '1px solid rgba(255,255,255,0.1)', flexShrink: 0 }}>
 
                                                     {/* BULK ACTIONS DROPDOWN */}
                                                     <div style={{ position: 'relative' }}>
@@ -4182,67 +4396,8 @@ const RoomDetail: React.FC = () => {
                                                     </button>
                                                 )}
 
-                                                <button
-                                                    onClick={() => {
-                                                        document.body.classList.add('printing-map');
+                                                {/* Print button moved to specific map detail title block */}
 
-                                                        // Cleanup after print dialog closes
-                                                        window.onafterprint = () => {
-                                                            document.body.classList.remove('printing-map');
-                                                            window.onafterprint = null; // Clean up listener
-                                                        };
-
-                                                        // Use timeout to ensure class is applied and style is recalculated before print
-                                                        setTimeout(() => {
-                                                            window.print();
-                                                        }, 100);
-
-                                                        // Fallback for browsers that don't block or support onafterprint consistently
-                                                        // (Optional: set a timeout just in case, but onafterprint is better)
-                                                    }}
-                                                    title="Imprimir Mapa"
-                                                    style={{
-                                                        background: 'rgba(255, 255, 255, 0.05)',
-                                                        border: '1px solid rgba(255, 255, 255, 0.1)',
-                                                        borderRadius: '0.375rem',
-                                                        padding: '0.5rem 0.75rem',
-                                                        fontSize: '0.85rem',
-                                                        cursor: 'pointer',
-                                                        color: '#cbd5e1',
-                                                        fontWeight: 600,
-                                                        display: 'flex', alignItems: 'center', gap: '0.5rem',
-                                                        transition: 'all 0.2s'
-                                                    }}
-                                                    onMouseEnter={e => {
-                                                        e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
-                                                        e.currentTarget.style.color = '#f8fafc';
-                                                    }}
-                                                    onMouseLeave={e => {
-                                                        e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
-                                                        e.currentTarget.style.color = '#cbd5e1';
-                                                    }}
-                                                >
-                                                    <FaPrint />
-                                                </button>
-
-                                                <button
-                                                    onClick={() => setActiveMapId(null)}
-                                                    style={{
-                                                        background: 'rgba(255, 255, 255, 0.1)',
-                                                        border: '1px solid rgba(255, 255, 255, 0.1)',
-                                                        padding: '0.5rem 0.75rem',
-                                                        borderRadius: '0.5rem',
-                                                        color: '#f8fafc',
-                                                        fontWeight: 600,
-                                                        cursor: 'pointer',
-                                                        display: 'flex', alignItems: 'center', gap: '0.5rem',
-                                                        transition: 'all 0.2s'
-                                                    }}
-                                                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)'}
-                                                    onMouseLeave={e => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'}
-                                                >
-                                                    <FaArrowLeft /> Volver
-                                                </button>
                                             </div>
 
                                         </div>
@@ -4257,82 +4412,146 @@ const RoomDetail: React.FC = () => {
                                         {!activeMapId ? (
                                             /* MAPS LIST VIEW */
                                             <div className="map-list-container">
-                                                <h3 className="no-print" style={{ color: '#718096', fontSize: '0.9rem', marginBottom: '0.5rem' }}>Mesas Activas (Arrastra lotes aquí para crear nuevas)</h3>
+                                                <div className={`mobile-maps-list-wrapper ${cloneMaps.length === 0 ? 'empty-maps' : ''}`}>
+                                                    <h3 className="no-print" style={{ color: '#718096', fontSize: '0.9rem', marginBottom: '0.5rem' }}>Mesas Activas (Arrastra lotes aquí para crear nuevas)</h3>
 
-                                                <div className="empty-map-state" style={{
-                                                    display: 'flex', gap: '1.5rem',
-                                                    marginBottom: '2rem', justifyContent: 'center'
-                                                }}>
-                                                    {cloneMaps.length === 0 ? (
-                                                        <div style={{ color: '#a0aec0', fontSize: '0.9rem', textAlign: 'center', width: '100%' }}>
-                                                            {room?.type === 'vegetation' ? 'No hay cultivos en vegetación actualmente' :
-                                                                room?.type === 'germination' ? 'No hay semillas en germinación.' :
-                                                                    room?.type === 'flowering' ? 'No hay plantas en floracion actualmente' :
-                                                                        room?.type === 'living_soil' ? 'No hay camas/cultivos activos.' :
-                                                                            'No hay mesas de esquejes creadas.'}
-                                                        </div>
-                                                    ) : (
-                                                        <div style={{
-                                                            display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem', width: '100%'
-                                                        }}>
-                                                            {cloneMaps.map(map => {
-                                                                const mapBatches = room?.batches?.filter(b => b.clone_map_id === map.id && b.quantity > 0) || [];
-                                                                const totalPlants = mapBatches.reduce((acc, b) => acc + b.quantity, 0);
-                                                                const uniqueGenetics = new Set(mapBatches.map(b => b.genetic_id)).size;
+                                                    <div className="empty-map-state" style={{
+                                                        display: 'flex', gap: '1.5rem',
+                                                        marginBottom: '2rem', justifyContent: 'center'
+                                                    }}>
+                                                        {cloneMaps.length === 0 ? (
+                                                            <div style={{ color: '#a0aec0', fontSize: '0.9rem', textAlign: 'center', width: '100%' }}>
+                                                                {room?.type === 'vegetation' ? 'No hay cultivos en vegetación actualmente' :
+                                                                    room?.type === 'germination' ? 'No hay semillas en germinación.' :
+                                                                        room?.type === 'flowering' ? 'No hay plantas en floracion actualmente' :
+                                                                            room?.type === 'living_soil' ? 'No hay camas/cultivos activos.' :
+                                                                                'No hay mesas de esquejes creadas.'}
+                                                            </div>
+                                                        ) : (
+                                                            <div style={{
+                                                                display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem', width: '100%'
+                                                            }}>
+                                                                {cloneMaps.map(map => {
+                                                                    const mapBatches = room?.batches?.filter(b => b.clone_map_id === map.id && b.quantity > 0) || [];
+                                                                    const totalPlants = mapBatches.reduce((acc, b) => acc + b.quantity, 0);
+                                                                    const uniqueGenetics = new Set(mapBatches.map(b => b.genetic_id)).size;
 
-                                                                return (
-                                                                    <DroppableMapCard key={map.id} map={map} onClick={() => setActiveMapId(map.id)}>
-                                                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
-                                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                                                                                <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#f8fafc' }}>{map.name}</h3>
-                                                                                <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                                                                    {/* Selection buttons removed from Map List View */}
+                                                                    return (
+                                                                        <DroppableMapCard key={map.id} map={map} onClick={() => setActiveMapId(map.id)}>
+                                                                            <style>{`
+                                                                                @media (max-width: 768px) {
+                                                                                    .desktop-view-map-${map.id} { display: none !important; }
+                                                                                    .mobile-view-map-${map.id} { display: flex !important; }
+                                                                                }
+                                                                                @media (min-width: 769px) {
+                                                                                    .mobile-view-map-${map.id} { display: none !important; }
+                                                                                }
+                                                                            `}</style>
+
+                                                                            <div className={`desktop-view-map-${map.id}`}>
+                                                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+                                                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                                                                        <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#f8fafc' }}>{map.name}</h3>
+                                                                                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                                                                            {/* Selection buttons removed from Map List View */}
+                                                                                        </div>
+                                                                                    </div>
+                                                                                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                                                                        {!isSelectionMode && (
+                                                                                            <>
+                                                                                                <button
+                                                                                                    onClick={(e) => { e.stopPropagation(); handleEditMapClick(e, map); }}
+                                                                                                    style={{ background: 'transparent', border: 'none', color: '#718096', cursor: 'pointer' }}
+                                                                                                >
+                                                                                                    <FaEdit />
+                                                                                                </button>
+                                                                                            </>
+                                                                                        )}
+                                                                                        <button
+                                                                                            onClick={(e) => { e.stopPropagation(); setMapIdToDelete(map.id); setIsDeleteMapModalOpen(true); }}
+                                                                                            style={{ background: 'transparent', border: 'none', color: '#e53e3e', cursor: 'pointer' }}
+                                                                                        >
+                                                                                            <FaTrash />
+                                                                                        </button>
+                                                                                    </div>
+                                                                                </div>
+
+                                                                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                                                                                    <div style={{ background: 'rgba(56, 189, 248, 0.1)', border: '1px solid rgba(56, 189, 248, 0.2)', padding: '0.5rem', borderRadius: '0.5rem', textAlign: 'center' }}>
+                                                                                        <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#38bdf8' }}>{totalPlants}</div>
+                                                                                        <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Plantas</div>
+                                                                                    </div>
+                                                                                    <div style={{ background: 'rgba(74, 222, 128, 0.1)', border: '1px solid rgba(74, 222, 128, 0.2)', padding: '0.5rem', borderRadius: '0.5rem', textAlign: 'center' }}>
+                                                                                        <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#4ade80' }}>{uniqueGenetics}</div>
+                                                                                        <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Variedades</div>
+                                                                                    </div>
                                                                                 </div>
                                                                             </div>
-                                                                            <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                                                                {!isSelectionMode && (
-                                                                                    <>
+
+                                                                            <div className={`mobile-view-map-${map.id}`} style={{ alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: '0.5rem' }}>
+                                                                                <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>
+                                                                                    <div style={{ fontSize: '1rem', fontWeight: 700, color: '#f8fafc', overflow: 'hidden', textOverflow: 'ellipsis' }}>{map.name}</div>
+                                                                                    <div style={{ fontSize: '0.8rem', color: '#94a3b8', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                                                                                        <span style={{ color: '#38bdf8', fontWeight: 600 }}>{totalPlants} Plantas</span> | <span style={{ color: '#4ade80', fontWeight: 600 }}>{uniqueGenetics} Var.</span>
+                                                                                    </div>
+                                                                                </div>
+
+                                                                                <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                                                                                    {!isSelectionMode && (
                                                                                         <button
                                                                                             onClick={(e) => { e.stopPropagation(); handleEditMapClick(e, map); }}
-                                                                                            style={{ background: 'transparent', border: 'none', color: '#718096', cursor: 'pointer' }}
+                                                                                            style={{ background: 'transparent', border: 'none', color: '#718096', cursor: 'pointer', fontSize: '1.2rem' }}
                                                                                         >
                                                                                             <FaEdit />
                                                                                         </button>
-                                                                                    </>
-                                                                                )}
-                                                                                <button
-                                                                                    onClick={(e) => { e.stopPropagation(); setMapIdToDelete(map.id); setIsDeleteMapModalOpen(true); }}
-                                                                                    style={{ background: 'transparent', border: 'none', color: '#e53e3e', cursor: 'pointer' }}
-                                                                                >
-                                                                                    <FaTrash />
-                                                                                </button>
+                                                                                    )}
+                                                                                    <button
+                                                                                        onClick={(e) => { e.stopPropagation(); setMapIdToDelete(map.id); setIsDeleteMapModalOpen(true); }}
+                                                                                        style={{ background: 'transparent', border: 'none', color: '#e53e3e', cursor: 'pointer', fontSize: '1.2rem' }}
+                                                                                    >
+                                                                                        <FaTrash />
+                                                                                    </button>
+                                                                                </div>
                                                                             </div>
-                                                                        </div>
 
-                                                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                                                                            <div style={{ background: 'rgba(56, 189, 248, 0.1)', border: '1px solid rgba(56, 189, 248, 0.2)', padding: '0.5rem', borderRadius: '0.5rem', textAlign: 'center' }}>
-                                                                                <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#38bdf8' }}>{totalPlants}</div>
-                                                                                <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Plantas</div>
-                                                                            </div>
-                                                                            <div style={{ background: 'rgba(74, 222, 128, 0.1)', border: '1px solid rgba(74, 222, 128, 0.2)', padding: '0.5rem', borderRadius: '0.5rem', textAlign: 'center' }}>
-                                                                                <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#4ade80' }}>{uniqueGenetics}</div>
-                                                                                <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Variedades</div>
-                                                                            </div>
-                                                                        </div>
-                                                                    </DroppableMapCard>
-                                                                );
-                                                            })}
-                                                        </div>
-                                                    )}
+                                                                        </DroppableMapCard>
+                                                                    );
+                                                                })}
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                 </div>
 
                                                 {/* Render CreateCard completely separate so mobile order can flex correctly */}
                                                 <div className="create-map-card-wrapper">
+                                                    <style>{`
+                                                        @media (max-width: 768px) {
+                                                            .mobile-compact-create-card {
+                                                                min-height: 60px !important;
+                                                                flex-direction: row !important;
+                                                                padding: 0.75rem 1rem !important;
+                                                                gap: 0.75rem !important;
+                                                            }
+                                                            .mobile-compact-create-card .dashed-circle-icon {
+                                                                width: 32px !important;
+                                                                height: 32px !important;
+                                                                font-size: 1rem !important;
+                                                            }
+                                                            .mobile-compact-create-card p, .mobile-compact-create-card span {
+                                                                font-size: 0.95rem !important;
+                                                                margin: 0;
+                                                            }
+                                                            .map-drop-zone-wrapper {
+                                                                margin-top: 0.5rem !important; /* Reduce gap to dropzone */
+                                                            }
+                                                        }
+                                                    `}</style>
                                                     <CreateCard
+                                                        className="mobile-compact-create-card"
                                                         onClick={() => setIsMapModalOpen(true)}
                                                         style={{ ...(cloneMaps.length > 0 ? { minHeight: '160px' } : {}) }}
                                                     >
-                                                        <DashedCircle>
+                                                        <DashedCircle className="dashed-circle-icon">
                                                             <FaPlus />
                                                         </DashedCircle>
                                                         {cloneMaps.length === 0 ? (
@@ -4353,9 +4572,47 @@ const RoomDetail: React.FC = () => {
                                                 {/* Create Map Drop Zone */}
                                                 <div className="map-drop-zone-wrapper">
                                                     <CreateMapDropZone>
-                                                        <div style={{ textAlign: 'center', padding: '2rem', color: '#a0aec0' }}>
-                                                            <FaMapMarkedAlt style={{ fontSize: '2rem', marginBottom: '0.5rem', opacity: 0.5 }} />
-                                                            <p>{room?.type === 'living_soil' ? 'Crea una nueva cama/cultivo para sembrar o transplantar' : 'Arrastra lotes aquí para crear una nueva mesa automáticamente'}</p>
+                                                        <style>{`
+                                                            .dropzone-content {
+                                                                text-align: center;
+                                                                padding: 2rem;
+                                                                color: #a0aec0;
+                                                                display: flex;
+                                                                flex-direction: column;
+                                                                align-items: center;
+                                                                justify-content: center;
+                                                            }
+                                                            .dropzone-icon {
+                                                                font-size: 2rem;
+                                                                margin-bottom: 0.5rem;
+                                                                opacity: 0.5;
+                                                            }
+                                                            .dropzone-text {
+                                                                margin: 0;
+                                                            }
+                                                            @media (max-width: 768px) {
+                                                                .dropzone-content {
+                                                                    flex-direction: row;
+                                                                    padding: 1rem;
+                                                                    text-align: left;
+                                                                    gap: 1rem;
+                                                                }
+                                                                .dropzone-icon {
+                                                                    font-size: 1.5rem;
+                                                                    margin-bottom: 0;
+                                                                    flex-shrink: 0;
+                                                                }
+                                                                .dropzone-text {
+                                                                    font-size: 0.85rem;
+                                                                    overflow: hidden;
+                                                                    text-overflow: ellipsis;
+                                                                    white-space: nowrap;
+                                                                }
+                                                            }
+                                                        `}</style>
+                                                        <div className="dropzone-content">
+                                                            <FaMapMarkedAlt className="dropzone-icon" />
+                                                            <p className="dropzone-text">{room?.type === 'living_soil' ? 'Crea una nueva cama/cultivo para sembrar o transplantar' : 'Arrastra lote aquí para crear nuevo mapa'}</p>
                                                         </div>
                                                     </CreateMapDropZone>
                                                 </div>
@@ -4396,32 +4653,84 @@ const RoomDetail: React.FC = () => {
 
                                                         {/* Print-only title since toolbar is hidden on print */}
                                                         <div className="printable-map-details" style={{
-                                                            marginBottom: '1rem',
+                                                            marginBottom: '2rem',
                                                             display: 'flex',
+                                                            flexDirection: 'column',
                                                             alignItems: 'center',
-                                                            gap: '1rem',
-                                                            background: 'rgba(15, 23, 42, 0.6)',
-                                                            backdropFilter: 'blur(12px)',
-                                                            WebkitBackdropFilter: 'blur(12px)',
-                                                            border: '1px solid rgba(255, 255, 255, 0.1)',
-                                                            padding: '1rem 1.5rem',
-                                                            borderRadius: '0.75rem',
-                                                            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.3)'
+                                                            gap: '1rem'
                                                         }}>
-                                                            <h2 style={{ margin: 0, fontSize: '1.25rem', color: '#f8fafc' }}>{activeMap?.name}</h2>
-                                                            <span style={{
-                                                                background: 'rgba(74, 222, 128, 0.1)',
-                                                                color: '#4ade80',
-                                                                border: '1px solid rgba(74, 222, 128, 0.2)',
-                                                                padding: '0.2rem 0.6rem',
-                                                                borderRadius: '9999px',
-                                                                fontSize: '0.85rem',
-                                                                fontWeight: 600
-                                                            }}>
-                                                                {activeMap?.grid_rows} x {activeMap?.grid_columns}
-                                                            </span>
-                                                            <div style={{ marginLeft: 'auto', display: 'flex', gap: '0.5rem' }}>
-                                                                {/* Actions can go here if needed in the future */}
+                                                            <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center', gap: '0.75rem' }}>
+                                                                <h2 style={{ margin: 0, fontSize: '1.75rem', color: '#f8fafc', fontWeight: 700 }}>
+                                                                    {activeMap?.name} {new Date(activeMap?.created_at || Date.now()).toLocaleDateString()}
+                                                                </h2>
+                                                                <span style={{
+                                                                    background: 'transparent',
+                                                                    color: '#4ade80',
+                                                                    border: '1px solid #4ade80',
+                                                                    padding: '0.2rem 0.6rem',
+                                                                    borderRadius: '9999px',
+                                                                    fontSize: '1rem',
+                                                                    fontWeight: 600
+                                                                }}>
+                                                                    {activeMap?.grid_rows} x {activeMap?.grid_columns}
+                                                                </span>
+                                                            </div>
+
+                                                            <div className="no-print" style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                                                                <button
+                                                                    onClick={() => {
+                                                                        document.body.classList.add('printing-map');
+                                                                        window.onafterprint = () => {
+                                                                            document.body.classList.remove('printing-map');
+                                                                            window.onafterprint = null;
+                                                                        };
+                                                                        setTimeout(() => {
+                                                                            window.print();
+                                                                        }, 100);
+                                                                    }}
+                                                                    title="Imprimir Mapa"
+                                                                    style={{
+                                                                        background: 'rgba(15, 23, 42, 0.4)',
+                                                                        backdropFilter: 'blur(8px)',
+                                                                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                                                                        borderRadius: '0.5rem',
+                                                                        padding: '0.5rem 1rem',
+                                                                        fontSize: '0.9rem',
+                                                                        cursor: 'pointer',
+                                                                        color: '#e2e8f0',
+                                                                        fontWeight: 600,
+                                                                        display: 'flex', alignItems: 'center', gap: '0.5rem',
+                                                                        transition: 'all 0.2s'
+                                                                    }}
+                                                                    onMouseEnter={e => {
+                                                                        e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                                                                    }}
+                                                                    onMouseLeave={e => {
+                                                                        e.currentTarget.style.background = 'rgba(15, 23, 42, 0.4)';
+                                                                    }}
+                                                                >
+                                                                    <FaPrint /> Imprimir
+                                                                </button>
+
+                                                                <button
+                                                                    onClick={() => setActiveMapId(null)}
+                                                                    style={{
+                                                                        background: 'rgba(15, 23, 42, 0.4)',
+                                                                        backdropFilter: 'blur(8px)',
+                                                                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                                                                        padding: '0.5rem 1rem',
+                                                                        borderRadius: '0.5rem',
+                                                                        color: '#e2e8f0',
+                                                                        fontWeight: 600,
+                                                                        cursor: 'pointer',
+                                                                        display: 'flex', alignItems: 'center', gap: '0.5rem',
+                                                                        transition: 'all 0.2s'
+                                                                    }}
+                                                                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'}
+                                                                    onMouseLeave={e => e.currentTarget.style.background = 'rgba(15, 23, 42, 0.4)'}
+                                                                >
+                                                                    <FaArrowLeft /> Volver
+                                                                </button>
                                                             </div>
                                                         </div>
 
@@ -4587,7 +4896,7 @@ const RoomDetail: React.FC = () => {
                                     </div>
 
                                     {/* SIDEBAR (Shared) */}
-                                    <div className="no-print sidebar-container" style={{
+                                    <div className={`no-print sidebar-container ${cloneMaps.length === 0 ? 'empty-maps' : ''}`} style={{
                                         flex: 1,
                                         minWidth: '250px',
                                         background: 'rgba(15, 23, 42, 0.4)',
@@ -4703,11 +5012,12 @@ const RoomDetail: React.FC = () => {
 
                                     return (
                                         <div key={root.id} style={{
-                                            background: 'white', border: '1px solid #e2e8f0', borderRadius: '0.5rem',
-                                            boxShadow: '0 2px 4px rgba(0,0,0,0.05)', overflow: 'hidden'
+                                            background: 'rgba(15, 23, 42, 0.4)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '0.5rem',
+                                            boxShadow: '0 4px 6px -1px rgba(0,0,0,0.2)', overflow: 'hidden', backdropFilter: 'blur(8px)'
                                         }}>
                                             {/* Group Header */}
                                             <div
+                                                className="drying-group-header"
                                                 onClick={() => toggleDryingGroupExpansion(root.id)}
                                                 style={{
                                                     padding: '1rem',
@@ -4715,27 +5025,30 @@ const RoomDetail: React.FC = () => {
                                                     display: 'flex',
                                                     justifyContent: 'space-between',
                                                     alignItems: 'center',
-                                                    background: isExpanded ? '#ebf8ff' : 'white',
-                                                    borderBottom: isExpanded ? '1px solid #bee3f8' : 'none'
+                                                    background: isExpanded ? 'rgba(30, 41, 59, 0.8)' : 'transparent',
+                                                    borderBottom: isExpanded ? '1px solid rgba(255, 255, 255, 0.1)' : 'none',
+                                                    transition: 'background 0.2s'
                                                 }}
                                             >
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                                                     <div style={{
                                                         width: '24px', height: '24px', borderRadius: '50%',
-                                                        background: '#48bb78', color: 'white',
+                                                        background: 'rgba(74, 222, 128, 0.2)', color: '#4ade80',
+                                                        border: '1px solid rgba(74, 222, 128, 0.5)',
                                                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                                                         fontSize: '0.8rem'
                                                     }}>
                                                         {isExpanded ? '▼' : '▶'}
                                                     </div>
                                                     <div>
-                                                        <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#2d3748' }}>{displayName}</h3>
-                                                        <span style={{ fontSize: '0.9rem', color: '#718096' }}>{totalQty} plantas en total</span>
+                                                        <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#f8fafc' }}>{displayName}</h3>
+                                                        <span style={{ fontSize: '0.9rem', color: '#94a3b8' }}>{totalQty} plantas en total</span>
                                                     </div>
                                                 </div>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                                <div className="drying-group-actions" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                                     <HoverButton
                                                         onClick={(e) => handleOpenGroupFinalize(e, [root, ...children])}
+                                                        style={{ background: 'rgba(237, 137, 54, 0.2)', color: '#ed8936', border: '1px solid rgba(237, 137, 54, 0.5)' }}
                                                     >
                                                         Finalizar Grupo
                                                     </HoverButton>
@@ -4751,7 +5064,7 @@ const RoomDetail: React.FC = () => {
                                                         display: 'grid',
                                                         gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', // Smaller cards
                                                         gap: '0.75rem', // Reduced gap
-                                                        background: '#f7fafc',
+                                                        background: 'rgba(15, 23, 42, 0.2)',
                                                         opacity: isExpanded ? 1 : 0,
                                                         transition: 'opacity 0.4s ease-in-out'
                                                     }}>
@@ -4759,33 +5072,34 @@ const RoomDetail: React.FC = () => {
                                                             const daysInDrying = differenceInDays(new Date(), new Date(b.created_at));
                                                             return (
                                                                 <div key={b.id} style={{
-                                                                    background: 'white', border: '1px solid #e2e8f0', borderRadius: '0.5rem',
+                                                                    background: 'rgba(30, 41, 59, 0.6)', border: '1px solid rgba(255, 255, 255, 0.05)', borderRadius: '0.5rem',
                                                                     padding: '0.5rem', // Compact padding
                                                                     position: 'relative',
                                                                     display: 'flex', flexDirection: 'column', gap: '0.25rem' // Tight layout
                                                                 }}>
-                                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                                        <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#4a5568' }}>{b.tracking_code || 'S/C'}</span>
-                                                                        <span style={{ fontSize: '0.7rem', color: '#a0aec0' }}>{format(new Date(b.created_at), 'd MMM', { locale: es })}</span>
+                                                                    <div className="drying-batch-card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                                        <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#cbd5e1' }}>{b.tracking_code || 'S/C'}</span>
+                                                                        <span style={{ fontSize: '0.7rem', color: '#64748b' }}>{format(new Date(b.created_at), 'd MMM', { locale: es })}</span>
                                                                     </div>
 
-                                                                    <h4 style={{ margin: 0, fontSize: '0.85rem', color: '#2d3748', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={b.name}>{b.name}</h4>
+                                                                    <h4 style={{ margin: 0, fontSize: '0.85rem', color: '#f8fafc', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={b.name}>{b.name}</h4>
 
-                                                                    <div style={{ display: 'flex', gap: '0.75rem', fontSize: '0.75rem', color: '#718096' }}>
-                                                                        <span><strong>{b.quantity}</strong> u.</span>
-                                                                        <span><strong>{daysInDrying}</strong> días</span>
+                                                                    <div style={{ display: 'flex', gap: '0.75rem', fontSize: '0.75rem', color: '#94a3b8' }}>
+                                                                        <span><strong style={{ color: '#cbd5e1' }}>{b.quantity}</strong> u.</span>
+                                                                        <span><strong style={{ color: '#cbd5e1' }}>{daysInDrying}</strong> días</span>
                                                                     </div>
 
                                                                     <button style={{
                                                                         width: '100%',
                                                                         marginTop: '0.25rem',
-                                                                        background: '#ed8936', color: 'white', border: 'none',
+                                                                        background: 'rgba(237, 137, 54, 0.2)', color: '#ed8936', border: '1px solid rgba(237, 137, 54, 0.5)',
                                                                         padding: '0.25rem', borderRadius: '0.25rem', cursor: 'pointer',
                                                                         fontWeight: 600, fontSize: '0.75rem',
-                                                                        transition: 'background 0.2s'
+                                                                        transition: 'all 0.2s',
+                                                                        backdropFilter: 'blur(4px)'
                                                                     }}
-                                                                        onMouseEnter={e => e.currentTarget.style.background = '#dd6b20'}
-                                                                        onMouseLeave={e => e.currentTarget.style.background = '#ed8936'}
+                                                                        onMouseEnter={e => { e.currentTarget.style.background = 'rgba(237, 137, 54, 0.3)'; }}
+                                                                        onMouseLeave={e => { e.currentTarget.style.background = 'rgba(237, 137, 54, 0.2)'; }}
                                                                         onClick={(e) => { e.stopPropagation(); handleOpenFinalize(b); }}>
                                                                         Finalizar
                                                                     </button>
@@ -4816,9 +5130,9 @@ const RoomDetail: React.FC = () => {
                 {/* Calendar Section (Hidden for Clones/Germination) */}
                 {
                     !['clones', 'esquejes', 'esquejera', 'drying', 'secado', 'curing', 'curado', 'germination'].includes((room?.type as string)?.toLowerCase()) && (
-                        <div className="no-print" style={{ background: 'rgba(15, 23, 42, 0.4)', backdropFilter: 'blur(12px)', borderRadius: '1rem', padding: '1.5rem', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.3)', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
+                        <CalendarContainer className="no-print">
                             {/* Calendar Header */}
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                            <CalendarHeader>
                                 <StyledActionButton onClick={() => setCurrentDate(subMonths(currentDate, 1))} $variant="secondary" style={{ padding: '0.5rem 1rem' }}>
                                     <FaChevronLeft /> Anterior
                                 </StyledActionButton>
@@ -4828,242 +5142,244 @@ const RoomDetail: React.FC = () => {
                                 <StyledActionButton onClick={() => setCurrentDate(addMonths(currentDate, 1))} $variant="secondary" style={{ padding: '0.5rem 1rem' }}>
                                     Siguiente <FaChevronRight />
                                 </StyledActionButton>
-                            </div>
+                            </CalendarHeader>
 
                             {/* Calendar Grid */}
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '1px', background: 'rgba(255, 255, 255, 0.1)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '0.5rem', overflow: 'hidden' }}>
-                                {['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'].map(d => (
-                                    <div key={d} style={{ background: 'rgba(15, 23, 42, 0.6)', padding: '0.75rem', textAlign: 'center', fontWeight: 'bold', color: '#94a3b8', fontSize: '0.85rem' }}>{d}</div>
-                                ))}
+                            <CalendarScrollWrapper>
+                                <CalendarGrid>
+                                    {['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'].map(d => (
+                                        <div key={d} style={{ background: 'rgba(15, 23, 42, 0.6)', padding: '0.75rem', textAlign: 'center', fontWeight: 'bold', color: '#94a3b8', fontSize: '0.85rem' }}>{d}</div>
+                                    ))}
 
-                                {(() => {
-                                    const monthStart = startOfMonth(currentDate);
-                                    const monthEnd = endOfMonth(monthStart);
-                                    const startDate = startOfWeek(monthStart);
-                                    const endDate = endOfWeek(monthEnd);
-                                    const dateFormat = "d";
+                                    {(() => {
+                                        const monthStart = startOfMonth(currentDate);
+                                        const monthEnd = endOfMonth(monthStart);
+                                        const startDate = startOfWeek(monthStart);
+                                        const endDate = endOfWeek(monthEnd);
+                                        const dateFormat = "d";
 
 
-                                    const calendarDays = eachDayOfInterval({ start: startDate, end: endDate });
+                                        const calendarDays = eachDayOfInterval({ start: startDate, end: endDate });
 
-                                    // Helper to generate virtual tasks based on recurrence
-                                    const generateVirtualTasks = (currentTasks: Task[], viewingDate: Date): Task[] => {
-                                        const virtualTasks: Task[] = [];
-                                        const monthEnd = endOfMonth(viewingDate);
+                                        // Helper to generate virtual tasks based on recurrence
+                                        const generateVirtualTasks = (currentTasks: Task[], viewingDate: Date): Task[] => {
+                                            const virtualTasks: Task[] = [];
+                                            const monthEnd = endOfMonth(viewingDate);
 
-                                        currentTasks.forEach(task => {
-                                            if (!task.recurrence || !task.due_date) return;
+                                            currentTasks.forEach(task => {
+                                                if (!task.recurrence || !task.due_date) return;
 
-                                            const rec = task.recurrence;
-                                            let lastDate = new Date(task.due_date);
-                                            // Ensure lastDate is valid
-                                            if (isNaN(lastDate.getTime())) return;
+                                                const rec = task.recurrence;
+                                                let lastDate = new Date(task.due_date);
+                                                // Ensure lastDate is valid
+                                                if (isNaN(lastDate.getTime())) return;
 
-                                            // Prevent infinite loops
-                                            let safetyCounter = 0;
+                                                // Prevent infinite loops
+                                                let safetyCounter = 0;
 
-                                            while (lastDate < monthEnd && safetyCounter < 50) {
-                                                let nextDate: Date | null = null;
-                                                const interval = typeof rec.interval === 'string' ? parseInt(rec.interval) || 1 : rec.interval || 1;
+                                                while (lastDate < monthEnd && safetyCounter < 50) {
+                                                    let nextDate: Date | null = null;
+                                                    const interval = typeof rec.interval === 'string' ? parseInt(rec.interval) || 1 : rec.interval || 1;
 
-                                                if (rec.type === 'custom' || rec.type === 'daily' || rec.type === 'weekly') {
-                                                    if (rec.unit === 'day' || rec.type === 'daily') {
-                                                        nextDate = addDays(lastDate, interval);
-                                                    } else if (rec.unit === 'week' || rec.type === 'weekly') {
-                                                        nextDate = addWeeks(lastDate, interval);
-                                                    } else if (rec.unit === 'month') {
-                                                        nextDate = addMonths(lastDate, interval);
+                                                    if (rec.type === 'custom' || rec.type === 'daily' || rec.type === 'weekly') {
+                                                        if (rec.unit === 'day' || rec.type === 'daily') {
+                                                            nextDate = addDays(lastDate, interval);
+                                                        } else if (rec.unit === 'week' || rec.type === 'weekly') {
+                                                            nextDate = addWeeks(lastDate, interval);
+                                                        } else if (rec.unit === 'month') {
+                                                            nextDate = addMonths(lastDate, interval);
+                                                        }
                                                     }
-                                                }
 
-                                                if (nextDate && nextDate <= monthEnd) {
-                                                    // Create Virtual Task
-                                                    // Check if a real task already exists on this date for this crop/room to avoid dupes?
-                                                    // For now, simply trust the projection.
-                                                    virtualTasks.push({
-                                                        ...task,
-                                                        id: `virtual - ${task.id} -${nextDate.getTime()} `,
-                                                        due_date: format(nextDate, 'yyyy-MM-dd'),
-                                                        status: 'pending',
-                                                        title: `${task.title} (Proyectada)`,
-                                                        // Add a custom flag handled by UI
-                                                        type: task.type // Keep type for color
-                                                    });
-                                                    lastDate = nextDate;
+                                                    if (nextDate && nextDate <= monthEnd) {
+                                                        // Create Virtual Task
+                                                        // Check if a real task already exists on this date for this crop/room to avoid dupes?
+                                                        // For now, simply trust the projection.
+                                                        virtualTasks.push({
+                                                            ...task,
+                                                            id: `virtual - ${task.id} -${nextDate.getTime()} `,
+                                                            due_date: format(nextDate, 'yyyy-MM-dd'),
+                                                            status: 'pending',
+                                                            title: `${task.title} (Proyectada)`,
+                                                            // Add a custom flag handled by UI
+                                                            type: task.type // Keep type for color
+                                                        });
+                                                        lastDate = nextDate;
+                                                    } else {
+                                                        break;
+                                                    }
+                                                    safetyCounter++;
+                                                }
+                                            });
+                                            return virtualTasks;
+                                        };
+
+                                        const allVirtualTasks = generateVirtualTasks(tasks, currentDate);
+                                        const allTasksForView = [...tasks, ...allVirtualTasks];
+
+                                        return calendarDays.map((dayItem, idx) => {
+                                            const isCurrentMonth = isSameMonth(dayItem, monthStart);
+                                            const dateStr = format(dayItem, 'yyyy-MM-dd');
+                                            const dayTasks = allTasksForView.filter(t => t.due_date && t.due_date.split('T')[0] === dateStr);
+
+                                            // Determine Background Gradient based on Task Distribution
+                                            let dayBg = 'transparent';
+
+                                            if (dayTasks.length > 0) {
+                                                // Helper to get pastel color by task type
+                                                const getTaskColor = (t: Task) => {
+                                                    switch (t.type) {
+                                                        case 'danger': return 'rgba(239, 68, 68, 0.2)'; // Red
+                                                        case 'warning': return 'rgba(234, 179, 8, 0.2)'; // Yellow
+                                                        case 'fertilizar':
+                                                        case 'enmienda':
+                                                        case 'te_compost': return 'rgba(74, 222, 128, 0.2)'; // Green
+                                                        case 'riego': return 'rgba(56, 189, 248, 0.2)'; // Blue
+                                                        case 'poda_apical': return 'rgba(239, 68, 68, 0.2)'; // Light Red
+                                                        case 'defoliacion': return 'rgba(249, 115, 22, 0.2)'; // Orange
+                                                        case 'hst':
+                                                        case 'lst':
+                                                        case 'entrenamiento': return 'rgba(168, 85, 247, 0.2)'; // Purple
+                                                        case 'esquejes': return 'rgba(249, 115, 22, 0.2)'; // Orange
+                                                        default: return 'rgba(148, 163, 184, 0.2)'; // Gray (Info)
+                                                    }
+                                                };
+
+                                                if (dayTasks.length === 1) {
+                                                    dayBg = getTaskColor(dayTasks[0]);
                                                 } else {
-                                                    break;
+                                                    // Build linear gradient
+                                                    const step = 100 / dayTasks.length;
+                                                    const stops = dayTasks.map((t, i) => {
+                                                        const color = getTaskColor(t);
+                                                        return `${color} ${i * step}% ${(i + 1) * step}% `;
+                                                    }).join(', ');
+                                                    dayBg = `linear-gradient(135deg, ${stops})`;
                                                 }
-                                                safetyCounter++;
                                             }
-                                        });
-                                        return virtualTasks;
-                                    };
 
-                                    const allVirtualTasks = generateVirtualTasks(tasks, currentDate);
-                                    const allTasksForView = [...tasks, ...allVirtualTasks];
-
-                                    return calendarDays.map((dayItem, idx) => {
-                                        const isCurrentMonth = isSameMonth(dayItem, monthStart);
-                                        const dateStr = format(dayItem, 'yyyy-MM-dd');
-                                        const dayTasks = allTasksForView.filter(t => t.due_date && t.due_date.split('T')[0] === dateStr);
-
-                                        // Determine Background Gradient based on Task Distribution
-                                        let dayBg = 'transparent';
-
-                                        if (dayTasks.length > 0) {
-                                            // Helper to get pastel color by task type
-                                            const getTaskColor = (t: Task) => {
-                                                switch (t.type) {
-                                                    case 'danger': return 'rgba(239, 68, 68, 0.2)'; // Red
-                                                    case 'warning': return 'rgba(234, 179, 8, 0.2)'; // Yellow
-                                                    case 'fertilizar':
-                                                    case 'enmienda':
-                                                    case 'te_compost': return 'rgba(74, 222, 128, 0.2)'; // Green
-                                                    case 'riego': return 'rgba(56, 189, 248, 0.2)'; // Blue
-                                                    case 'poda_apical': return 'rgba(239, 68, 68, 0.2)'; // Light Red
-                                                    case 'defoliacion': return 'rgba(249, 115, 22, 0.2)'; // Orange
-                                                    case 'hst':
-                                                    case 'lst':
-                                                    case 'entrenamiento': return 'rgba(168, 85, 247, 0.2)'; // Purple
-                                                    case 'esquejes': return 'rgba(249, 115, 22, 0.2)'; // Orange
-                                                    default: return 'rgba(148, 163, 184, 0.2)'; // Gray (Info)
-                                                }
-                                            };
-
-                                            if (dayTasks.length === 1) {
-                                                dayBg = getTaskColor(dayTasks[0]);
-                                            } else {
-                                                // Build linear gradient
-                                                const step = 100 / dayTasks.length;
-                                                const stops = dayTasks.map((t, i) => {
-                                                    const color = getTaskColor(t);
-                                                    return `${color} ${i * step}% ${(i + 1) * step}% `;
-                                                }).join(', ');
-                                                dayBg = `linear-gradient(135deg, ${stops})`;
-                                            }
-                                        }
-
-                                        // Phase Calculation Logic
-                                        let phaseBar = null;
+                                            // Phase Calculation Logic
+                                            let phaseBar = null;
 
 
 
-                                        if (room?.start_date && isCurrentMonth) {
-                                            // ... existing logic ...
-                                            const [y, m, d] = room.start_date.split('T')[0].split('-').map(Number);
-                                            const roomStart = new Date(y, m - 1, d);
-                                            const dayTime = new Date(dayItem).setHours(0, 0, 0, 0);
-                                            const startTime = roomStart.setHours(0, 0, 0, 0);
+                                            if (room?.start_date && isCurrentMonth) {
+                                                // ... existing logic ...
+                                                const [y, m, d] = room.start_date.split('T')[0].split('-').map(Number);
+                                                const roomStart = new Date(y, m - 1, d);
+                                                const dayTime = new Date(dayItem).setHours(0, 0, 0, 0);
+                                                const startTime = roomStart.setHours(0, 0, 0, 0);
 
-                                            if (dayTime >= startTime) {
-                                                const weekNum = Math.floor((dayTime - startTime) / (7 * 24 * 60 * 60 * 1000)) + 1;
-                                                let isFloweringPhase = false;
-                                                const activeBatch = room.batches?.find(b => b.genetic);
-                                                const geneticVegWeeks = activeBatch?.genetic?.vegetative_weeks;
+                                                if (dayTime >= startTime) {
+                                                    const weekNum = Math.floor((dayTime - startTime) / (7 * 24 * 60 * 60 * 1000)) + 1;
+                                                    let isFloweringPhase = false;
+                                                    const activeBatch = room.batches?.find(b => b.genetic);
+                                                    const geneticVegWeeks = activeBatch?.genetic?.vegetative_weeks;
 
-                                                if (geneticVegWeeks !== undefined && weekNum > geneticVegWeeks) {
-                                                    isFloweringPhase = true;
-                                                } else if (room.type === 'flowering') {
-                                                    isFloweringPhase = true;
-                                                }
+                                                    if (geneticVegWeeks !== undefined && weekNum > geneticVegWeeks) {
+                                                        isFloweringPhase = true;
+                                                    } else if (room.type === 'flowering') {
+                                                        isFloweringPhase = true;
+                                                    }
 
-                                                const color = isFloweringPhase ? '#fcd34d' : '#4ade80';
-                                                const showLabel = dayItem.getDay() === 1 || dayItem.getDate() === 1 || dayTime === startTime;
+                                                    const color = isFloweringPhase ? '#fcd34d' : '#4ade80';
+                                                    const showLabel = dayItem.getDay() === 1 || dayItem.getDate() === 1 || dayTime === startTime;
 
-                                                phaseBar = (
-                                                    <>
-                                                        <div style={{
-                                                            position: 'absolute', bottom: 0, left: 0, right: 0,
-                                                            height: '6px', background: color, opacity: 0.7
-                                                        }} title={`Semana ${weekNum} del ciclo ${isFloweringPhase ? '(Floración)' : '(Vegetativo)'} `}></div>
-                                                        {showLabel && (
+                                                    phaseBar = (
+                                                        <>
                                                             <div style={{
-                                                                position: 'absolute', bottom: '8px', right: '2px',
-                                                                fontSize: '0.65rem', fontWeight: 'bold', color: isFloweringPhase ? '#fef3c7' : '#f0fdf4',
-                                                                background: 'rgba(15, 23, 42, 0.8)', padding: '0 4px', borderRadius: '4px', border: `1px solid ${color}`
-                                                            }}>Sem {weekNum}</div>
-                                                        )}
-                                                    </>
-                                                );
+                                                                position: 'absolute', bottom: 0, left: 0, right: 0,
+                                                                height: '6px', background: color, opacity: 0.7
+                                                            }} title={`Semana ${weekNum} del ciclo ${isFloweringPhase ? '(Floración)' : '(Vegetativo)'} `}></div>
+                                                            {showLabel && (
+                                                                <div style={{
+                                                                    position: 'absolute', bottom: '8px', right: '2px',
+                                                                    fontSize: '0.65rem', fontWeight: 'bold', color: isFloweringPhase ? '#fef3c7' : '#f0fdf4',
+                                                                    background: 'rgba(15, 23, 42, 0.8)', padding: '0 4px', borderRadius: '4px', border: `1px solid ${color}`
+                                                                }}>Sem {weekNum}</div>
+                                                            )}
+                                                        </>
+                                                    );
+                                                }
                                             }
-                                        }
 
-                                        return (
-                                            <div
-                                                key={dayItem.toString()}
-                                                className="calendar-day calendar-day-hover"
-                                                style={{
-                                                    background: dayBg, // Applied dynamic background
-                                                    minHeight: '100px',
-                                                    padding: '0.5rem',
-                                                    position: 'relative',
-                                                    opacity: isCurrentMonth ? 1 : 0.4,
-                                                    cursor: user && (user.role === 'admin' || user.role === 'partner') ? 'pointer' : 'default',
-                                                    transition: 'all 0.2s',
-                                                    border: isSameDay(dayItem, new Date()) ? '2px solid #38bdf8' : '1px solid transparent'
-                                                }}
-                                                onClick={() => handleDayDetails(dayItem)}
-                                            >
-                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                    <span style={{ fontWeight: isSameDay(dayItem, new Date()) ? 'bold' : 'normal', color: isSameDay(dayItem, new Date()) ? '#7dd3fc' : '#f8fafc' }}>
-                                                        {format(dayItem, dateFormat)}
-                                                    </span>
-                                                    {/* Actions: Add Task / Sticky */}
-                                                    {user && (user.role === 'admin' || user.role === 'partner') && (
-                                                        <div style={{ display: 'flex', gap: '4px' }}>
+                                            return (
+                                                <div
+                                                    key={dayItem.toString()}
+                                                    className="calendar-day calendar-day-hover"
+                                                    style={{
+                                                        background: dayBg, // Applied dynamic background
+                                                        minHeight: '100px',
+                                                        padding: '0.5rem',
+                                                        position: 'relative',
+                                                        opacity: isCurrentMonth ? 1 : 0.4,
+                                                        cursor: user && (user.role === 'admin' || user.role === 'partner') ? 'pointer' : 'default',
+                                                        transition: 'all 0.2s',
+                                                        border: isSameDay(dayItem, new Date()) ? '2px solid #38bdf8' : '1px solid transparent'
+                                                    }}
+                                                    onClick={() => handleDayDetails(dayItem)}
+                                                >
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                        <span style={{ fontWeight: isSameDay(dayItem, new Date()) ? 'bold' : 'normal', color: isSameDay(dayItem, new Date()) ? '#7dd3fc' : '#f8fafc' }}>
+                                                            {format(dayItem, dateFormat)}
+                                                        </span>
+                                                        {/* Actions: Add Task / Sticky */}
+                                                        {user && (user.role === 'admin' || user.role === 'partner') && (
+                                                            <div style={{ display: 'flex', gap: '4px' }}>
 
-                                                            <span
-                                                                style={{ color: '#94a3b8', fontSize: '0.8rem', opacity: 0.8, cursor: 'pointer', padding: '2px' }}
-                                                                title="Agregar Tarea"
-                                                                onClick={(e) => { e.stopPropagation(); handleAddTask(dayItem); }}
-                                                            >
-                                                                <FaPlus />
-                                                            </span>
-                                                        </div>
-                                                    )}
-                                                </div>
-
-                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', marginTop: '4px' }}>
-                                                    {dayTasks.map(t => {
-                                                        const isVirtual = t.id.startsWith('virtual-');
-                                                        return (
-                                                            <div
-                                                                key={t.id}
-                                                                onClick={(e) => {
-                                                                    if (isVirtual) {
-                                                                        e.stopPropagation();
-                                                                        setIsProjectionAlertOpen(true);
-                                                                        return;
-                                                                    }
-                                                                    handleTaskClick(e, t);
-                                                                }}
-                                                                style={{
-                                                                    fontSize: '0.7rem', padding: '2px 4px', borderRadius: '3px',
-                                                                    background: isVirtual ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.6)',
-                                                                    color: '#2d3748',
-                                                                    whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-                                                                    borderLeft: `3px solid ${t.status === 'done' ? '#48bb78' : isVirtual ? '#a0aec0' : '#718096'} `,
-                                                                    cursor: isVirtual ? 'default' : 'pointer',
-                                                                    boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
-                                                                    opacity: isVirtual ? 0.7 : 1,
-                                                                    fontStyle: isVirtual ? 'italic' : 'normal',
-                                                                    border: isVirtual ? '1px dashed #cbd5e0' : 'none'
-                                                                }}
-                                                                title={isVirtual ? "Proyección futura (Virtual)" : t.title}
-                                                            >
-                                                                {t.title.replace(' (Proyectada)', '')}
+                                                                <span
+                                                                    style={{ color: '#94a3b8', fontSize: '0.8rem', opacity: 0.8, cursor: 'pointer', padding: '2px' }}
+                                                                    title="Agregar Tarea"
+                                                                    onClick={(e) => { e.stopPropagation(); handleAddTask(dayItem); }}
+                                                                >
+                                                                    <FaPlus />
+                                                                </span>
                                                             </div>
-                                                        );
-                                                    })}
-                                                </div>
+                                                        )}
+                                                    </div>
 
-                                                {phaseBar}
-                                            </div>
-                                        );
-                                    });
-                                })()}
-                            </div>
-                        </div >
+                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', marginTop: '4px' }}>
+                                                        {dayTasks.map(t => {
+                                                            const isVirtual = t.id.startsWith('virtual-');
+                                                            return (
+                                                                <div
+                                                                    key={t.id}
+                                                                    onClick={(e) => {
+                                                                        if (isVirtual) {
+                                                                            e.stopPropagation();
+                                                                            setIsProjectionAlertOpen(true);
+                                                                            return;
+                                                                        }
+                                                                        handleTaskClick(e, t);
+                                                                    }}
+                                                                    style={{
+                                                                        fontSize: '0.7rem', padding: '2px 4px', borderRadius: '3px',
+                                                                        background: isVirtual ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.6)',
+                                                                        color: '#2d3748',
+                                                                        whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                                                                        borderLeft: `3px solid ${t.status === 'done' ? '#48bb78' : isVirtual ? '#a0aec0' : '#718096'} `,
+                                                                        cursor: isVirtual ? 'default' : 'pointer',
+                                                                        boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                                                                        opacity: isVirtual ? 0.7 : 1,
+                                                                        fontStyle: isVirtual ? 'italic' : 'normal',
+                                                                        border: isVirtual ? '1px dashed #cbd5e0' : 'none'
+                                                                    }}
+                                                                    title={isVirtual ? "Proyección futura (Virtual)" : t.title}
+                                                                >
+                                                                    {t.title.replace(' (Proyectada)', '')}
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
+
+                                                    {phaseBar}
+                                                </div>
+                                            );
+                                        });
+                                    })()}
+                                </CalendarGrid>
+                            </CalendarScrollWrapper>
+                        </CalendarContainer>
                     )
                 }
 
@@ -5090,9 +5406,9 @@ const RoomDetail: React.FC = () => {
 
                                 {user && (user.role === 'admin' || user.role === 'partner') ? (
                                     <>
-                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', flex: 1 }}>
+                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2rem', flex: 1 }}>
                                             {/* Left Column: Primary Info */}
-                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', flex: '1 1 300px' }}>
                                                 <FormGroup>
                                                     <label style={{ color: '#94a3b8', fontWeight: 600, fontSize: '0.9rem', marginBottom: '0.5rem', display: 'block' }}>Tipo de Tarea</label>
                                                     <CustomSelect
@@ -5131,8 +5447,8 @@ const RoomDetail: React.FC = () => {
                                                     />
                                                 </FormGroup>
 
-                                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                                                    <FormGroup>
+                                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem' }}>
+                                                    <FormGroup style={{ flex: '1 1 150px' }}>
                                                         <label style={{ color: '#94a3b8', fontWeight: 600, fontSize: '0.9rem', marginBottom: '0.5rem', display: 'block' }}>Fecha</label>
                                                         <CustomDatePicker
                                                             selected={taskForm.due_date ? new Date(taskForm.due_date) : new Date()}
@@ -5143,7 +5459,7 @@ const RoomDetail: React.FC = () => {
                                                             }}
                                                         />
                                                     </FormGroup>
-                                                    <FormGroup>
+                                                    <FormGroup style={{ flex: '1 1 150px' }}>
                                                         <label style={{ color: '#94a3b8', fontWeight: 600, fontSize: '0.9rem', marginBottom: '0.5rem', display: 'block' }}>Asignar a</label>
                                                         <CustomSelect
                                                             value={taskForm.assigned_to}
@@ -5247,7 +5563,7 @@ const RoomDetail: React.FC = () => {
                                             </div>
 
                                             {/* Right Column: Instructions & Files */}
-                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', flex: '1 1 300px' }}>
                                                 <FormGroup style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
                                                     <label style={{ color: '#94a3b8', fontWeight: 600, fontSize: '0.9rem', marginBottom: '0.5rem', display: 'block' }}>Instrucciones</label>
                                                     <textarea
@@ -6396,71 +6712,73 @@ const RoomDetail: React.FC = () => {
                                             No hay movimientos registrados recientemente.
                                         </p>
                                     ) : (
-                                        <table style={{ width: '100%', borderCollapse: 'collapse', color: '#f8fafc' }}>
-                                            <thead>
-                                                <tr style={{ borderBottom: '2px solid rgba(255, 255, 255, 0.1)', textAlign: 'left' }}>
-                                                    <th style={{ padding: '0.75rem', color: '#94a3b8', fontSize: '0.85rem' }}>Fecha</th>
-                                                    <th style={{ padding: '0.75rem', color: '#94a3b8', fontSize: '0.85rem' }}>Usuario</th>
-                                                    <th style={{ padding: '0.75rem', color: '#94a3b8', fontSize: '0.85rem' }}>Código</th>
-                                                    <th style={{ padding: '0.75rem', color: '#94a3b8', fontSize: '0.85rem' }}>Acción/Notas</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {roomHistory.map((move: any) => {
-                                                    // Date Formatting
-                                                    const dateObj = move.moved_at ? new Date(move.moved_at) : null;
-                                                    const dateStr = dateObj ? dateObj.toLocaleDateString('es-AR', { weekday: 'long', year: 'numeric', month: '2-digit', day: '2-digit' }) : '-';
-                                                    const timeStr = dateObj ? dateObj.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: true }).toLowerCase() : '';
-                                                    const fullDate = dateObj ? `${dateStr.charAt(0).toUpperCase() + dateStr.slice(1)} - ${timeStr} ` : '-';
+                                        <div style={{ width: '100%', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+                                            <table style={{ minWidth: '600px', width: '100%', borderCollapse: 'collapse', color: '#f8fafc' }}>
+                                                <thead>
+                                                    <tr style={{ borderBottom: '2px solid rgba(255, 255, 255, 0.1)', textAlign: 'left' }}>
+                                                        <th style={{ padding: '0.75rem', color: '#94a3b8', fontSize: '0.85rem', whiteSpace: 'nowrap' }}>Fecha</th>
+                                                        <th style={{ padding: '0.75rem', color: '#94a3b8', fontSize: '0.85rem', whiteSpace: 'nowrap' }}>Usuario</th>
+                                                        <th style={{ padding: '0.75rem', color: '#94a3b8', fontSize: '0.85rem', whiteSpace: 'nowrap' }}>Código</th>
+                                                        <th style={{ padding: '0.75rem', color: '#94a3b8', fontSize: '0.85rem', whiteSpace: 'nowrap' }}>Acción/Notas</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {roomHistory.map((move: any) => {
+                                                        // Date Formatting
+                                                        const dateObj = move.moved_at ? new Date(move.moved_at) : null;
+                                                        const dateStr = dateObj ? dateObj.toLocaleDateString('es-AR', { weekday: 'long', year: 'numeric', month: '2-digit', day: '2-digit' }) : '-';
+                                                        const timeStr = dateObj ? dateObj.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: true }).toLowerCase() : '';
+                                                        const fullDate = dateObj ? `${dateStr.charAt(0).toUpperCase() + dateStr.slice(1)} - ${timeStr} ` : '-';
 
-                                                    // Color Coding Logic
-                                                    let rowBg = 'transparent';
-                                                    let noteColor = '#94a3b8';
-                                                    let borderColor = 'rgba(255, 255, 255, 0.05)';
+                                                        // Color Coding Logic
+                                                        let rowBg = 'transparent';
+                                                        let noteColor = '#94a3b8';
+                                                        let borderColor = 'rgba(255, 255, 255, 0.05)';
 
-                                                    const noteLower = (move.notes || '').toLowerCase();
+                                                        const noteLower = (move.notes || '').toLowerCase();
 
-                                                    if (noteLower.includes('observación') || noteLower.includes('alerta')) {
-                                                        rowBg = 'rgba(253, 224, 71, 0.1)'; // Light Yellow
-                                                        noteColor = '#fde047'; // Dark Yellow
-                                                        borderColor = 'rgba(253, 224, 71, 0.2)';
-                                                    } else if (noteLower.includes('etapa') || noteLower.includes('transplante') || noteLower.includes('siembra')) {
-                                                        rowBg = 'rgba(74, 222, 128, 0.1)'; // Light Green
-                                                        noteColor = '#4ade80'; // Dark Green
-                                                        borderColor = 'rgba(74, 222, 128, 0.2)';
-                                                    } else if (noteLower.includes('eliminado') || noteLower.includes('baja') || noteLower.includes('descartad')) {
-                                                        rowBg = 'rgba(248, 113, 113, 0.1)'; // Light Red
-                                                        noteColor = '#f87171'; // Dark Red
-                                                        borderColor = 'rgba(248, 113, 113, 0.2)';
-                                                    } else if (noteLower.includes('nota') || noteLower.includes('edición')) {
-                                                        rowBg = 'rgba(56, 189, 248, 0.1)'; // Light Blue
-                                                        noteColor = '#38bdf8'; // Dark Blue
-                                                        borderColor = 'rgba(56, 189, 248, 0.2)';
-                                                    }
+                                                        if (noteLower.includes('observación') || noteLower.includes('alerta')) {
+                                                            rowBg = 'rgba(253, 224, 71, 0.1)'; // Light Yellow
+                                                            noteColor = '#fde047'; // Dark Yellow
+                                                            borderColor = 'rgba(253, 224, 71, 0.2)';
+                                                        } else if (noteLower.includes('etapa') || noteLower.includes('transplante') || noteLower.includes('siembra')) {
+                                                            rowBg = 'rgba(74, 222, 128, 0.1)'; // Light Green
+                                                            noteColor = '#4ade80'; // Dark Green
+                                                            borderColor = 'rgba(74, 222, 128, 0.2)';
+                                                        } else if (noteLower.includes('eliminado') || noteLower.includes('baja') || noteLower.includes('descartad')) {
+                                                            rowBg = 'rgba(248, 113, 113, 0.1)'; // Light Red
+                                                            noteColor = '#f87171'; // Dark Red
+                                                            borderColor = 'rgba(248, 113, 113, 0.2)';
+                                                        } else if (noteLower.includes('nota') || noteLower.includes('edición')) {
+                                                            rowBg = 'rgba(56, 189, 248, 0.1)'; // Light Blue
+                                                            noteColor = '#38bdf8'; // Dark Blue
+                                                            borderColor = 'rgba(56, 189, 248, 0.2)';
+                                                        }
 
-                                                    return (
-                                                        <tr key={move.id} style={{ borderBottom: `1px solid ${borderColor}`, background: rowBg }}>
-                                                            <td style={{ padding: '0.75rem', color: '#f8fafc', fontSize: '0.9rem', whiteSpace: 'nowrap' }}>
-                                                                {fullDate}
-                                                            </td>
-                                                            <td style={{ padding: '0.75rem', color: '#cbd5e1', fontSize: '0.9rem' }}>
-                                                                {move.user?.full_name || move.user?.email || 'Sistema'}
-                                                            </td>
-                                                            <td style={{ padding: '0.75rem', fontWeight: 600, color: '#f8fafc', fontSize: '0.9rem' }}>
-                                                                {move.batch?.tracking_code || move.batch?.name || 'Desconocido'}
-                                                            </td>
-                                                            <td style={{ padding: '0.75rem', color: noteColor, fontSize: '0.9rem', fontWeight: 500 }}>
-                                                                {move.notes || '-'}
-                                                            </td>
-                                                        </tr>
-                                                    );
-                                                })}
-                                            </tbody>
-                                        </table>
+                                                        return (
+                                                            <tr key={move.id} style={{ borderBottom: `1px solid ${borderColor}`, background: rowBg }}>
+                                                                <td style={{ padding: '0.75rem', color: '#f8fafc', fontSize: '0.9rem', whiteSpace: 'nowrap' }}>
+                                                                    {fullDate}
+                                                                </td>
+                                                                <td style={{ padding: '0.75rem', color: '#cbd5e1', fontSize: '0.9rem', whiteSpace: 'nowrap' }}>
+                                                                    {move.user?.full_name || move.user?.email || 'Sistema'}
+                                                                </td>
+                                                                <td style={{ padding: '0.75rem', fontWeight: 600, color: '#f8fafc', fontSize: '0.9rem', whiteSpace: 'nowrap' }}>
+                                                                    {move.batch?.tracking_code || move.batch?.name || 'Desconocido'}
+                                                                </td>
+                                                                <td style={{ padding: '0.75rem', color: noteColor, fontSize: '0.9rem', fontWeight: 500, whiteSpace: 'nowrap' }}>
+                                                                    {move.notes || '-'}
+                                                                </td>
+                                                            </tr>
+                                                        );
+                                                    })}
+                                                </tbody>
+                                            </table>
+                                        </div>
                                     )}
                                 </div>
                             </ModalContent>
-                        </PortalModalOverlay >
+                        </PortalModalOverlay>
                     )
                 }
 
@@ -6731,14 +7049,14 @@ const RoomDetail: React.FC = () => {
                     (finalizeBatch || finalizeBatches || isClosingFinalize) && (
                         <PortalModalOverlay isClosing={isClosingFinalize}>
                             <ModalContent isClosing={isClosingFinalize} style={{ maxWidth: '400px' }}>
-                                <h2 style={{ marginBottom: '1rem', color: '#2d3748' }}>
+                                <h2 style={{ marginBottom: '1rem', color: '#f8fafc' }}>
                                     {finalizeBatches ? 'Finalizar Grupo Completo' : 'Finalizar Secado'}
                                 </h2>
-                                <p style={{ marginBottom: '1rem', color: '#4a5568' }}>
+                                <p style={{ marginBottom: '1rem', color: '#cbd5e1' }}>
                                     {finalizeBatches ? (
                                         <>
-                                            Estás enviando <strong>{finalizeBatches.length} lotes</strong> ({finalizeBatches.reduce((acc, b) => acc + b.quantity, 0)} plantas) a Stock.
-                                            <br /><span style={{ fontSize: '0.85rem', color: '#718096' }}>El peso total se distribuirá proporcionalmente.</span>
+                                            Estás enviando <strong>1 lote</strong> de {finalizeBatches.reduce((acc, b) => acc + b.quantity, 0)} plantas a Stock.
+                                            <br /><span style={{ fontSize: '0.85rem', color: '#94a3b8' }}>El peso total se distribuirá proporcionalmente.</span>
                                         </>
                                     ) : (
                                         <>Estás enviando <strong>{finalizeBatch?.name}</strong> ({finalizeBatch?.quantity} plantas) a Stock.</>
@@ -6746,7 +7064,7 @@ const RoomDetail: React.FC = () => {
                                 </p>
 
                                 <div style={{ marginBottom: '1rem' }}>
-                                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>
+                                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#f8fafc' }}>
                                         {finalizeBatches ? 'Peso Seco TOTAL del Grupo (g)' : 'Peso Seco Final (g)'}
                                     </label>
                                     <input
@@ -6754,24 +7072,24 @@ const RoomDetail: React.FC = () => {
                                         autoFocus
                                         value={finalWeight}
                                         onChange={e => setFinalWeight(e.target.value)}
-                                        style={{ width: '100%', padding: '0.5rem', border: '1px solid #e2e8f0', borderRadius: '0.5rem' }}
+                                        style={{ width: '100%', padding: '0.75rem', background: 'rgba(15, 23, 42, 0.6)', border: '1px solid rgba(255, 255, 255, 0.1)', color: '#f8fafc', borderRadius: '0.5rem' }}
                                         placeholder="0.00"
                                     />
                                 </div>
 
                                 <div style={{ marginBottom: '1.5rem' }}>
-                                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Notas</label>
+                                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#f8fafc' }}>Notas</label>
                                     <textarea
                                         value={finalNotes}
                                         onChange={e => setFinalNotes(e.target.value)}
-                                        style={{ width: '100%', padding: '0.5rem', border: '1px solid #e2e8f0', borderRadius: '0.5rem' }}
+                                        style={{ width: '100%', padding: '0.75rem', background: 'rgba(15, 23, 42, 0.6)', border: '1px solid rgba(255, 255, 255, 0.1)', color: '#f8fafc', borderRadius: '0.5rem' }}
                                         rows={3}
                                         placeholder="Calidad, observaciones..."
                                     />
                                 </div>
 
                                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
-                                    <button
+                                    <CancelButton
                                         onClick={() => {
                                             setIsClosingFinalize(true);
                                             setTimeout(() => {
@@ -6780,31 +7098,20 @@ const RoomDetail: React.FC = () => {
                                                 setIsClosingFinalize(false);
                                             }, 200);
                                         }}
-                                        style={{ background: 'white', border: '1px solid #e2e8f0', padding: '0.5rem 1rem', borderRadius: '0.5rem', cursor: 'pointer' }}
                                     >
                                         Cancelar
-                                    </button>
-                                    <button
+                                    </CancelButton>
+                                    <ActionButton
                                         onClick={async () => {
                                             await handleConfirmFinalize();
                                         }}
                                         disabled={isFinalizing}
-                                        style={{
-                                            background: isFinalizing ? '#9ae6b4' : '#38a169',
-                                            color: 'white',
-                                            border: 'none',
-                                            padding: '0.5rem 1rem',
-                                            borderRadius: '0.5rem',
-                                            cursor: isFinalizing ? 'not-allowed' : 'pointer',
-                                            fontWeight: 600,
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: '0.5rem'
-                                        }}
+                                        $variant="success"
+                                        style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
                                     >
                                         {isFinalizing && <FaCircleNotch className="spin" />}
                                         {isFinalizing ? 'Enviando...' : 'Confirmar y Enviar'}
-                                    </button>
+                                    </ActionButton>
                                 </div>
                             </ModalContent>
                         </PortalModalOverlay>

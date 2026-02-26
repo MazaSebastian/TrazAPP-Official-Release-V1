@@ -32,13 +32,14 @@ const slideDown = keyframes`
   to { opacity: 0; transform: translateY(20px) scale(0.95); }
 `;
 
-// Styled Components
 const PageContainer = styled.div`
   padding: 1rem;
+  padding-top: 1.5rem;
   max-width: 1400px; 
   margin: 0 auto;
   min-height: 100vh;
   color: #f8fafc;
+  box-sizing: border-box;
 `;
 
 const Header = styled.div`
@@ -46,6 +47,12 @@ const Header = styled.div`
   justify-content: space-between;
   align-items: center;
   margin-bottom: 2rem;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: stretch;
+  }
 `;
 
 const Title = styled.h1`
@@ -54,6 +61,11 @@ const Title = styled.h1`
   display: flex;
   align-items: center;
   gap: 0.5rem;
+
+  @media (max-width: 768px) {
+    justify-content: center;
+    text-align: center;
+  }
 `;
 
 const ActionButton = styled.button`
@@ -69,6 +81,7 @@ const ActionButton = styled.button`
   gap: 0.5rem;
   transition: all 0.2s;
   backdrop-filter: blur(8px);
+  justify-content: center;
 
   &:hover {
     background: rgba(168, 85, 247, 0.3);
@@ -107,6 +120,45 @@ const PatientCard = styled.div`
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
     border-color: rgba(168, 85, 247, 0.3);
   }
+
+  .desktop-content {
+    display: block;
+    @media (max-width: 768px) {
+      display: none;
+    }
+  }
+
+  .mobile-content {
+    display: none;
+    @media (max-width: 768px) {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+    }
+    
+    .m-info {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      font-size: 0.9rem;
+    }
+
+    .m-name {
+      font-weight: 700;
+      color: #f8fafc;
+    }
+    
+    .m-dni {
+      color: #94a3b8;
+    }
+  }
+
+  @media (max-width: 768px) {
+    padding: 0.75rem 1rem;
+    border-radius: 0.75rem;
+  }
 `;
 
 const StatusBadge = styled.span<{ status: string }>`
@@ -138,6 +190,7 @@ const SearchInput = styled.input`
   background: rgba(30, 41, 59, 0.5);
   color: #f8fafc;
   backdrop-filter: blur(8px);
+  box-sizing: border-box;
 
   &:focus {
     outline: none;
@@ -223,6 +276,17 @@ const FormRow = styled.div`
     @media (max-width: 600px) {
         grid-template-columns: 1fr;
     }
+`;
+
+const ModalGrid = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
 `;
 
 const SectionHeader = styled.h3`
@@ -516,46 +580,62 @@ const Patients: React.FC = () => {
                     <CardGrid>
                         {filteredPatients.map(patient => (
                             <PatientCard key={patient.id} onClick={() => openEdit(patient)}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                                    <StatusBadge status={patient.reprocann_status}>
+                                {/* Desktop View */}
+                                <div className="desktop-content">
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                                        <StatusBadge status={patient.reprocann_status}>
+                                            {patient.reprocann_status === 'active' ? 'Activo' :
+                                                patient.reprocann_status === 'expired' ? 'Vencido' : 'Pendiente'}
+                                        </StatusBadge>
+                                        <span style={{ fontSize: '0.8rem', color: '#718096' }}>Límite Mensual: {patient.monthly_limit}g</span>
+                                    </div>
+                                    <h3 style={{ margin: '0 0 0.25rem 0' }}>{patient.profile?.full_name || 'Sin Nombre'}</h3>
+                                    <p style={{ color: '#718096', fontSize: '0.9rem', margin: 0 }}>
+                                        {patient.reprocann_number || 'Sin Reprocann'}
+                                    </p>
+                                    {/* Show extra info if available */}
+                                    {patient.document_number && <p style={{ fontSize: '0.8rem', color: '#94a3b8' }}>DNI: {patient.document_number}</p>}
+                                    {(patient as any).expiration_date && (
+                                        <small style={{ color: new Date((patient as any).expiration_date!) < new Date() ? '#f87171' : '#4ade80', display: 'block', marginTop: '0.5rem' }}>
+                                            Vence: {(patient as any).expiration_date}
+                                        </small>
+                                    )}
+
+                                    <div style={{ marginTop: '1rem', borderTop: '1px solid rgba(255, 255, 255, 0.1)', paddingTop: '1rem', display: 'flex', gap: '0.5rem' }}>
+                                        <ActionButton
+                                            type="button"
+                                            style={{ flex: 1, justifyContent: 'center', padding: '0.75rem 0.5rem', fontSize: '0.9rem' }}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                navigate(`/patients/${patient.id || patient.profile_id}`);
+                                            }}
+                                        >
+                                            <FaFileAlt /> H. Clínica
+                                        </ActionButton>
+                                        <ActionButton
+                                            type="button"
+                                            style={{ flex: 1, justifyContent: 'center', padding: '0.75rem 0.5rem', fontSize: '0.9rem', backgroundColor: 'rgba(59, 130, 246, 0.2)', color: '#60a5fa', border: '1px solid rgba(59, 130, 246, 0.4)' }}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                navigate(`/patients/${patient.id || patient.profile_id}?action=new_followup`);
+                                            }}
+                                        >
+                                            <FaNotesMedical /> Seguimiento
+                                        </ActionButton>
+                                    </div>
+                                </div>
+
+                                {/* Mobile View (Compact Single Line) */}
+                                <div className="mobile-content">
+                                    <div className="m-info">
+                                        <span className="m-name">{patient.profile?.full_name || 'Sin Nombre'}</span>
+                                        <span style={{ color: '#475569' }}>-</span>
+                                        <span className="m-dni">{patient.document_number || 'Sin DNI'}</span>
+                                    </div>
+                                    <StatusBadge status={patient.reprocann_status} style={{ fontSize: '0.65rem', padding: '0.15rem 0.4rem' }}>
                                         {patient.reprocann_status === 'active' ? 'Activo' :
                                             patient.reprocann_status === 'expired' ? 'Vencido' : 'Pendiente'}
                                     </StatusBadge>
-                                    <span style={{ fontSize: '0.8rem', color: '#718096' }}>Límite Mensual: {patient.monthly_limit}g</span>
-                                </div>
-                                <h3 style={{ margin: '0 0 0.25rem 0' }}>{patient.profile?.full_name || 'Sin Nombre'}</h3>
-                                <p style={{ color: '#718096', fontSize: '0.9rem', margin: 0 }}>
-                                    {patient.reprocann_number || 'Sin Reprocann'}
-                                </p>
-                                {/* Show extra info if available */}
-                                {patient.document_number && <p style={{ fontSize: '0.8rem', color: '#94a3b8' }}>DNI: {patient.document_number}</p>}
-                                {(patient as any).expiration_date && (
-                                    <small style={{ color: new Date((patient as any).expiration_date!) < new Date() ? '#f87171' : '#4ade80', display: 'block', marginTop: '0.5rem' }}>
-                                        Vence: {(patient as any).expiration_date}
-                                    </small>
-                                )}
-
-                                <div style={{ marginTop: '1rem', borderTop: '1px solid rgba(255, 255, 255, 0.1)', paddingTop: '1rem', display: 'flex', gap: '0.5rem' }}>
-                                    <ActionButton
-                                        type="button"
-                                        style={{ flex: 1, justifyContent: 'center', padding: '0.75rem 0.5rem', fontSize: '0.9rem' }}
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            navigate(`/patients/${patient.id || patient.profile_id}`);
-                                        }}
-                                    >
-                                        <FaFileAlt /> H. Clínica
-                                    </ActionButton>
-                                    <ActionButton
-                                        type="button"
-                                        style={{ flex: 1, justifyContent: 'center', padding: '0.75rem 0.5rem', fontSize: '0.9rem', backgroundColor: 'rgba(59, 130, 246, 0.2)', color: '#60a5fa', border: '1px solid rgba(59, 130, 246, 0.4)' }}
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            navigate(`/patients/${patient.id || patient.profile_id}?action=new_followup`);
-                                        }}
-                                    >
-                                        <FaNotesMedical /> Seguimiento
-                                    </ActionButton>
                                 </div>
                             </PatientCard>
                         ))}
@@ -788,11 +868,12 @@ const Patients: React.FC = () => {
                                         <span style={{ fontSize: '0.9rem', color: '#94a3b8' }}>{selectedPatient.profile?.email}</span>
                                     </div>
                                     <StatusBadge status={selectedPatient.reprocann_status} style={{ fontSize: '1rem', padding: '0.5rem 1rem' }}>
-                                        {selectedPatient.reprocann_status.toUpperCase()}
+                                        {selectedPatient.reprocann_status === 'active' ? 'ACTIVO' :
+                                            selectedPatient.reprocann_status === 'expired' ? 'VENCIDO' : 'PENDIENTE'}
                                     </StatusBadge>
                                 </div>
 
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+                                <ModalGrid>
                                     <div>
                                         <SectionHeader style={{ marginTop: 0 }}>Datos Personales</SectionHeader>
                                         <p><strong>DNI:</strong> {selectedPatient.document_number || '-'}</p>
@@ -806,7 +887,7 @@ const Patients: React.FC = () => {
                                         <p><strong>Emisión:</strong> {selectedPatient.reprocann_issue_date || '-'}</p>
                                         <p><strong>Vencimiento:</strong> <span style={{ color: new Date(selectedPatient.expiration_date!) < new Date() ? 'red' : 'inherit' }}>{selectedPatient.expiration_date}</span></p>
                                     </div>
-                                </div>
+                                </ModalGrid>
 
                                 <SectionHeader>Documentación</SectionHeader>
                                 <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
@@ -814,19 +895,19 @@ const Patients: React.FC = () => {
                                         <ActionButton as="a" href={selectedPatient.file_reprocann_url} target="_blank" style={{ fontSize: '0.9rem' }}>
                                             <FaFileAlt /> Ver Credencial
                                         </ActionButton>
-                                    ) : <span style={{ color: '#64748b' }}>Sin Credencial</span>}
+                                    ) : <span style={{ color: '#64748b', fontSize: '0.9rem', alignSelf: 'center' }}>Sin Credencial</span>}
 
                                     {selectedPatient.file_affidavit_url ? (
                                         <ActionButton as="a" href={selectedPatient.file_affidavit_url} target="_blank" style={{ fontSize: '0.9rem' }}>
                                             <FaFileAlt /> Ver DDJJ
                                         </ActionButton>
-                                    ) : <span style={{ color: '#64748b' }}>Sin DDJJ</span>}
+                                    ) : <span style={{ color: '#64748b', fontSize: '0.9rem' }}>Sin DDJJ</span>}
 
                                     {selectedPatient.file_consent_url ? (
                                         <ActionButton as="a" href={selectedPatient.file_consent_url} target="_blank" style={{ fontSize: '0.9rem' }}>
                                             <FaFileAlt /> Ver Consentimiento
                                         </ActionButton>
-                                    ) : <span style={{ color: '#64748b' }}>Sin Consentimiento</span>}
+                                    ) : <span style={{ color: '#64748b', fontSize: '0.9rem' }}>Sin Consentimiento</span>}
                                 </div>
 
                                 <SectionHeader>Gestión de Estado</SectionHeader>

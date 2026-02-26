@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { useParams, useNavigate } from 'react-router-dom';
-import { FaArrowLeft, FaBarcode, FaBox, FaCalendarAlt, FaCut, FaMapMarkerAlt, FaSeedling, FaTag } from 'react-icons/fa';
+import { FaArrowLeft, FaBarcode, FaBox, FaCalendarAlt, FaCut, FaMapMarkerAlt, FaSeedling, FaTag, FaPrint } from 'react-icons/fa';
 import { roomsService } from '../services/roomsService';
 import { Batch } from '../types/rooms';
 import { LoadingSpinner } from '../components/LoadingSpinner';
@@ -13,7 +13,7 @@ const fadeIn = keyframes`
 
 const Container = styled.div`
     padding: 2rem;
-    padding-top: 5rem;
+    padding-top: 1.5rem;
     max-width: 1000px;
     margin: 0 auto;
     animation: ${fadeIn} 0.5s ease-in-out;
@@ -50,6 +50,28 @@ const BackButton = styled.button`
     justify-content: center;
     cursor: pointer;
     transition: all 0.2s;
+
+    &:hover {
+        background: rgba(255, 255, 255, 0.1);
+        transform: translateY(-2px);
+    }
+`;
+
+const ActionButton = styled.button`
+    background: rgba(15, 23, 42, 0.4);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #e2e8f0;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-weight: 600;
 
     &:hover {
         background: rgba(255, 255, 255, 0.1);
@@ -267,25 +289,30 @@ export const BatchDetail: React.FC = () => {
 
     return (
         <Container>
-            <Header>
-                <BackButton onClick={() => navigate(-1)} title="Volver"><FaArrowLeft /></BackButton>
-                <h1><FaBox style={{ color: '#38bdf8' }} /> Detalle de Lote</h1>
-            </Header>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '2rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
+                    <h2 style={{ fontSize: '2rem', margin: '0', color: '#f8fafc', fontFamily: "'Courier New', monospace", letterSpacing: '1px' }}>
+                        {displayName}
+                    </h2>
+                    <span style={{ background: 'rgba(74, 222, 128, 0.1)', color: '#4ade80', border: '1px solid rgba(74, 222, 128, 0.3)', padding: '0.2rem 0.75rem', borderRadius: '4px', fontSize: '1.1rem', fontWeight: 'bold' }}>
+                        {allUnits.length}u
+                    </span>
+                    <span style={{ display: 'inline-block', padding: '0.25rem 0.75rem', background: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', borderRadius: '1rem', fontSize: '1rem', fontWeight: 600 }}>
+                        {batch.genetic?.name || 'Genética Desconocida'}
+                    </span>
+                </div>
+
+                <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                    <ActionButton onClick={() => window.print()} title="Imprimir Ficha">
+                        <FaPrint /> Imprimir
+                    </ActionButton>
+                    <ActionButton onClick={() => navigate(-1)} title="Volver al Listado">
+                        <FaArrowLeft /> Volver
+                    </ActionButton>
+                </div>
+            </div>
 
             <GlassCard>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', marginBottom: '1rem' }}>
-                    <div style={{ background: 'rgba(255,255,255,0.05)', padding: '1.5rem', borderRadius: '1rem', border: '1px dashed rgba(255,255,255,0.1)' }}>
-                        <FaBarcode size={50} style={{ color: '#94a3b8' }} />
-                    </div>
-                    <div>
-                        <h2 style={{ fontSize: '2rem', margin: '0 0 0.5rem 0', color: '#f8fafc', fontFamily: "'Courier New', monospace", letterSpacing: '1px' }}>
-                            {displayName}
-                        </h2>
-                        <span style={{ display: 'inline-block', padding: '0.25rem 0.75rem', background: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', borderRadius: '1rem', fontSize: '0.85rem', fontWeight: 600 }}>
-                            {batch.genetic?.name || 'Genética Desconocida'}
-                        </span>
-                    </div>
-                </div>
 
                 <MetaGrid>
                     <MetaItem>

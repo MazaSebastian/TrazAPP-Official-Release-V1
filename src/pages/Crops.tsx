@@ -45,7 +45,7 @@ const scaleOut = keyframes`
 
 const Container = styled.div`
   padding: 2rem;
-  padding-top: 5rem;
+  padding-top: 1.5rem;
   max-width: 1400px;
   margin: 0 auto;
   min-height: 100vh;
@@ -53,7 +53,7 @@ const Container = styled.div`
   animation: ${fadeIn} 0.5s ease-in-out;
   
   @media (max-width: 768px) {
-    padding-top: 5.5rem;
+    padding-top: 1.5rem;
     padding-left: 1rem;
     padding-right: 1rem;
   }
