@@ -5451,7 +5451,7 @@ const RoomDetail: React.FC = () => {
                                                     <FormGroup style={{ flex: '1 1 150px' }}>
                                                         <label style={{ color: '#94a3b8', fontWeight: 600, fontSize: '0.9rem', marginBottom: '0.5rem', display: 'block' }}>Fecha</label>
                                                         <CustomDatePicker
-                                                            selected={taskForm.due_date ? new Date(taskForm.due_date) : new Date()}
+                                                            selected={taskForm.due_date ? new Date(`${taskForm.due_date}T12:00:00`) : new Date()}
                                                             onChange={(date) => {
                                                                 if (date) {
                                                                     setTaskForm({ ...taskForm, due_date: format(date, 'yyyy-MM-dd') });
@@ -7007,7 +7007,7 @@ const RoomDetail: React.FC = () => {
                                 <div style={{ marginBottom: '1.5rem' }}>
                                     <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#f8fafc' }}>Fecha de Inicio</label>
                                     <CustomDatePicker
-                                        selected={editRoomStartDate ? new Date(editRoomStartDate) : new Date()}
+                                        selected={editRoomStartDate ? new Date(`${editRoomStartDate}T12:00:00`) : new Date()}
                                         onChange={(date) => {
                                             if (date) {
                                                 setEditRoomStartDate(format(date, 'yyyy-MM-dd'));
