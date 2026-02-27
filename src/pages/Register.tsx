@@ -28,8 +28,8 @@ const Container = styled.div`
   
   @media (max-width: 768px) {
     overflow-y: auto; /* Allow scroll on very small mobile screens */
-    justify-content: flex-start; /* Prevent cut-off at top */
-    padding-top: 4rem; /* Give breathing room to logo */
+    /* Removed padding-top and flex-start to allow natural center flex */
+    min-height: 100svh; /* use svh for better iOS Safari handling */
   }
   
   /* Shared Tailwind-like utility classes */
@@ -53,6 +53,12 @@ const ContentWrapper = styled.div`
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  flex-grow: 1; /* Allow to take up remaining space in Container */
+  
+  @media (max-width: 768px) {
+    /* Explicitly take up remaining height to give absolute children room to center */
+    min-height: calc(100svh - 4rem);
+  }
 `;
 
 const StepContainer = styled(motion.div)`
