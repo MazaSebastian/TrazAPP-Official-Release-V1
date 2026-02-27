@@ -1748,7 +1748,8 @@ const RoomDetail: React.FC = () => {
         if (isEditModalOpen && room) {
             setEditRoomName(room.name);
             setEditRoomType(room.type || 'vegetation');
-            setEditRoomStartDate(room.start_date ? new Date(room.start_date).toISOString().split('T')[0] : '');
+            // If start_date is absolute ISO, split the string directly to keep the stored date, avoiding Date object UTC shift
+            setEditRoomStartDate(room.start_date ? room.start_date.split('T')[0] : '');
         }
     }, [isEditModalOpen, room]);
 
@@ -2284,7 +2285,7 @@ const RoomDetail: React.FC = () => {
             await roomsService.updateRoom(room.id, {
                 name: editRoomName,
                 type: editRoomType as any,
-                start_date: editRoomStartDate ? new Date(editRoomStartDate).toISOString() : undefined
+                start_date: editRoomStartDate ? `${editRoomStartDate}T12:00:00.000Z` : undefined
             });
             // Reload data without triggering global loading screen if possible, or accept short delay.
             // The flicker happened because setLoading(true) unmounted the modal/page content.
