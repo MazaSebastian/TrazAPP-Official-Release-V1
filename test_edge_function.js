@@ -1,31 +1,15 @@
-require('dotenv').config();
-const { createClient } = require('@supabase/supabase-js');
+const url = "https://fnzxjpynuijjxxpcpqtd.supabase.co/functions/v1/send-invite";
+const anonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZuenhqcHludWlqanh4cGNwcXRkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE0NDc3MzYsImV4cCI6MjA4NzAyMzczNn0.1qgAvml5ATk6Hk_CfHTG7w97fIYgL_SXwxxrffM-tf4";
 
-const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
-const anonKey = process.env.REACT_APP_SUPABASE_ANON_KEY;
-
-const supabase = createClient(supabaseUrl, anonKey);
-
-async function testEdgeFunction() {
-    console.log("Authenticating as owner email...");
-    // Let's just use the fetch API directly so we can see the exact HTTP response without the client throwing immediately!
-    const res = await fetch(`${supabaseUrl}/functions/v1/create-user`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${anonKey}` // valid jwt format, might get rejected by the internal role check but should pass kong
-        },
-        body: JSON.stringify({
-            email: 'test' + Date.now() + '@example.com',
-            password: 'password123',
-            name: 'Test Setup',
-            role: 'grower',
-            organizationId: 'e6c77b09-d43a-4180-b9be-7b0a1702c157'
-        })
+async function test() {
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${anonKey}` },
+      body: JSON.stringify({ email: "cliente.falso123456@gmail.com", inviteLink: "https://software.trazapp.ar/", orgName: "Test Org" })
     });
-
     console.log("Status:", res.status);
-    console.log("Text:", await res.text());
+    console.log("Response:", await res.text());
+  } catch (err) { console.error("Fetch error:", err); }
 }
-
-testEdgeFunction();
+test();
