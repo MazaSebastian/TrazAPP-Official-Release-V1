@@ -7,110 +7,123 @@ import Aurora from '../components/Aurora';
 import Antigravity from '../components/Antigravity';
 
 const EmailConfirmed: React.FC = () => {
-    const navigate = useNavigate();
-    const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
+  const navigate = useNavigate();
+  const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
+  const [countdown, setCountdown] = useState(5);
 
-    useEffect(() => {
-        // Escuchar cambios de sesión que ocurren automáticamente cuando la URL contiene hashes access_token de Supabase
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-            // EVENTOS esperados: SIGNED_IN, TOKEN_REFRESHED, INITIAL_SESSION
-            if (session?.user) {
-                setStatus('success');
+  useEffect(() => {
+    // Escuchar cambios de sesión que ocurren automáticamente cuando la URL contiene hashes access_token de Supabase
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      // EVENTOS esperados: SIGNED_IN, TOKEN_REFRESHED, INITIAL_SESSION
+      if (session?.user) {
+        setStatus('success');
+      }
+    });
+
+    const verifySession = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+
+        if (error) throw error;
+
+        if (session?.user) {
+          setStatus('success');
+        } else {
+          // Si llegamos sin hash ni sesión luego de un delay sutil, marcamos error o expirado.
+          // Le damos un pequeño buffer a Supabase auth listener para que parsee la URL.
+          setTimeout(() => {
+            if (status !== 'success') {
+              setStatus('error');
             }
-        });
+          }, 1500);
+        }
+      } catch (err) {
+        setStatus('error');
+      }
+    };
 
-        const verifySession = async () => {
-            try {
-                const { data: { session }, error } = await supabase.auth.getSession();
+    verifySession();
 
-                if (error) throw error;
+    return () => subscription.unsubscribe();
+  }, []);
 
-                if (session?.user) {
-                    setStatus('success');
-                } else {
-                    // Si llegamos sin hash ni sesión luego de un delay sutil, marcamos error o expirado.
-                    // Le damos un pequeño buffer a Supabase auth listener para que parsee la URL.
-                    setTimeout(() => {
-                        if (status !== 'success') {
-                            setStatus('error');
-                        }
-                    }, 1500);
-                }
-            } catch (err) {
-                setStatus('error');
-            }
-        };
+  // Effect for countdown redirect
+  useEffect(() => {
+    if (status === 'success') {
+      if (countdown > 0) {
+        const timerId = setTimeout(() => setCountdown(countdown - 1), 1000);
+        return () => clearTimeout(timerId);
+      } else {
+        navigate('/login', { replace: true });
+      }
+    }
+  }, [status, countdown, navigate]);
 
-        verifySession();
+  return (
+    <Container>
+      {/* Background Effects */}
+      <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0 }}>
+        <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0.6 }}>
+          <Aurora colorStops={["#199301", "#7cff67", "#037233"]} amplitude={1} blend={1} />
+        </div>
+        <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0.6 }}>
+          <Antigravity
+            count={500}
+            magnetRadius={10}
+            ringRadius={15}
+            waveSpeed={0.5}
+            waveAmplitude={2.6}
+            particleSize={0.5}
+            lerpSpeed={0.17}
+            color="#00ff59"
+          />
+        </div>
+      </div>
 
-        return () => subscription.unsubscribe();
-    }, [status]);
+      <ContentWrapper>
+        <LogoWrapper>
+          <img src="/trazapplogo.png" alt="TrazAPP Logo" />
+        </LogoWrapper>
 
-    return (
-        <Container>
-            {/* Background Effects */}
-            <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0 }}>
-                <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0.6 }}>
-                    <Aurora colorStops={["#199301", "#7cff67", "#037233"]} amplitude={1} blend={1} />
-                </div>
-                <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0.6 }}>
-                    <Antigravity
-                        count={500}
-                        magnetRadius={10}
-                        ringRadius={15}
-                        waveSpeed={0.5}
-                        waveAmplitude={2.6}
-                        particleSize={0.5}
-                        lerpSpeed={0.17}
-                        color="#00ff59"
-                    />
-                </div>
-            </div>
+        {status === 'loading' && (
+          <GlassCard>
+            <LoadingPulse>Verificando tu conexión...</LoadingPulse>
+          </GlassCard>
+        )}
 
-            <ContentWrapper>
-                <LogoWrapper>
-                    <img src="/trazapplogo.png" alt="TrazAPP Logo" />
-                </LogoWrapper>
+        {status === 'success' && (
+          <GlassCard>
+            <SuccessIcon>
+              <FaCheckCircle />
+            </SuccessIcon>
+            <Title>¡Correo Confirmado!</Title>
+            <Subtitle>
+              ¡Hemos confirmado tu acceso al sistema! En breve serás redirigido a la pantalla de inicio de sesión para que puedas disfrutar de la experiencia TrazAPP.
+            </Subtitle>
+            <ActionButton disabled style={{ cursor: 'wait', opacity: 0.8 }}>
+              Redirigiendo en {countdown} segundos...
+            </ActionButton>
+          </GlassCard>
+        )}
 
-                {status === 'loading' && (
-                    <GlassCard>
-                        <LoadingPulse>Verificando tu conexión...</LoadingPulse>
-                    </GlassCard>
-                )}
+        {status === 'error' && (
+          <GlassCard>
+            <ErrorIcon>
+              <FaExclamationTriangle />
+            </ErrorIcon>
+            <Title>El enlace ha expirado</Title>
+            <Subtitle>
+              Parece que este enlace de confirmación caducó o ya fue utilizado. Puedes solicitar uno nuevo intentando iniciar sesión.
+            </Subtitle>
+            <ActionButton onClick={() => navigate('/login')} className="error-btn">
+              Volver al Login
+            </ActionButton>
+          </GlassCard>
+        )}
 
-                {status === 'success' && (
-                    <GlassCard>
-                        <SuccessIcon>
-                            <FaCheckCircle />
-                        </SuccessIcon>
-                        <Title>¡Correo Confirmado!</Title>
-                        <Subtitle>
-                            Tu dirección de correo electrónico ha sido verificada exitosamente. Ya puedes ingresar a la plataforma y explorar tu escritorio.
-                        </Subtitle>
-                        <ActionButton onClick={() => navigate('/')}>
-                            Ir a mi Panel de Control
-                        </ActionButton>
-                    </GlassCard>
-                )}
-
-                {status === 'error' && (
-                    <GlassCard>
-                        <ErrorIcon>
-                            <FaExclamationTriangle />
-                        </ErrorIcon>
-                        <Title>El enlace ha expirado</Title>
-                        <Subtitle>
-                            Parece que este enlace de confirmación caducó o ya fue utilizado. Puedes solicitar uno nuevo intentando iniciar sesión.
-                        </Subtitle>
-                        <ActionButton onClick={() => navigate('/login')} className="error-btn">
-                            Volver al Login
-                        </ActionButton>
-                    </GlassCard>
-                )}
-
-            </ContentWrapper>
-        </Container>
-    );
+      </ContentWrapper>
+    </Container>
+  );
 };
 
 export default EmailConfirmed;
