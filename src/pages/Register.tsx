@@ -464,7 +464,8 @@ const Register: React.FC = () => {
       // Sign out the automatically created session so the user has to login manually
       await supabase.auth.signOut();
 
-      setTimeout(() => navigate('/login?registered=true', { replace: true }), 3000);
+      // Removed automatic redirect to implement manual validation UI
+      // setTimeout(() => navigate('/login?registered=true', { replace: true }), 3000);
 
     } catch (err: any) {
       setStatus('invalid');
@@ -771,11 +772,29 @@ const Register: React.FC = () => {
           )}
 
           {step === 10 && (
-            <StepContainer key="step10" variants={stepVariants} initial="initial">
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', background: 'rgba(20, 83, 45, 0.4)', border: '1px solid #22c55e', padding: '2rem 3rem', borderRadius: '1.5rem', backdropFilter: 'blur(16px)' }}>
-                <FaCheckCircle style={{ color: '#4ade80', fontSize: '3rem', marginBottom: '1rem' }} />
-                <span className="text-xl font-medium text-center">Registro exitoso.<br /><span style={{ fontSize: '0.9rem', color: '#94a3b8' }}>Redirigiendo al inicio de sesión...</span></span>
-              </div>
+            <StepContainer key="step10" variants={stepVariants} initial="initial" animate="animate" exit="exit">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.8 }}
+                style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}
+              >
+                <SummaryCard style={{ textAlign: 'center', alignItems: 'center', maxWidth: '450px' }}>
+                  <FaCheckCircle style={{ color: '#4ade80', fontSize: '3.5rem', marginBottom: '0.5rem' }} />
+                  <h3 style={{ fontSize: '1.4rem', color: '#f8fafc', fontWeight: 600, margin: '0.5rem 0' }}>¡Sistema configurado!</h3>
+                  <p style={{ color: '#cbd5e1', fontSize: '1.05rem', lineHeight: '1.5', margin: '0.5rem 0 1.5rem', fontWeight: 400 }}>
+                    <strong style={{ color: '#f8fafc' }}>{data.name.split(' ')[0]}</strong>, hemos enviado un mail de confirmación de acceso al sistema a tu casilla de correo.<br /><br />
+                    Por favor verifica el email enviado para ingresar a tu cuenta de manera segura.
+                  </p>
+
+                  <ValidationButton
+                    style={{ width: '100%', marginTop: '0.5rem' }}
+                    onClick={() => navigate('/login?registered=true', { replace: true })}
+                  >
+                    Entendido, ir al Login
+                  </ValidationButton>
+                </SummaryCard>
+              </motion.div>
             </StepContainer>
           )}
 
