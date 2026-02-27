@@ -5,6 +5,7 @@ import { FaCheckCircle, FaExclamationTriangle } from 'react-icons/fa';
 import { supabase } from '../services/supabaseClient';
 import Aurora from '../components/Aurora';
 import Antigravity from '../components/Antigravity';
+import StarBorder from '../components/StarBorder';
 
 const EmailConfirmed: React.FC = () => {
   const navigate = useNavigate();
@@ -62,7 +63,7 @@ const EmailConfirmed: React.FC = () => {
   return (
     <Container>
       {/* Background Effects */}
-      <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0 }}>
+      <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0 }}>
         <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0.6 }}>
           <Aurora colorStops={["#199301", "#7cff67", "#037233"]} amplitude={1} blend={1} />
         </div>
@@ -80,48 +81,49 @@ const EmailConfirmed: React.FC = () => {
         </div>
       </div>
 
-      <ContentWrapper>
-        <LogoWrapper>
-          <img src="/trazapplogo.png" alt="TrazAPP Logo" />
-        </LogoWrapper>
+      <ConfirmedCardWrapper>
+        <StarBorder as="div" color="#4ade80" speed="7s" thickness={3}>
+          <LogoWrapper>
+            <img src="/logotrazappfix.png" alt="TrazApp Logo" />
+          </LogoWrapper>
 
-        {status === 'loading' && (
-          <GlassCard>
-            <LoadingPulse>Verificando tu conexión...</LoadingPulse>
-          </GlassCard>
-        )}
+          {status === 'loading' && (
+            <div className="status-content">
+              <LoadingPulse>Verificando tu conexión...</LoadingPulse>
+            </div>
+          )}
 
-        {status === 'success' && (
-          <GlassCard>
-            <SuccessIcon>
-              <FaCheckCircle />
-            </SuccessIcon>
-            <Title>¡Correo Confirmado!</Title>
-            <Subtitle>
-              ¡Hemos confirmado tu acceso al sistema! En breve serás redirigido a la pantalla de inicio de sesión para que puedas disfrutar de la experiencia TrazAPP.
-            </Subtitle>
-            <ActionButton disabled style={{ cursor: 'wait', opacity: 0.8 }}>
-              Redirigiendo en {countdown} segundos...
-            </ActionButton>
-          </GlassCard>
-        )}
+          {status === 'success' && (
+            <div className="status-content">
+              <SuccessIcon>
+                <FaCheckCircle />
+              </SuccessIcon>
+              <Title>¡Correo Confirmado!</Title>
+              <Subtitle>
+                ¡Hemos confirmado tu acceso al sistema! En breve serás redirigido a la pantalla de inicio de sesión para que puedas disfrutar de la experiencia TrazAPP.
+              </Subtitle>
+              <ActionButton disabled style={{ cursor: 'wait', opacity: 0.8 }}>
+                Redirigiendo en {countdown} segundos...
+              </ActionButton>
+            </div>
+          )}
 
-        {status === 'error' && (
-          <GlassCard>
-            <ErrorIcon>
-              <FaExclamationTriangle />
-            </ErrorIcon>
-            <Title>El enlace ha expirado</Title>
-            <Subtitle>
-              Parece que este enlace de confirmación caducó o ya fue utilizado. Puedes solicitar uno nuevo intentando iniciar sesión.
-            </Subtitle>
-            <ActionButton onClick={() => navigate('/login')} className="error-btn">
-              Volver al Login
-            </ActionButton>
-          </GlassCard>
-        )}
-
-      </ContentWrapper>
+          {status === 'error' && (
+            <div className="status-content">
+              <ErrorIcon>
+                <FaExclamationTriangle />
+              </ErrorIcon>
+              <Title>El enlace ha expirado</Title>
+              <Subtitle>
+                Parece que este enlace de confirmación caducó o ya fue utilizado. Puedes solicitar uno nuevo intentando iniciar sesión.
+              </Subtitle>
+              <ActionButton onClick={() => navigate('/login')} className="error-btn">
+                Volver al Login
+              </ActionButton>
+            </div>
+          )}
+        </StarBorder>
+      </ConfirmedCardWrapper>
     </Container>
   );
 };
@@ -153,40 +155,62 @@ const Container = styled.div`
   padding: 2rem;
 `;
 
-const ContentWrapper = styled.div`
-  position: relative;
-  z-index: 10;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+const ConfirmedCardWrapper = styled.div`
   width: 100%;
   max-width: 480px;
+  position: relative;
+  z-index: 10;
   animation: ${slideUp} 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-`;
-
-const LogoWrapper = styled.div`
-  margin-bottom: 3rem;
   
-  img {
-    width: 80px;
-    height: auto;
-    filter: drop-shadow(0 0 20px rgba(34, 197, 94, 0.4));
+  .star-border-container {
+    width: 100%;
+    display: block;
+    border-radius: 1.5rem !important;
+    
+    background: rgba(15, 23, 42, 0.5);
+    backdrop-filter: blur(24px);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
+  
+  .inner-content {
+    background: transparent !important;
+    backdrop-filter: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 3rem !important;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+    text-align: center !important;
+
+    @media (max-width: 640px) {
+      padding: 2rem 1.5rem !important;
+    }
+  }
+
+  .status-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+    width: 100%;
   }
 `;
 
-const GlassCard = styled.div`
-  background: rgba(15, 23, 42, 0.6);
-  backdrop-filter: blur(24px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 3rem 2.5rem;
-  border-radius: 1.5rem;
-  width: 100%;
-  text-align: center;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1.5rem;
+const LogoWrapper = styled.div`
+  margin-bottom: 2rem;
+  
+  img {
+    width: 120px;
+    height: auto;
+    filter: drop-shadow(0 6px 8px rgba(0,0,0,0.4));
+
+    @media (max-width: 640px) {
+      width: 100px;
+    }
+  }
 `;
 
 const LoadingPulse = styled.div`

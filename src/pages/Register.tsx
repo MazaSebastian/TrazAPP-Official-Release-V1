@@ -491,7 +491,7 @@ const Register: React.FC = () => {
   if (status === 'invalid') {
     return (
       <Container>
-        <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0 }}>
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0 }}>
           <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0.6 }}>
             <Aurora colorStops={["#199301", "#7cff67", "#037233"]} amplitude={1} blend={1} />
           </div>
@@ -530,7 +530,7 @@ const Register: React.FC = () => {
   // The Main Cinematic Render
   return (
     <Container>
-      <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0 }}>
+      <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0 }}>
         <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0.6 }}>
           <Aurora colorStops={["#199301", "#7cff67", "#037233"]} amplitude={1} blend={1} />
         </div>
