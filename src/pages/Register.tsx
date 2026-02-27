@@ -547,7 +547,7 @@ const Register: React.FC = () => {
         </div>
       </div>
 
-      <ContentWrapper style={{ minHeight: '300px' }}>
+      <ContentWrapper style={{ minHeight: '300px' }} spellCheck={false} translate="no" data-gramm="false" data-gramm_editor="false" data-enable-grammarly="false">
         <AnimatePresence mode="wait">
 
           {step === 0 && (
