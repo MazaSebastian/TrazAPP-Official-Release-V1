@@ -28,8 +28,7 @@ const Container = styled.div`
   
   @media (max-width: 768px) {
     overflow-y: auto; /* Allow scroll on very small mobile screens */
-    /* Removed padding-top and flex-start to allow natural center flex */
-    min-height: 100svh; /* use svh for better iOS Safari handling */
+    justify-content: flex-start;
   }
   
   /* Shared Tailwind-like utility classes */
@@ -56,8 +55,9 @@ const ContentWrapper = styled.div`
   flex-grow: 1; /* Allow to take up remaining space in Container */
   
   @media (max-width: 768px) {
-    /* Explicitly take up remaining height to give absolute children room to center */
-    min-height: calc(100svh - 4rem);
+    justify-content: flex-start;
+    padding-top: 8rem;
+    min-height: 500px;
   }
 `;
 
