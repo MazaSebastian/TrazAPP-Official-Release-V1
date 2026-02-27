@@ -3,6 +3,7 @@ import styled, { keyframes } from 'styled-components';
 import { supabase } from '../../services/supabaseClient';
 import { Organization } from '../../types';
 import { CreateOrgModal } from './CreateOrgModal';
+import { ConfirmModal } from '../../components/ConfirmModal';
 import { FaPlus, FaUsers, FaTrash, FaCheck, FaBan, FaClock } from 'react-icons/fa';
 
 const fadeIn = keyframes`
@@ -236,6 +237,21 @@ const ClientManagement: React.FC = () => {
     const [activeTab, setActiveTab] = useState<'active' | 'pending' | 'suspended' | 'all'>('active');
     const [searchTerm, setSearchTerm] = useState('');
 
+    // Modal de Confirmación de Borrado
+    const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean, orgId: string | null, orgName: string }>({
+        isOpen: false,
+        orgId: null,
+        orgName: ''
+    });
+
+    // Modal de Confirmación de Cambio de Estado
+    const [statusModal, setStatusModal] = useState<{ isOpen: boolean, orgId: string | null, newStatus: 'active' | 'suspended' | null, confirmMsg: string }>({
+        isOpen: false,
+        orgId: null,
+        newStatus: null,
+        confirmMsg: ''
+    });
+
     useEffect(() => {
         fetchOrgs();
     }, []);
@@ -256,30 +272,42 @@ const ClientManagement: React.FC = () => {
         setIsLoading(false);
     };
 
-    const handleUpdateStatus = async (id: string, newStatus: 'active' | 'suspended') => {
+    const handleUpdateStatus = (id: string, newStatus: 'active' | 'suspended') => {
         const confirmMsg = newStatus === 'active'
             ? '¿Aprobar esta organización y darle acceso inmediato?'
             : '¿Suspender el acceso a esta organización?';
 
-        if (!window.confirm(confirmMsg)) return;
+        setStatusModal({ isOpen: true, orgId: id, newStatus, confirmMsg });
+    };
+
+    const executeUpdateStatus = async () => {
+        const { orgId, newStatus } = statusModal;
+        if (!orgId || !newStatus) return;
 
         try {
-            const { error } = await supabase.from('organizations').update({ status: newStatus }).eq('id', id);
+            const { error } = await supabase.from('organizations').update({ status: newStatus }).eq('id', orgId);
             if (error) throw error;
             // Optimistic update
-            setOrgs(prev => prev.map(o => o.id === id ? { ...o, status: newStatus } : o));
+            setOrgs(prev => prev.map(o => o.id === orgId ? { ...o, status: newStatus } : o));
+            setStatusModal({ isOpen: false, orgId: null, newStatus: null, confirmMsg: '' });
         } catch (e: any) {
             alert('Error: ' + e.message);
         }
     };
 
-    const handleDelete = async (id: string, name: string) => {
-        if (!window.confirm(`PELIGRO: ¿Estás seguro de ELIMINAR DEFINITIVAMENTE la organización "${name}"? \n\nEsta acción borrará TODOS los datos asociados (cultivos, usuarios, métricas) y NO se puede deshacer.`)) return;
+    const handleDelete = (id: string, name: string) => {
+        setDeleteModal({ isOpen: true, orgId: id, orgName: name });
+    };
+
+    const executeDelete = async () => {
+        const { orgId, orgName } = deleteModal;
+        if (!orgId) return;
 
         try {
-            const { error } = await supabase.from('organizations').delete().eq('id', id);
+            const { error } = await supabase.from('organizations').delete().eq('id', orgId);
             if (error) throw error;
-            setOrgs(prev => prev.filter(o => o.id !== id));
+            setOrgs(prev => prev.filter(o => o.id !== orgId));
+            setDeleteModal({ isOpen: false, orgId: null, orgName: '' });
         } catch (e: any) {
             alert('Error eliminando:' + e.message);
         }
@@ -409,6 +437,9 @@ const ClientManagement: React.FC = () => {
                                         <SmallBtn variant="danger" onClick={() => handleUpdateStatus(org.id, 'suspended')} title="Suspender Acceso">
                                             <FaBan /> Suspender
                                         </SmallBtn>
+                                        <SmallBtn variant="danger" onClick={() => handleDelete(org.id, org.name)} title="Eliminar Definitivamente">
+                                            <FaTrash /> Eliminar
+                                        </SmallBtn>
                                     </>
                                 )}
 
@@ -434,6 +465,24 @@ const ClientManagement: React.FC = () => {
                     onSuccess={fetchOrgs}
                 />
             )}
+
+            <ConfirmModal
+                isOpen={deleteModal.isOpen}
+                title="Eliminar Definivamente"
+                message={`PELIGRO: ¿Estás seguro de eliminar la organización "${deleteModal.orgName}"? Esta acción borrará TODOS los datos asociados (cultivos, salas, genéticas, registros) de forma irreversible.`}
+                onConfirm={executeDelete}
+                onClose={() => setDeleteModal({ isOpen: false, orgId: null, orgName: '' })}
+                isDanger={true}
+            />
+
+            <ConfirmModal
+                isOpen={statusModal.isOpen}
+                title={statusModal.newStatus === 'active' ? "Aprobar Organización" : "Suspender Organización"}
+                message={statusModal.confirmMsg}
+                onConfirm={executeUpdateStatus}
+                onClose={() => setStatusModal({ isOpen: false, orgId: null, newStatus: null, confirmMsg: '' })}
+                isDanger={statusModal.newStatus === 'suspended'}
+            />
         </Container>
     );
 };

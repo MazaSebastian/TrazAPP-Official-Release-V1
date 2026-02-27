@@ -23,8 +23,14 @@ const Container = styled.div`
   background: #020617;
   padding: 2rem 1rem;
   position: relative;
-  overflow: hidden;
+  overflow: hidden; /* Desktop view */
   color: #f8fafc;
+  
+  @media (max-width: 768px) {
+    overflow-y: auto; /* Allow scroll on very small mobile screens */
+    justify-content: flex-start; /* Prevent cut-off at top */
+    padding-top: 4rem; /* Give breathing room to logo */
+  }
   
   /* Shared Tailwind-like utility classes */
   .text-4xl { font-size: 2.25rem; line-height: 2.5rem; }
@@ -192,6 +198,12 @@ const SummaryCard = styled.div`
   display: flex;
   flex-direction: column;
   gap: 1.2rem;
+  
+  @media (max-width: 768px) {
+    padding: 1.5rem 1.25rem;
+    gap: 0.8rem;
+    border-radius: 1rem;
+  }
 `;
 
 const SummaryRow = styled.div`
@@ -220,6 +232,18 @@ const SummaryRow = styled.div`
   .value.highlight {
     color: #4ade80;
     font-weight: 600;
+  }
+
+  @media (max-width: 768px) {
+    padding-bottom: 0.75rem;
+    
+    .label {
+      font-size: 0.85rem;
+    }
+    
+    .value {
+      font-size: 0.95rem;
+    }
   }
 `;
 
@@ -344,34 +368,83 @@ const Register: React.FC = () => {
     try {
       // Record start time to enforce a 10-second cinematic delay for the ShinyText step
       const startTime = Date.now();
+      let userId = '';
 
-      const { data: authData, error: authError } = await supabase.auth.signUp({
+      // TACTIC: Attempt signIn first to recover orphaned users from previous failed attempts
+      // due to the old DB bugs. This bypasses the Fake UUID (Email Enumeration Protection) issue of Supabase.
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
         email: data.email,
-        password: data.password,
-        options: {
-          data: {
-            name: data.name,
-            full_name: data.name,
-            role: inviteDetails.role === 'owner' ? 'admin' : inviteDetails.role
+        password: data.password
+      });
+
+      if (signInData?.user) {
+        userId = signInData.user.id;
+        console.log("Recuperado usuario huérfano de intento previo, procediendo a unirse a la organización...");
+      } else {
+        // Standard user creation
+        const { data: authData, error: authError } = await supabase.auth.signUp({
+          email: data.email,
+          password: data.password,
+          options: {
+            data: {
+              name: data.name,
+              full_name: data.name,
+              role: inviteDetails.role === 'owner' ? 'admin' : inviteDetails.role
+            }
           }
+        });
+
+        if (authError) throw authError;
+        if (!authData.user) throw new Error('No se pudo crear el usuario.');
+
+        userId = authData.user.id;
+
+        // WORKAROUND: Asynchronous Race Condition.
+        // Supabase's internal Trigger "on_auth_user_created" needs a fraction of a second
+        // to copy a purely NEW user into public.profiles BEFORE we can link it to the Organization.
+        // We pause the JS thread for 1.5s to let the DB finish its automatic insert.
+        await new Promise(resolve => setTimeout(resolve, 1500));
+      }
+
+      let rpcSuccess = false;
+      let rpcAttempts = 0;
+      let lastErrorMessage = '';
+
+      // Retry mechanism up to 3 times in case the DB is under heavy load
+      while (!rpcSuccess && rpcAttempts < 3) {
+        rpcAttempts++;
+        const { error: rpcError } = await supabase.rpc('accept_invitation', {
+          p_token: token,
+          p_user_id: userId,
+          p_full_name: data.name,
+          p_phone: data.phone,
+          p_referral_source: 'other',
+          p_ong_name: null
+        });
+
+        if (rpcError) {
+          lastErrorMessage = rpcError.message;
+          console.warn(`Intento ${rpcAttempts} fallido de RPC accept_invitation:`, rpcError);
+          // Retry only on synchronization/profile missing errors
+          if (rpcError.message.includes('no ha sido sincronizado') || rpcError.message.includes('not found') || rpcError.message.includes('No se encontró')) {
+            if (rpcAttempts < 3) {
+              await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+          } else {
+            // Hard DB errors (like missing tables) shouldn't be retried
+            break;
+          }
+        } else {
+          rpcSuccess = true;
         }
-      });
+      }
 
-      if (authError) throw authError;
-      if (!authData.user) throw new Error('No se pudo crear el usuario.');
-
-      const userId = authData.user.id;
-
-      const { error: rpcError } = await supabase.rpc('accept_invitation', {
-        p_token: token,
-        p_user_id: userId,
-        p_full_name: data.name,
-        p_phone: data.phone,
-        p_referral_source: 'other',
-        p_ong_name: null
-      });
-
-      if (rpcError) throw new Error(rpcError.message);
+      if (!rpcSuccess) {
+        if (lastErrorMessage.includes('no ha sido sincronizado')) {
+          throw new Error("El correo ya está registrado con otra contraseña. Por favor, usa la clave que elegiste la primera vez o recupera tu cuenta desde el Login.");
+        }
+        throw new Error(lastErrorMessage || 'Ocurrió un error de sincronización de datos con el servidor.');
+      }
 
       // Enforce the 10 second minimum display for "Configurando tu sistema"
       const elapsed = Date.now() - startTime;
@@ -620,7 +693,7 @@ const Register: React.FC = () => {
 
           {step === 7 && (
             <StepContainer key="step7" variants={stepVariants} initial="initial" animate="animate" exit="exit">
-              <SplitText text="Verifica que tu información sea correcta" delay={30} className="text-3xl font-semibold mb-8 text-center" />
+              <SplitText text="Verifica que tu información sea correcta" delay={30} className="text-2xl md:text-3xl font-semibold mb-4 md:mb-8 text-center" />
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}

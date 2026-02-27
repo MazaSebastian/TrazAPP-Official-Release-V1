@@ -37,7 +37,7 @@ const ModalContent = styled.div`
 
 const Title = styled.h2`
   margin-top: 0;
-  color: #1a202c;
+  color: #f8fafc;
   font-size: 1.5rem;
   font-weight: 700;
   margin-bottom: 1.5rem;
@@ -150,7 +150,23 @@ export const CreateOrgModal: React.FC<CreateOrgModalProps> = ({ onClose, onSucce
             if (data && data.id) {
                 const invite = await inviteService.createInvite(data.id, email, 'owner');
                 if (invite) {
-                    const link = `${window.location.origin}/register?token=${invite.token}`;
+                    // Forzar el uso del dominio público si el admin crea orgs desde su ambiente de desarrollo local.
+                    let baseOrigin = window.location.origin;
+                    if (baseOrigin.includes('localhost') || baseOrigin.includes('127.0.0.1')) {
+                        baseOrigin = 'https://software.trazapp.ar'; // Dominio oficial de producción
+                    }
+                    const link = `${baseOrigin}/register?token=${invite.token}`;
+
+                    // Invocar el envío de Email automático (Resend)
+                    const { error: invokeError } = await supabase.functions.invoke('send-invite', {
+                        body: { email, inviteLink: link, orgName },
+                    });
+
+                    if (invokeError) {
+                        console.error('Error enviando correo:', invokeError);
+                        // A pesar del error en el correo, mostramos el link manualmente para no bloquear al admin
+                    }
+
                     setInviteLink(link);
                     return; // Don't close, show link
                 }
@@ -159,7 +175,7 @@ export const CreateOrgModal: React.FC<CreateOrgModalProps> = ({ onClose, onSucce
             onSuccess();
             onClose();
         } catch (err: any) {
-            setError(err.message);
+            setError(err.message || 'Error al crear la organización.');
         } finally {
             setIsLoading(false);
         }
@@ -181,13 +197,16 @@ export const CreateOrgModal: React.FC<CreateOrgModalProps> = ({ onClose, onSucce
                         <div style={{ background: 'rgba(74, 222, 128, 0.2)', width: '60px', height: '60px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem', border: '1px solid rgba(74, 222, 128, 0.5)' }}>
                             <FaCheck size={30} color="#4ade80" />
                         </div>
-                        <Title>¡Organización Creada!</Title>
+                        <Title>¡Invitación Enviada!</Title>
+                        <p style={{ color: '#e2e8f0', marginBottom: '1rem', fontSize: '1.1rem' }}>
+                            La organización <strong style={{ color: '#4ade80' }}>{orgNameText}</strong> ha sido creada.
+                        </p>
                         <p style={{ color: '#94a3b8', marginBottom: '2rem' }}>
-                            La organización <strong style={{ color: '#f8fafc' }}>{orgNameText}</strong> ha sido creada exitosamente.
+                            Se ha enviado un correo electrónico a <strong>{email}</strong> con su enlace de acceso seguro.
                         </p>
 
                         <div style={{ background: 'rgba(30, 41, 59, 0.5)', padding: '1.5rem', borderRadius: '8px', marginBottom: '2rem', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
-                            <Label style={{ textAlign: 'left', marginBottom: '0.5rem' }}>Enlace de Invitación para el Cliente:</Label>
+                            <Label style={{ textAlign: 'left', marginBottom: '0.5rem' }}>Para uso de emergencia (respaldo):</Label>
                             <div style={{ display: 'flex', gap: '0.5rem' }}>
                                 <Input value={inviteLink} readOnly />
                                 <Button onClick={copyToClipboard} variant="secondary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem' }}>
@@ -195,7 +214,7 @@ export const CreateOrgModal: React.FC<CreateOrgModalProps> = ({ onClose, onSucce
                                 </Button>
                             </div>
                             <small style={{ display: 'block', textAlign: 'left', marginTop: '0.5rem', color: '#64748b' }}>
-                                Comparte este enlace con el cliente para que pueda registrarse y acceder a su cuenta.
+                                Usa este enlace manual si el cliente reporta no haber recibido el correo electrónico.
                             </small>
                         </div>
 

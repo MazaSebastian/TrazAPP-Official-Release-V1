@@ -37,6 +37,7 @@ import Login from './pages/Login';
 import Register from './pages/Register'; // New Import
 import ForgotPassword from './pages/ForgotPassword';
 import UpdatePassword from './pages/UpdatePassword';
+import EmailConfirmed from './pages/EmailConfirmed'; // New Import
 import { useAuth } from './context/AuthContext';
 import { DataProvider } from './context/DataContext';
 import { OrganizationProvider } from './context/OrganizationContext';
@@ -79,7 +80,8 @@ function App() {
   const isRegister = location.pathname === '/register';
   const isForgotPassword = location.pathname === '/forgot-password';
   const isUpdatePassword = location.pathname === '/update-password';
-  const isPublicRoute = isLogin || isRegister || isForgotPassword || isUpdatePassword;
+  const isEmailConfirmed = location.pathname === '/email-confirmed';
+  const isPublicRoute = isLogin || isRegister || isForgotPassword || isUpdatePassword || isEmailConfirmed;
 
   return (
     <DataProvider>
@@ -103,6 +105,7 @@ function App() {
             <Route path="/register" element={<Register />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/update-password" element={<UpdatePassword />} />
+            <Route path="/email-confirmed" element={<EmailConfirmed />} />
 
 
 
