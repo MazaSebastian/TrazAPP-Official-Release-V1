@@ -784,7 +784,8 @@ const Register: React.FC = () => {
                   <h3 style={{ fontSize: '1.4rem', color: '#f8fafc', fontWeight: 600, margin: '0.5rem 0' }}>¡Sistema configurado!</h3>
                   <p style={{ color: '#cbd5e1', fontSize: '1.05rem', lineHeight: '1.5', margin: '0.5rem 0 1.5rem', fontWeight: 400 }}>
                     <strong style={{ color: '#f8fafc' }}>{data.name.split(' ')[0]}</strong>, hemos enviado un mail de confirmación de acceso al sistema a tu casilla de correo.<br /><br />
-                    Por favor verifica el email enviado para ingresar a tu cuenta de manera segura.
+                    Por favor verifica el email enviado para ingresar a tu cuenta de manera segura.<br /><br />
+                    <span style={{ fontSize: '0.95rem', color: '#94a3b8', fontStyle: 'italic' }}>Revisa correo no deseado/spam en caso que no lo veas en tu bandeja de entrada ;)</span>
                   </p>
 
                   <ValidationButton
