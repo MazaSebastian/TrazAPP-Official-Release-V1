@@ -392,6 +392,7 @@ const Register: React.FC = () => {
           email: data.email,
           password: data.password,
           options: {
+            emailRedirectTo: `${window.location.origin}/email-confirmed`,
             data: {
               name: data.name,
               full_name: data.name,
