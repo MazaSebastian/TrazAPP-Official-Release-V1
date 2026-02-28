@@ -20,6 +20,7 @@ export interface Room {
     grid_columns?: number; // For Esquejera (Clones) Battleship Grid
     batches?: Batch[];
     clone_maps?: CloneMap[]; // Added for maps
+    maps?: CloneMap[]; // Used dynamically in RoomDetail.tsx
     spot?: { id?: string; name: string }; // Joined Crop Info
 }
 
@@ -31,6 +32,7 @@ export interface CloneMap {
     grid_columns: number;
     position_x?: number; // For Freestyle Layout (Vegetation)
     position_y?: number; // For Freestyle Layout (Vegetation)
+    status?: string;
     created_at?: string;
 }
 

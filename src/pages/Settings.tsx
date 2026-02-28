@@ -10,8 +10,9 @@ import { useOrganization } from '../context/OrganizationContext';
 import { useAuth } from '../context/AuthContext';
 import { organizationService } from '../services/organizationService';
 import { planService } from '../services/planService';
-import { Plan } from '../types';
-import { FaUserPlus, FaUserShield, FaTrash, FaTimes } from 'react-icons/fa';
+import { Plan, TaskType } from '../types';
+import { tasksService } from '../services/tasksService';
+import { FaUserPlus, FaUserShield, FaTrash, FaTimes, FaTasks, FaPlus } from 'react-icons/fa';
 
 // Animación de aparición para modales
 import { keyframes } from 'styled-components';
@@ -144,6 +145,34 @@ const ActionButton = styled.button<{ $danger?: boolean }>`
   }
 `;
 
+const FormGroup = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+`;
+
+const Label = styled.label`
+  color: #94a3b8;
+  font-weight: 600;
+  font-size: 0.85rem;
+`;
+
+const Input = styled.input`
+  width: 100%;
+  padding: 0.75rem;
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.5rem;
+  color: #f8fafc;
+  outline: none;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+
+  &:focus {
+    border-color: rgba(56, 189, 248, 0.5);
+  }
+`;
+
 // --- Nuevos estilos para la vista móvil de Usuarios ---
 const UserCardWrapper = styled.div`
   background: rgba(30, 41, 59, 0.4);
@@ -244,6 +273,11 @@ const Settings: React.FC = () => {
   const [members, setMembers] = useState<any[]>([]);
   const [orgPlan, setOrgPlan] = useState<Plan | null>(null);
 
+  // Task Manager State
+  const [taskTypes, setTaskTypes] = useState<TaskType[]>([]);
+  const [newTaskTypeName, setNewTaskTypeName] = useState('');
+  const [creatingTaskType, setCreatingTaskType] = useState(false);
+
   const [newUserEmail, setNewUserEmail] = useState('');
   const [newUserRole, setNewUserRole] = useState('grower');
   const [newUserName, setNewUserName] = useState('');
@@ -280,6 +314,9 @@ const Settings: React.FC = () => {
 
         const planData = await planService.getPlanBySlug(currentOrganization.plan);
         setOrgPlan(planData);
+
+        const tData = await tasksService.getTaskTypes();
+        setTaskTypes(tData);
       }
     } catch (e) {
       console.error("Error loading settings data:", e);
@@ -391,6 +428,37 @@ const Settings: React.FC = () => {
 
   const currentUserRole = members.find(m => m.user_id === user?.id)?.role;
   const canManageUsers = currentUserRole === 'owner' || currentUserRole === 'admin';
+  const canManageTasks = currentUserRole === 'owner' || currentUserRole === 'grower';
+
+  const handleCreateTaskType = async () => {
+    if (!newTaskTypeName.trim()) return;
+    setCreatingTaskType(true);
+    try {
+      const newType = await tasksService.createTaskType(newTaskTypeName.trim());
+      if (newType) {
+        setTaskTypes([...taskTypes, newType]);
+        setNewTaskTypeName('');
+        setToast({ isOpen: true, message: 'Tipo de tarea creado', type: 'success' });
+      }
+    } catch (e: any) {
+      setToast({ isOpen: true, message: e.message || 'Error al crear la tarea', type: 'error' });
+    } finally {
+      setCreatingTaskType(false);
+    }
+  };
+
+  const handleDeleteTaskType = async (id: string) => {
+    if (!window.confirm("¿Seguro que deseas eliminar este tipo de tarea? Las tareas existentes con este tipo no se borrarán, pero ya no se podrá seleccionar.")) return;
+    try {
+      const success = await tasksService.deleteTaskType(id);
+      if (success) {
+        setTaskTypes(taskTypes.filter(t => t.id !== id));
+        setToast({ isOpen: true, message: 'Tipo de tarea eliminado', type: 'success' });
+      }
+    } catch (e: any) {
+      setToast({ isOpen: true, message: 'Error al eliminar la tarea', type: 'error' });
+    }
+  };
 
   if (loading) return <PageContainer>Cargando configuración...</PageContainer>;
 
@@ -572,6 +640,73 @@ const Settings: React.FC = () => {
               <div style={{ padding: '1rem', textAlign: 'center', color: '#94a3b8' }}>No hay miembros registrados</div>
             )}
           </MobileView>
+        </Section>
+      )}
+
+      {canManageTasks && (
+        <Section>
+          <SectionHeader>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <FaTasks /> Gestor de Tipos de Tarea
+            </div>
+            <div style={{ fontSize: '0.85rem', fontWeight: 'normal', color: '#94a3b8' }}>
+              Personaliza las tareas disponibles
+            </div>
+          </SectionHeader>
+
+          <div style={{ marginBottom: '1.5rem', background: 'rgba(15, 23, 42, 0.5)', padding: '1.5rem', borderRadius: '0.5rem', border: '1px solid rgba(255,255,255,0.05)' }}>
+            <h3 style={{ margin: '0 0 1rem 0', fontSize: '1rem', color: '#cbd5e1' }}>Añadir Nuevo Tipo</h3>
+            <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+              <FormGroup style={{ flex: '1 1 200px' }}>
+                <Label>Nombre de la tarea (Ej: 'Limpieza de filtros')</Label>
+                <Input
+                  type="text"
+                  placeholder="Escriba aquí..."
+                  value={newTaskTypeName}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewTaskTypeName(e.target.value)}
+                  onKeyPress={(e: React.KeyboardEvent<HTMLInputElement>) => e.key === 'Enter' && handleCreateTaskType()}
+                />
+              </FormGroup>
+              <SaveButton
+                onClick={handleCreateTaskType}
+                disabled={creatingTaskType || !newTaskTypeName.trim()}
+                style={{ width: 'auto', background: '#22c55e' }}
+              >
+                {creatingTaskType ? 'Guardando...' : <><FaPlus /> Añadir</>}
+              </SaveButton>
+            </div>
+          </div>
+
+          <div style={{ background: 'rgba(15, 23, 42, 0.5)', borderRadius: '0.5rem', border: '1px solid rgba(255,255,255,0.05)', overflow: 'hidden' }}>
+            {taskTypes.length > 0 ? (
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
+                <thead>
+                  <tr style={{ background: 'rgba(255, 255, 255, 0.02)', borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                    <th style={{ padding: '1rem', textAlign: 'left', color: '#94a3b8', fontWeight: 600 }}>TIPO DE TAREA</th>
+                    <th style={{ padding: '1rem', textAlign: 'center', color: '#94a3b8', fontWeight: 600, width: '100px' }}>ACCIONES</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {taskTypes.map(t => (
+                    <tr key={t.id} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                      <td style={{ padding: '1rem', color: '#f8fafc', fontWeight: 500 }}>
+                        {t.name}
+                      </td>
+                      <td style={{ padding: '1rem', textAlign: 'center' }}>
+                        <ActionButton $danger onClick={() => handleDeleteTaskType(t.id)} title="Eliminar tipo">
+                          <FaTrash />
+                        </ActionButton>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <div style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>
+                No hay tipos de tarea personalizados registrados.
+              </div>
+            )}
+          </div>
         </Section>
       )}
 

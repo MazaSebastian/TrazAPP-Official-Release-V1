@@ -1,5 +1,5 @@
 import { supabase, getSelectedOrgId } from './supabaseClient';
-import { Task, CreateTaskInput } from '../types';
+import { Task, CreateTaskInput, TaskType } from '../types';
 import { notificationService } from './notificationService';
 import { addDays, addWeeks, addMonths, parseISO, format } from 'date-fns';
 
@@ -183,5 +183,54 @@ export const tasksService = {
         }
 
         return data as Task[];
+    },
+
+    // --- Task Types ---
+    async getTaskTypes(): Promise<TaskType[]> {
+        if (!supabase) return [];
+        const { data, error } = await supabase
+            .from('task_types')
+            .select('*')
+            .eq('organization_id', getSelectedOrgId())
+            .order('created_at', { ascending: true });
+
+        if (error) {
+            console.error('Error fetching task types:', error);
+            return [];
+        }
+        return data as TaskType[];
+    },
+
+    async createTaskType(name: string, color?: string): Promise<TaskType | null> {
+        if (!supabase) return null;
+        const { data, error } = await supabase
+            .from('task_types')
+            .insert([{
+                name,
+                color,
+                organization_id: getSelectedOrgId()
+            }])
+            .select()
+            .single();
+
+        if (error) {
+            console.error('Error creating task type:', error);
+            throw error;
+        }
+        return data as TaskType;
+    },
+
+    async deleteTaskType(id: string): Promise<boolean> {
+        if (!supabase) return false;
+        const { error } = await supabase
+            .from('task_types')
+            .delete()
+            .eq('id', id);
+
+        if (error) {
+            console.error('Error deleting task type:', error);
+            return false;
+        }
+        return true;
     }
 };

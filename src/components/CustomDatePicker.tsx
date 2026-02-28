@@ -126,10 +126,14 @@ export const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
   minDate,
   maxDate
 }) => {
+  // Safeguard: Fallback to current date or null if the selected date is Invalid
+  // This prevents react-datepicker from crashing the entire component tree on Safari/iOS
+  const safeSelected = selected && !isNaN(selected.getTime()) ? selected : new Date();
+
   return (
     <Wrapper>
       <DatePicker
-        selected={selected}
+        selected={safeSelected}
         onChange={onChange}
         placeholderText={placeholderText}
         dateFormat={dateFormat}

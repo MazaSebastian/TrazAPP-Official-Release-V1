@@ -100,6 +100,7 @@ export const organizationService = {
      * Get all members of an organization with their profiles
      */
     async getOrganizationMembers(orgId: string): Promise<any[]> {
+        console.log(`[DEBUG] getOrganizationMembers called for orgId: ${orgId}`);
         const { data, error } = await supabase
             .from('organization_members')
             .select(`
@@ -107,7 +108,7 @@ export const organizationService = {
                 role,
                 created_at,
                 user_id,
-                profile:profiles!organization_members_user_id_fkey(
+                profiles (
                     id,
                     email,
                     full_name,
@@ -121,7 +122,11 @@ export const organizationService = {
             throw error;
         }
 
-        return data || [];
+        // Map 'profiles' to 'profile' for backward compatibility
+        return data?.map((m: any) => ({
+            ...m,
+            profile: m.profiles
+        })) || [];
     },
 
     /**

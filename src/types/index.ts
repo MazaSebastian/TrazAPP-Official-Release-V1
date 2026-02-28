@@ -130,7 +130,7 @@ export interface Task {
   id: string;
   title: string;
   description?: string;
-  type: 'info' | 'warning' | 'danger' | 'fertilizar' | 'riego' | 'poda_apical' | 'hst' | 'lst' | 'entrenamiento' | 'defoliacion' | 'esquejes' | 'enmienda' | 'te_compost';
+  type: string;
   status: 'pending' | 'done' | 'dismissed';
   due_date?: string;
   created_at: string;
@@ -138,6 +138,7 @@ export interface Task {
   assigned_to?: string;
   observations?: string;
   photos?: string[];
+  crop_id?: string;
   completed_at?: string;
   recurrence?: RecurrenceConfig;
 }
@@ -145,7 +146,7 @@ export interface Task {
 export interface CreateTaskInput {
   title: string;
   description?: string;
-  type: 'info' | 'warning' | 'danger' | 'fertilizar' | 'riego' | 'poda_apical' | 'hst' | 'lst' | 'entrenamiento' | 'defoliacion' | 'esquejes' | 'enmienda' | 'te_compost';
+  type: string;
   due_date?: string;
   crop_id?: string;
   room_id?: string;
@@ -274,4 +275,12 @@ export interface ClinicalEvolution {
 export interface AdverseEffect {
   effect: string;
   intensity: 'mild' | 'moderate' | 'severe';
+}
+
+export interface TaskType {
+  id: string;
+  organization_id: string;
+  name: string;
+  color?: string;
+  created_at: string;
 }

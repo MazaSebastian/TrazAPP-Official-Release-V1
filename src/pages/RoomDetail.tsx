@@ -17,7 +17,7 @@ import { tasksService } from '../services/tasksService';
 import { stickiesService } from '../services/stickiesService';
 import { usersService } from '../services/usersService';
 import { Room } from '../types/rooms';
-import { Task, StickyNote, RecurrenceConfig } from '../types';
+import { Task, StickyNote, RecurrenceConfig, TaskType } from '../types';
 
 
 import { GroupDetailModal } from '../components/GroupDetailModal';
@@ -1691,7 +1691,8 @@ const RoomDetail: React.FC = () => {
     };
     const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
     const [selectedTask, setSelectedTask] = useState<Task | null>(null);
-    const [taskForm, setTaskForm] = useState({ title: '', type: 'info', due_date: '', description: '', assigned_to: '' });
+    const [taskForm, setTaskForm] = useState({ title: '', type: 'info', due_date: '', description: '', assigned_to: '', crop_id: '' as string | null });
+    const [taskTypes, setTaskTypes] = useState<TaskType[]>([]);
 
     // Real Users State
     const [users, setUsers] = useState<any[]>([]);
@@ -2381,23 +2382,24 @@ const RoomDetail: React.FC = () => {
 
 
             const loadPromise = async () => {
-                const [roomData, tasksData, usersData, stickiesData, mapsData, metricsResult, geneticsData] = await Promise.all([
+                const [roomData, tasksData, usersData, stickiesData, mapsData, metricsResult, geneticsData, taskTypesData] = await Promise.all([
                     roomsService.getRoomById(roomId),
                     tasksService.getTasksByRoomId(roomId),
                     usersService.getUsers(),
                     stickiesService.getStickies(roomId),
                     roomsService.getCloneMaps(roomId),
                     roomsService.getCloneSuccessMetrics(roomId),
-                    roomsService.getGenetics() // Always fetch genetics to be safe or keep conditional?
+                    roomsService.getGenetics(), // Always fetch genetics to be safe or keep conditional?
+                    tasksService.getTaskTypes()
                 ]);
-                return { roomData, tasksData, usersData, stickiesData, mapsData, metricsResult, geneticsData };
+                return { roomData, tasksData, usersData, stickiesData, mapsData, metricsResult, geneticsData, taskTypesData };
             };
 
             const [results] = await Promise.all([
                 loadPromise()
             ]);
 
-            const { roomData, tasksData, usersData, stickiesData, mapsData, metricsResult, geneticsData } = results;
+            const { roomData, tasksData, usersData, stickiesData, mapsData, metricsResult, geneticsData, taskTypesData } = results;
 
             setRoom(roomData);
             setTasks(tasksData);
@@ -2405,6 +2407,7 @@ const RoomDetail: React.FC = () => {
             setStickies(stickiesData);
             setCloneMaps(mapsData);
             setMetricsData(metricsResult);
+            setTaskTypes(taskTypesData);
 
             // Conditional genetics set-reusing the fetched data if needed
             if (['clones', 'esquejes', 'esquejera', 'germinacion', 'germinación', 'germination', 'semillero', 'living_soil'].includes((roomData?.type as string)?.toLowerCase())) {
@@ -3653,7 +3656,7 @@ const RoomDetail: React.FC = () => {
     const handleAddTask = (day: Date) => {
         // Allow admin or partner (owner) to add tasks
         if (user && (user.role === 'admin' || user.role === 'partner')) {
-            setTaskForm({ title: '', type: 'info', due_date: format(day, 'yyyy-MM-dd'), description: '', assigned_to: '' });
+            setTaskForm({ title: '', type: 'info', due_date: format(day, 'yyyy-MM-dd'), description: '', assigned_to: '', crop_id: null });
             setSelectedTask(null);
             setRecurrenceEnabled(false);
             setRecurrenceConfig({ type: 'daily', interval: 1, unit: 'day', daysOfWeek: [] });
@@ -3672,9 +3675,10 @@ const RoomDetail: React.FC = () => {
         setTaskForm({
             title: task.title,
             type: task.type as any,
-            due_date: task.due_date || '',
+            due_date: task.due_date ? task.due_date.split('T')[0] : '',
             description: task.description || '',
-            assigned_to: task.assigned_to || ''
+            assigned_to: task.assigned_to || '',
+            crop_id: task.crop_id || null
         });
         if (task.recurrence) {
             setRecurrenceEnabled(true);
@@ -3693,10 +3697,11 @@ const RoomDetail: React.FC = () => {
             const taskData: any = {
                 title: taskForm.title,
                 type: taskForm.type as any,
-                due_date: taskForm.due_date,
+                due_date: taskForm.due_date ? `${taskForm.due_date}T12:00:00.000Z` : undefined,
                 description: taskForm.description,
                 room_id: room.id,
                 assigned_to: taskForm.assigned_to || null,
+                crop_id: taskForm.crop_id || null,
                 recurrence: recurrenceEnabled ? recurrenceConfig : undefined
             };
 
@@ -5229,21 +5234,17 @@ const RoomDetail: React.FC = () => {
                                             if (dayTasks.length > 0) {
                                                 // Helper to get pastel color by task type
                                                 const getTaskColor = (t: Task) => {
-                                                    switch (t.type) {
-                                                        case 'danger': return 'rgba(239, 68, 68, 0.2)'; // Red
-                                                        case 'warning': return 'rgba(234, 179, 8, 0.2)'; // Yellow
-                                                        case 'fertilizar':
-                                                        case 'enmienda':
-                                                        case 'te_compost': return 'rgba(74, 222, 128, 0.2)'; // Green
-                                                        case 'riego': return 'rgba(56, 189, 248, 0.2)'; // Blue
-                                                        case 'poda_apical': return 'rgba(239, 68, 68, 0.2)'; // Light Red
-                                                        case 'defoliacion': return 'rgba(249, 115, 22, 0.2)'; // Orange
-                                                        case 'hst':
-                                                        case 'lst':
-                                                        case 'entrenamiento': return 'rgba(168, 85, 247, 0.2)'; // Purple
-                                                        case 'esquejes': return 'rgba(249, 115, 22, 0.2)'; // Orange
-                                                        default: return 'rgba(148, 163, 184, 0.2)'; // Gray (Info)
-                                                    }
+                                                    const customType = taskTypes.find(tt => tt.name.toLowerCase() === t.type.toLowerCase());
+                                                    if (customType && customType.color) return customType.color;
+
+                                                    const lowerType = t.type.toLowerCase();
+                                                    if (lowerType.includes('riego')) return 'rgba(56, 189, 248, 0.2)'; // Blue
+                                                    if (lowerType.includes('fertiliz') || lowerType.includes('enmienda') || lowerType.includes('compost')) return 'rgba(74, 222, 128, 0.2)'; // Green
+                                                    if (lowerType.includes('poda') || lowerType.includes('danger') || lowerType.includes('alerta') || lowerType.includes('warning')) return 'rgba(239, 68, 68, 0.2)'; // Red
+                                                    if (lowerType.includes('defoliacion') || lowerType.includes('esqueje')) return 'rgba(249, 115, 22, 0.2)'; // Orange
+                                                    if (lowerType.includes('hst') || lowerType.includes('lst') || lowerType.includes('entrenamiento')) return 'rgba(168, 85, 247, 0.2)'; // Purple
+
+                                                    return 'rgba(148, 163, 184, 0.2)'; // Gray (Info)
                                                 };
 
                                                 if (dayTasks.length === 1) {
@@ -5367,6 +5368,7 @@ const RoomDetail: React.FC = () => {
                                                                     }}
                                                                     title={isVirtual ? "Proyección futura (Virtual)" : t.title}
                                                                 >
+                                                                    {t.crop_id ? `[${room?.clone_maps?.find(m => m.id === t.crop_id)?.name || room?.batches?.find(b => b.id === t.crop_id)?.name || 'Mapa Eliminado'}] ` : ''}
                                                                     {t.title.replace(' (Proyectada)', '')}
                                                                 </div>
                                                             );
@@ -5415,35 +5417,13 @@ const RoomDetail: React.FC = () => {
                                                     <CustomSelect
                                                         value={taskForm.type}
                                                         onChange={(value) => {
-                                                            const newType = value as any;
-                                                            let newTitle = 'Tarea';
-                                                            switch (newType) {
-                                                                case 'info': newTitle = 'Información'; break;
-                                                                case 'riego': newTitle = 'Riego'; break;
-                                                                case 'fertilizar': newTitle = 'Fertilizar'; break;
-                                                                case 'defoliacion': newTitle = 'Defoliación'; break;
-                                                                case 'poda_apical': newTitle = 'Poda Apical'; break;
-                                                                case 'hst': newTitle = 'HST'; break;
-                                                                case 'lst': newTitle = 'LST'; break;
-                                                                case 'entrenamiento': newTitle = 'Entrenamiento'; break;
-                                                                case 'esquejes': newTitle = 'Esquejes'; break;
-                                                                case 'warning': newTitle = 'Alerta'; break;
-                                                                default: newTitle = 'Tarea';
-                                                            }
-                                                            setTaskForm({ ...taskForm, type: newType, title: newTitle });
+                                                            setTaskForm({ ...taskForm, type: value, title: value });
                                                         }}
-                                                        options={[
-                                                            { value: "info", label: "Info" },
-                                                            { value: "riego", label: "Riego" },
-                                                            { value: "fertilizar", label: "Fertilizar" },
-                                                            { value: "defoliacion", label: "Defoliación" },
-                                                            { value: "poda_apical", label: "Poda Apical" },
-                                                            { value: "hst", label: "HST" },
-                                                            { value: "lst", label: "LST" },
-                                                            { value: "entrenamiento", label: "Entrenamiento" },
-                                                            { value: "esquejes", label: "Esquejes" },
-                                                            { value: "warning", label: "Alerta" }
-                                                        ]}
+                                                        options={
+                                                            taskTypes.length > 0
+                                                                ? taskTypes.map(t => ({ value: t.name, label: t.name }))
+                                                                : [{ value: "info", label: "Info" }, { value: "riego", label: "Riego" }] // Fallback if empty
+                                                        }
                                                         placeholder="Seleccionar Tipo"
                                                     />
                                                 </FormGroup>
@@ -5452,7 +5432,7 @@ const RoomDetail: React.FC = () => {
                                                     <FormGroup style={{ flex: '1 1 150px' }}>
                                                         <label style={{ color: '#94a3b8', fontWeight: 600, fontSize: '0.9rem', marginBottom: '0.5rem', display: 'block' }}>Fecha</label>
                                                         <CustomDatePicker
-                                                            selected={taskForm.due_date ? new Date(`${taskForm.due_date}T12:00:00`) : new Date()}
+                                                            selected={taskForm.due_date ? new Date(taskForm.due_date.replace(/-/g, '/') + ' 12:00:00') : new Date()}
                                                             onChange={(date) => {
                                                                 if (date) {
                                                                     setTaskForm({ ...taskForm, due_date: format(date, 'yyyy-MM-dd') });
@@ -5461,7 +5441,19 @@ const RoomDetail: React.FC = () => {
                                                         />
                                                     </FormGroup>
                                                     <FormGroup style={{ flex: '1 1 150px' }}>
-                                                        <label style={{ color: '#94a3b8', fontWeight: 600, fontSize: '0.9rem', marginBottom: '0.5rem', display: 'block' }}>Asignar a</label>
+                                                        <label style={{ color: '#94a3b8', fontWeight: 600, fontSize: '0.9rem', marginBottom: '0.5rem', display: 'block' }}>Asignar a Mapa de la Sala</label>
+                                                        <CustomSelect
+                                                            value={taskForm.crop_id || ""}
+                                                            onChange={(value) => setTaskForm({ ...taskForm, crop_id: value || null })}
+                                                            options={[
+                                                                { value: "", label: "-- General (Sala) --" },
+                                                                ...(room?.clone_maps?.map((map: any) => ({ value: map.id, label: map.name })) || [])
+                                                            ]}
+                                                            placeholder="Seleccionar Mapa..."
+                                                        />
+                                                    </FormGroup>
+                                                    <FormGroup style={{ flex: '1 1 150px' }}>
+                                                        <label style={{ color: '#94a3b8', fontWeight: 600, fontSize: '0.9rem', marginBottom: '0.5rem', display: 'block' }}>Asignar a Usuario</label>
                                                         <CustomSelect
                                                             value={taskForm.assigned_to}
                                                             onChange={(value) => setTaskForm({ ...taskForm, assigned_to: value })}
@@ -5735,27 +5727,40 @@ const RoomDetail: React.FC = () => {
                 {
                     isDaySummaryOpen && selectedDayForSummary && (
                         <PortalModalOverlay>
-                            <ModalContent style={{ maxWidth: '600px' }}>
+                            <TaskModalContent style={{ maxWidth: '600px' }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                                    <h3 style={{ margin: 0 }}>Resumen del {format(selectedDayForSummary, 'd MMMM yyyy', { locale: es })}</h3>
-                                    <button onClick={() => setIsDaySummaryOpen(false)} style={{ border: 'none', background: 'none', cursor: 'pointer', fontSize: '1.2rem' }}>×</button>
+                                    <h3 style={{ margin: 0, color: '#f8fafc' }}>Resumen del {format(selectedDayForSummary, 'd MMMM yyyy', { locale: es })}</h3>
+                                    <button onClick={() => setIsDaySummaryOpen(false)} style={{ border: 'none', background: 'none', cursor: 'pointer', fontSize: '1.2rem', color: '#a0aec0' }}>×</button>
                                 </div>
 
                                 <div style={{ marginBottom: '1.5rem' }}>
-                                    <h4 style={{ fontSize: '1rem', color: '#4a5568', marginBottom: '0.5rem' }}>Tareas Asignadas</h4>
+                                    <h4 style={{ fontSize: '1rem', color: '#94a3b8', marginBottom: '0.5rem' }}>Tareas Asignadas</h4>
                                     {tasks.filter(t => t.due_date && t.due_date.split('T')[0] === format(selectedDayForSummary, 'yyyy-MM-dd')).length > 0 ? (
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                                             {tasks.filter(t => t.due_date && t.due_date.split('T')[0] === format(selectedDayForSummary, 'yyyy-MM-dd')).map(t => (
                                                 <div key={t.id} style={{
-                                                    border: '1px solid #e2e8f0', borderRadius: '0.5rem', padding: '0.75rem',
-                                                    background: t.status === 'done' ? '#f0fff4' : 'white',
+                                                    border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '0.5rem', padding: '0.75rem',
+                                                    background: t.status === 'done' ? 'rgba(72, 187, 120, 0.2)' : 'rgba(30, 41, 59, 0.5)',
                                                     display: 'flex', justifyContent: 'space-between', alignItems: 'center'
                                                 }}>
                                                     <div>
-                                                        <div style={{ fontWeight: 'bold', color: '#2d3748' }}>{t.title}</div>
-                                                        <div style={{ fontSize: '0.85rem', color: '#718096' }}>
-                                                            <Badge taskType={t.type} style={{ marginRight: '0.5rem', fontSize: '0.65rem' }}>{t.type?.replace(/_/g, ' ')}</Badge>
-                                                            Asignado a: {users.find(u => u.id === t.assigned_to)?.full_name || 'Nadie'}
+                                                        <div style={{ fontWeight: 'bold', color: '#f8fafc' }}>{t.title}</div>
+                                                        <div style={{ fontSize: '0.85rem', color: '#94a3b8', display: 'flex', flexWrap: 'wrap', gap: '0.5rem', alignItems: 'center', marginTop: '0.25rem' }}>
+                                                            <Badge taskType={t.type} style={{ fontSize: '0.65rem' }}>{t.type?.replace(/_/g, ' ')}</Badge>
+                                                            {t.crop_id && (
+                                                                <span style={{
+                                                                    background: 'rgba(56, 189, 248, 0.15)',
+                                                                    color: '#38bdf8',
+                                                                    padding: '0.15rem 0.5rem',
+                                                                    borderRadius: '0.25rem',
+                                                                    fontSize: '0.65rem',
+                                                                    fontWeight: 600,
+                                                                    border: '1px solid rgba(56, 189, 248, 0.3)'
+                                                                }}>
+                                                                    {room?.clone_maps?.find(m => m.id === t.crop_id)?.name || room?.batches?.find(b => b.id === t.crop_id)?.name || 'Mapa Eliminado'}
+                                                                </span>
+                                                            )}
+                                                            <span>Asignado a: {users.find(u => u.id === t.assigned_to)?.full_name || 'Nadie'}</span>
                                                         </div>
                                                     </div>
                                                     <div style={{ display: 'flex', gap: '0.5rem' }}>
@@ -5766,9 +5771,9 @@ const RoomDetail: React.FC = () => {
                                                                 handleToggleTaskStatus(t);
                                                             }}
                                                             style={{
-                                                                background: t.status === 'done' ? '#48bb78' : 'white',
-                                                                border: `1px solid ${t.status === 'done' ? '#48bb78' : '#cbd5e0'} `,
-                                                                color: t.status === 'done' ? 'white' : '#cbd5e0',
+                                                                background: t.status === 'done' ? '#48bb78' : 'rgba(255, 255, 255, 0.05)',
+                                                                border: `1px solid ${t.status === 'done' ? '#48bb78' : 'rgba(255, 255, 255, 0.1)'} `,
+                                                                color: t.status === 'done' ? 'white' : '#94a3b8',
                                                                 borderRadius: '0.375rem',
                                                                 padding: '0.4rem',
                                                                 cursor: 'pointer',
@@ -5787,7 +5792,7 @@ const RoomDetail: React.FC = () => {
                                                             style={{
                                                                 fontSize: '0.75rem',
                                                                 color: 'white',
-                                                                background: '#3182ce',
+                                                                background: '#3b82f6',
                                                                 border: 'none',
                                                                 borderRadius: '0.375rem',
                                                                 padding: '0.4rem 0.8rem',
@@ -5804,21 +5809,21 @@ const RoomDetail: React.FC = () => {
                                             ))}
                                         </div>
                                     ) : (
-                                        <p style={{ color: '#a0aec0', fontStyle: 'italic' }}>No hay tareas para este día.</p>
+                                        <p style={{ color: '#94a3b8', fontStyle: 'italic' }}>No hay tareas para este día.</p>
                                     )}
                                 </div>
 
                                 <div>
-                                    <h4 style={{ fontSize: '1rem', color: '#4a5568', marginBottom: '0.5rem' }}>Registro Diario</h4>
+                                    <h4 style={{ fontSize: '1rem', color: '#94a3b8', marginBottom: '0.5rem' }}>Registro Diario</h4>
                                     <div style={{
-                                        border: '2px dashed #e2e8f0', borderRadius: '0.5rem', padding: '2rem',
-                                        textAlign: 'center', color: '#a0aec0'
+                                        border: '2px dashed rgba(255, 255, 255, 0.1)', borderRadius: '0.5rem', padding: '2rem',
+                                        textAlign: 'center', color: '#94a3b8'
                                     }}>
                                         <FaCalendarAlt style={{ fontSize: '2rem', marginBottom: '0.5rem', opacity: 0.5 }} />
                                         <p>No se cargaron fotos ni reportes diarios.</p>
                                     </div>
                                 </div>
-                            </ModalContent>
+                            </TaskModalContent>
                         </PortalModalOverlay>
                     )
                 }
@@ -7008,7 +7013,7 @@ const RoomDetail: React.FC = () => {
                                 <div style={{ marginBottom: '1.5rem' }}>
                                     <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#f8fafc' }}>Fecha de Inicio</label>
                                     <CustomDatePicker
-                                        selected={editRoomStartDate ? new Date(`${editRoomStartDate}T12:00:00`) : new Date()}
+                                        selected={editRoomStartDate ? new Date(editRoomStartDate.replace(/-/g, '/') + ' 12:00:00') : new Date()}
                                         onChange={(date) => {
                                             if (date) {
                                                 setEditRoomStartDate(format(date, 'yyyy-MM-dd'));
