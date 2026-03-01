@@ -260,7 +260,7 @@ const PatientDetail: React.FC = () => {
         }
     };
 
-    if (loading) return <LoadingSpinner text="Cargando Historia Clínica..." />;
+    if (loading) return <LoadingSpinner />;
 
     const lastVisitDate = evolutions.length > 0 ? evolutions[0].date : (admission ? new Date(admission.created_at).toLocaleDateString() : '-');
     const pathologyText = patient?.pathology || (admission?.diagnosis_cie11?.length ? admission.diagnosis_cie11.join(', ') : '-');

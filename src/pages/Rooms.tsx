@@ -373,7 +373,7 @@ const Rooms: React.FC = () => {
         setNewRoom({ name: '', type: 'vegetation', capacity: 0 });
     };
 
-    if (loading) return <LoadingSpinner text="Cargando salas..." fullScreen duration={1500} />;
+    if (loading) return <LoadingSpinner fullScreen duration={1500} />;
 
     return (
         <Container>

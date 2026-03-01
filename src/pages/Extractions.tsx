@@ -9,6 +9,7 @@ import { ConfirmationModal } from '../components/ConfirmationModal';
 import { FaFlask, FaPlus, FaCalendarAlt, FaWeightHanging, FaTrash, FaEye, FaEdit } from 'react-icons/fa';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { LoadingSpinner } from '../components/LoadingSpinner';
 
 export const ExtractionsPage: React.FC = () => {
     const [extractions, setExtractions] = useState<Extraction[]>([]);
@@ -66,7 +67,9 @@ export const ExtractionsPage: React.FC = () => {
             </Header>
 
             {loading ? (
-                <div style={{ color: '#4a5568', textAlign: 'center', padding: '2rem' }}>Cargando laboratorio...</div>
+                <div style={{ display: 'flex', justifyContent: 'center', padding: '4rem 0' }}>
+                    <LoadingSpinner />
+                </div>
             ) : extractions.length === 0 ? (
                 <EmptyState>
                     <FaFlask size={48} color="#4a5568" />

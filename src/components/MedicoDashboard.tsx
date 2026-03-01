@@ -388,7 +388,7 @@ export const MedicoDashboard: React.FC = () => {
   }, []);
 
   if (isLoading) {
-    return <LoadingSpinner text="Cargando panel médico..." fullScreen duration={2000} />;
+    return <LoadingSpinner fullScreen duration={2000} />;
   }
 
   return (

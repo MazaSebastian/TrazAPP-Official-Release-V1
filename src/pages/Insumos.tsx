@@ -11,6 +11,8 @@ import {
 import { CustomSelect } from '../components/CustomSelect';
 import { useOrganization } from '../context/OrganizationContext';
 import UpgradeOverlay from '../components/common/UpgradeOverlay';
+import { ConfirmModal } from '../components/ConfirmModal';
+import { ToastModal } from '../components/ToastModal';
 import type { Insumo } from '../types';
 import {
   getInsumos,
@@ -394,6 +396,7 @@ const Insumos: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isClosingModal, setIsClosingModal] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingInsumo, setEditingInsumo] = useState<Insumo | null>(null);
   const [formData, setFormData] = useState({
     nombre: '',
@@ -405,6 +408,16 @@ const Insumos: React.FC = () => {
     stock_minimo: '',
     notas: ''
   });
+
+  // Delete / Edit Modal States
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const [insumoToDelete, setInsumoToDelete] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // Toast States
+  const [toastOpen, setToastOpen] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('info');
 
   // Cargar insumos desde Supabase
   useEffect(() => {
@@ -504,7 +517,9 @@ const Insumos: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
 
+    setIsSubmitting(true);
     try {
       const newInsumo: Omit<Insumo, 'id' | 'created_at' | 'updated_at'> = {
         nombre: formData.nombre,
@@ -539,22 +554,39 @@ const Insumos: React.FC = () => {
     } catch (error) {
       console.error('Error al guardar insumo:', error);
       alert('Error al guardar el insumo. Por favor, intenta de nuevo.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (window.confirm('¿Estás seguro de que quieres eliminar este insumo?')) {
-      try {
-        const success = await deleteInsumo(id);
-        if (success) {
-          setInsumos(prev => prev.filter(i => i.id !== id));
-        } else {
-          alert('Error al eliminar el insumo. Por favor, intenta de nuevo.');
-        }
-      } catch (error) {
-        console.error('Error al eliminar insumo:', error);
-        alert('Error al eliminar el insumo. Por favor, intenta de nuevo.');
+  const handleDelete = (id: string) => {
+    setInsumoToDelete(id);
+    setConfirmDeleteOpen(true);
+  };
+
+  const executeDelete = async () => {
+    if (!insumoToDelete) return;
+    setIsDeleting(true);
+
+    try {
+      const success = await deleteInsumo(insumoToDelete);
+      if (success) {
+        setInsumos(prev => prev.filter(i => i.id !== insumoToDelete));
+        setToastMessage('Insumo eliminado exitosamente');
+        setToastType('success');
+      } else {
+        setToastMessage('Error al eliminar el insumo. Por favor, intenta de nuevo.');
+        setToastType('error');
       }
+    } catch (error) {
+      console.error('Error al eliminar insumo:', error);
+      setToastMessage('Error al eliminar el insumo. Por favor, intenta de nuevo.');
+      setToastType('error');
+    } finally {
+      setIsDeleting(false);
+      setConfirmDeleteOpen(false);
+      setInsumoToDelete(null);
+      setToastOpen(true);
     }
   };
 
@@ -872,16 +904,52 @@ const Insumos: React.FC = () => {
                   type="button"
                   variant="secondary"
                   onClick={closeModal}
+                  disabled={isSubmitting}
                 >
                   Cancelar
                 </Button>
-                <Button type="submit">
-                  {editingInsumo ? 'Actualizar' : 'Crear'} Insumo
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? (
+                    <>
+                      <div style={{
+                        border: '2px solid rgba(255, 255, 255, 0.3)',
+                        borderRadius: '50%',
+                        borderTop: '2px solid white',
+                        width: '14px',
+                        height: '14px',
+                        animation: 'spin 1s linear infinite'
+                      }} />
+                      {editingInsumo ? 'Actualizando...' : 'Creando...'}
+                    </>
+                  ) : (
+                    <>{editingInsumo ? 'Actualizar' : 'Crear'} Insumo</>
+                  )}
                 </Button>
               </div>
             </Form>
           </ModalContent>
         </Modal>
+
+        {/* Modal de Confirmación de Borrado */}
+        <ConfirmModal
+          isOpen={confirmDeleteOpen}
+          title="Eliminar Insumo"
+          message="¿Estás seguro de que deseas eliminar este insumo? Esta acción no se puede deshacer y el registro de stock se perderá."
+          onClose={() => setConfirmDeleteOpen(false)}
+          onConfirm={executeDelete}
+          confirmText="Eliminar"
+          cancelText="Cancelar"
+          isDanger={true}
+          isLoading={isDeleting}
+        />
+
+        {/* Notificaciones Toast */}
+        <ToastModal
+          isOpen={toastOpen}
+          message={toastMessage}
+          type={toastType}
+          onClose={() => setToastOpen(false)}
+        />
       </div>
     </Page>
   );

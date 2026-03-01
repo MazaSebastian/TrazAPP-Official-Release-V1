@@ -5,6 +5,9 @@ import { templatesService, ClinicalTemplate, FormField, FieldType } from '../ser
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ToastModal } from '../components/ToastModal';
 import { CustomSelect } from '../components/CustomSelect';
+import { PrintableTemplate } from '../components/Templates/PrintableTemplate';
+import { useReactToPrint } from 'react-to-print';
+import { useRef } from 'react';
 
 const fadeIn = keyframes`
   from { opacity: 0; }
@@ -347,6 +350,28 @@ const Templates: React.FC = () => {
     setToastOpen(true);
   };
 
+  // Printing logic
+  const printRef = useRef<HTMLDivElement>(null);
+  const [templateToPrint, setTemplateToPrint] = useState<ClinicalTemplate | null>(null);
+
+  const handlePrint = useReactToPrint({
+    contentRef: printRef,
+    documentTitle: templateToPrint ? `Plantilla-${templateToPrint.name}` : 'Plantilla',
+    onAfterPrint: () => setTemplateToPrint(null),
+    onPrintError: (err) => console.log('Print error:', err),
+  });
+
+  // Effect to trigger print after state updates templateToPrint, need a small timeout to let React mount the printable component
+  useEffect(() => {
+    if (templateToPrint) {
+      setTimeout(() => {
+        if (printRef.current) {
+          handlePrint();
+        }
+      }, 100);
+    }
+  }, [templateToPrint, handlePrint]);
+
   const loadData = async () => {
     setIsLoading(true);
     const data = await templatesService.getTemplates();
@@ -450,7 +475,7 @@ const Templates: React.FC = () => {
       </Header>
 
       {isLoading ? (
-        <LoadingSpinner text="Cargando plantillas..." />
+        <LoadingSpinner />
       ) : (
         <CardGrid>
           <TemplateCard $isNew onClick={() => openModal()}>
@@ -465,13 +490,22 @@ const Templates: React.FC = () => {
               <div className="desktop-content">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <h3 style={{ textTransform: 'capitalize' }}>{template.name}</h3>
-                  <ActionButton
-                    style={{ background: 'transparent', border: 'none', padding: '0.2rem', color: '#f87171' }}
-                    onClick={(e) => handleDelete(template.id, e)}
-                    title="Eliminar plantilla"
-                  >
-                    <FaTrash size={14} />
-                  </ActionButton>
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <ActionButton
+                      style={{ background: 'transparent', border: 'none', padding: '0.2rem', color: '#38bdf8' }}
+                      onClick={(e) => { e.stopPropagation(); setTemplateToPrint(template); }}
+                      title="Imprimir plantilla en blanco"
+                    >
+                      <svg stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 512 512" height="14" width="14" xmlns="http://www.w3.org/2000/svg"><path d="M400 32H112C85.5 32 64 53.5 64 80v352c0 26.5 21.5 48 48 48h288c26.5 0 48-21.5 48-48V80c0-26.5-21.5-48-48-48zm-16 398c0 3.3-2.7 6-6 6H134c-3.3 0-6-2.7-6-6V86c0-3.3 2.7-6 6-6h244c3.3 0 6 2.7 6 6v344zM160 160h192v32H160zm0 80h192v32H160zm0 80h192v32H160z"></path></svg>
+                    </ActionButton>
+                    <ActionButton
+                      style={{ background: 'transparent', border: 'none', padding: '0.2rem', color: '#f87171' }}
+                      onClick={(e) => handleDelete(template.id, e)}
+                      title="Eliminar plantilla"
+                    >
+                      <FaTrash size={14} />
+                    </ActionButton>
+                  </div>
                 </div>
                 <p>{template.description || 'Sin descripción'}</p>
                 <div style={{ marginTop: '1rem', fontSize: '0.8rem', color: '#64748b', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
@@ -482,12 +516,19 @@ const Templates: React.FC = () => {
               </div>
 
               {/* Mobile View */}
-              <div className="mobile-content">
+              < div className="mobile-content" >
                 <div className="m-info">
                   <span className="m-name">{template.name}</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <span className="m-badge">{template.fields.length} campos</span>
+                  <ActionButton
+                    style={{ background: 'transparent', border: 'none', padding: '0.2rem', color: '#38bdf8' }}
+                    onClick={(e) => { e.stopPropagation(); setTemplateToPrint(template); }}
+                    title="Imprimir"
+                  >
+                    <svg stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 512 512" height="14" width="14" xmlns="http://www.w3.org/2000/svg"><path d="M400 32H112C85.5 32 64 53.5 64 80v352c0 26.5 21.5 48 48 48h288c26.5 0 48-21.5 48-48V80c0-26.5-21.5-48-48-48zm-16 398c0 3.3-2.7 6-6 6H134c-3.3 0-6-2.7-6-6V86c0-3.3 2.7-6 6-6h244c3.3 0 6 2.7 6 6v344zM160 160h192v32H160zm0 80h192v32H160zm0 80h192v32H160z"></path></svg>
+                  </ActionButton>
                   <ActionButton
                     style={{ background: 'transparent', border: 'none', padding: '0.2rem', color: '#f87171' }}
                     onClick={(e) => handleDelete(template.id, e)}
@@ -498,8 +539,9 @@ const Templates: React.FC = () => {
                 </div>
               </div>
             </TemplateCard>
-          ))}
-        </CardGrid>
+          ))
+          }
+        </CardGrid >
       )}
 
       <Modal isOpen={isModalOpen || isClosing} $isClosing={isClosing} onMouseDown={closeModal}>
@@ -612,8 +654,16 @@ const Templates: React.FC = () => {
         </ModalContent>
       </Modal>
 
+      {/* Hidden Print Container */}
+      <div style={{ display: 'none' }}>
+        <PrintableTemplate
+          ref={printRef}
+          template={templateToPrint || ({ id: 'dummy', name: '', is_active: false, fields: [] } as unknown as ClinicalTemplate)}
+        />
+      </div>
+
       {toastOpen && <ToastModal isOpen={toastOpen} message={toastMessage} type={toastType} onClose={() => setToastOpen(false)} />}
-    </PageContainer>
+    </PageContainer >
   );
 };
 

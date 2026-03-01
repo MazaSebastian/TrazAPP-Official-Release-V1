@@ -11,6 +11,7 @@ import { Tooltip } from '../components/Tooltip';
 // Looking at Stock.tsx, Button was defined locally. I will copy the definition.
 import { ConfirmModal } from '../components/ConfirmModal';
 import { EditDispensaryModal } from '../components/EditDispensaryModal';
+import { useReactToPrint } from 'react-to-print';
 
 // --- Styled Components (Copied from Stock.tsx) ---
 
@@ -190,77 +191,52 @@ const ModalActions = styled.div`
 `;
 
 const PrintableLabel = styled.div`
-  display: none;
-  @media print {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    width: 100mm;
-    height: 150mm; // Adjust as needed for specific label size
-    padding: 1rem;
-    background: white;
-    text-align: center;
-    page-break-after: always;
-    
-    /* Force simple styling for thermal printers */
-    font-family: sans-serif;
-    color: black;
-    
-    h1 {
-      font-size: 24pt;
-      margin: 10px 0;
-      font-weight: 800;
-    }
-    
-    h2 {
-      font-size: 16pt;
-      margin: 5px 0;
-      font-weight: normal;
-    }
-    
-    .batch-code {
-      font-size: 14pt;
-      font-family: monospace;
-      margin: 10px 0;
-      padding: 5px 10px;
-      border: 2px solid black;
-      border-radius: 5px;
-    }
-    
-    .qr-container {
-      margin: 20px 0;
-      border: 4px solid black;
-      padding: 10px;
-      background: white;
-    }
-    
-    .logo {
-      font-size: 12pt;
-      margin-top: auto;
-      font-weight: bold;
-    }
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100mm;
+  height: 150mm; // Adjust as needed for specific label size
+  padding: 1rem;
+  background: white;
+  text-align: center;
+  
+  /* Force simple styling for thermal printers */
+  font-family: sans-serif;
+  color: black;
+  
+  h1 {
+    font-size: 24pt;
+    margin: 10px 0;
+    font-weight: 800;
   }
-`;
-
-// Global Print Styles to hide everything else
-const PrintStyles = styled.div`
-  @media print {
-    body * {
-      visibility: hidden;
-    }
-    .printable-label, .printable-label * {
-      visibility: visible;
-    }
-    .printable-label {
-      position: absolute;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      margin: 0;
-      padding: 0;
-    }
+  
+  h2 {
+    font-size: 16pt;
+    margin: 5px 0;
+    font-weight: normal;
+  }
+  
+  .batch-code {
+    font-size: 14pt;
+    font-family: monospace;
+    margin: 10px 0;
+    padding: 5px 10px;
+    border: 2px solid black;
+    border-radius: 5px;
+  }
+  
+  .qr-container {
+    margin: 20px 0;
+    border: 4px solid black;
+    padding: 10px;
+    background: white;
+  }
+  
+  .logo {
+    font-size: 12pt;
+    margin-top: auto;
+    font-weight: bold;
   }
 `;
 
@@ -282,6 +258,8 @@ const Dispensary: React.FC = () => {
     /* QR Code Logic */
     const [qrModalOpen, setQrModalOpen] = useState(false);
     const [qrBatch, setQrBatch] = useState<DispensaryBatch | null>(null);
+    const labelPrintRef = React.useRef<HTMLDivElement>(null);
+    const handlePrintLabel = useReactToPrint({ contentRef: labelPrintRef });
 
     const loadPatients = async () => {
         const data = await patientsService.getPatients();
@@ -374,7 +352,6 @@ const Dispensary: React.FC = () => {
 
     return (
         <PageContainer>
-            <PrintStyles />
             <Header>
                 <h1><FaHandHoldingMedical style={{ marginRight: '10px' }} />Dispensario</h1>
             </Header>
@@ -591,22 +568,24 @@ const Dispensary: React.FC = () => {
 
                     <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'center', gap: '1rem' }}>
                         <ButtonComp variant="secondary" onClick={() => setQrModalOpen(false)}>Cerrar</ButtonComp>
-                        <ButtonComp variant="primary" onClick={() => window.print()} style={{ background: '#2d3748', borderColor: '#2d3748' }}>
+                        <ButtonComp variant="primary" onClick={() => handlePrintLabel()} style={{ background: '#2d3748', borderColor: '#2d3748' }}>
                             <FaPrint /> Imprimir Etiqueta
                         </ButtonComp>
                     </div>
 
                     {/* Printable Content (Hidden until print) */}
-                    <div className="printable-label" style={{ display: 'none' }}>
-                        <PrintableLabel>
-                            <h1>{qrBatch?.strain_name}</h1>
-                            <div className="qr-container">
-                                <QRCode value={`${window.location.origin}/passport/${qrBatch?.id}`} size={250} />
-                            </div>
-                            <div className="batch-code">{qrBatch?.batch_code}</div>
-                            <h2>{qrBatch?.initial_weight}g / {qrBatch?.status}</h2>
-                            <div className="logo">AURORA DEL PLATA</div>
-                        </PrintableLabel>
+                    <div style={{ display: 'none' }}>
+                        <div ref={labelPrintRef}>
+                            <PrintableLabel>
+                                <h1>{qrBatch?.strain_name}</h1>
+                                <div className="qr-container">
+                                    <QRCode value={`${window.location.origin}/passport/${qrBatch?.id}`} size={250} />
+                                </div>
+                                <div className="batch-code">{qrBatch?.batch_code}</div>
+                                <h2>{qrBatch?.initial_weight}g / {qrBatch?.status}</h2>
+                                <div className="logo">AURORA DEL PLATA</div>
+                            </PrintableLabel>
+                        </div>
                     </div>
                 </ModalContent>
             </Modal>

@@ -10,6 +10,7 @@ import { PrintableBatchLabels } from './PrintableBatchLabels'; // Import the new
 import { DndContext, useDraggable, useDroppable, DragEndEvent, useSensor, useSensors, PointerSensor } from '@dnd-kit/core';
 import ToastModal from '../ToastModal';
 import { CustomSelect } from '../CustomSelect';
+import { useReactToPrint } from 'react-to-print';
 
 // ... (Rest of imports and styled components unchanged) ...
 
@@ -281,13 +282,15 @@ export const TransplantModal: React.FC<TransplantModalProps> = ({ isOpen, onClos
 
     // Print State
     const [printingGroup, setPrintingGroup] = useState<{ id: string, name: string, batchIds: string[] } | null>(null);
+    const labelsPrintRef = React.useRef<HTMLDivElement>(null);
+    const handlePrintReact = useReactToPrint({ contentRef: labelsPrintRef });
 
     const handlePrintLabels = (group: { id: string, name: string, batchIds: string[] }) => {
         setPrintingGroup(group);
-        // Allow render to update before printing
+        // Allow render to update ref before calling print generator
         setTimeout(() => {
-            window.print();
-        }, 300);
+            handlePrintReact();
+        }, 100);
     };
 
     // Initialize Active Map
@@ -859,13 +862,15 @@ export const TransplantModal: React.FC<TransplantModalProps> = ({ isOpen, onClos
             </Content>
 
             {/* Hidden Print Area */}
-            {
-                printingGroup && (
-                    <PrintableBatchLabels
-                        batches={printingGroup.batchIds.map(id => getBatch(id)).filter(Boolean) as Batch[]}
-                    />
-                )
-            }
+            <div style={{ display: 'none' }}>
+                <div ref={labelsPrintRef}>
+                    {printingGroup && (
+                        <PrintableBatchLabels
+                            batches={printingGroup.batchIds.map(id => getBatch(id)).filter(Boolean) as Batch[]}
+                        />
+                    )}
+                </div>
+            </div>
 
             <ToastModal
                 isOpen={toastOpen}

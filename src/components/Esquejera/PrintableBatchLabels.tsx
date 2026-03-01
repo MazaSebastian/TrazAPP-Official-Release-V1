@@ -7,48 +7,44 @@ interface PrintableBatchLabelsProps {
   batches: Batch[];
 }
 
-const PrintGlobalStyle = createGlobalStyle`
-  @media print {
-    body * {
-      visibility: hidden;
-    }
-    #printable-batch-labels-root, #printable-batch-labels-root * {
-      visibility: visible;
-    }
-    #printable-batch-labels-root {
-      position: absolute;
-      left: 0;
-      top: 0;
-      width: 100%;
-      z-index: 9999;
-      background: white;
-    }
-    @page {
-      margin: 0;
-    }
-  }
-`;
+
 
 const PrintContainer = styled.div`
-  display: none; // Hidden by default
+  background: white;
+  color: black;
+  width: 100%;
+  font-family: 'Inter', sans-serif;
+
   @media print {
-    display: block; // Visible in print
+    /* 
+      ========================================================================
+      ⚠️ ¡CRÍTICO! NO MODIFICAR NI ELIMINAR ESTAS REGLAS DE IMPRESIÓN ⚠️
+      Fuerza fondo blanco y texto negro para evitar gastar tóner.
+      ========================================================================
+    */
+    html, body, #root {
+      background-color: white !important;
+      color: black !important;
+    }
+    * {
+      color: black !important;
+    }
   }
 `;
 
 // Label Size: Aprox 5cm x 2.5cm or similar standard small label
-// We'll use a grid layout for multiple labels per page
 const LabelGrid = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  gap: 2mm; 
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(45mm, 1fr));
+  gap: 4mm; 
   padding: 5mm;
+  width: 100%;
 `;
 
 const Label = styled.div`
-  width: 50mm;
+  width: 100%;
   height: 25mm;
-  border: 1px dashed #ccc; // Helper border, maybe remove for final or make configurable
+  border: 1px dashed #666; // Línea de corte punteada
   box-sizing: border-box;
   padding: 2mm;
   display: flex;
@@ -56,6 +52,11 @@ const Label = styled.div`
   justify-content: space-between;
   page-break-inside: avoid;
   overflow: hidden;
+  border-radius: 4px;
+
+  @media print {
+    border: 1px dashed #000 !important;
+  }
 `;
 
 const Info = styled.div`
@@ -64,32 +65,34 @@ const Info = styled.div`
   flex-direction: column;
   justify-content: center;
   overflow: hidden;
+  padding-right: 2px;
 `;
 
 const GeneticName = styled.div`
-  font-size: 10px;
-  font-weight: bold;
+  font-size: 11px;
+  font-weight: 800;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  text-transform: uppercase;
 `;
 
 const Code = styled.div`
-  font-size: 8px;
+  font-size: 9px;
   font-family: monospace;
+  font-weight: bold;
   margin-top: 1mm;
 `;
 
 const DateText = styled.div`
-    font-size: 6px;
-    color: #666;
+    font-size: 8px;
+    color: #444;
     margin-top: 1mm;
 `;
 
 export const PrintableBatchLabels: React.FC<PrintableBatchLabelsProps> = ({ batches }) => {
   return (
-    <PrintContainer id="printable-batch-labels-root">
-      <PrintGlobalStyle />
+    <PrintContainer className="printable-labels">
       <LabelGrid>
         {batches.map(batch => (
           <Label key={batch.id}>
@@ -98,10 +101,10 @@ export const PrintableBatchLabels: React.FC<PrintableBatchLabelsProps> = ({ batc
               <Code>{batch.tracking_code || '---'}</Code>
               <DateText>{new Date().toLocaleDateString()}</DateText>
             </Info>
-            <div style={{ width: '20mm', height: '20mm', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ width: '22mm', height: '22mm', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'white', padding: '1mm' }}>
               <QRCode
                 value={batch.tracking_code || batch.id}
-                size={64} // approx 17mm
+                size={70} // approx 18.5mm
                 level="M"
               />
             </div>

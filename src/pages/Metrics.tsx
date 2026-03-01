@@ -98,7 +98,7 @@ const Metrics: React.FC = () => {
         }
     };
 
-    if (loading) return <LoadingSpinner fullScreen text="Analizando datos..." />;
+    if (loading) return <LoadingSpinner fullScreen />;
 
     // Aggregate Totals
     const totalYield = monthlyMetrics.reduce((acc, m) => acc + (Number(m.total_yield) || 0), 0);

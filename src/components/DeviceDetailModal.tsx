@@ -421,7 +421,7 @@ export const DeviceDetailModal: React.FC<DeviceDetailModalProps> = ({ device, on
                             </div>
                         ) : (
                             // ... history view (restored or kept)
-                            loading ? <LoadingSpinner text="Cargando historial..." /> : !hasData ? (
+                            loading ? <LoadingSpinner /> : !hasData ? (
                                 <div style={{ textAlign: 'center', color: '#a0aec0', padding: '3rem' }}>
                                     <FaHistory style={{ fontSize: '3rem', marginBottom: '1rem', display: 'block', margin: '0 auto 1rem' }} />
                                     No hay datos históricos disponibles para este periodo.

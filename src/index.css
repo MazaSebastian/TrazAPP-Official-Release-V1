@@ -14,6 +14,11 @@ body {
   background-color: #020617 !important;
 }
 
+/* Aseguramos que el contenedor de tu reporte también sea blanco */
+.printable-report {
+  background-color: white !important;
+}
+
 /* Calendar Hover Effect */
 .calendar-day-hover:hover {
   background: #f7fafc !important;
@@ -23,7 +28,9 @@ body {
 }
 
 
-/* PRINT STYLES */
+/* ==================================================================================
+ * 🖨️ STYLES DE IMPRESIÓN GLOBALES (¡NO MODIFICAR! MANTENER ALTO CONTRASTE) 🖨️
+ * ================================================================================== */
 @media screen {
 
   .printable-map-details,
@@ -33,27 +40,37 @@ body {
 }
 
 @media print {
-  .no-print {
-    display: none !important;
-  }
 
-  .printable-map-details,
-  .printable-report {
-    display: block !important;
-  }
-
-  /* Force background colors for map printing */
-  * {
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-  }
-
-  /* Hide sidebar and other distractions */
+  /* 1. Ocultar la UI de la aplicación */
+  .no-print,
   aside,
   nav,
   header,
   footer {
     display: none !important;
+  }
+
+  /* 2. Mostrar contenedores de impresión */
+  .printable-map-details,
+  .printable-report {
+    display: block !important;
+    background-color: white !important;
+    /* BLINDAJE: Fondo de reporte = Blanco */
+  }
+
+  /* 3. Forzar fondos blancos y eliminar imágenes de fondo globales para ahorrar tinta */
+  html,
+  body,
+  #root {
+    background-color: white !important;
+    background-image: none !important;
+    color: black !important;
+  }
+
+  /* 4. Forzar que el navegador respete nuestros colores (WebKit/Blink) */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 
   /* Ensure map takes full width */

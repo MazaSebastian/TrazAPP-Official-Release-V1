@@ -1,10 +1,34 @@
 import React from 'react';
 import styled from 'styled-components';
-import { createPortal } from 'react-dom';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Batch } from '../../types/rooms';
-import { EsquejeraGrid } from './EsquejeraGrid';
+import { getGeneticColor } from '../../utils/geneticColors';
+
+import { createGlobalStyle } from 'styled-components';
+
+// Esta es la "bala de plata" que forzará el blanco sin importar el CSS global
+const GlobalPrintForce = createGlobalStyle`
+  @media print {
+    /* Atacamos a TODOS los posibles culpables al mismo tiempo */
+    html, body, #root, [class*="layout"], [class*="container"], main, section {
+      background-color: white !important;
+      background-image: none !important;
+      color: black !important;
+    }
+    
+    /* Si el fondo azul viene de un div de fondo de la app */
+    div {
+      background-color: transparent !important;
+    }
+    
+    /* Excepto tu reporte, que debe ser blanco sólido */
+    .printable-report, .printable-report * {
+      background-color: white !important;
+      color: black !important;
+    }
+  }
+`;
 
 interface PrintableMapReportProps {
   roomName: string;
@@ -19,6 +43,26 @@ const PrintContainer = styled.div`
   color: black;
   background: white;
   width: 100%;
+
+  @media print {
+    /* 
+      ========================================================================
+      ⚠️ ¡CRÍTICO! NO MODIFICAR NI ELIMINAR ESTAS REGLAS DE IMPRESIÓN ⚠️
+      Estas reglas fuerzan el fondo blanco y texto negro en el reporte.
+      Si se eliminan, componentes oscuros de la UI (ej. sidebar, fondos) 
+      van a filtrarse en la vista de impresión, gastando tóner masivamente.
+      El hook 'react-to-print' depende de esto para resetear el iframe.
+      ========================================================================
+    */
+    html, body, #root {
+      background-color: white !important;
+      color: black !important;
+    }
+    
+    * {
+      color: black !important; /* Forza todo el texto a negro por defecto */
+    }
+  }
 `;
 
 // Page 1: Map (Forces new page after)
@@ -32,9 +76,8 @@ const PageOne = styled.div`
   
   @media print {
     display: block; /* Use block for print to adhere to break rules strictly */
-    break-after: page;
+    display: block; /* Use block for print to adhere to break rules strictly */
     page-break-after: always;
-    height: 100vh;
     padding: 0; /* Let print margins handle it or explicit padding */
   }
 `;
@@ -47,7 +90,6 @@ const PageTwo = styled.div`
   
   @media print {
     display: block;
-    break-before: page;
     page-break-before: always;
     padding: 2rem 0;
   }
@@ -115,53 +157,53 @@ const Table = styled.table`
 
 export const PrintableMapReport: React.FC<PrintableMapReportProps> = ({ roomName, mapName, rows, cols, batches }) => {
   // Sort batches by position (A1, A2, B1...)
+
   const sortedBatches = [...batches].sort((a, b) => {
     if (!a.grid_position || !b.grid_position) return 0;
     return a.grid_position.localeCompare(b.grid_position);
   });
 
+  function getRowLabel(index: number) {
+    return String.fromCharCode(65 + index);
+  } // 0 -> A
+  const batchMap = React.useMemo(() => {
+    const map: Record<string, Batch> = {};
+    batches.forEach(b => {
+      if (b.grid_position) {
+        map[b.grid_position.trim().toUpperCase()] = b;
+      }
+    });
+    return map;
+  }, [batches]);
+
+
+
   const totalPlants = batches.reduce((acc, b) => acc + b.quantity, 0);
   const currentDate = format(new Date(), "d 'de' MMMM, yyyy - HH:mm", { locale: es });
 
-  return createPortal(
-    <PrintContainer id="print-root" className="printable-report">
-      {/* FORCE ROOT LEVEL RENDERING & ISOLATION */}
-      <style>{`
-        @media print {
-            .printable-report {
-                position: relative !important;
-                top: 0 !important;
-                left: 0 !important;
-                width: 100% !important;
-                height: auto !important;
-                z-index: 99999 !important;
-                background: white !important;
-                display: block !important;
-                visibility: visible !important;
-                opacity: 1 !important;
-            }
-            
-            .printable-report * {
-                visibility: visible !important;
-            }
-            
-            /* Hide ALL other direct children of body (like #root) */
-            body > *:not(.printable-report) {
-                display: none !important;
-            }
+  // --- LÓGICA DE VISTA COMPACTA (ZOOM OUT) ---
+  const maxDim = Math.max(rows, cols);
+  const isZoomedOut = maxDim > 5;
 
-            body {
-                background: white !important;
-                margin: 0 !important;
-                padding: 0 !important;
-                overflow: visible !important;
-                visibility: visible !important;
-            }
-        }
-      `}</style>
+  // Si es menor a 5x5 usamos el escalado que implementamos previamente.
+  // Si es mayor a 5x5 usamos medidas fijas pequeñas para la vista compacta.
+  const scaleRatio = !isZoomedOut && maxDim > 0 ? Math.max(5 / maxDim, 0.35) : 1;
+
+  const mapStyles = {
+    cellHeight: isZoomedOut ? '40px' : `${Math.floor(50 * scaleRatio)}px`,
+    cellWidth: isZoomedOut ? '40px' : 'auto',
+    padding: isZoomedOut ? '2px' : `${Math.floor(4 * scaleRatio)}px`,
+    mainTextSize: `${Math.floor(11 * scaleRatio)}px`,
+    subTextSize: `${Math.floor(9 * scaleRatio)}px`,
+    headerSize: isZoomedOut ? '11px' : `${Math.floor(10 * scaleRatio)}px`,
+    gapSize: `${Math.max(1, Math.floor(2 * scaleRatio))}px`
+  };
+
+  return (
+    <PrintContainer className="printable-report">
 
       {/* --- PAGE 1: MAP --- */}
-      <PageOne style={{ display: 'block', minHeight: '95vh', pageBreakAfter: 'always', breakAfter: 'page' }}>
+      <PageOne style={{ display: 'block', pageBreakAfter: 'always' }}>
         <Header>
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             <Title>Reporte: {roomName}</Title>
@@ -175,14 +217,74 @@ export const PrintableMapReport: React.FC<PrintableMapReportProps> = ({ roomName
         </SectionTitle>
 
         <div style={{ width: '100%', display: 'flex', justifyContent: 'center', padding: '1rem 0' }}>
-          <EsquejeraGrid
-            rows={rows}
-            cols={cols}
-            batches={batches}
-            onBatchClick={() => { }} // Read-only
-            selectionMode={false}
-            paintingMode={false}
-          />
+          <table className="print-table" style={{ borderCollapse: 'collapse', width: isZoomedOut ? 'auto' : '100%', maxWidth: '900px', margin: '0 auto', fontSize: '10px' }}>
+            <thead>
+              <tr>
+                <th style={{ width: '30px', border: '1px solid #000', padding: mapStyles.padding, background: '#e2e8f0' }}></th>
+                {Array.from({ length: cols }).map((_, cIndex) => (
+                  <th key={`col-${cIndex}`} style={{ width: mapStyles.cellWidth, border: '1px solid #000', padding: mapStyles.padding, background: '#e2e8f0', textAlign: 'center', color: '#000', fontSize: mapStyles.headerSize }}>
+                    {cIndex + 1}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {Array.from({ length: rows }).map((_, rIndex) => {
+                const rLabel = getRowLabel(rIndex);
+                return (
+                  <tr key={`row-${rIndex}`}>
+                    <td style={{ border: '1px solid #000', padding: mapStyles.padding, background: '#e2e8f0', textAlign: 'center', fontWeight: 'bold', color: '#000', fontSize: mapStyles.headerSize }}>
+                      {rLabel}
+                    </td>
+                    {Array.from({ length: cols }).map((_, cIndex) => {
+                      const pos = `${rLabel}${cIndex + 1}`;
+                      const batch = batchMap[pos];
+
+                      // Background logic (Black and White Focus)
+                      const cellBgColor = batch
+                        ? '#ffffff' // Ocupado: Fondo blanco para ahorrar tinta
+                        : '#f0f0f0'; // Vacío: Gris muy clarito para distinguir la grilla
+
+                      return (
+                        <td key={pos} style={{
+                          border: '1px solid #000',
+                          padding: mapStyles.padding,
+                          textAlign: 'center',
+                          height: mapStyles.cellHeight,
+                          width: mapStyles.cellWidth,
+                          verticalAlign: 'middle',
+                          backgroundColor: cellBgColor,
+                          color: '#000',
+                          position: 'relative'
+                        }}>
+                          {isZoomedOut ? (
+                            // --- VISTA COMPACTA ---
+                            <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              <span style={{
+                                fontWeight: batch ? 'bold' : 'normal',
+                                fontSize: '11px',
+                                color: batch ? '#000' : '#888',
+                              }}>
+                                {pos}
+                              </span>
+                            </div>
+                          ) : (
+                            // --- VISTA DETALLADA ---
+                            batch ? (
+                              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: mapStyles.gapSize }}>
+                                <span style={{ fontWeight: 'bold', fontSize: mapStyles.mainTextSize, lineHeight: 1.1 }}>{batch.tracking_code || batch.name}</span>
+                                <span style={{ fontSize: mapStyles.subTextSize, color: '#444', lineHeight: 1.1, marginTop: mapStyles.gapSize }}>{batch.genetic?.name?.substring(0, 15) || 'S/G'}</span>
+                              </div>
+                            ) : ''
+                          )}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
 
         <div style={{ marginTop: '2rem', display: 'flex', gap: '2rem', justifyContent: 'center', fontSize: '12px', color: '#666' }}>
@@ -191,11 +293,8 @@ export const PrintableMapReport: React.FC<PrintableMapReportProps> = ({ roomName
         </div>
       </PageOne>
 
-      {/* FORCE PAGE BREAK */}
-      <div style={{ pageBreakBefore: 'always', breakBefore: 'page', height: '1px', width: '100%', visibility: 'hidden' }} />
-
       {/* --- PAGE 2: TABLE --- */}
-      <PageTwo>
+      <PageTwo style={{ display: 'block', pageBreakBefore: 'always' }}>
 
         {/* --- PAGE 2: DETAILS --- */}
         <Header>
@@ -241,7 +340,6 @@ export const PrintableMapReport: React.FC<PrintableMapReportProps> = ({ roomName
           </tbody>
         </Table>
       </PageTwo>
-    </PrintContainer>,
-    document.body
+    </PrintContainer>
   );
 };

@@ -984,7 +984,7 @@ const Stock: React.FC = () => {
       </StatsGrid>
 
       {isLoading ? (
-        <LoadingSpinner text="Cargando inventario..." />
+        <LoadingSpinner />
       ) : (
         <TableContainer>
           <MainTable>

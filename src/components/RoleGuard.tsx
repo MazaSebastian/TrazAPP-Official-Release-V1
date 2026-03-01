@@ -14,7 +14,7 @@ export const RoleGuard: React.FC<RoleGuardProps> = ({ children, allowedRoles }) 
 
     // While organization/role is loading, show a spinner
     if (isLoading) {
-        return <LoadingSpinner fullScreen text="Verificando permisos..." duration={1000} />;
+        return <LoadingSpinner fullScreen duration={1000} />;
     }
 
     // Role is extracted, let's verify if they have access

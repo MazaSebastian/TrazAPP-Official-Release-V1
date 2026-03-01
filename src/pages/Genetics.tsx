@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';
-import { FaDna, FaPlus, FaClock, FaCalendarAlt, FaLeaf, FaEdit, FaTrash, FaTag, FaTimes } from 'react-icons/fa';
+import { FaDna, FaPlus, FaClock, FaCalendarAlt, FaLeaf, FaEdit, FaTrash, FaTag, FaTimes, FaPrint } from 'react-icons/fa';
 import { geneticsService } from '../services/geneticsService';
 import { Genetic, GeneticType } from '../types/genetics';
 import { generateUniqueColor } from '../utils/geneticColors';
@@ -11,7 +11,8 @@ import { ToastModal } from '../components/ToastModal';
 import { CustomDatePicker } from '../components/CustomDatePicker';
 import { useOrganization } from '../context/OrganizationContext';
 import UpgradeOverlay from '../components/common/UpgradeOverlay';
-
+import { useReactToPrint } from 'react-to-print';
+import { PrintableGeneticsCatalog } from '../components/Genetics/PrintableGeneticsCatalog';
 const fadeIn = keyframes`
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
@@ -585,6 +586,26 @@ const Genetics: React.FC = () => {
 
     const [editingId, setEditingId] = useState<string | null>(null);
 
+    const printRef = React.useRef<HTMLDivElement>(null);
+    const handlePrintCatalog = useReactToPrint({
+        contentRef: printRef,
+        documentTitle: `Catalogo_Geneticas_${new Date().toLocaleDateString('es-AR').replace(/\//g, '-')}`,
+        pageStyle: `
+            @page { size: portrait; margin: 10mm; }
+            html, body, #root, [class*="layout"], [class*="container"], main, section {
+                background-color: white !important;
+                background-image: none !important;
+                color: black !important;
+            }
+            .no-print { display: none !important; }
+            .printable-report { background-color: white !important; }
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+        `
+    });
+
     // Mobile Detail State
     const [mobileDetailGenetic, setMobileDetailGenetic] = useState<Genetic | null>(null);
 
@@ -777,15 +798,43 @@ const Genetics: React.FC = () => {
         setIsModalOpen(true);
     };
 
-    if (loading) return <LoadingSpinner text="Cargando madres..." fullScreen />;
+    if (loading) return <LoadingSpinner fullScreen />;
 
     return (
         <Container style={{ position: 'relative', overflow: 'hidden' }}>
             {planLevel < 2 && <UpgradeOverlay requiredPlanName="Equipo o superior" />}
 
             <div style={{ filter: planLevel < 2 ? 'blur(4px)' : 'none', pointerEvents: planLevel < 2 ? 'none' : 'auto', userSelect: planLevel < 2 ? 'none' : 'auto', opacity: planLevel < 2 ? 0.5 : 1 }}>
-                <Header>
+                <Header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <h1><FaDna /> Gestión de Madres</h1>
+                    <button
+                        onClick={handlePrintCatalog}
+                        className="no-print"
+                        title="Imprimir Catálogo"
+                        style={{
+                            background: 'rgba(15, 23, 42, 0.4)',
+                            backdropFilter: 'blur(8px)',
+                            border: '1px solid rgba(255, 255, 255, 0.1)',
+                            borderRadius: '0.5rem',
+                            padding: '0.5rem 1rem',
+                            fontSize: '0.9rem',
+                            color: '#cbd5e1',
+                            fontWeight: 600,
+                            display: 'flex', alignItems: 'center', gap: '0.5rem',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s'
+                        }}
+                        onMouseEnter={e => {
+                            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                            e.currentTarget.style.color = '#f8fafc';
+                        }}
+                        onMouseLeave={e => {
+                            e.currentTarget.style.background = 'rgba(15, 23, 42, 0.4)';
+                            e.currentTarget.style.color = '#cbd5e1';
+                        }}
+                    >
+                        <FaPrint /> Imprimir Catálogo
+                    </button>
                 </Header>
 
                 <StatsGrid>
@@ -1173,6 +1222,13 @@ const Genetics: React.FC = () => {
                         </GlassToastContent>
                     </GlassToastOverlay>
                 )}
+                {/* Printable Catalog Portal */}
+                <div style={{ display: 'none' }}>
+                    <div ref={printRef}>
+                        <PrintableGeneticsCatalog genetics={genetics} />
+                    </div>
+                </div>
+
             </div>
         </Container >
     );

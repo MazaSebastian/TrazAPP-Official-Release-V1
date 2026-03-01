@@ -13,6 +13,7 @@ import { planService } from '../services/planService';
 import { Plan, TaskType } from '../types';
 import { tasksService } from '../services/tasksService';
 import { FaUserPlus, FaUserShield, FaTrash, FaTimes, FaTasks, FaPlus } from 'react-icons/fa';
+import { LoadingSpinner } from '../components/LoadingSpinner';
 
 // Animación de aparición para modales
 import { keyframes } from 'styled-components';
@@ -460,7 +461,13 @@ const Settings: React.FC = () => {
     }
   };
 
-  if (loading) return <PageContainer>Cargando configuración...</PageContainer>;
+  if (loading) {
+    return (
+      <PageContainer style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', marginTop: '-10vh' }}>
+        <LoadingSpinner />
+      </PageContainer>
+    );
+  }
 
   return (
     <PageContainer>

@@ -12,6 +12,7 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useOrganization } from '../context/OrganizationContext';
 import UpgradeOverlay from '../components/common/UpgradeOverlay';
+import { LoadingSpinner } from '../components/LoadingSpinner';
 
 export const LaboratoryPage: React.FC = () => {
     const { currentOrganization } = useOrganization();
@@ -107,7 +108,9 @@ export const LaboratoryPage: React.FC = () => {
                 </Header>
 
                 {loading ? (
-                    <div style={{ color: '#4a5568', textAlign: 'center', padding: '2rem' }}>Cargando laboratorio...</div>
+                    <div style={{ display: 'flex', justifyContent: 'center', padding: '4rem 0' }}>
+                        <LoadingSpinner />
+                    </div>
                 ) : (
                     <>
                         {activeTab === 'raw' && (

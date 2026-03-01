@@ -64,7 +64,7 @@ const RequireAuth: React.FC<{ children: React.ReactElement }> = ({ children }) =
     initNotifications();
   }, []);
 
-  if (isLoading) return <LoadingSpinner fullScreen text="Iniciando..." duration={3000} />;
+  if (isLoading) return <LoadingSpinner fullScreen duration={3000} />;
   if (!user) return <Navigate to="/login" replace />;
 
   return (

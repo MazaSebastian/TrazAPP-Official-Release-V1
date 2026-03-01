@@ -3,10 +3,12 @@ import styled, { keyframes } from 'styled-components';
 
 
 
-const pulse = keyframes`
-  0% { opacity: 0.6; transform: scale(0.98); }
-  50% { opacity: 1; transform: scale(1.02); }
-  100% { opacity: 0.6; transform: scale(0.98); }
+const heartbeat = keyframes`
+  0% { transform: scale(1); opacity: 0.8; }
+  25% { transform: scale(1.05); opacity: 1; filter: drop-shadow(0 0 8px rgba(74, 222, 128, 0.5)); }
+  50% { transform: scale(1); opacity: 0.8; }
+  75% { transform: scale(1.05); opacity: 1; filter: drop-shadow(0 0 8px rgba(74, 222, 128, 0.5)); }
+  100% { transform: scale(1); opacity: 0.8; }
 `;
 
 const Overlay = styled.div<{ $fullScreen?: boolean }>`
@@ -25,68 +27,37 @@ const Overlay = styled.div<{ $fullScreen?: boolean }>`
   min-height: 200px;
 `;
 
-const filling = keyframes`
-  0% { clip-path: inset(100% 0 0 0); }
-  100% { clip-path: inset(0 0 0 0); }
-`;
-
 const SpinnerContainer = styled.div`
   position: relative;
-  width: 150px; /* Increased size */
-  height: 150px;
+  width: 120px;
+  height: 120px;
   margin-bottom: 2rem;
   display: flex;
   justify-content: center;
   align-items: center;
-  animation: ${pulse} 2s ease-in-out infinite;
 `;
 
-const BaseImage = styled.img`
-  position: absolute;
+const HeartbeatImage = styled.img`
   width: 100%;
   height: 100%;
   object-fit: contain;
-  opacity: 0.2;
-`;
-
-const FillImage = styled.img<{ $duration: number }>`
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  animation: ${filling} ${p => p.$duration}ms linear forwards;
-`;
-
-const LoadingText = styled.h3`
-  color: #4ade80; /* Neo green text */
-  font-size: 1.2rem;
-  font-weight: 600;
-  margin: 0;
-  letter-spacing: 0.05em;
-  opacity: 0.8;
-  animation: ${pulse} 2s ease-in-out infinite;
+  animation: ${heartbeat} 1.5s ease-in-out infinite;
 `;
 
 interface LoadingSpinnerProps {
-  text?: string;
   fullScreen?: boolean;
   duration?: number;
 }
 
 export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
-  text = 'Cargando...',
   fullScreen = false,
   duration = 2000
 }) => {
   return (
     <Overlay $fullScreen={fullScreen}>
       <SpinnerContainer>
-        {/* Base semi-transparent logo */}
-        <BaseImage src="/carga.png" alt="Cargando base" />
-        {/* Animated filling logo */}
-        <FillImage src="/carga.png" alt="Cargando fill" $duration={duration} />
+        <HeartbeatImage src="/carga.png" alt="Cargando..." />
       </SpinnerContainer>
-      <LoadingText>{text}</LoadingText>
     </Overlay>
   );
 };

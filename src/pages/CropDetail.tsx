@@ -1766,7 +1766,7 @@ const CropDetail: React.FC = () => {
 
 
   if (!crop) {
-    return <LoadingSpinner text="Cargando detalles del cultivo..." fullScreen duration={1500} />;
+    return <LoadingSpinner fullScreen duration={1500} />;
   }
 
 
@@ -1833,7 +1833,7 @@ const CropDetail: React.FC = () => {
 
         {isLoadingRooms ? (
           <div style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>
-            <LoadingSpinner text="Cargando salas..." />
+            <LoadingSpinner />
           </div>
         ) : (
           <FadeInWrapper>

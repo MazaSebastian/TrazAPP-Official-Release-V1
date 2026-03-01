@@ -25,6 +25,7 @@ import { LoadingSpinner } from '../components/LoadingSpinner';
 
 import { EsquejeraGrid } from '../components/Esquejera/EsquejeraGrid';
 import { PrintableMapReport } from '../components/Esquejera/PrintableMapReport';
+import { PrintableBatchLabels } from '../components/Esquejera/PrintableBatchLabels';
 import { LivingSoilGrid } from '../components/LivingSoil/LivingSoilGrid';
 import { LivingSoilBatchModal } from '../components/LivingSoil/LivingSoilBatchModal';
 import { StageSelectionModal } from '../components/LivingSoil/StageSelectionModal';
@@ -32,6 +33,7 @@ import { DndContext, DragEndEvent, useSensor, useSensors, MouseSensor, TouchSens
 import { getGeneticColor } from '../utils/geneticColors';
 import { Batch, CloneMap, BatchStage } from '../types/rooms';
 import { Genetic } from '../types/genetics';
+import { useReactToPrint } from 'react-to-print';
 
 
 
@@ -1971,7 +1973,60 @@ const RoomDetail: React.FC = () => {
     // Ref for detecting clicks outside map for deselection
     const mapContainerRef = useRef<HTMLDivElement>(null);
     const toolbarRef = useRef<HTMLDivElement>(null);
+    const mapReportRef = useRef<HTMLDivElement>(null);
+    const batchLabelsRef = useRef<HTMLDivElement>(null);
 
+    const handlePrintMap = useReactToPrint({
+        contentRef: mapReportRef,
+        documentTitle: `Mapa_Distribucion_${new Date().toLocaleDateString('es-AR').replace(/\//g, '-')}`,
+
+        // =========================================================================================
+        // 🛡️ BLINDAJE DE IMPRESIÓN (¡NO TOCAR!) 🛡️
+        // Este 'pageStyle' se inyecta directamente en el <iframe> virtual que crea react-to-print.
+        // Es la ÚNICA FORMA de vencer al dark mode global de index.css o StyledComponents.
+        // Si se borra esto, el mapa se imprimirá con fondo azul oscuro y arruinará el PDF.
+        // =========================================================================================
+        pageStyle: `
+            @page { size: landscape; margin: 10mm; }
+            html, body {
+                background-color: white !important;
+                background-image: none !important;
+                color: black !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            /* Ocultar elementos no deseados que se hayan colado al clonar el DOM */
+            .no-print { display: none !important; }
+            /* Forzar el reporte a fondo blanco puro */
+            .printable-report { background-color: white !important; }
+            /* Forzar navegador a respetar el blanco ignorando el tema oscuro del OS */
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+        `
+    });
+
+    const handlePrintLabels = useReactToPrint({
+        contentRef: batchLabelsRef,
+        documentTitle: `Etiquetas_Lotes`,
+        pageStyle: `
+            @page { size: portrait; margin: 10mm; }
+            html, body {
+                background-color: white !important;
+                background-image: none !important;
+                color: black !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            .no-print { display: none !important; }
+            .printable-report { background-color: white !important; }
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+        `
+    });
 
 
 
@@ -2210,7 +2265,7 @@ const RoomDetail: React.FC = () => {
 
                     // USER REQUIREMENT: Tracking IDs must NEVER change.
                     // Previous logic merged batches into a new one, destroying IDs.
-                    // New logic: Move each batch individually. 
+                    // New logic: Move each batch individually.
                     // We treat the "Group Name" as a labeling/note preference, not a database merge.
 
                     for (const batchId of group.batchIds) {
@@ -2713,10 +2768,10 @@ const RoomDetail: React.FC = () => {
             // Ideally service handles this. Let's use createBatch logic from service if possible or custom manual one.
             // We'll use a specific service method or standard createBatch.
             // But standard createBatch doesn't auto-set tracking code easily without logic.
-            // Let's rely on backend or service logic handling naming if passed empty? 
+            // Let's rely on backend or service logic handling naming if passed empty?
             // For now, let's just pass basic info and let DB/Service handle naming if needed or generate here.
 
-            // Getting next sequence is hard on client without query. 
+            // Getting next sequence is hard on client without query.
             // Let's use a simpler approach: Name = "S-POS" or similar temporarily, or assume service fixes it.
             // Actually `roomsService.batchAssignToMap` does logic. Maybe we can misuse it? No.
 
@@ -2824,7 +2879,7 @@ const RoomDetail: React.FC = () => {
             showToast("Error moviendo lote", 'error');
         } finally {
             setMoveConfirm({ isOpen: false, position: null });
-            // Ensure moving state is cleared on error too if desired, 
+            // Ensure moving state is cleared on error too if desired,
             // but keeping it might allow retry. The user requested "cancel" explicitly.
             setMovingBatch(null);
         }
@@ -2858,9 +2913,9 @@ const RoomDetail: React.FC = () => {
         }
     };
 
-    /* 
+    /*
     // Legacy Toggle Alert - Removed in favor of Register Observation
-    const handleToggleAlert = async () => { ... } 
+    const handleToggleAlert = async () => { ... }
     */
 
 
@@ -3182,10 +3237,10 @@ const RoomDetail: React.FC = () => {
 
                 if (totalPlants > freeSlots) {
                     // Show Toast/Alert for capacity exceeded
-                    // Using standard alert for now as requested "modal toast central" implies existing component or simple alert is better than nothing, 
+                    // Using standard alert for now as requested "modal toast central" implies existing component or simple alert is better than nothing,
                     // and I'll use the existing ToastModal if available or simple alert.
                     // Given the constraint "debe desplegar un modal toast central flotante", I will use a custom state for a simple central modal if ToastModal isn't easy to hook up instantly without looking at it.
-                    // But wait, there is a ToastModal imported. Let's try to use it if I can see how. 
+                    // But wait, there is a ToastModal imported. Let's try to use it if I can see how.
                     // Actually, for now, to ensure reliability, I will use window.alert but ideally I should check ToastModal usage.
                     // Improving: I will use a simple alert for now to ensure functionality, then can refine to ToastModal.
                     setToastState({
@@ -3263,7 +3318,7 @@ const RoomDetail: React.FC = () => {
             if (!batch || !batch.clone_map_id) return; // Already in stock or invalid
 
             try {
-                // Determine if we need to split? 
+                // Determine if we need to split?
                 // Usually dragging back means "Unassign All of this batch" or "Unassign 1 unit"?
                 // If it's a grid item (single), we move it back.
 
@@ -3647,7 +3702,7 @@ const RoomDetail: React.FC = () => {
             console.error(error);
             showToast("Error al crear el lote.", 'error');
         } finally {
-            // Ensure loading state is off. 
+            // Ensure loading state is off.
             // If component unmounted, this might warn, but usually fine in this structure.
             setIsCreatingBatch(false);
         }
@@ -3854,18 +3909,15 @@ const RoomDetail: React.FC = () => {
 
     // Tables calc removed
 
-    if (loading) return <LoadingSpinner fullScreen text={activeMapId ? "Cargando Mapa..." : "Cargando sala..."} duration={3000} />
+    if (loading) return <LoadingSpinner fullScreen duration={3000} />
 
     return (
         <RoomDetailContainer>
             <Container>
                 <GlobalPrintStyles />
                 <RoomHeaderContainer className="no-print">
-                    <RoomHeaderLeft>
-                        <BackButton onClick={() => navigate(-1)}><FaArrowLeft /> Volver</BackButton>
-                        <Title>{room?.name} <Badge stage={room?.type}>{room?.type === 'vegetation' ? 'Vegetación' : room?.type === 'flowering' ? 'Floración' : (room?.type === 'drying' || room?.type === 'curing') ? 'Secado' : room?.type === 'living_soil' ? 'Agro/Living Soil' : room?.type}</Badge></Title>
-                    </RoomHeaderLeft>
-
+                    <BackButton onClick={() => navigate(-1)}><FaArrowLeft /> Volver</BackButton>
+                    <Title>{room?.name} <Badge stage={room?.type}>{room?.type === 'vegetation' ? 'Vegetación' : room?.type === 'flowering' ? 'Floración' : (room?.type === 'drying' || room?.type === 'curing') ? 'Secado' : room?.type === 'living_soil' ? 'Agro/Living Soil' : room?.type}</Badge></Title>
                 </RoomHeaderContainer>
 
                 {/* Room Summary Header */}
@@ -3949,10 +4001,10 @@ const RoomDetail: React.FC = () => {
                 )}
 
 
-                {/* 
+                {/*
             <div style={{ marginBottom: '2rem' }} className="no-print">
                 <TuyaManager mode="sensors" roomId={room?.id} />
-            </div> 
+            </div>
             */}
 
 
@@ -4161,16 +4213,7 @@ const RoomDetail: React.FC = () => {
                                         <div className="no-print-map-controls" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.75rem', justifyContent: 'center' }}>
 
                                             <button
-                                                onClick={() => {
-                                                    document.body.classList.add('printing-map');
-                                                    window.onafterprint = () => {
-                                                        document.body.classList.remove('printing-map');
-                                                        window.onafterprint = null;
-                                                    };
-                                                    setTimeout(() => {
-                                                        window.print();
-                                                    }, 100);
-                                                }}
+                                                onClick={() => handlePrintMap()}
                                                 title="Imprimir Mapa"
                                                 style={{
                                                     background: 'rgba(15, 23, 42, 0.4)',
@@ -4267,7 +4310,32 @@ const RoomDetail: React.FC = () => {
                                                                     <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#94a3b8', letterSpacing: '0.05em' }}>ACCIONES DE LOTE</div>
                                                                 </div>
 
-                                                                {/* 1. EDITAR */}
+                                                                {/* 1. IMPRIMIR ETIQUETAS */}
+                                                                <button
+                                                                    onClick={() => {
+                                                                        setIsBulkActionsOpen(false);
+                                                                        handlePrintLabels();
+                                                                    }}
+                                                                    style={{
+                                                                        width: '100%',
+                                                                        display: 'flex', alignItems: 'center', gap: '0.75rem',
+                                                                        padding: '0.75rem 1rem',
+                                                                        color: '#f8fafc',
+                                                                        fontSize: '0.85rem',
+                                                                        fontWeight: 500,
+                                                                        background: 'transparent',
+                                                                        border: 'none',
+                                                                        cursor: 'pointer',
+                                                                        transition: 'all 0.2s',
+                                                                        textAlign: 'left'
+                                                                    }}
+                                                                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'}
+                                                                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                                                                >
+                                                                    <FaPrint color="#94a3b8" /> Imprimir Etiquetas
+                                                                </button>
+
+                                                                {/* 2. EDITAR */}
                                                                 <button
                                                                     onClick={() => {
                                                                         setIsBulkActionsOpen(false);
@@ -4684,16 +4752,7 @@ const RoomDetail: React.FC = () => {
 
                                                             <div className="no-print" style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
                                                                 <button
-                                                                    onClick={() => {
-                                                                        document.body.classList.add('printing-map');
-                                                                        window.onafterprint = () => {
-                                                                            document.body.classList.remove('printing-map');
-                                                                            window.onafterprint = null;
-                                                                        };
-                                                                        setTimeout(() => {
-                                                                            window.print();
-                                                                        }, 100);
-                                                                    }}
+                                                                    onClick={() => handlePrintMap()}
                                                                     title="Imprimir Mapa"
                                                                     style={{
                                                                         background: 'rgba(15, 23, 42, 0.4)',
@@ -7368,14 +7427,26 @@ const RoomDetail: React.FC = () => {
                     count={selectedBatchIds.size}
                 />
                 {/* REPLACE INLINE PRINT LOGIC WITH ROBUST COMPONENT */}
-                {/* REPLACE INLINE PRINT LOGIC WITH ROBUST COMPONENT */}
-                <PrintableMapReport
-                    roomName={room?.name || 'Sala'}
-                    mapName={activeMapId ? (cloneMaps.find(m => m.id === activeMapId)?.name || 'Mapa') : 'General'}
-                    rows={activeMapId ? (cloneMaps.find(m => m.id === activeMapId)?.grid_rows || 0) : (room?.grid_rows || 0)}
-                    cols={activeMapId ? (cloneMaps.find(m => m.id === activeMapId)?.grid_columns || 0) : (room?.grid_columns || 0)}
-                    batches={(room?.batches || []).filter(b => b.quantity > 0 && (!activeMapId || b.clone_map_id === activeMapId))}
-                />
+                <div style={{ display: 'none' }}>
+                    <div ref={mapReportRef}>
+                        <PrintableMapReport
+                            roomName={room?.name || 'Sala'}
+                            mapName={activeMapId ? (cloneMaps.find(m => m.id === activeMapId)?.name || 'Mapa') : 'General'}
+                            rows={activeMapId ? (cloneMaps.find(m => m.id === activeMapId)?.grid_rows || 0) : (room?.grid_rows || 0)}
+                            cols={activeMapId ? (cloneMaps.find(m => m.id === activeMapId)?.grid_columns || 0) : (room?.grid_columns || 0)}
+                            batches={(room?.batches || []).filter(b => b.quantity > 0 && (!activeMapId || b.clone_map_id === activeMapId))}
+                        />
+                    </div>
+                </div>
+
+                {/* Etiquetas Print Portal */}
+                <div style={{ display: 'none' }}>
+                    <div ref={batchLabelsRef}>
+                        <PrintableBatchLabels
+                            batches={room?.batches?.filter(b => selectedBatchIds.has(b.id)) || []}
+                        />
+                    </div>
+                </div>
 
             </Container >
         </RoomDetailContainer>

@@ -5,6 +5,7 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { FaTimes, FaPrint, FaThermometerHalf, FaClock, FaLayerGroup, FaSnowflake, FaTint } from 'react-icons/fa';
 import { TastingRating } from './TastingRating';
+import { useReactToPrint } from 'react-to-print';
 
 interface ExtractionDetailsProps {
     extraction: Extraction;
@@ -12,10 +13,8 @@ interface ExtractionDetailsProps {
 }
 
 export const ExtractionDetails: React.FC<ExtractionDetailsProps> = ({ extraction, onClose }) => {
-
-    const handlePrint = () => {
-        window.print();
-    };
+    const printRef = React.useRef<HTMLDivElement>(null);
+    const handlePrint = useReactToPrint({ contentRef: printRef });
 
     const renderParams = () => {
         const p = extraction.parameters as any;
@@ -68,76 +67,77 @@ export const ExtractionDetails: React.FC<ExtractionDetailsProps> = ({ extraction
                         </IconButton>
                     </div>
                 </Header>
-
-                <Content>
-                    <Section>
-                        <SectionTitle>Información General</SectionTitle>
-                        <InfoRow>
-                            <div>
-                                <Label>Fecha</Label>
-                                <Value>{format(new Date(extraction.date), 'dd MMMM yyyy', { locale: es })}</Value>
-                            </div>
-                            <div>
-                                <Label>ID</Label>
-                                <Value style={{ fontFamily: 'monospace', fontSize: '0.8rem' }}>{extraction.id.split('-')[0]}</Value>
-                            </div>
-                        </InfoRow>
-                    </Section>
-
-                    <Section>
-                        <SectionTitle>Materia Prima</SectionTitle>
-                        <InfoRow>
-                            <div>
-                                <Label>Variedad</Label>
-                                <Value>{extraction.source_batch?.strain_name || 'Desconocido'}</Value>
-                            </div>
-                            <div>
-                                <Label>Lote Origen</Label>
-                                <Value>{extraction.source_batch?.batch_code}</Value>
-                            </div>
-                        </InfoRow>
-                    </Section>
-
-                    <Section>
-                        <SectionTitle>Parámetros Técnicos</SectionTitle>
-                        {renderParams()}
-                    </Section>
-
-                    <Section>
-                        <SectionTitle>Resultados</SectionTitle>
-                        <ResultsContainer>
-                            <ResultBox>
-                                <Label>Entrada</Label>
-                                <BigValue>{extraction.input_weight}g</BigValue>
-                            </ResultBox>
-                            <ResultBox>
-                                <Label>Salida</Label>
-                                <BigValue>{extraction.output_weight}g</BigValue>
-                            </ResultBox>
-                            <ResultBox $highlight>
-                                <Label>Retorno</Label>
-                                <BigValue>{extraction.yield_percentage?.toFixed(1) || ((extraction.output_weight / extraction.input_weight) * 100).toFixed(1)}%</BigValue>
-                            </ResultBox>
-                        </ResultsContainer>
-                    </Section>
-
-                    {extraction.ratings && (
+                <div ref={printRef}>
+                    <Content>
                         <Section>
-                            <SectionTitle>Cata & Calidad</SectionTitle>
-                            <TastingRating ratings={extraction.ratings} readonly />
+                            <SectionTitle>Información General</SectionTitle>
+                            <InfoRow>
+                                <div>
+                                    <Label>Fecha</Label>
+                                    <Value>{format(new Date(extraction.date), 'dd MMMM yyyy', { locale: es })}</Value>
+                                </div>
+                                <div>
+                                    <Label>ID</Label>
+                                    <Value style={{ fontFamily: 'monospace', fontSize: '0.8rem' }}>{extraction.id.split('-')[0]}</Value>
+                                </div>
+                            </InfoRow>
                         </Section>
-                    )}
 
-                    {extraction.notes && (
                         <Section>
-                            <SectionTitle>Notas</SectionTitle>
-                            <NotesBox>
-                                {extraction.notes}
-                            </NotesBox>
+                            <SectionTitle>Materia Prima</SectionTitle>
+                            <InfoRow>
+                                <div>
+                                    <Label>Variedad</Label>
+                                    <Value>{extraction.source_batch?.strain_name || 'Desconocido'}</Value>
+                                </div>
+                                <div>
+                                    <Label>Lote Origen</Label>
+                                    <Value>{extraction.source_batch?.batch_code}</Value>
+                                </div>
+                            </InfoRow>
                         </Section>
-                    )}
 
-                </Content>
+                        <Section>
+                            <SectionTitle>Parámetros Técnicos</SectionTitle>
+                            {renderParams()}
+                        </Section>
+
+                        <Section>
+                            <SectionTitle>Resultados</SectionTitle>
+                            <ResultsContainer>
+                                <ResultBox>
+                                    <Label>Entrada</Label>
+                                    <BigValue>{extraction.input_weight}g</BigValue>
+                                </ResultBox>
+                                <ResultBox>
+                                    <Label>Salida</Label>
+                                    <BigValue>{extraction.output_weight}g</BigValue>
+                                </ResultBox>
+                                <ResultBox $highlight>
+                                    <Label>Retorno</Label>
+                                    <BigValue>{extraction.yield_percentage?.toFixed(1) || ((extraction.output_weight / extraction.input_weight) * 100).toFixed(1)}%</BigValue>
+                                </ResultBox>
+                            </ResultsContainer>
+                        </Section>
+
+                        {extraction.ratings && (
+                            <Section>
+                                <SectionTitle>Cata & Calidad</SectionTitle>
+                                <TastingRating ratings={extraction.ratings} readonly />
+                            </Section>
+                        )}
+
+                        {extraction.notes && (
+                            <Section>
+                                <SectionTitle>Notas</SectionTitle>
+                                <NotesBox>
+                                    {extraction.notes}
+                                </NotesBox>
+                            </Section>
+                        )}
+
+                    </Content>
+                </div>
             </Modal>
         </Overlay>
     );

@@ -665,7 +665,7 @@ const Crops: React.FC = () => {
   };
 
   if (loading) {
-    return <LoadingSpinner text="Cargando tus cultivos..." fullScreen duration={1500} />;
+    return <LoadingSpinner fullScreen duration={1500} />;
   }
 
   return (

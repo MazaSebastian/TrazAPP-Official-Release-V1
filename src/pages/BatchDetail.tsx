@@ -5,6 +5,8 @@ import { FaArrowLeft, FaBarcode, FaBox, FaCalendarAlt, FaCut, FaMapMarkerAlt, Fa
 import { roomsService } from '../services/roomsService';
 import { Batch } from '../types/rooms';
 import { LoadingSpinner } from '../components/LoadingSpinner';
+import { useReactToPrint } from 'react-to-print';
+import { PrintableBatchPassport } from '../components/Batches/PrintableBatchPassport';
 
 const fadeIn = keyframes`
   from { opacity: 0; transform: translateY(10px); }
@@ -196,6 +198,27 @@ export const BatchDetail: React.FC = () => {
     const [childBatches, setChildBatches] = useState<Batch[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const printRef = React.useRef<HTMLDivElement>(null);
+    const handlePrint = useReactToPrint({
+        contentRef: printRef,
+        documentTitle: `Pasaporte_Lote_${batch?.tracking_code || batch?.id?.substring(0, 8) || 'Desconocido'}`,
+        pageStyle: `
+            @page { size: portrait; margin: 10mm; }
+            html, body {
+                background-color: white !important;
+                background-image: none !important;
+                color: black !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            .no-print { display: none !important; }
+            .printable-report { background-color: white !important; }
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+        `
+    });
 
     useEffect(() => {
         const fetchBatch = async () => {
@@ -303,7 +326,7 @@ export const BatchDetail: React.FC = () => {
                 </div>
 
                 <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-                    <ActionButton onClick={() => window.print()} title="Imprimir Ficha">
+                    <ActionButton onClick={handlePrint} title="Imprimir Ficha">
                         <FaPrint /> Imprimir
                     </ActionButton>
                     <ActionButton onClick={() => navigate(-1)} title="Volver al Listado">
@@ -312,65 +335,16 @@ export const BatchDetail: React.FC = () => {
                 </div>
             </div>
 
-            <GlassCard>
-
-                <MetaGrid>
-                    <MetaItem>
-                        <div className="icon-wrapper"><FaCalendarAlt /></div>
-                        <div className="info">
-                            <span className="label">Creación</span>
-                            <span className="value">{new Date(batch.start_date || batch.created_at).toLocaleDateString()}</span>
-                        </div>
-                    </MetaItem>
-                    <MetaItem>
-                        <div className="icon-wrapper" style={{ background: 'rgba(74, 222, 128, 0.1)', color: '#4ade80' }}><FaTag /></div>
-                        <div className="info">
-                            <span className="label">Cantidad Total</span>
-                            <span className="value">{allUnits.length} unidades</span>
-                        </div>
-                    </MetaItem>
-                    <MetaItem>
-                        <div className="icon-wrapper" style={{ background: 'rgba(192, 132, 252, 0.1)', color: '#c084fc' }}><FaMapMarkerAlt /></div>
-                        <div className="info">
-                            <span className="label">Sala / Destino</span>
-                            <span className="value">{batch.room?.name || '---'} {batch.room?.type ? `(${batch.room.type})` : ''}</span>
-                        </div>
-                    </MetaItem>
-                    <MetaItem>
-                        <div className="icon-wrapper" style={{ background: 'rgba(250, 204, 21, 0.1)', color: '#facc15' }}><FaSeedling /></div>
-                        <div className="info">
-                            <span className="label">Estado Actual</span>
-                            <span className="value" style={{ textTransform: 'capitalize' }}>
-                                {batch.status === 'activo' ? 'En Crecimiento' : batch.status === 'madre' ? 'Madre' : batch.status}
-                            </span>
-                        </div>
-                    </MetaItem>
-                </MetaGrid>
-            </GlassCard>
-
-            <UnitsSection>
-                <h2><FaCut style={{ color: '#94a3b8' }} /> Unidades del Lote ({allUnits.length})</h2>
-                {allUnits.length > 0 ? (
-                    <UnitsGrid>
-                        {allUnits.map((unit) => (
-                            <UnitCard key={unit.id} onClick={() => {
-                                if (unit.genetic_id) {
-                                    navigate(`/genetic/${unit.genetic_id}`);
-                                } else {
-                                    navigate('/clones'); // Fallback if no genetic ID
-                                }
-                            }}>
-                                <FaBarcode className="icon" />
-                                <span className="identifier">{unit.name}</span>
-                            </UnitCard>
-                        ))}
-                    </UnitsGrid>
-                ) : (
-                    <div style={{ padding: '3rem', textAlign: 'center', background: 'rgba(255,255,255,0.02)', borderRadius: '1rem', border: '1px dashed rgba(255,255,255,0.1)', color: '#94a3b8' }}>
-                        No hay unidades individuales registradas para este lote padre.
-                    </div>
-                )}
-            </UnitsSection>
+            <div style={{ display: 'none' }}>
+                <div ref={printRef}>
+                    {batch && (
+                        <PrintableBatchPassport
+                            batch={batch}
+                            childBatches={childBatches}
+                        />
+                    )}
+                </div>
+            </div>
         </Container>
     );
 };

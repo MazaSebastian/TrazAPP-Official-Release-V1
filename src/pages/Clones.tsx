@@ -13,6 +13,7 @@ import { geneticsService } from '../services/geneticsService';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ConfirmModal } from '../components/ConfirmModal';
 import { ToastModal } from '../components/ToastModal';
+import { useReactToPrint } from 'react-to-print';
 
 import { Room } from '../types/rooms';
 import QRCode from 'react-qr-code';
@@ -1046,6 +1047,9 @@ const Clones: React.FC = () => {
     // Mobile Detail State
     const [mobileDetailBatch, setMobileDetailBatch] = useState<any>(null);
 
+    const printLabelsRef = React.useRef<HTMLDivElement>(null);
+    const handlePrintReact = useReactToPrint({ contentRef: printLabelsRef });
+
     const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
         setToastMessage(message);
         setToastType(type);
@@ -1517,7 +1521,7 @@ const Clones: React.FC = () => {
         setIsBarcodeModalOpen(true);
         if (autoPrint) {
             setTimeout(() => {
-                window.print();
+                handlePrintReact();
             }, 500);
         }
     };
@@ -1530,7 +1534,7 @@ const Clones: React.FC = () => {
 
     const handlePrintTickets = () => {
         if (!viewingBatch) return;
-        window.print();
+        handlePrintReact();
     };
 
     const handleDiscardClick = (batch: any) => {
@@ -1617,7 +1621,7 @@ const Clones: React.FC = () => {
     if (loading) {
         return (
             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 'calc(100vh - 100px)', width: '100%' }}>
-                <LoadingSpinner text="Cargando esquejes..." />
+                <LoadingSpinner />
             </div>
         );
     }
@@ -2417,24 +2421,26 @@ const Clones: React.FC = () => {
 
             {/* Print Area */}
             <PrintStyles />
-            <div id="printable-clones-area">
-                {viewingBatch && Array.from({ length: printQuantity }).map((_, i) => (
-                    <PrintableCloneLabel key={i}>
-                        <div className="qr-side">
-                            <QRCode
-                                value={viewingBatch.genetic_id ? `${window.location.origin}/genetic/${viewingBatch.genetic_id}` : viewingBatch.name}
-                                size={64} // sized for 22mm roughly (approx 80px)
-                                style={{ height: "auto", maxWidth: "100%", width: "100%" }}
-                                viewBox={`0 0 256 256`}
-                            />
-                        </div>
-                        <div className="info-side">
-                            <div className="name">{viewingBatch.name}</div>
-                            <div className="meta">{viewingBatch.genetic?.name?.substring(0, 15)}</div>
-                            <div className="meta">{new Date(viewingBatch.start_date || viewingBatch.created_at).toLocaleDateString()}</div>
-                        </div>
-                    </PrintableCloneLabel>
-                ))}
+            <div style={{ display: 'none' }}>
+                <div ref={printLabelsRef} id="printable-clones-area">
+                    {viewingBatch && Array.from({ length: printQuantity }).map((_, i) => (
+                        <PrintableCloneLabel key={i}>
+                            <div className="qr-side">
+                                <QRCode
+                                    value={viewingBatch.genetic_id ? `${window.location.origin}/genetic/${viewingBatch.genetic_id}` : viewingBatch.name}
+                                    size={64} // sized for 22mm roughly (approx 80px)
+                                    style={{ height: "auto", maxWidth: "100%", width: "100%" }}
+                                    viewBox={`0 0 256 256`}
+                                />
+                            </div>
+                            <div className="info-side">
+                                <div className="name">{viewingBatch.name}</div>
+                                <div className="meta">{viewingBatch.genetic?.name?.substring(0, 15)}</div>
+                                <div className="meta">{new Date(viewingBatch.start_date || viewingBatch.created_at).toLocaleDateString()}</div>
+                            </div>
+                        </PrintableCloneLabel>
+                    ))}
+                </div>
             </div>
 
             {/* Mobile Detail Modal */}

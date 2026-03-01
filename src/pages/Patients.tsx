@@ -575,7 +575,7 @@ const Patients: React.FC = () => {
                 />
 
                 {isLoading ? (
-                    <LoadingSpinner text="Cargando socios..." />
+                    <LoadingSpinner />
                 ) : (
                     <CardGrid>
                         {filteredPatients.map(patient => (

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { format, differenceInDays } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -18,8 +18,11 @@ import {
   FaStickyNote,
   FaPlus,
   FaTrash,
-  FaClock
+  FaClock,
+  FaPrint
 } from 'react-icons/fa';
+import { useReactToPrint } from 'react-to-print';
+import { PrintableTaskChecklist } from '../components/Tasks/PrintableTaskChecklist';
 import { WeatherWidget } from '../components/WeatherWidget';
 import { useAuth } from '../context/AuthContext';
 import { useData } from '../context/DataContext';
@@ -778,6 +781,28 @@ const AlertActions = styled.div`
 
 const Dashboard: React.FC = () => {
   const { user } = useAuth();
+  const checklistRef = useRef<HTMLDivElement>(null);
+
+  const handlePrintChecklist = useReactToPrint({
+    contentRef: checklistRef,
+    documentTitle: `Checklist_Operarios_${new Date().toLocaleDateString('es-AR').replace(/\//g, '-')}`,
+    pageStyle: `
+      @page { size: portrait; margin: 10mm; }
+      html, body {
+          background-color: white !important;
+          background-image: none !important;
+          color: black !important;
+          margin: 0 !important;
+          padding: 0 !important;
+      }
+      .no-print { display: none !important; }
+      .printable-report { background-color: white !important; }
+      * {
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
+      }
+    `
+  });
 
 
   const { tasks, crops, rooms, stickies, isLoading, refreshData, updateStickies, updateTasks } = useData();
@@ -887,7 +912,7 @@ const Dashboard: React.FC = () => {
 
 
   if (isLoading) {
-    return <LoadingSpinner text="Cargando panel..." fullScreen duration={3000} />;
+    return <LoadingSpinner fullScreen duration={3000} />;
   }
 
   return (
@@ -1105,7 +1130,37 @@ const Dashboard: React.FC = () => {
 
 
         <div>
-          <SectionTitle><FaExclamationTriangle /> Alertas & Tareas</SectionTitle>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+            <SectionTitle style={{ marginBottom: 0 }}><FaExclamationTriangle /> Alertas & Tareas</SectionTitle>
+            <button
+              onClick={() => handlePrintChecklist()}
+              className="no-print"
+              title="Descargar Planilla de Operarios"
+              style={{
+                background: 'rgba(15, 23, 42, 0.4)',
+                backdropFilter: 'blur(8px)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                borderRadius: '0.5rem',
+                padding: '0.4rem 0.75rem',
+                fontSize: '0.8rem',
+                color: '#cbd5e1',
+                fontWeight: 600,
+                display: 'flex', alignItems: 'center', gap: '0.5rem',
+                cursor: 'pointer',
+                transition: 'all 0.2s'
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                e.currentTarget.style.color = '#f8fafc';
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.background = 'rgba(15, 23, 42, 0.4)';
+                e.currentTarget.style.color = '#cbd5e1';
+              }}
+            >
+              <FaPrint /> Imprimir Checklist
+            </button>
+          </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
             {alerts.map(alert => (
               <AlertItem key={alert.id} style={alert.type === 'info' ? { background: '#ebf8ff', borderLeftColor: '#4299e1' } : {}}>
@@ -1137,6 +1192,17 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
       </ContentGrid>
+      {/* Printable Checklist Portal */}
+      <div style={{ display: 'none' }}>
+        <div ref={checklistRef}>
+          <PrintableTaskChecklist
+            date={new Date()}
+            tasks={tasks.filter(t => t.status !== 'dismissed')}
+            stickies={stickies}
+          />
+        </div>
+      </div>
+
     </Container>
   );
 };
