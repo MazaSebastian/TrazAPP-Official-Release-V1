@@ -9,6 +9,7 @@ import { createPortal } from 'react-dom';
 
 
 // --- Styled Components ---
+// Trigger new deploy
 
 // Zoom Controls Components (copied/adapted from LivingSoilGrid)
 const ControlsContainer = styled.div`
