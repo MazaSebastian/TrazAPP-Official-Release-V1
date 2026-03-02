@@ -1,6 +1,25 @@
 import React from 'react';
-import styled from 'styled-components';
+import styled, { createGlobalStyle } from 'styled-components';
 import { ClinicalTemplate } from '../../services/templatesService';
+
+const GlobalPrintStyle = createGlobalStyle`
+  @media print {
+    html, body, #root, .App, [class*="layout"], [class*="container"], main, section {
+      background-color: white !important;
+      background-image: none !important;
+      color: black !important;
+    }
+    
+    div {
+      background-color: transparent !important;
+    }
+    
+    .printable-template, .printable-template * {
+      background-color: white !important;
+      color: black !important;
+    }
+  }
+`;
 
 const PrintContainer = styled.div`
   @media print {
@@ -188,7 +207,8 @@ interface PrintableTemplateProps {
 export const PrintableTemplate = React.forwardRef<HTMLDivElement, PrintableTemplateProps>(
   ({ template }, ref) => {
     return (
-      <PrintContainer ref={ref}>
+      <PrintContainer ref={ref} className="printable-template">
+        <GlobalPrintStyle />
         <Header>
           <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start' }}>
             <img src="/trazapphorizontal.png" alt="TrazApp Logo" style={{ height: '35px', width: 'auto' }} />
