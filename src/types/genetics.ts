@@ -6,14 +6,15 @@ export interface Genetic {
     type: GeneticType;
     vegetative_weeks: number;
     flowering_weeks: number;
-    breeder?: string;
-    description?: string;
-    acquisition_date?: string;
-    thc_percent?: number;
-    cbd_percent?: number;
-    estimated_yield_g?: number;
-    default_price_per_gram?: number;
-    nomenclatura?: string;
+    breeder?: string | null;
+    description?: string | null;
+    acquisition_date?: string | null;
+    thc_percent?: number | null;
+    cbd_percent?: number | null;
+    estimated_yield_g?: number | null;
+    default_price_per_gram?: number | null;
+    nomenclatura?: string | null;
     color?: string; // Hex color for distinct chart/map displays
+    photo_url?: string | null; // Product/Mother photo
     created_at: string;
 }

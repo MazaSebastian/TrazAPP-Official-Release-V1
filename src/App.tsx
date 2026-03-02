@@ -38,6 +38,7 @@ import Register from './pages/Register'; // New Import
 import ForgotPassword from './pages/ForgotPassword';
 import UpdatePassword from './pages/UpdatePassword';
 import EmailConfirmed from './pages/EmailConfirmed'; // New Import
+import { PublicTracking } from './pages/PublicTracking'; // QR Scan Public Route
 import { useAuth } from './context/AuthContext';
 import { DataProvider } from './context/DataContext';
 import { OrganizationProvider } from './context/OrganizationContext';
@@ -81,7 +82,8 @@ function App() {
   const isForgotPassword = location.pathname === '/forgot-password';
   const isUpdatePassword = location.pathname === '/update-password';
   const isEmailConfirmed = location.pathname === '/email-confirmed';
-  const isPublicRoute = isLogin || isRegister || isForgotPassword || isUpdatePassword || isEmailConfirmed;
+  const isPublicTracking = location.pathname.startsWith('/track/');
+  const isPublicRoute = isLogin || isRegister || isForgotPassword || isUpdatePassword || isEmailConfirmed || isPublicTracking;
 
   return (
     <DataProvider>
@@ -106,6 +108,7 @@ function App() {
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/update-password" element={<UpdatePassword />} />
             <Route path="/email-confirmed" element={<EmailConfirmed />} />
+            <Route path="/track/:id" element={<PublicTracking />} />
 
 
 

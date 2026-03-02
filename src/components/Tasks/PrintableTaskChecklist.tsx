@@ -11,28 +11,43 @@ interface PrintableTaskChecklistProps {
 }
 
 const PrintContainer = styled.div`
-  font-family: 'Inter', sans-serif;
-  color: black;
-  background: white;
-  width: 100%;
-  padding: 10mm;
-  box-sizing: border-box;
-
   @media print {
-    padding: 0;
-    /* 
-      ========================================================================
-      ⚠️ ¡CRÍTICO! NO MODIFICAR NI ELIMINAR ESTAS REGLAS DE IMPRESIÓN ⚠️
-      Fuerza fondo blanco y texto negro para evitar gastar tóner.
-      ========================================================================
-    */
-    html, body, #root {
+    @page {
+      size: A4 portrait;
+      margin: 10mm;
+    }
+
+    html, body {
       background-color: white !important;
       color: black !important;
+      min-height: auto !important;
+      height: auto !important;
+      margin: 0 !important;
+      padding: 0 !important;
     }
-    * {
-      color: black !important;
+
+    body {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
     }
+  }
+
+  padding: 10px;
+  margin: 0 !important;
+  font-family: 'Inter', sans-serif;
+  color: black !important;
+  background: white !important;
+  width: 100%; 
+  height: auto !important;
+  min-height: auto !important;
+  box-sizing: border-box;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 99999;
+
+  * {
+    color: black !important;
   }
 `;
 
@@ -40,34 +55,54 @@ const Header = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
-  border-bottom: 2px solid #000;
-  padding-bottom: 1rem;
-  margin-bottom: 2rem;
+  margin-bottom: 20px;
+  border-bottom: 2px solid black;
+  padding-bottom: 10px;
+`;
+
+const TitleBox = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 `;
 
 const Title = styled.h1`
-  font-size: 24px;
   margin: 0;
+  font-size: 24px;
   font-weight: 800;
   text-transform: uppercase;
 `;
 
 const Subtitle = styled.h2`
+  margin: 0;
   font-size: 16px;
-  margin: 0.5rem 0 0 0;
-  font-weight: normal;
-  color: #444;
+  font-weight: 600;
+  color: black !important;
+`;
+
+const DateText = styled.div`
+  font-size: 14px;
+  color: black !important;
+  font-weight: bold;
+`;
+
+const SectionTitle = styled.h3`
+  font-size: 16px;
+  margin: 0 0 10px 0;
+  font-weight: 700;
+  text-transform: uppercase;
 `;
 
 const Table = styled.table`
   width: 100%;
   border-collapse: collapse;
-  font-size: 14px;
-  margin-bottom: 2rem;
+  font-size: 12px;
+  margin-bottom: 20px;
+  border: 2px solid black;
 
   th, td {
-    border: 1px solid #000;
-    padding: 12px 8px;
+    border: 1px solid black;
+    padding: 8px 6px;
     text-align: left;
     vertical-align: top;
   }
@@ -76,16 +111,17 @@ const Table = styled.table`
     background-color: #f0f0f0 !important;
     font-weight: bold;
     text-transform: uppercase;
-    font-size: 12px;
+    font-size: 10px;
+    border-bottom: 2px solid black;
   }
 `;
 
 const CheckboxSquare = styled.div`
-  width: 18px;
-  height: 18px;
-  border: 2px solid #000;
+  width: 14px;
+  height: 14px;
+  border: 2px solid black;
   margin: 0 auto;
-  border-radius: 3px;
+  border-radius: 2px;
 `;
 
 export const PrintableTaskChecklist: React.FC<PrintableTaskChecklistProps> = ({ date, tasks, stickies = [] }) => {
@@ -101,16 +137,19 @@ export const PrintableTaskChecklist: React.FC<PrintableTaskChecklistProps> = ({ 
     return (
         <PrintContainer className="printable-report">
             <Header>
-                <div>
-                    <Title>Checklist de Operaciones</Title>
-                    <Subtitle>Planilla de tareas diarias para completar en sala</Subtitle>
+                <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start' }}>
+                    <img src="/trazapphorizontal.png" alt="TrazApp Logo" style={{ height: '35px', width: 'auto' }} />
+                    <TitleBox>
+                        <Title>Checklist de Operaciones</Title>
+                        <Subtitle>Planilla de tareas diarias para sala</Subtitle>
+                    </TitleBox>
                 </div>
-                <div style={{ textAlign: 'right', fontWeight: 'bold' }}>
-                    Fecha: <span style={{ textTransform: 'capitalize' }}>{dateStr}</span>
+                <div style={{ textAlign: 'right' }}>
+                    <DateText style={{ textTransform: 'capitalize' }}>Fecha: {dateStr}</DateText>
                 </div>
             </Header>
 
-            <h3 style={{ fontSize: '16px', marginBottom: '10px', textTransform: 'uppercase' }}>Tareas Programadas ({tasks.length})</h3>
+            <SectionTitle>Tareas Programadas ({tasks.length})</SectionTitle>
 
             {tasks.length > 0 ? (
                 <Table>
@@ -126,17 +165,17 @@ export const PrintableTaskChecklist: React.FC<PrintableTaskChecklistProps> = ({ 
                     <tbody>
                         {sortedTasks.map(task => (
                             <tr key={task.id}>
-                                <td style={{ textAlign: 'center', verticalAlign: 'middle' }}>
+                                <td style={{ textAlign: 'center', verticalAlign: 'middle', borderRight: '1px solid black' }}>
                                     <CheckboxSquare />
                                 </td>
-                                <td style={{ textTransform: 'uppercase', fontWeight: 'bold', fontSize: '11px' }}>
+                                <td style={{ textTransform: 'uppercase', fontWeight: 'bold', fontSize: '11px', color: 'black !important', borderRight: '1px solid black' }}>
                                     {task.type.replace(/_/g, ' ')}
                                 </td>
-                                <td>
-                                    <strong style={{ display: 'block', fontSize: '14px', marginBottom: '4px' }}>{task.title}</strong>
-                                    {task.description && <span style={{ fontSize: '12px', color: '#333' }}>{task.description}</span>}
+                                <td style={{ borderRight: '1px solid black' }}>
+                                    <strong style={{ display: 'block', fontSize: '14px', marginBottom: '4px', color: 'black !important' }}>{task.title}</strong>
+                                    {task.description && <span style={{ fontSize: '12px', color: 'black !important' }}>{task.description}</span>}
                                 </td>
-                                <td style={{ fontSize: '12px', color: '#444' }}>
+                                <td style={{ fontSize: '12px', color: 'black !important', borderRight: '1px solid black' }}>
                                     {task.observations || '-'}
                                 </td>
                                 <td>
@@ -147,14 +186,14 @@ export const PrintableTaskChecklist: React.FC<PrintableTaskChecklistProps> = ({ 
                     </tbody>
                 </Table>
             ) : (
-                <div style={{ padding: '20px', border: '1px dashed #000', marginBottom: '20px', textAlign: 'center' }}>
+                <div style={{ padding: '20px', border: '1px dashed black', marginBottom: '20px', textAlign: 'center', color: 'black !important' }}>
                     No hay tareas formales programadas para este día.
                 </div>
             )}
 
             {stickies.length > 0 && (
                 <>
-                    <h3 style={{ fontSize: '16px', marginBottom: '10px', marginTop: '20px', textTransform: 'uppercase' }}>Notas Rapidas / Sticky Notes ({stickies.length})</h3>
+                    <SectionTitle style={{ marginTop: '20px' }}>Notas Rápidas / Sticky Notes ({stickies.length})</SectionTitle>
                     <Table>
                         <thead>
                             <tr>
@@ -165,10 +204,10 @@ export const PrintableTaskChecklist: React.FC<PrintableTaskChecklistProps> = ({ 
                         <tbody>
                             {stickies.map(sticky => (
                                 <tr key={sticky.id}>
-                                    <td style={{ textAlign: 'center', verticalAlign: 'middle' }}>
+                                    <td style={{ textAlign: 'center', verticalAlign: 'middle', borderRight: '1px solid black' }}>
                                         <CheckboxSquare />
                                     </td>
-                                    <td style={{ fontSize: '14px', fontStyle: 'italic' }}>
+                                    <td style={{ fontSize: '14px', fontStyle: 'italic', color: 'black !important' }}>
                                         "{sticky.content}"
                                     </td>
                                 </tr>

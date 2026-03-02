@@ -91,5 +91,28 @@ export const geneticsService = {
             return false;
         }
         return true;
+    },
+
+    async uploadPhoto(file: File, geneticId: string): Promise<string | null> {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${geneticId}-${Date.now()}.${fileExt}`;
+        const filePath = `${getSelectedOrgId()}/${fileName}`;
+
+        const { error: uploadError } = await getClient()
+            .storage
+            .from('genetic_photos')
+            .upload(filePath, file);
+
+        if (uploadError) {
+            console.error('Error uploading photo:', uploadError);
+            return null;
+        }
+
+        const { data } = getClient()
+            .storage
+            .from('genetic_photos')
+            .getPublicUrl(filePath);
+
+        return data.publicUrl;
     }
 };

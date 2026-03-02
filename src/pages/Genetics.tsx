@@ -585,6 +585,8 @@ const Genetics: React.FC = () => {
     const [deleteValidationError, setDeleteValidationError] = useState<React.ReactNode | null>(null);
 
     const [editingId, setEditingId] = useState<string | null>(null);
+    const [activeTab, setActiveTab] = useState<'info' | 'profile'>('info');
+    const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
     const printRef = React.useRef<HTMLDivElement>(null);
     const handlePrintCatalog = useReactToPrint({
@@ -612,6 +614,7 @@ const Genetics: React.FC = () => {
     const handleEdit = (genetic: Genetic) => {
         setEditingId(genetic.id);
         setNewGenetic(genetic);
+        setActiveTab('info');
         setIsModalOpen(true);
     };
 
@@ -735,11 +738,11 @@ const Genetics: React.FC = () => {
             vegetative_weeks: newGenetic.vegetative_weeks || 0,
             flowering_weeks: newGenetic.flowering_weeks || 0,
             description: newGenetic.description || '',
-            acquisition_date: newGenetic.acquisition_date,
-            thc_percent: newGenetic.thc_percent,
-            cbd_percent: newGenetic.cbd_percent,
-            estimated_yield_g: newGenetic.estimated_yield_g,
-            default_price_per_gram: newGenetic.default_price_per_gram,
+            acquisition_date: newGenetic.acquisition_date || null,
+            thc_percent: (typeof newGenetic.thc_percent === 'number' && !isNaN(newGenetic.thc_percent)) ? newGenetic.thc_percent : null,
+            cbd_percent: (typeof newGenetic.cbd_percent === 'number' && !isNaN(newGenetic.cbd_percent)) ? newGenetic.cbd_percent : null,
+            estimated_yield_g: (typeof newGenetic.estimated_yield_g === 'number' && !isNaN(newGenetic.estimated_yield_g)) ? newGenetic.estimated_yield_g : null,
+            default_price_per_gram: (typeof newGenetic.default_price_per_gram === 'number' && !isNaN(newGenetic.default_price_per_gram)) ? newGenetic.default_price_per_gram : null,
             color: newGenetic.color || '#48BB78'
         };
 
@@ -756,6 +759,28 @@ const Genetics: React.FC = () => {
                 closeModal();
             }
         }
+    };
+
+    const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (!e.target.files || e.target.files.length === 0 || !editingId) return;
+        const file = e.target.files[0];
+        setUploadingPhoto(true);
+        const photoUrl = await geneticsService.uploadPhoto(file, editingId);
+        if (photoUrl) {
+            setNewGenetic(prev => ({ ...prev, photo_url: photoUrl }));
+            await geneticsService.updateGenetic(editingId, { photo_url: photoUrl });
+            setGenetics(genetics.map(g => g.id === editingId ? { ...g, photo_url: photoUrl } : g));
+            setToastMessage("Foto subida exitosamente.");
+            setToastType('success');
+            setToastAnimate(false);
+            setToastOpen(true);
+        } else {
+            setToastMessage("Error al subir la foto.");
+            setToastType('error');
+            setToastAnimate(true);
+            setToastOpen(true);
+        }
+        setUploadingPhoto(false);
     };
 
     const closeModal = () => {
@@ -783,6 +808,7 @@ const Genetics: React.FC = () => {
         const existingColors = genetics.map(g => g.color || '');
         const newColor = generateUniqueColor(existingColors);
 
+        setActiveTab('info');
         setNewGenetic({
             name: '',
             type: 'photoperiodic',
@@ -969,114 +995,165 @@ const Genetics: React.FC = () => {
                             <ModalContent $isClosing={isClosingModal}>
                                 <h2>{editingId ? 'Editar Madre' : 'Nueva Madre'}</h2>
 
-                                <FormGroup>
-                                    <label>Nombre</label>
-                                    <input
-                                        type="text"
-                                        value={newGenetic.name}
-                                        onChange={e => setNewGenetic({ ...newGenetic, name: e.target.value })}
-                                        placeholder="Ej: Gorilla Glue #4"
-                                    />
-                                </FormGroup>
+                                <div style={{ display: 'flex', gap: '1.5rem', marginBottom: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                                    <button
+                                        onClick={(e) => { e.preventDefault(); setActiveTab('info'); }}
+                                        style={{ background: 'none', border: 'none', color: activeTab === 'info' ? '#38bdf8' : '#cbd5e1', padding: '0.75rem 0', fontWeight: activeTab === 'info' ? 700 : 500, borderBottom: activeTab === 'info' ? '2px solid #38bdf8' : '2px solid transparent', cursor: 'pointer', transition: 'all 0.2s', fontSize: '0.95rem' }}
+                                    >
+                                        Infor. Técnica
+                                    </button>
+                                    <button
+                                        onClick={(e) => { e.preventDefault(); setActiveTab('profile'); }}
+                                        style={{ background: 'none', border: 'none', color: activeTab === 'profile' ? '#38bdf8' : '#cbd5e1', padding: '0.75rem 0', fontWeight: activeTab === 'profile' ? 700 : 500, borderBottom: activeTab === 'profile' ? '2px solid #38bdf8' : '2px solid transparent', cursor: 'pointer', transition: 'all 0.2s', fontSize: '0.95rem' }}
+                                    >
+                                        Perfil / Foto
+                                    </button>
+                                </div>
 
-                                <FormGroup>
-                                    <label>Nomenclatura (Código)</label>
-                                    <input
-                                        type="text"
-                                        value={newGenetic.nomenclatura || ''}
-                                        onChange={e => setNewGenetic({ ...newGenetic, nomenclatura: e.target.value })}
-                                        placeholder="Ej: GG4"
-                                    />
-                                </FormGroup>
+                                {activeTab === 'info' && (
+                                    <>
+                                        <FormGroup>
+                                            <label>Nombre</label>
+                                            <input
+                                                type="text"
+                                                value={newGenetic.name}
+                                                onChange={e => setNewGenetic({ ...newGenetic, name: e.target.value })}
+                                                placeholder="Ej: Gorilla Glue #4"
+                                            />
+                                        </FormGroup>
 
-                                <FormGroup>
-                                    <label>Fecha de inicio</label>
-                                    <CustomDatePicker
-                                        selected={newGenetic.acquisition_date ? new Date(newGenetic.acquisition_date + 'T12:00:00') : null}
-                                        onChange={(date: Date | null) => setNewGenetic({ ...newGenetic, acquisition_date: date ? date.toISOString().split('T')[0] : '' })}
-                                        placeholderText="Seleccionar fecha"
-                                    />
-                                </FormGroup>
+                                        <FormGroup>
+                                            <label>Nomenclatura (Código)</label>
+                                            <input
+                                                type="text"
+                                                value={newGenetic.nomenclatura || ''}
+                                                onChange={e => setNewGenetic({ ...newGenetic, nomenclatura: e.target.value })}
+                                                placeholder="Ej: GG4"
+                                            />
+                                        </FormGroup>
 
-                                <FormGroup>
-                                    <label>Color en Mapa/Gráficos</label>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                                        <input
-                                            type="color"
-                                            value={newGenetic.color || '#48BB78'}
-                                            onChange={e => setNewGenetic({ ...newGenetic, color: e.target.value })}
-                                            style={{ width: '50px', height: '40px', padding: '0', cursor: 'pointer', border: 'none', background: 'transparent' }}
-                                        />
-                                        <span style={{ color: '#cbd5e1', fontSize: '0.9rem', fontFamily: 'monospace' }}>{newGenetic.color?.toUpperCase() || '#48BB78'}</span>
+                                        <FormGroup>
+                                            <label>Fecha de inicio</label>
+                                            <CustomDatePicker
+                                                selected={newGenetic.acquisition_date ? new Date(newGenetic.acquisition_date + 'T12:00:00') : null}
+                                                onChange={(date: Date | null) => setNewGenetic({ ...newGenetic, acquisition_date: date ? date.toISOString().split('T')[0] : '' })}
+                                                placeholderText="Seleccionar fecha"
+                                            />
+                                        </FormGroup>
+
+                                        <FormGroup>
+                                            <label>Color en Mapa/Gráficos</label>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                                <input
+                                                    type="color"
+                                                    value={newGenetic.color || '#48BB78'}
+                                                    onChange={e => setNewGenetic({ ...newGenetic, color: e.target.value })}
+                                                    style={{ width: '50px', height: '40px', padding: '0', cursor: 'pointer', border: 'none', background: 'transparent' }}
+                                                />
+                                                <span style={{ color: '#cbd5e1', fontSize: '0.9rem', fontFamily: 'monospace' }}>{newGenetic.color?.toUpperCase() || '#48BB78'}</span>
+                                            </div>
+                                            <div className="hint">Este será el color con el que los lotes de esta madre aparecerán en el mapa de Esquejes.</div>
+                                        </FormGroup>
+
+                                        <FormRow>
+                                            <FormGroup style={{ flex: 1 }}>
+                                                <label>Prod. Est. (g)</label>
+                                                <input
+                                                    type="number"
+                                                    value={newGenetic.estimated_yield_g || ''}
+                                                    onChange={e => setNewGenetic({ ...newGenetic, estimated_yield_g: parseFloat(e.target.value) })}
+                                                    placeholder="Ej: 500"
+                                                />
+                                            </FormGroup>
+                                        </FormRow>
+
+                                        <FormRow>
+                                            <FormGroup style={{ flex: 1 }}>
+                                                <label>% THC (Opcional)</label>
+                                                <input
+                                                    type="number"
+                                                    step="0.1"
+                                                    value={newGenetic.thc_percent || ''}
+                                                    onChange={e => setNewGenetic({ ...newGenetic, thc_percent: parseFloat(e.target.value) })}
+                                                    placeholder="Ej: 22.5"
+                                                />
+                                            </FormGroup>
+                                            <FormGroup style={{ flex: 1 }}>
+                                                <label>% CBD (Opcional)</label>
+                                                <input
+                                                    type="number"
+                                                    step="0.1"
+                                                    value={newGenetic.cbd_percent || ''}
+                                                    onChange={e => setNewGenetic({ ...newGenetic, cbd_percent: parseFloat(e.target.value) })}
+                                                    placeholder="Ej: 0.5"
+                                                />
+                                            </FormGroup>
+                                        </FormRow>
+
+                                        <FormRow>
+                                            <FormGroup style={{ flex: 1 }}>
+                                                <label>Semanas Vege</label>
+                                                <input
+                                                    type="number"
+                                                    value={newGenetic.vegetative_weeks}
+                                                    onChange={e => setNewGenetic({ ...newGenetic, vegetative_weeks: parseInt(e.target.value) })}
+                                                />
+                                                <div className="hint">Desde semilla hasta cambio de ciclo</div>
+                                            </FormGroup>
+                                            <FormGroup style={{ flex: 1 }}>
+                                                <label>Semanas Flora</label>
+                                                <input
+                                                    type="number"
+                                                    value={newGenetic.flowering_weeks}
+                                                    onChange={e => setNewGenetic({ ...newGenetic, flowering_weeks: parseInt(e.target.value) })}
+                                                />
+                                                <div className="hint">Duración de la fase de floración</div>
+                                            </FormGroup>
+                                        </FormRow>
+                                    </>
+                                )}
+
+                                {activeTab === 'profile' && (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', WebkitAnimation: 'fadeIn 0.3s' }}>
+                                        <FormGroup>
+                                            <label>Foto de la Genética</label>
+                                            {newGenetic.photo_url ? (
+                                                <div style={{ marginBottom: '1rem', position: 'relative', width: '100%', maxWidth: '250px', aspectRatio: '1/1', borderRadius: '0.5rem', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)' }}>
+                                                    <img src={newGenetic.photo_url} alt="Genética" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                    <label style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'rgba(0,0,0,0.7)', color: 'white', textAlign: 'center', padding: '0.6rem', cursor: 'pointer', margin: 0, fontSize: '0.9rem', backdropFilter: 'blur(4px)' }}>
+                                                        {uploadingPhoto ? 'Subiendo...' : 'Cambiar Foto'}
+                                                        <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handlePhotoUpload} disabled={uploadingPhoto} />
+                                                    </label>
+                                                </div>
+                                            ) : (
+                                                <div style={{ border: '2px dashed rgba(255,255,255,0.2)', padding: '2.5rem', textAlign: 'center', borderRadius: '0.5rem', background: 'rgba(0,0,0,0.2)' }}>
+                                                    {!editingId ? (
+                                                        <p style={{ color: '#94a3b8', fontSize: '0.9rem', margin: 0 }}>Debe <strong>guardar la genética</strong> primero, y luego volver a editarla, para poder subir su foto.</p>
+                                                    ) : (
+                                                        uploadingPhoto ? (
+                                                            <div style={{ color: '#38bdf8', fontSize: '0.9rem', fontWeight: 600 }}>Subiendo imagen, aguarde...</div>
+                                                        ) : (
+                                                            <label style={{ cursor: 'pointer', color: '#38bdf8', fontWeight: 600, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
+                                                                Seleccionar Foto (JPG/PNG)
+                                                                <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handlePhotoUpload} />
+                                                            </label>
+                                                        )
+                                                    )}
+                                                </div>
+                                            )}
+                                        </FormGroup>
+
+                                        <FormGroup>
+                                            <label>Descripción / Notas de Catálogo</label>
+                                            <textarea
+                                                rows={5}
+                                                value={newGenetic.description || ''}
+                                                onChange={e => setNewGenetic({ ...newGenetic, description: e.target.value })}
+                                                placeholder="Escriba aquí el perfil aromático, efectos, linaje u observaciones importantes..."
+                                            />
+                                        </FormGroup>
                                     </div>
-                                    <div className="hint">Este será el color con el que los lotes de esta madre aparecerán en el mapa de Esquejes.</div>
-                                </FormGroup>
-
-                                <FormRow>
-                                    <FormGroup style={{ flex: 1 }}>
-                                        <label>Prod. Est. (g)</label>
-                                        <input
-                                            type="number"
-                                            value={newGenetic.estimated_yield_g || ''}
-                                            onChange={e => setNewGenetic({ ...newGenetic, estimated_yield_g: parseFloat(e.target.value) })}
-                                            placeholder="Ej: 500"
-                                        />
-                                    </FormGroup>
-                                </FormRow>
-
-                                <FormRow>
-                                    <FormGroup style={{ flex: 1 }}>
-                                        <label>% THC (Opcional)</label>
-                                        <input
-                                            type="number"
-                                            step="0.1"
-                                            value={newGenetic.thc_percent || ''}
-                                            onChange={e => setNewGenetic({ ...newGenetic, thc_percent: parseFloat(e.target.value) })}
-                                            placeholder="Ej: 22.5"
-                                        />
-                                    </FormGroup>
-                                    <FormGroup style={{ flex: 1 }}>
-                                        <label>% CBD (Opcional)</label>
-                                        <input
-                                            type="number"
-                                            step="0.1"
-                                            value={newGenetic.cbd_percent || ''}
-                                            onChange={e => setNewGenetic({ ...newGenetic, cbd_percent: parseFloat(e.target.value) })}
-                                            placeholder="Ej: 0.5"
-                                        />
-                                    </FormGroup>
-                                </FormRow>
-
-                                <FormRow>
-                                    <FormGroup style={{ flex: 1 }}>
-                                        <label>Semanas Vege</label>
-                                        <input
-                                            type="number"
-                                            value={newGenetic.vegetative_weeks}
-                                            onChange={e => setNewGenetic({ ...newGenetic, vegetative_weeks: parseInt(e.target.value) })}
-                                        />
-                                        <div className="hint">Desde semilla hasta cambio de ciclo</div>
-                                    </FormGroup>
-                                    <FormGroup style={{ flex: 1 }}>
-                                        <label>Semanas Flora</label>
-                                        <input
-                                            type="number"
-                                            value={newGenetic.flowering_weeks}
-                                            onChange={e => setNewGenetic({ ...newGenetic, flowering_weeks: parseInt(e.target.value) })}
-                                        />
-                                        <div className="hint">Duración de la fase de floración</div>
-                                    </FormGroup>
-                                </FormRow>
-
-                                <FormGroup>
-                                    <label>Descripción / Notas</label>
-                                    <textarea
-                                        rows={3}
-                                        value={newGenetic.description}
-                                        onChange={e => setNewGenetic({ ...newGenetic, description: e.target.value })}
-                                        placeholder="Información adicional..."
-                                    />
-                                </FormGroup>
+                                )}
 
                                 <ModalActions>
                                     <button

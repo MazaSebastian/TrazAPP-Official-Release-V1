@@ -18,6 +18,7 @@ import { stickiesService } from '../services/stickiesService';
 import { usersService } from '../services/usersService';
 import { Room } from '../types/rooms';
 import { Task, StickyNote, RecurrenceConfig, TaskType } from '../types';
+import { PrintableRoomCalendar } from '../components/Esquejera/PrintableRoomCalendar';
 
 
 import { GroupDetailModal } from '../components/GroupDetailModal';
@@ -70,6 +71,13 @@ const GlobalPrintStyles = createGlobalStyle`
     /* Hide common non-print elements */
     .no-print, nav, aside, header, footer, .Toastify, .no-print-map-header, .no-print-map-controls {
         display: none !important;
+    }
+
+    /* Force all layout wrappers to give up their dark backgrounds and heights */
+    div[class*="RoomDetailContainer"], div[class*="Container"], div[class*="Layout"] {
+        background: transparent !important;
+        background-color: transparent !important;
+        min-height: 0 !important;
     }
 
     /* NOTE: We removed the aggressive 'body * { visibility: hidden }' 
@@ -1683,6 +1691,19 @@ const RoomDetail: React.FC = () => {
     const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
     const [isClosingTaskModal, setIsClosingTaskModal] = useState(false);
     const [isSavingTask, setIsSavingTask] = useState(false);
+
+    // --- Printing Setup for Calendar ---
+    const calendarPrintRef = useRef<HTMLDivElement>(null);
+    const handlePrintCalendar = useReactToPrint({
+        contentRef: calendarPrintRef,
+        documentTitle: `Calendario_Sala_${room?.name || 'Desconocida'}_${format(currentDate, 'MMMM_yyyy', { locale: es })}`,
+        onBeforePrint: () => new Promise<void>((resolve) => {
+            console.log("Preparando impresión horizontal del calendario...");
+            resolve();
+        }),
+        onAfterPrint: () => console.log("Impresión de calendario finalizada."),
+        onPrintError: (e) => console.error("Error al imprimir el calendario", e)
+    });
 
     const closeTaskModal = () => {
         setIsClosingTaskModal(true);
@@ -5201,9 +5222,14 @@ const RoomDetail: React.FC = () => {
                                 <StyledActionButton onClick={() => setCurrentDate(subMonths(currentDate, 1))} $variant="secondary" style={{ padding: '0.5rem 1rem' }}>
                                     <FaChevronLeft /> Anterior
                                 </StyledActionButton>
-                                <h2 style={{ fontSize: '1.5rem', color: '#f8fafc', textTransform: 'capitalize', margin: 0 }}>
-                                    {format(currentDate, 'MMMM yyyy', { locale: es })}
-                                </h2>
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
+                                    <h2 style={{ fontSize: '1.5rem', color: '#f8fafc', textTransform: 'capitalize', margin: 0 }}>
+                                        {format(currentDate, 'MMMM yyyy', { locale: es })}
+                                    </h2>
+                                    <StyledActionButton onClick={handlePrintCalendar} $variant="primary" style={{ fontSize: '0.8rem', padding: '0.4rem 0.8rem' }}>
+                                        <FaPrint /> Imprimir Mes Horizontal
+                                    </StyledActionButton>
+                                </div>
                                 <StyledActionButton onClick={() => setCurrentDate(addMonths(currentDate, 1))} $variant="secondary" style={{ padding: '0.5rem 1rem' }}>
                                     Siguiente <FaChevronRight />
                                 </StyledActionButton>
@@ -5344,7 +5370,9 @@ const RoomDetail: React.FC = () => {
                                                     }
 
                                                     const color = isFloweringPhase ? '#fcd34d' : '#4ade80';
-                                                    const showLabel = dayItem.getDay() === 1 || dayItem.getDate() === 1 || dayTime === startTime;
+
+                                                    // Only show label on the numeric day of the week that the crop started, or strictly on day 1 of month if it's the start, or on the absolute start day
+                                                    const showLabel = dayItem.getDay() === new Date(startTime).getDay() || dayTime === startTime;
 
                                                     phaseBar = (
                                                         <>
@@ -7446,6 +7474,16 @@ const RoomDetail: React.FC = () => {
                             batches={room?.batches?.filter(b => selectedBatchIds.has(b.id)) || []}
                         />
                     </div>
+                </div>
+
+                {/* Calendar Print Portal */}
+                <div style={{ display: 'none' }}>
+                    <PrintableRoomCalendar
+                        ref={calendarPrintRef}
+                        room={room}
+                        tasks={tasks}
+                        currentDate={currentDate}
+                    />
                 </div>
 
             </Container >

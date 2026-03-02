@@ -61,7 +61,11 @@ body {
   /* 3. Forzar fondos blancos y eliminar imágenes de fondo globales para ahorrar tinta */
   html,
   body,
-  #root {
+  #root,
+  #root>div,
+  [class*="Container"],
+  [class*="Layout"],
+  main {
     background-color: white !important;
     background-image: none !important;
     color: black !important;
