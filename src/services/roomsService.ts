@@ -494,7 +494,7 @@ export const roomsService = {
             .from('batches')
             .update({
                 discarded_at: new Date().toISOString(),
-                // discard_reason: reason || 'Eliminado manualmente', 
+                discard_reason: reason || 'Eliminado manualmente',
                 current_room_id: null,
                 clone_map_id: null,
                 grid_position: null
@@ -543,7 +543,7 @@ export const roomsService = {
                 .from('batches')
                 .update({
                     discarded_at: new Date().toISOString(),
-                    // discard_reason: reason || 'Eliminación Masiva', 
+                    discard_reason: reason || 'Eliminación Masiva',
                     current_room_id: null,
                     clone_map_id: null,
                     grid_position: null

@@ -315,7 +315,7 @@ export const patientsService = {
             .select('*')
             .eq('organization_id', getSelectedOrgId())
             .eq('admission_id', admissionId)
-            .order('date', { ascending: false }); // Newest first
+            .order('created_at', { ascending: false }); // Newest first
 
         if (error) {
             console.error("Error fetching evolutions:", error);

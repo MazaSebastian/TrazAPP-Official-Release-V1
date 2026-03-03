@@ -12,23 +12,10 @@ export const usersService = {
     async getUsers(): Promise<Profile[]> {
         if (!supabase) return [];
 
-        // 1. Get current user
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return [];
+        const selectedOrgId = localStorage.getItem('selectedOrganizationId');
+        if (!selectedOrgId) return [];
 
-        // 2. Get current user's organization_id
-        const { data: orgMemberData, error: orgMemberError } = await supabase
-            .from('organization_members')
-            .select('organization_id')
-            .eq('user_id', user.id)
-            .single();
-
-        if (orgMemberError || !orgMemberData?.organization_id) {
-            console.error('Error fetching user organization:', orgMemberError);
-            return [];
-        }
-
-        // 3. Get all profiles that belong to this organization_id
+        // Get all profiles that belong to the active organization
         const { data: members, error: membersError } = await supabase
             .from('organization_members')
             .select(`
@@ -41,7 +28,7 @@ export const usersService = {
                     email
                 )
             `)
-            .eq('organization_id', orgMemberData.organization_id);
+            .eq('organization_id', selectedOrgId);
 
         if (membersError) {
             console.error('Error fetching organization profiles:', membersError);

@@ -7,7 +7,7 @@ import { useAuth } from '../context/AuthContext';
 import { patientsService } from '../services/patientsService';
 import { dispensaryService } from '../services/dispensaryService';
 import { LoadingSpinner } from './LoadingSpinner';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { supabase, getSelectedOrgId } from '../services/supabaseClient';
 
 const Container = styled.div`
@@ -95,6 +95,14 @@ const KPICard = styled.div<{ alert?: boolean }>`
   position: relative;
   overflow: hidden;
 
+  cursor: pointer;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 15px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.2);
+    border-color: ${props => props.alert ? 'rgba(239, 68, 68, 0.6)' : 'rgba(56, 189, 248, 0.5)'};
+  }
+
   /* Decorative accent line */
   &::before {
     content: '';
@@ -158,6 +166,108 @@ const KPICard = styled.div<{ alert?: boolean }>`
       font-size: 1.5rem;
       margin: 0;
     }
+  }
+`;
+
+const ModalOverlay = styled.div`
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+`;
+
+const ModalContent = styled.div`
+  background: #0f172a;
+  border-radius: 1.25rem;
+  width: 100%;
+  max-width: 600px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+
+  .modal-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    h3 {
+      margin: 0;
+      color: #f8fafc;
+      font-size: 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      svg { color: #38bdf8; }
+    }
+
+    button {
+      background: rgba(255,255,255,0.05);
+      border: none;
+      color: #94a3b8;
+      width: 32px;
+      height: 32px;
+      border-radius: 0.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      &:hover { background: rgba(255,255,255,0.1); color: #fff; }
+    }
+  }
+
+  .modal-body {
+    padding: 1.5rem;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+`;
+
+const PatientListItem = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.05);
+  border-radius: 0.75rem;
+  transition: all 0.2s;
+  cursor: pointer;
+
+  &:hover {
+    background: rgba(56, 189, 248, 0.1);
+    border-color: rgba(56, 189, 248, 0.3);
+  }
+
+  .info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+
+    .name {
+      color: #f8fafc;
+      font-weight: 600;
+    }
+    .meta {
+      color: #94a3b8;
+      font-size: 0.85rem;
+    }
+  }
+
+  .action {
+    color: #38bdf8;
+    font-size: 0.9rem;
+    font-weight: 500;
   }
 `;
 
@@ -312,13 +422,16 @@ const RecentItem = styled.div`
 
 export const MedicoDashboard: React.FC = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [currentTime, setCurrentTime] = useState(new Date());
 
   const [metrics, setMetrics] = useState({
-    activePatients: 0,
-    pendingAdmissions: 0,
-    pendingFollowUps: 0,
+    activePatients: [] as any[],
+    pendingAdmissions: [] as any[],
+    pendingFollowUps: [] as any[],
   });
+  const [activeModal, setActiveModal] = useState<'activePatients' | 'pendingAdmissions' | 'pendingFollowUps' | null>(null);
+  const [recentActivity, setRecentActivity] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   // Reloj
@@ -340,11 +453,11 @@ export const MedicoDashboard: React.FC = () => {
         const admissions = admissionsRes.data || [];
         const evolutions = evolutionsRes.data || [];
 
-        const activePatientsList = patients.filter((p: any) => p.status === 'Activo');
+        const activePatientsList = patients.filter((p: any) => p.reprocann_status === 'active');
         const activePatientsCount = activePatientsList.length > 0 ? activePatientsList.length : patients.length;
 
-        let pendingAdmissions = 0;
-        let pendingFollowUps = 0;
+        let pendingAdmissionsList: any[] = [];
+        let pendingFollowUpsList: any[] = [];
 
         const admissionPatientIds = new Set(admissions.map(a => a.patient_id));
 
@@ -352,20 +465,20 @@ export const MedicoDashboard: React.FC = () => {
 
         patientsToCount.forEach((p: any) => {
           if (!admissionPatientIds.has(p.id)) {
-            pendingAdmissions++;
+            pendingAdmissionsList.push(p);
           } else {
             // Pending Follow-up logic
             const patientAdmission = admissions.find(a => a.patient_id === p.id);
             if (patientAdmission) {
               const patientEvolutions = evolutions.filter(e => e.admission_id === patientAdmission.id);
               if (patientEvolutions.length === 0) {
-                pendingFollowUps++;
+                pendingFollowUpsList.push(p);
               } else {
                 const latestEvo = patientEvolutions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
                 const _30daysAgo = new Date();
                 _30daysAgo.setDate(_30daysAgo.getDate() - 30);
                 if (new Date(latestEvo.date) < _30daysAgo) {
-                  pendingFollowUps++;
+                  pendingFollowUpsList.push(p);
                 }
               }
             }
@@ -373,10 +486,76 @@ export const MedicoDashboard: React.FC = () => {
         });
 
         setMetrics({
-          activePatients: activePatientsCount,
-          pendingAdmissions,
-          pendingFollowUps
+          activePatients: activePatientsList,
+          pendingAdmissions: pendingAdmissionsList,
+          pendingFollowUps: pendingFollowUpsList
         });
+
+        // 2. Fetch Recent Activity
+        const [recentMovementsRes, recentEvolutionsRes] = await Promise.all([
+          supabase
+            .from('chakra_dispensary_movements')
+            .select(`
+              created_at,
+              member_id,
+              batch:batch_id!inner(organization_id)
+            `)
+            .eq('batch.organization_id', getSelectedOrgId())
+            .eq('type', 'dispense')
+            .order('created_at', { ascending: false })
+            .limit(10),
+          supabase
+            .from('clinical_evolutions')
+            .select(`
+              created_at,
+              admission_id
+            `)
+            .eq('organization_id', getSelectedOrgId())
+            .order('created_at', { ascending: false })
+            .limit(10)
+        ]);
+
+        const recentMovements = recentMovementsRes.data || [];
+        const recentEvolutions = recentEvolutionsRes.data || [];
+
+        const activities: any[] = [];
+
+        // We need patient names for these. We already have the 'patients' array.
+        // For movements, we have member_id -> map to patient.id
+        recentMovements.forEach(m => {
+          const patient = patients.find(p => p.id === m.member_id);
+          if (patient) {
+            activities.push({
+              type: 'dispense',
+              date: m.created_at,
+              title: `Entrega a ${patient.profile?.full_name || 'Paciente'}`,
+              status: 'COMPLETADO'
+            });
+          }
+        });
+
+        // For evolutions, we have admission_id -> map to patient.id
+        recentEvolutions.forEach(e => {
+          const admission = admissions.find(a => a.id === e.admission_id);
+          if (admission) {
+            const patient = patients.find(p => p.id === admission.patient_id);
+            if (patient) {
+              activities.push({
+                type: 'evolution',
+                date: e.created_at,
+                title: `Ficha Clínica: ${patient.profile?.full_name || 'Paciente'}`,
+                status: 'ACTUALIZADO'
+              });
+            }
+          }
+        });
+
+        // Sort combined activities by date desc
+        activities.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+        // Keep top 5
+        setRecentActivity(activities.slice(0, 5));
+
       } catch (err) {
         console.error("Error loading Medico Dashboard data:", err);
       } finally {
@@ -405,22 +584,22 @@ export const MedicoDashboard: React.FC = () => {
       </WelcomeHeader>
 
       <KPISection>
-        <KPICard>
+        <KPICard onClick={() => setActiveModal('activePatients')}>
           <div className="icon-wrapper"><FaUsers /></div>
           <div className="label">Socios / Pacientes Activos</div>
-          <div className="value">{metrics.activePatients}</div>
+          <div className="value">{metrics.activePatients.length}</div>
         </KPICard>
-        <KPICard alert={metrics.pendingAdmissions > 0}>
+        <KPICard alert={metrics.pendingAdmissions.length > 0} onClick={() => setActiveModal('pendingAdmissions')}>
           <div className="icon-wrapper"><FaNotesMedical /></div>
           <div className="label">Pacientes Pendientes de Admisión</div>
-          <div className="value">{metrics.pendingAdmissions}</div>
+          <div className="value">{metrics.pendingAdmissions.length}</div>
         </KPICard>
-        <KPICard alert={metrics.pendingFollowUps > 0}>
+        <KPICard alert={metrics.pendingFollowUps.length > 0} onClick={() => setActiveModal('pendingFollowUps')}>
           <div className="icon-wrapper">
-            {metrics.pendingFollowUps > 0 ? <FaExclamationTriangle /> : <FaCheckCircle />}
+            {metrics.pendingFollowUps.length > 0 ? <FaExclamationTriangle /> : <FaCheckCircle />}
           </div>
           <div className="label">Pacientes Pendientes de Seguimiento</div>
-          <div className="value">{metrics.pendingFollowUps}</div>
+          <div className="value">{metrics.pendingFollowUps.length}</div>
         </KPICard>
       </KPISection>
 
@@ -443,34 +622,71 @@ export const MedicoDashboard: React.FC = () => {
           </ActionGrid>
         </Card>
 
-        {/* This could load real recent deliveries later, static design for now */}
+        {/* Real Recent Activity */}
         <Card>
           <SectionTitle><FaClock /> Actividad Reciente</SectionTitle>
-          <RecentList>
-            <RecentItem>
-              <div className="details">
-                <span className="name">Entrega a Juan Pérez</span>
-                <span className="date">Hoy, 14:30</span>
-              </div>
-              <span className="status completed">COMPLETADO</span>
-            </RecentItem>
-            <RecentItem>
-              <div className="details">
-                <span className="name">Actualización Ficha Clínica</span>
-                <span className="date">Ayer, 09:15</span>
-              </div>
-              <span className="status completed">COMPLETADO</span>
-            </RecentItem>
-            <RecentItem>
-              <div className="details">
-                <span className="name">Entrega Pendiente (María)</span>
-                <span className="date">Hoy, 16:00</span>
-              </div>
-              <span className="status pending">PENDIENTE</span>
-            </RecentItem>
-          </RecentList>
+          {recentActivity.length > 0 ? (
+            <RecentList>
+              {recentActivity.map((activity, index) => {
+                const isToday = new Date(activity.date).toDateString() === new Date().toDateString();
+                const isYesterday = new Date(activity.date).toDateString() === new Date(Date.now() - 86400000).toDateString();
+                const displayDate = isToday
+                  ? `Hoy, ${format(new Date(activity.date), 'HH:mm')}`
+                  : isYesterday
+                    ? `Ayer, ${format(new Date(activity.date), 'HH:mm')}`
+                    : format(new Date(activity.date), "dd/MM, HH:mm");
+
+                return (
+                  <RecentItem key={index}>
+                    <div className="details">
+                      <span className="name">{activity.title}</span>
+                      <span className="date">{displayDate}</span>
+                    </div>
+                    <span className={`status completed`}>{activity.status}</span>
+                  </RecentItem>
+                );
+              })}
+            </RecentList>
+          ) : (
+            <div style={{ textAlign: 'center', padding: '2rem', color: '#94a3b8', background: 'rgba(255,255,255,0.02)', borderRadius: '0.75rem', border: '1px dashed rgba(255,255,255,0.1)' }}>
+              No hay actividad reciente.
+            </div>
+          )}
         </Card>
       </ContentGrid>
+
+      {/* Metric Detail Modal */}
+      {activeModal && (
+        <ModalOverlay onClick={() => setActiveModal(null)}>
+          <ModalContent onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>
+                {activeModal === 'activePatients' && <><FaUsers /> Socios Activos</>}
+                {activeModal === 'pendingAdmissions' && <><FaNotesMedical color="#fca5a5" /> Pendientes de Admisión</>}
+                {activeModal === 'pendingFollowUps' && <><FaExclamationTriangle color="#facc15" /> Pendientes de Seguimiento</>}
+              </h3>
+              <button title="Cerrar" onClick={() => setActiveModal(null)}>✕</button>
+            </div>
+            <div className="modal-body">
+              {metrics[activeModal].length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '2rem', color: '#94a3b8' }}>
+                  No hay pacientes en esta categoría.
+                </div>
+              ) : (
+                metrics[activeModal].map((patient: any) => (
+                  <PatientListItem key={patient.id} onClick={() => navigate(`/patients/${patient.id}`)}>
+                    <div className="info">
+                      <span className="name">{patient.profile?.full_name || 'Sin Nombre'}</span>
+                      <span className="meta">{patient.document_type || 'DNI'}: {patient.document_number} {patient.phone ? `• Tel: ${patient.phone}` : ''}</span>
+                    </div>
+                    <div className="action">Ver Ficha →</div>
+                  </PatientListItem>
+                ))
+              )}
+            </div>
+          </ModalContent>
+        </ModalOverlay>
+      )}
     </Container>
   );
 };

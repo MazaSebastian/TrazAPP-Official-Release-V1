@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import styled, { keyframes } from 'styled-components';
 import {
   FaSeedling,
@@ -88,6 +89,12 @@ const Grid = styled.div`
   align-items: flex-start;
 `;
 
+const cardPulse = keyframes`
+  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.7); }
+  70% { transform: scale(1.02); box-shadow: 0 0 0 10px rgba(74, 222, 128, 0); }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(74, 222, 128, 0); }
+`;
+
 const Card = styled.div<{ forceHover?: boolean }>`
   background: rgba(15, 23, 42, 0.75);
   backdrop-filter: blur(12px);
@@ -103,6 +110,13 @@ const Card = styled.div<{ forceHover?: boolean }>`
   &:hover {
     transform: translateY(-4px);
     box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.4);
+  }
+
+  &.tour-crop-pulse {
+    animation: ${cardPulse} 1.5s infinite;
+    z-index: 10001;
+    position: relative;
+    border-color: #4ade80;
   }
 
   .desktop-view {
@@ -407,6 +421,7 @@ const DashedCircle = styled.div`
 `;
 
 const Crops: React.FC = () => {
+  const { tourStepIndex } = useAuth();
   const [crops, setCrops] = useState<Crop[]>([]);
   // Toast State
   const [toastOpen, setToastOpen] = useState(false);
@@ -676,9 +691,10 @@ const Crops: React.FC = () => {
       </Header>
 
       <Grid>
-        {crops.map((crop) => (
+        {crops.map((crop, index) => (
           <Card
             key={crop.id}
+            className={index === 0 ? `tour-first-crop-card ${tourStepIndex === 6 ? 'tour-crop-pulse' : ''}` : ''}
             onClick={() => handleCardClick(crop.id)}
             forceHover={
               editingCrop?.id === crop.id ||
@@ -823,7 +839,7 @@ const Crops: React.FC = () => {
           </Card>
         ))}
         {/* Add New Crop Card */}
-        <CreateCard onClick={() => setIsModalOpen(true)}>
+        <CreateCard className="tour-new-crop" onClick={() => setIsModalOpen(true)}>
           <DashedCircle>
             <FaPlus />
           </DashedCircle>

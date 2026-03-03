@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { DispensaryBatch, dispensaryService } from '../services/dispensaryService';
 import { FaSave, FaTimes } from 'react-icons/fa';
+import { CustomSelect } from './CustomSelect';
 
 const ModalOverlay = styled.div`
   position: fixed;
@@ -9,23 +10,26 @@ const ModalOverlay = styled.div`
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(15, 23, 42, 0.8);
+  backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 2100;
-  backdrop-filter: blur(4px);
 `;
 
 const ModalContent = styled.div`
-  background: white;
-  padding: 2rem;
+  background: rgba(30, 41, 59, 0.95);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 2.5rem;
   border-radius: 1rem;
   width: 90%;
   max-width: 500px;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  color: #f8fafc;
 `;
 
 const Header = styled.div`
@@ -36,7 +40,7 @@ const Header = styled.div`
   
   h2 {
     font-size: 1.5rem;
-    color: #2d3748;
+    color: #f8fafc;
     margin: 0;
   }
 `;
@@ -45,64 +49,107 @@ const CloseButton = styled.button`
   background: none;
   border: none;
   font-size: 1.5rem;
-  color: #a0aec0;
+  color: #94a3b8;
   cursor: pointer;
   padding: 0.5rem;
+  transition: color 0.2s;
   
   &:hover {
-    color: #4a5568;
+    color: #f8fafc;
   }
 `;
 
 const FormGroup = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
   margin-bottom: 1.5rem;
 
   label {
-    display: block;
-    margin-bottom: 0.5rem;
-    color: #4a5568;
-    font-weight: 500;
-    font-size: 0.95rem;
+    font-weight: 600;
+    color: #cbd5e1;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
   }
 
   input, select, textarea {
-    width: 100%;
-    padding: 0.75rem;
-    border: 1px solid #e2e8f0;
-    border-radius: 0.5rem;
+    padding: 0.875rem 1rem;
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0.75rem;
+    color: #f8fafc;
     font-size: 1rem;
     transition: all 0.2s;
 
     &:focus {
       outline: none;
-      border-color: #3182ce;
-      box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1);
+      border-color: #38bdf8;
+      box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
+    }
+
+    option {
+      background: #1e293b;
+      color: #f8fafc;
     }
   }
   
   .hint {
     font-size: 0.8rem;
-    color: #718096;
+    color: #94a3b8;
     margin-top: 0.25rem;
   }
 `;
 
 const Button = styled.button<{ variant?: 'primary' | 'secondary' | 'danger' }>`
-  background: ${p => p.variant === 'secondary' ? 'white' : p.variant === 'danger' ? '#e53e3e' : '#3182ce'};
-  color: ${p => p.variant === 'secondary' ? '#4a5568' : 'white'};
-  border: 1px solid ${p => p.variant === 'secondary' ? '#e2e8f0' : 'transparent'};
-  padding: 0.75rem 1.5rem;
-  border-radius: 0.5rem;
-  font-weight: 600;
-  cursor: pointer;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0.5rem;
-  transition: all 0.2s;
+  padding: 0.75rem 1rem;
+  border: none;
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+  background: ${props => {
+        switch (props.variant) {
+            case 'primary': return 'linear-gradient(135deg, rgba(74, 222, 128, 0.2) 0%, rgba(56, 189, 248, 0.2) 100%)';
+            case 'danger': return 'rgba(239, 68, 68, 0.1)';
+            case 'secondary': return 'rgba(148, 163, 184, 0.1)';
+            default: return 'rgba(255, 255, 255, 0.05)';
+        }
+    }};
+
+  border: 1px solid ${props => {
+        switch (props.variant) {
+            case 'primary': return 'rgba(74, 222, 128, 0.3)';
+            case 'danger': return 'rgba(239, 68, 68, 0.3)';
+            case 'secondary': return 'rgba(148, 163, 184, 0.2)';
+            default: return 'rgba(255, 255, 255, 0.1)';
+        }
+    }};
+
+  color: ${props => {
+        switch (props.variant) {
+            case 'primary': return '#f8fafc';
+            case 'danger': return '#fca5a5';
+            case 'secondary': return '#e2e8f0';
+            default: return '#f8fafc';
+        }
+    }};
 
   &:hover {
-    filter: brightness(110%);
-    transform: translateY(-1px);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px ${props => {
+        switch (props.variant) {
+            case 'primary': return 'rgba(74, 222, 128, 0.2)';
+            case 'danger': return 'rgba(239, 68, 68, 0.2)';
+            default: return 'rgba(0, 0, 0, 0.2)';
+        }
+    }};
   }
 `;
 
@@ -111,8 +158,8 @@ const Actions = styled.div`
   justify-content: flex-end;
   gap: 1rem;
   margin-top: 2rem;
-  padding-top: 1rem;
-  border-top: 1px solid #e2e8f0;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
 `;
 
 interface EditDispensaryModalProps {
@@ -182,7 +229,7 @@ export const EditDispensaryModal: React.FC<EditDispensaryModalProps> = ({
                 <Header>
                     <div>
                         <h2>Editar Lote</h2>
-                        <span style={{ fontSize: '0.9rem', color: '#718096', fontFamily: 'monospace' }}>
+                        <span style={{ fontSize: '0.9rem', color: '#94a3b8', fontFamily: 'monospace' }}>
                             {batch.batch_code}
                         </span>
                     </div>
@@ -229,28 +276,30 @@ export const EditDispensaryModal: React.FC<EditDispensaryModalProps> = ({
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                         <FormGroup>
                             <label>Estado</label>
-                            <select
+                            <CustomSelect
                                 value={formData.status}
-                                onChange={e => setFormData({ ...formData, status: e.target.value })}
-                            >
-                                <option value="curing">Curándose (Curing)</option>
-                                <option value="available">Disponible</option>
-                                <option value="quarantine">Cuarentena</option>
-                                <option value="depleted">Agotado</option>
-                            </select>
+                                onChange={val => setFormData({ ...formData, status: val })}
+                                options={[
+                                    { value: 'curing', label: 'Curándose (Curing)' },
+                                    { value: 'available', label: 'Disponible' },
+                                    { value: 'quarantine', label: 'Cuarentena' },
+                                    { value: 'depleted', label: 'Agotado' }
+                                ]}
+                            />
                         </FormGroup>
 
                         <FormGroup>
                             <label>Calidad</label>
-                            <select
+                            <CustomSelect
                                 value={formData.quality_grade}
-                                onChange={e => setFormData({ ...formData, quality_grade: e.target.value })}
-                            >
-                                <option value="Premium">Premium</option>
-                                <option value="Standard">Standard</option>
-                                <option value="Extracts">Extracts</option>
-                                <option value="Trim">Trim</option>
-                            </select>
+                                onChange={val => setFormData({ ...formData, quality_grade: val })}
+                                options={[
+                                    { value: 'Premium', label: 'Premium' },
+                                    { value: 'Standard', label: 'Standard' },
+                                    { value: 'Extracts', label: 'Extracts' },
+                                    { value: 'Trim', label: 'Trim' }
+                                ]}
+                            />
                         </FormGroup>
                     </div>
 

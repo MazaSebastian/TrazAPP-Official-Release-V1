@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { FaBoxes, FaPlus, FaChevronDown, FaEdit, FaTrash, FaTimes, FaHistory, FaHandHoldingMedical, FaFlask, FaCheckSquare } from 'react-icons/fa';
@@ -415,6 +416,7 @@ const FormGroup = styled.div`
 interface AggregatedStock {
   strain: string;
   totalWeight: number;
+  totalInitialWeight: number;
   batchesCount: number;
   batches: DispensaryBatch[];
 }
@@ -425,7 +427,6 @@ const Stock: React.FC = () => {
   // Data State
   const [genetics, setGenetics] = useState<Genetic[]>([]);
   const [aggregatedStock, setAggregatedStock] = useState<AggregatedStock[]>([]);
-  const [expandedStrains, setExpandedStrains] = useState<Set<string>>(new Set());
   const [openActionMenuId, setOpenActionMenuId] = useState<string | null>(null);
 
   // Close ActionMenu on outside click
@@ -581,9 +582,10 @@ const Stock: React.FC = () => {
     batches.forEach(b => {
       const strainName = b.strain_name || 'Sin Genética';
       if (!items[strainName]) {
-        items[strainName] = { strain: strainName, totalWeight: 0, batchesCount: 0, batches: [] };
+        items[strainName] = { strain: strainName, totalWeight: 0, totalInitialWeight: 0, batchesCount: 0, batches: [] };
       }
       items[strainName].totalWeight += b.current_weight;
+      items[strainName].totalInitialWeight += b.initial_weight || b.current_weight;
       items[strainName].batchesCount += 1;
       items[strainName].batches.push(b);
     });
@@ -598,13 +600,6 @@ const Stock: React.FC = () => {
   const loadMovements = async () => {
     const data = await dispensaryService.getMovements(50);
     setMovements(data);
-  };
-
-  const toggleExpand = (strain: string) => {
-    const newSet = new Set(expandedStrains);
-    if (newSet.has(strain)) newSet.delete(strain);
-    else newSet.add(strain);
-    setExpandedStrains(newSet);
   };
 
   const handleOpenHistory = () => {
@@ -780,36 +775,28 @@ const Stock: React.FC = () => {
     // Logic: Sort batches by oldest created_at, then deduct sequentially
     const sortedBatches = [...itemGroup.batches].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
     let remainingToDispense = amountToDispense;
-    let successCount = 0;
 
+    const deductions = [];
     for (const batch of sortedBatches) {
       if (remainingToDispense <= 0) break;
       if (batch.current_weight <= 0) continue;
 
       const deductAmount = Math.min(batch.current_weight, remainingToDispense);
-      const success = await dispensaryService.dispenseToShop(batch.id, deductAmount);
-
-      if (success) {
-        remainingToDispense -= deductAmount;
-        successCount++;
-      } else {
-        showToast(`Error al dispensar del lote ${batch.batch_code}.`, 'error');
-        // We could break here, but let's try to fulfill with other batches if one fails? 
-        // Safer to break to avoid partial confusing states if it's a real network error.
-        break;
-      }
+      deductions.push({ batchId: batch.id, amount: deductAmount });
+      remainingToDispense -= deductAmount;
     }
 
-    if (remainingToDispense === 0) {
-      showToast(`Se dispensaron ${amountToDispense}g exitosamente en ${successCount} lote(s).`, 'success');
+    const success = await dispensaryService.bulkDispenseToShop(deductions, groupDispenseStrain);
+
+    if (success) {
+      showToast(`Se dispensaron ${amountToDispense}g exitosamente de ${deductions.length} lote(s).`, 'success');
       setIsGroupDispenseOpen(false);
       setGroupDispenseAmount('');
       setGroupDispenseStrain(null);
       loadData();
     } else {
-      // It partially failed or didn't complete
-      showToast(`Atención: Se dispensó un parcial. Faltaron ${remainingToDispense}g.`, 'info');
-      loadData(); // Reload to see the partial state
+      showToast(`Error al enviar el stock masivamente.`, 'error');
+      loadData();
     }
   };
 
@@ -843,8 +830,7 @@ const Stock: React.FC = () => {
   // Group Lab Transfer
   const [isGroupLabOpen, setIsGroupLabOpen] = useState(false);
   const [groupLabStrain, setGroupLabStrain] = useState<string | null>(null);
-  const [groupLabBatches, setGroupLabBatches] = useState<DispensaryBatch[]>([]);
-  const [groupLabSelections, setGroupLabSelections] = useState<Record<string, { selected: boolean, amount: string }>>({});
+  const [groupLabAmount, setGroupLabAmount] = useState('');
 
   const openGroupLabTransfer = (strain: string) => {
     const group = aggregatedStock.find(g => g.strain === strain);
@@ -853,61 +839,56 @@ const Stock: React.FC = () => {
       return;
     }
 
-    // Initialize selections: all unselected, default amount = current weight
-    const initialSelections: Record<string, { selected: boolean, amount: string }> = {};
-    group.batches.forEach(b => {
-      initialSelections[b.id] = { selected: false, amount: Number(b.current_weight).toFixed(2) };
-    });
-
     setGroupLabStrain(strain);
-    setGroupLabBatches(group.batches);
-    setGroupLabSelections(initialSelections);
+    setGroupLabAmount('');
     setIsGroupLabOpen(true);
   };
 
-  const handleGroupLabSelectionChange = (batchId: string, field: 'selected' | 'amount', value: any) => {
-    if (field === 'amount') {
-      // Limit to 2 decimal places
-      if (value && !/^\d*\.?\d{0,2}$/.test(value)) return;
-    }
-    setGroupLabSelections(prev => ({
-      ...prev,
-      [batchId]: {
-        ...prev[batchId],
-        [field]: value
-      }
-    }));
-  };
-
   const confirmGroupLabTransfer = async () => {
-    const selectedIds = Object.keys(groupLabSelections).filter(id => groupLabSelections[id].selected);
-    if (selectedIds.length === 0) {
-      showToast("Selecciona al menos un lote.", 'error');
+    if (!groupLabStrain || !groupLabAmount) return;
+    const amountToTransfer = parseFloat(groupLabAmount);
+
+    if (isNaN(amountToTransfer) || amountToTransfer <= 0) {
+      showToast("Cantidad inválida.", 'error');
       return;
     }
 
-    let successCount = 0;
-    for (const batchId of selectedIds) {
-      const amountStr = groupLabSelections[batchId].amount;
-      const amount = parseFloat(amountStr);
-      const batch = groupLabBatches.find(b => b.id === batchId);
+    const itemGroup = aggregatedStock.find(i => i.strain === groupLabStrain);
+    if (!itemGroup) return;
 
-      if (!batch || isNaN(amount) || amount <= 0 || amount > batch.current_weight) {
-        // Skip or warn?
-        continue;
-      }
-
-      const ok = await dispensaryService.transferToLab(batchId, amount);
-      if (ok) successCount++;
+    if (amountToTransfer > itemGroup.totalWeight) {
+      showToast(`El stock máximo disponible es ${itemGroup.totalWeight}g.`, 'error');
+      return;
     }
 
-    if (successCount > 0) {
-      showToast(`Enviados ${successCount} lotes al Laboratorio.`, 'success');
+    // Quick Loading State hack: change text/disable
+    const btn = document.activeElement as HTMLButtonElement;
+    if (btn) { btn.disabled = true; btn.innerText = "Procesando..."; }
+
+    // Logic: Sort batches by oldest created_at, then deduct sequentially
+    const sortedBatches = [...itemGroup.batches].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+    let remainingToTransfer = amountToTransfer;
+    const deductions = [];
+
+    for (const batch of sortedBatches) {
+      if (remainingToTransfer <= 0) break;
+      if (batch.current_weight <= 0) continue;
+
+      const transferAmount = Math.min(batch.current_weight, remainingToTransfer);
+      deductions.push({ batchId: batch.id, amount: transferAmount });
+      remainingToTransfer -= transferAmount;
+    }
+
+    const success = await dispensaryService.bulkTransferToLab(deductions, groupLabStrain);
+
+    if (success) {
+      showToast(`Enviados ${amountToTransfer}g al Laboratorio desde ${deductions.length} lote(s).`, 'success');
       setIsGroupLabOpen(false);
       setGroupLabStrain(null);
+      setGroupLabAmount('');
       loadData();
     } else {
-      showToast("Error al enviar lotes.", 'error');
+      showToast("Error al enviar lotes al Laboratorio.", 'error');
     }
   };
 
@@ -945,6 +926,7 @@ const Stock: React.FC = () => {
       ...group,
       batches: visibleBatches,
       totalWeight: visibleBatches.reduce((sum, b) => sum + b.current_weight, 0),
+      totalInitialWeight: visibleBatches.reduce((sum, b) => sum + (b.initial_weight || b.current_weight), 0),
       batchesCount: visibleBatches.length
     };
   }).filter(g => g.batches.length > 0).sort((a, b) => b.totalWeight - a.totalWeight);
@@ -1000,19 +982,15 @@ const Stock: React.FC = () => {
             </thead>
             <tbody>
               {visibleStock.map((item) => {
-                const isExpanded = expandedStrains.has(item.strain);
-                const percent = totalWeight > 0 ? (item.totalWeight / totalWeight * 100).toFixed(1) : '0';
+                const percent = item.totalInitialWeight > 0 ? (item.totalWeight / item.totalInitialWeight * 100).toFixed(1) : '0';
 
                 return (
                   <React.Fragment key={item.strain}>
                     <tr
-                      onClick={() => toggleExpand(item.strain)}
-                      style={{ cursor: 'pointer', background: isExpanded ? 'rgba(30, 41, 59, 0.8)' : 'transparent', transition: 'background 0.2s' }}
+                      style={{ background: 'transparent', transition: 'background 0.2s' }}
                     >
                       <td style={{ textAlign: 'center', color: '#94a3b8' }}>
-                        <div style={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.3s ease' }}>
-                          <FaChevronDown />
-                        </div>
+                        <FaBoxes style={{ opacity: 0.5 }} />
                       </td>
                       <td style={{ fontWeight: 'bold' }}>{item.strain}</td>
                       <td style={{ textAlign: 'right', fontWeight: 'bold', color: '#f8fafc' }}>{item.totalWeight.toFixed(1)}g</td>
@@ -1057,93 +1035,6 @@ const Stock: React.FC = () => {
                         </ActionMenuContainer>
                       </td>
                     </tr>
-                    <ExpandedRow $expanded={isExpanded}>
-                      <td colSpan={6}>
-                        <CollapsibleWrapper isOpen={isExpanded}>
-                          <div style={{ padding: '1rem 0' }}>
-                            {/* Bulk Actions Toolbar for this strain if items selected */}
-                            {item.batches.some(b => selectedBatches.has(b.id)) && (
-                              <div style={{ background: 'rgba(56, 189, 248, 0.1)', padding: '0.5rem 1rem', marginBottom: '0.5rem', borderRadius: '0.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid rgba(56, 189, 248, 0.2)' }}>
-                                <span style={{ fontSize: '0.85rem', color: '#38bdf8', fontWeight: 'bold' }}>
-                                  {item.batches.filter(b => selectedBatches.has(b.id)).length} seleccionados
-                                </span>
-                                <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                  <ActionButton variant="danger" onClick={deleteSelected} style={{ padding: '0.25rem 0.75rem', fontSize: '0.8rem' }}>
-                                    <FaTrash /> Eliminar Seleccionados
-                                  </ActionButton>
-                                </div>
-                              </div>
-                            )}
-
-                            <DetailTable>
-                              <thead>
-                                <tr style={{ color: '#cbd5e1', fontSize: '0.8rem', borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
-                                  <th style={{ width: '40px', textAlign: 'center', padding: '0.5rem' }}>
-                                    <input
-                                      type="checkbox"
-                                      checked={item.batches.length > 0 && item.batches.every(b => selectedBatches.has(b.id))}
-                                      onChange={() => toggleSelectAllStrain(item.batches)}
-                                      style={{ cursor: 'pointer' }}
-                                    />
-                                  </th>
-                                  <th style={{ padding: '0.5rem' }}>FECHA</th>
-                                  <th style={{ padding: '0.5rem' }}>CÓDIGO</th>
-                                  <th style={{ padding: '0.5rem' }}>PESO</th>
-                                  <th style={{ padding: '0.5rem', textAlign: 'right' }}>ACCIONES</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {item.batches.map(batch => {
-                                  // Color Logic
-                                  let rowBg = 'transparent';
-                                  if (batch.current_weight === 0) rowBg = 'rgba(239, 68, 68, 0.1)'; // Depleted -> Red
-                                  else if (batch.status === 'available') rowBg = 'rgba(74, 222, 128, 0.1)'; // Dispensing -> Green
-
-                                  const isSelected = selectedBatches.has(batch.id);
-
-                                  return (
-                                    <tr key={batch.id} style={{ background: isSelected ? 'rgba(56, 189, 248, 0.2)' : rowBg }}>
-                                      <td style={{ textAlign: 'center' }}>
-                                        <input
-                                          type="checkbox"
-                                          checked={isSelected}
-                                          onChange={() => toggleBatchSelection(batch.id)}
-                                          style={{ cursor: 'pointer' }}
-                                        />
-                                      </td>
-                                      <td style={{ width: '15%', color: '#94a3b8' }}>{new Date(batch.created_at).toLocaleDateString()}</td>
-                                      <td style={{ width: '30%', fontWeight: '600' }}>{batch.batch_code}</td>
-                                      <td style={{ width: '25%', fontWeight: 'bold', color: '#f8fafc' }}>{Number(batch.current_weight).toFixed(2)}g / {Number(batch.initial_weight).toFixed(2)}g</td>
-                                      <td style={{ width: '25%', textAlign: 'right' }}>
-                                        <ActionMenuContainer onClick={(e) => e.stopPropagation()}>
-                                          <ActionMenuToggle onClick={() => setOpenActionMenuId(openActionMenuId === batch.id ? null : batch.id)} title="Opciones">
-                                            <span style={{ fontSize: '1.2rem', lineHeight: 0, paddingBottom: '4px' }}>...</span>
-                                          </ActionMenuToggle>
-                                          <ActionMenuDropdown $isOpen={openActionMenuId === batch.id}>
-                                            <ActionMenuItem $color="#38bdf8" onClick={() => {
-                                              setOpenActionMenuId(null);
-                                              openEdit(batch);
-                                            }}>
-                                              <FaEdit /> Editar Lote
-                                            </ActionMenuItem>
-                                            <ActionMenuItem $color="#f87171" onClick={() => {
-                                              setOpenActionMenuId(null);
-                                              initDelete(batch);
-                                            }}>
-                                              <FaTrash /> Eliminar Lote
-                                            </ActionMenuItem>
-                                          </ActionMenuDropdown>
-                                        </ActionMenuContainer>
-                                      </td>
-                                    </tr>
-                                  );
-                                })}
-                              </tbody>
-                            </DetailTable>
-                          </div>
-                        </CollapsibleWrapper>
-                      </td>
-                    </ExpandedRow>
                   </React.Fragment>
                 );
               })}
@@ -1153,7 +1044,8 @@ const Stock: React.FC = () => {
             </tbody>
           </MainTable>
         </TableContainer>
-      )}
+      )
+      }
 
       {/* CREATE MODAL */}
       <AnimatedModal isOpen={isCreateOpen} onClose={() => setIsCreateOpen(false)}>
@@ -1275,41 +1167,43 @@ const Stock: React.FC = () => {
       </AnimatedModal>
 
       {/* GLOBAL CONFIRM MODAL */}
-      {confirmModal.isOpen && (
-        <div style={{
-          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)', zIndex: 9999,
-          display: 'flex', alignItems: 'center', justifyContent: 'center'
-        }}>
+      {
+        confirmModal.isOpen && (
           <div style={{
-            background: 'rgba(15, 23, 42, 0.95)', padding: '2rem', borderRadius: '1rem',
-            width: '90%', maxWidth: '400px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.5)',
-            border: '1px solid rgba(255, 255, 255, 0.1)', backdropFilter: 'blur(16px)'
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+            background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)', zIndex: 9999,
+            display: 'flex', alignItems: 'center', justifyContent: 'center'
           }}>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '1rem', color: confirmModal.isDanger ? '#f87171' : '#f8fafc' }}>
-              {confirmModal.title}
-            </h3>
-            <p style={{ marginBottom: '1.5rem', color: '#cbd5e1' }}>{confirmModal.message}</p>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
-              <ActionButton variant="secondary" onClick={() => setConfirmModal({ ...confirmModal, isOpen: false })}>
-                Cancelar
-              </ActionButton>
-              <ActionButton
-                variant={confirmModal.isDanger ? 'danger' : 'primary'}
-                onClick={async () => {
-                  // Quick Loading State hack: change text/disable
-                  const btn = document.activeElement as HTMLButtonElement;
-                  if (btn) { btn.disabled = true; btn.innerText = "Procesando..."; }
-                  await confirmModal.onConfirm();
-                  setConfirmModal({ ...confirmModal, isOpen: false });
-                }}
-              >
-                Confirmar
-              </ActionButton>
+            <div style={{
+              background: 'rgba(15, 23, 42, 0.95)', padding: '2rem', borderRadius: '1rem',
+              width: '90%', maxWidth: '400px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.5)',
+              border: '1px solid rgba(255, 255, 255, 0.1)', backdropFilter: 'blur(16px)'
+            }}>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '1rem', color: confirmModal.isDanger ? '#f87171' : '#f8fafc' }}>
+                {confirmModal.title}
+              </h3>
+              <p style={{ marginBottom: '1.5rem', color: '#cbd5e1' }}>{confirmModal.message}</p>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
+                <ActionButton variant="secondary" onClick={() => setConfirmModal({ ...confirmModal, isOpen: false })}>
+                  Cancelar
+                </ActionButton>
+                <ActionButton
+                  variant={confirmModal.isDanger ? 'danger' : 'primary'}
+                  onClick={async () => {
+                    // Quick Loading State hack: change text/disable
+                    const btn = document.activeElement as HTMLButtonElement;
+                    if (btn) { btn.disabled = true; btn.innerText = "Procesando..."; }
+                    await confirmModal.onConfirm();
+                    setConfirmModal({ ...confirmModal, isOpen: false });
+                  }}
+                >
+                  Confirmar
+                </ActionButton>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )
+      }
 
       {/* HISTORY MODAL */}
       <AnimatedModal isOpen={isHistoryOpen} onClose={() => setIsHistoryOpen(false)} wide>
@@ -1439,69 +1333,43 @@ const Stock: React.FC = () => {
 
 
 
-      {/* GROUP LAB TRANSFER MODAL */}
-      <AnimatedModal isOpen={isGroupLabOpen} onClose={() => setIsGroupLabOpen(false)} wide>
-        <CloseIcon onClick={() => setIsGroupLabOpen(false)}><FaTimes /></CloseIcon>
-        <h2 style={{ marginBottom: '1.5rem', color: '#4ade80', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <FaFlask /> Enviar a Laboratorio: {groupLabStrain}
-        </h2>
-        <p style={{ marginBottom: '1rem', color: '#cbd5e1', fontSize: '0.9rem' }}>
-          Selecciona los lotes y cantidades que deseas enviar al laboratorio.
-        </p>
+      {/* GROUP LAB TRANSFER MODAL (BULK) */}
+      <AnimatedModal isOpen={isGroupLabOpen} onClose={() => setIsGroupLabOpen(false)}>
+        {groupLabStrain && (() => {
+          const itemGroup = visibleStock.find(s => s.strain === groupLabStrain);
+          const maxAvailable = itemGroup ? itemGroup.totalWeight : 0;
+          return (
+            <>
+              <CloseIcon onClick={() => setIsGroupLabOpen(false)}><FaTimes /></CloseIcon>
+              <h2 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#a855f7' }}>
+                <FaFlask /> Enviar a Laboratorio: {groupLabStrain}
+              </h2>
 
-        <div style={{ maxHeight: '400px', overflowY: 'auto', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '0.5rem' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
-            <thead style={{ background: 'rgba(30, 41, 59, 0.6)', position: 'sticky', top: 0, zIndex: 10 }}>
-              <tr>
-                <th style={{ padding: '0.75rem', textAlign: 'center', width: '50px', color: '#cbd5e1' }}><FaCheckSquare /></th>
-                <th style={{ padding: '0.75rem', textAlign: 'left', color: '#cbd5e1' }}>Lote</th>
-                <th style={{ padding: '0.75rem', textAlign: 'right', color: '#cbd5e1' }}>Disp.</th>
-                <th style={{ padding: '0.75rem', textAlign: 'right', color: '#cbd5e1' }}>Enviar (g)</th>
-              </tr>
-            </thead>
-            <tbody>
-              {groupLabBatches.map(batch => {
-                const selection = groupLabSelections[batch.id] || { selected: false, amount: '' };
-                return (
-                  <tr key={batch.id} style={{ borderTop: '1px solid rgba(255, 255, 255, 0.05)', background: selection.selected ? 'rgba(74, 222, 128, 0.1)' : 'transparent', color: '#f8fafc' }}>
-                    <td style={{ padding: '0.75rem', textAlign: 'center' }}>
-                      <input
-                        type="checkbox"
-                        checked={selection.selected}
-                        onChange={(e) => handleGroupLabSelectionChange(batch.id, 'selected', e.target.checked)}
-                        style={{ cursor: 'pointer', transform: 'scale(1.2)' }}
-                      />
-                    </td>
-                    <td style={{ padding: '0.75rem', fontWeight: 600 }}>{batch.batch_code}</td>
-                    <td style={{ padding: '0.75rem', textAlign: 'right', color: '#94a3b8' }}>{Number(batch.current_weight).toFixed(2)}g</td>
-                    <td style={{ padding: '0.75rem', textAlign: 'right' }}>
-                      <input
-                        type="number"
-                        value={selection.amount}
-                        onChange={(e) => handleGroupLabSelectionChange(batch.id, 'amount', e.target.value)}
-                        disabled={!selection.selected}
-                        style={{
-                          width: '80px',
-                          padding: '0.25rem',
-                          textAlign: 'right',
-                          border: '1px solid rgba(255, 255, 255, 0.1)',
-                          borderRadius: '0.25rem',
-                          background: selection.selected ? 'rgba(15, 23, 42, 0.5)' : 'rgba(30, 41, 59, 0.5)',
-                          color: '#f8fafc'
-                        }}
-                      />
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+              <div style={{ marginBottom: '1.5rem', background: 'rgba(30, 41, 59, 0.6)', padding: '1rem', borderRadius: '0.5rem', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
+                <p style={{ margin: 0, fontSize: '0.9rem', color: '#cbd5e1' }}>Stock Total Disponible en todas las plantas:</p>
+                <p style={{ margin: '0.25rem 0 0 0', fontWeight: 'bold', color: '#a855f7', fontSize: '1.25rem' }}>{maxAvailable.toFixed(2)}g</p>
+                <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.8rem', color: '#94a3b8' }}>Se enviará al laboratorio descontando automáticamente desde los lotes más antiguos hasta alcanzar la cantidad total.</p>
+              </div>
 
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '2rem' }}>
-          <ActionButton variant="secondary" onClick={() => setIsGroupLabOpen(false)}>Cancelar</ActionButton>
-          <ActionButton variant="primary" style={{ background: '#38a169' }} onClick={confirmGroupLabTransfer}>Confirmar Envío</ActionButton>
-        </div>
+              <FormGroup style={{ marginTop: '1rem' }}>
+                <label>Cantidad Total a Enviar (g)</label>
+                <input
+                  type="number"
+                  autoFocus
+                  value={groupLabAmount}
+                  onChange={e => setGroupLabAmount(e.target.value)}
+                  placeholder="0.00"
+                  max={maxAvailable}
+                />
+              </FormGroup>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '2rem' }}>
+                <ActionButton variant="secondary" onClick={() => setIsGroupLabOpen(false)}>Cancelar</ActionButton>
+                <ActionButton variant="primary" style={{ background: '#a855f7', borderColor: '#a855f7' }} onClick={confirmGroupLabTransfer}>Confirmar Envío</ActionButton>
+              </div>
+            </>
+          );
+        })()}
       </AnimatedModal>
 
       <ConfirmModal

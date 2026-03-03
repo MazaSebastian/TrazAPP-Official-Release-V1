@@ -1,11 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
-import { FaMoneyBillWave, FaTrash, FaExclamationCircle, FaFilter, FaCalendarAlt, FaTimes } from 'react-icons/fa';
-import { expensesService, CashMovement } from '../services/expensesService';
-import { format, isWithinInterval, parseISO, startOfDay, endOfDay } from 'date-fns';
+import { FaMoneyBillWave, FaTrash, FaExclamationCircle, FaFilter, FaTimes } from 'react-icons/fa';
+import { expensesService, CashMovement, getAreaFromRole } from '../services/expensesService';
+import { format, parseISO, startOfDay, endOfDay } from 'date-fns';
 import { CustomSelect } from '../components/CustomSelect';
 import { useOrganization } from '../context/OrganizationContext';
+import { usersService, Profile } from '../services/usersService';
+import { ConfirmationModal } from '../components/ConfirmationModal';
 import UpgradeOverlay from '../components/common/UpgradeOverlay';
+import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale } from 'chart.js';
+import { Doughnut } from 'react-chartjs-2';
+
+ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale);
 
 const fadeIn = keyframes`
   from { opacity: 0; backdrop-filter: blur(0px); }
@@ -354,6 +360,7 @@ const Expenses: React.FC = () => {
 
     const [movements, setMovements] = useState<CashMovement[]>([]);
     const [loading, setLoading] = useState(true);
+    const [organizationUsers, setOrganizationUsers] = useState<Profile[]>([]);
 
     // Toast State
     const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -361,7 +368,9 @@ const Expenses: React.FC = () => {
 
     // Form State
     const [type, setType] = useState<'INGRESO' | 'EGRESO'>('EGRESO');
-    const [owner, setOwner] = useState('Staff / Operario');
+    const [owner] = useState('Staff / Operario');
+    const [paymentMethod, setPaymentMethod] = useState('Efectivo');
+    const [responsibleUserId, setResponsibleUserId] = useState('');
     const [concept, setConcept] = useState('');
     const [amount, setAmount] = useState('');
 
@@ -375,9 +384,21 @@ const Expenses: React.FC = () => {
     // Modal Mobile State
     const [selectedMovement, setSelectedMovement] = useState<CashMovement | null>(null);
 
+    // Delete Confirmation State
+    const [itemToDelete, setItemToDelete] = useState<string | null>(null);
+
     useEffect(() => {
         loadData();
+        loadUsers();
     }, []);
+
+    const loadUsers = async () => {
+        const users = await usersService.getUsers();
+        setOrganizationUsers(users);
+        if (users.length > 0) {
+            setResponsibleUserId(users[0].id);
+        }
+    };
 
     const loadData = async () => {
         const data = await expensesService.getMovements();
@@ -395,17 +416,21 @@ const Expenses: React.FC = () => {
     };
 
     const handleCreate = async () => {
-        if (!concept || !amount) {
+        if (!concept || !amount || !paymentMethod || !responsibleUserId) {
             showToast('Completa todos los campos');
             return;
         }
 
-        const newVal = {
+        const responsibleUser = organizationUsers.find(u => u.id === responsibleUserId);
+
+        const newVal: CashMovement = {
             type,
-            owner,
+            owner: responsibleUser ? responsibleUser.full_name : owner, // Legacy field fallback
             concept,
             amount: parseFloat(amount),
-            date: new Date().toISOString().split('T')[0] // today YYYY-MM-DD
+            date: new Date().toISOString().split('T')[0], // today YYYY-MM-DD
+            payment_method: paymentMethod,
+            responsible_user_id: responsibleUserId
         };
 
         const result = await expensesService.createMovement(newVal);
@@ -418,15 +443,6 @@ const Expenses: React.FC = () => {
         }
     };
 
-    const handleDelete = async (id: string) => {
-        if (!window.confirm('¿Eliminar movimiento?')) return;
-        await expensesService.deleteMovement(id);
-        if (selectedMovement?.id === id) {
-            setSelectedMovement(null);
-        }
-        loadData();
-    };
-
     const calculateBalance = (user?: string) => {
         return movements.reduce((acc, curr) => {
             if (user && curr.owner !== user) return acc;
@@ -434,15 +450,24 @@ const Expenses: React.FC = () => {
         }, 0);
     };
 
-    const totalBalance = calculateBalance();
+    const handleDeleteClick = (id: string, e?: React.MouseEvent) => {
+        if (e) e.stopPropagation();
+        setItemToDelete(id);
+    };
 
-    const formatMoney = (val: number) => {
-        return new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(val);
+    const confirmDelete = async () => {
+        if (!itemToDelete) return;
+        await expensesService.deleteMovement(itemToDelete);
+        if (selectedMovement?.id === itemToDelete) {
+            setSelectedMovement(null);
+        }
+        setItemToDelete(null);
+        loadData();
     };
 
     const filteredMovements = movements.filter(m => {
         // Owner Filter
-        if (filterOwner !== 'Todos' && m.owner !== filterOwner) return false;
+        if (filterOwner !== 'Todos' && m.owner !== filterOwner && m.profiles?.full_name !== filterOwner) return false;
 
         // Date Filter
         if (filterDateMode === 'exact' && filterExactDate) {
@@ -456,6 +481,80 @@ const Expenses: React.FC = () => {
         return true;
     });
 
+    const calculateAreaMetrics = () => {
+        // Only calculate expenses (EGRESO)
+        const expenses = filteredMovements.filter(m => m.type === 'EGRESO');
+        const areaTotals: Record<string, number> = {
+            'Área de Cultivo': 0,
+            'Área de Medicina': 0,
+            'Área Administrativa': 0,
+            'Otros': 0
+        };
+
+        expenses.forEach(m => {
+            const area = getAreaFromRole(m.profiles?.role);
+            if (areaTotals[area] !== undefined) {
+                areaTotals[area] += m.amount;
+            } else {
+                areaTotals['Otros'] += m.amount;
+            }
+        });
+
+        return areaTotals;
+    };
+
+    const totalBalance = calculateBalance();
+    const areaMetrics = calculateAreaMetrics();
+    const totalExpenses = Object.values(areaMetrics).reduce((a, b) => a + b, 0);
+
+    const formatMoney = (val: number) => {
+        return new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(val);
+    };
+
+    const chartData = {
+        labels: Object.keys(areaMetrics),
+        datasets: [
+            {
+                data: Object.values(areaMetrics),
+                backgroundColor: [
+                    'rgba(74, 222, 128, 0.8)', // Verde (Cultivo)
+                    'rgba(56, 189, 248, 0.8)', // Azul (Medicina)
+                    'rgba(168, 85, 247, 0.8)', // Morado (Administrativa)
+                    'rgba(148, 163, 184, 0.8)', // Gris (Otros)
+                ],
+                borderColor: [
+                    'rgba(74, 222, 128, 1)',
+                    'rgba(56, 189, 248, 1)',
+                    'rgba(168, 85, 247, 1)',
+                    'rgba(148, 163, 184, 1)',
+                ],
+                borderWidth: 1,
+            },
+        ],
+    };
+
+    const chartOptions = {
+        plugins: {
+            legend: {
+                position: 'right' as const,
+                labels: { color: '#f8fafc', font: { size: 12 } }
+            },
+            tooltip: {
+                callbacks: {
+                    label: function (context: any) {
+                        let label = context.label || '';
+                        if (label) label += ': ';
+                        if (context.parsed !== null) {
+                            label += formatMoney(context.parsed);
+                        }
+                        return label;
+                    }
+                }
+            }
+        },
+        maintainAspectRatio: false,
+    };
+
     return (
         <Container style={{ position: 'relative', overflow: 'hidden' }}>
             {planLevel < 2 && <UpgradeOverlay requiredPlanName="Equipo o superior" />}
@@ -466,11 +565,24 @@ const Expenses: React.FC = () => {
                 </Header>
 
                 <Grid>
-                    <BalanceCard>
-                        <h2>Saldo Total</h2>
-                        <p className="balance" style={{ color: totalBalance >= 0 ? '#4ade80' : '#f87171' }}>
-                            {formatMoney(totalBalance)}
-                        </p>
+                    <BalanceCard style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '2rem' }}>
+                        <div>
+                            <h2>Saldo Total</h2>
+                            <p className="balance" style={{ color: totalBalance >= 0 ? '#4ade80' : '#f87171' }}>
+                                {formatMoney(totalBalance)}
+                            </p>
+
+                            <h2 style={{ marginTop: '2rem' }}>Egresos Totales</h2>
+                            <p className="balance" style={{ color: '#f87171', fontSize: '1.5rem' }}>
+                                -{formatMoney(totalExpenses)}
+                            </p>
+                        </div>
+
+                        {totalExpenses > 0 && (
+                            <div style={{ height: '220px', width: '300px', flexShrink: 0 }}>
+                                <Doughnut data={chartData} options={chartOptions as any} />
+                            </div>
+                        )}
                     </BalanceCard>
 
                     {/* Input Form */}
@@ -489,14 +601,23 @@ const Expenses: React.FC = () => {
                             </div>
                             <div style={{ position: 'relative', zIndex: 1001 }}>
                                 <CustomSelect
-                                    value={owner}
-                                    onChange={(val) => setOwner(val)}
+                                    value={paymentMethod}
+                                    onChange={(val) => setPaymentMethod(val)}
                                     options={[
-                                        { value: 'Staff / Operario', label: 'Staff / Operario' },
-                                        { value: 'Medico / Director Medico', label: 'Medico / Director Medico' },
-                                        { value: 'Grower / Director de Cultivo', label: 'Grower / Director de Cultivo' },
-                                        { value: 'Administrador', label: 'Administrador' }
+                                        { value: 'Efectivo', label: 'Efectivo' },
+                                        { value: 'Transferencia', label: 'Transferencia' },
+                                        { value: 'Criptomonedas', label: 'Criptomonedas' }
                                     ]}
+                                />
+                            </div>
+                            <div style={{ position: 'relative', zIndex: 1000 }}>
+                                <CustomSelect
+                                    value={responsibleUserId}
+                                    onChange={(val) => setResponsibleUserId(val)}
+                                    options={organizationUsers.map(u => ({
+                                        value: u.id,
+                                        label: u.full_name || 'Usuario'
+                                    }))}
                                 />
                             </div>
                             <input
@@ -528,10 +649,10 @@ const Expenses: React.FC = () => {
                                     onChange={(val) => setFilterOwner(val)}
                                     options={[
                                         { value: 'Todos', label: 'Todos' },
-                                        { value: 'Staff / Operario', label: 'Staff / Operario' },
-                                        { value: 'Medico / Director Medico', label: 'Medico / Director Medico' },
-                                        { value: 'Grower / Director de Cultivo', label: 'Grower / Director de Cultivo' },
-                                        { value: 'Administrador', label: 'Administrador' }
+                                        ...organizationUsers.map(u => ({
+                                            value: u.full_name || u.id,
+                                            label: u.full_name || 'Usuario'
+                                        }))
                                     ]}
                                 />
                             </div>
@@ -588,11 +709,13 @@ const Expenses: React.FC = () => {
                                     <Table>
                                         <thead>
                                             <tr>
-                                                <th>Tipo</th>
-                                                <th>Fecha</th>
-                                                <th>Concepto</th>
-                                                <th>Responsable</th>
-                                                <th>Monto</th>
+                                                <th> Tipo</th>
+                                                <th> Fecha</th>
+                                                <th> Concepto</th>
+                                                <th> Área</th>
+                                                <th> Método de Pago</th>
+                                                <th> Responsable</th>
+                                                <th> Monto</th>
                                                 <th></th>
                                             </tr>
                                         </thead>
@@ -609,12 +732,14 @@ const Expenses: React.FC = () => {
                                                         <td><span className={`type-badge ${m.type}`}>{m.type}</span></td>
                                                         <td>{format(new Date(m.date), 'dd/MM/yyyy')}</td>
                                                         <td>{m.concept}</td>
-                                                        <td>{m.owner}</td>
+                                                        <td>{getAreaFromRole(m.profiles?.role)}</td>
+                                                        <td>{m.payment_method || 'N/A'}</td>
+                                                        <td>{m.profiles?.full_name || m.owner}</td>
                                                         <td style={{ fontWeight: 600, color: m.type === 'INGRESO' ? '#4ade80' : '#f87171' }}>
                                                             {m.type === 'INGRESO' ? '+' : '-'}{formatMoney(m.amount)}
                                                         </td>
                                                         <td>
-                                                            <button onClick={() => m.id && handleDelete(m.id)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: '1rem' }}
+                                                            <button onClick={(e) => m.id && handleDeleteClick(m.id, e)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: '1rem' }}
                                                                 onMouseOver={(e) => e.currentTarget.style.color = '#f87171'}
                                                                 onMouseOut={(e) => e.currentTarget.style.color = '#94a3b8'}
                                                             >
@@ -638,7 +763,10 @@ const Expenses: React.FC = () => {
                                             <MovementCard key={m.id} onClick={() => setSelectedMovement(m)}>
                                                 <div className="left-col">
                                                     <span className="m-date">{format(new Date(m.date), 'dd/MM/yyyy')}</span>
-                                                    <span className="m-owner">{m.owner}</span>
+                                                    <span className="m-owner">{m.profiles?.full_name || m.owner} • {m.payment_method || 'N/A'}</span>
+                                                    <span style={{ fontSize: '0.75rem', color: '#cbd5e1', marginTop: '0.2rem' }}>
+                                                        {getAreaFromRole(m.profiles?.role)}
+                                                    </span>
                                                 </div>
                                                 <div className="right-col">
                                                     <div className="m-amount" style={{ color: m.type === 'INGRESO' ? '#4ade80' : '#f87171' }}>
@@ -693,14 +821,24 @@ const Expenses: React.FC = () => {
                                 <span className="detail-value">{format(new Date(selectedMovement.date), 'dd/MM/yyyy')}</span>
                             </div>
 
+                            <div className="detail-group">
+                                <span className="detail-label">Método de Pago</span>
+                                <span className="detail-value">{selectedMovement.payment_method || 'N/A'}</span>
+                            </div>
+
+                            <div className="detail-group">
+                                <span className="detail-label">Área</span>
+                                <span className="detail-value">{getAreaFromRole(selectedMovement.profiles?.role)}</span>
+                            </div>
+
                             <div className="detail-group" style={{ marginBottom: '2rem' }}>
                                 <span className="detail-label">Responsable</span>
-                                <span className="detail-value">{selectedMovement.owner}</span>
+                                <span className="detail-value">{selectedMovement.profiles?.full_name || selectedMovement.owner}</span>
                             </div>
 
                             <button
-                                onClick={() => {
-                                    if (selectedMovement.id) handleDelete(selectedMovement.id);
+                                onClick={(e) => {
+                                    if (selectedMovement.id) handleDeleteClick(selectedMovement.id, e);
                                 }}
                                 style={{
                                     width: '100%',
@@ -728,6 +866,16 @@ const Expenses: React.FC = () => {
                         {toastMessage}
                     </ToastContainer>
                 )}
+
+                <ConfirmationModal
+                    isOpen={!!itemToDelete}
+                    title="Eliminar Movimiento"
+                    message="¿Estás seguro de que deseas eliminar este registro? El saldo se recalculará. Esta acción no se puede deshacer."
+                    onConfirm={confirmDelete}
+                    onCancel={() => setItemToDelete(null)}
+                    confirmText="Eliminar"
+                    isDestructive
+                />
             </div>
         </Container>
     );

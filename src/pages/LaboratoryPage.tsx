@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { supabase } from '../services/supabaseClient';
 import styled from 'styled-components';
 import { extractionsService } from '../services/extractionsService';
 import { dispensaryService, DispensaryBatch } from '../services/dispensaryService';
@@ -50,7 +51,56 @@ export const LaboratoryPage: React.FC = () => {
         setExtractions(extData);
         // Filter for batches in 'Laboratorio'
         const labBatches = batchesData.filter(b => b.location === 'Laboratorio' && b.current_weight > 0);
-        setRawMaterials(labBatches);
+
+        // Self-Healing: Consolidate fragmented legacy batches
+        let needsReload = false;
+        const groupedByStrain: Record<string, DispensaryBatch[]> = {};
+        labBatches.forEach(b => {
+            const s = b.strain_name || 'Desconocido';
+            if (!groupedByStrain[s]) groupedByStrain[s] = [];
+            groupedByStrain[s].push(b);
+        });
+
+        for (const strain in groupedByStrain) {
+            const strainBatches = groupedByStrain[strain];
+            if (strainBatches.length > 1) {
+                needsReload = true;
+                // Sort oldest first
+                strainBatches.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+                const master = strainBatches[0];
+                const fragments = strainBatches.slice(1);
+
+                let addedCurrent = 0;
+                let addedInitial = 0;
+                const updatePromises = [];
+
+                for (const frag of fragments) {
+                    addedCurrent += frag.current_weight;
+                    addedInitial += frag.initial_weight || frag.current_weight;
+                    updatePromises.push(
+                        supabase.from('chakra_dispensary_batches').update({ current_weight: 0, status: 'depleted', notes: 'Consolidado en LAB POOL' }).eq('id', frag.id)
+                    );
+                }
+
+                updatePromises.push(
+                    supabase.from('chakra_dispensary_batches').update({
+                        current_weight: master.current_weight + addedCurrent,
+                        initial_weight: (master.initial_weight || master.current_weight) + addedInitial,
+                        batch_code: `${strain} - LAB POOL`
+                    }).eq('id', master.id)
+                );
+
+                await Promise.all(updatePromises);
+            }
+        }
+
+        if (needsReload) {
+            // Reload cleanly after fixing the DB
+            const freshBatches = await dispensaryService.getBatches();
+            setRawMaterials(freshBatches.filter(b => b.location === 'Laboratorio' && b.current_weight > 0));
+        } else {
+            setRawMaterials(labBatches);
+        }
 
         setLoading(false);
     };

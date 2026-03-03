@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { ConfirmModal } from '../components/ConfirmModal';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ToastModal } from '../components/ToastModal';
-import { FaUserPlus, FaIdCard, FaFileUpload, FaCheckCircle, FaFileAlt, FaNotesMedical } from 'react-icons/fa';
+import { FaUserPlus, FaIdCard, FaFileUpload, FaCheckCircle, FaFileAlt, FaNotesMedical, FaWhatsapp } from 'react-icons/fa';
 import { CustomSelect } from '../components/CustomSelect';
 import { CustomDatePicker } from '../components/CustomDatePicker';
 import { useOrganization } from '../context/OrganizationContext';
@@ -864,7 +864,26 @@ const Patients: React.FC = () => {
                             <>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', paddingBottom: '1rem' }}>
                                     <div>
-                                        <h2 style={{ margin: 0, color: '#f8fafc' }}>{selectedPatient.profile?.full_name}</h2>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                            <h2 style={{ margin: 0, color: '#f8fafc' }}>{selectedPatient.profile?.full_name}</h2>
+                                            {selectedPatient.phone && (
+                                                <ActionButton
+                                                    as="a"
+                                                    href={`https://wa.me/${selectedPatient.phone.replace(/\D/g, '')}`}
+                                                    target="_blank"
+                                                    style={{
+                                                        background: '#25D366',
+                                                        color: '#fff',
+                                                        borderColor: 'transparent',
+                                                        padding: '0.4rem 0.8rem',
+                                                        fontSize: '0.85rem',
+                                                        borderRadius: '2rem'
+                                                    }}
+                                                >
+                                                    <FaWhatsapp size={16} /> WhatsApp
+                                                </ActionButton>
+                                            )}
+                                        </div>
                                         <span style={{ fontSize: '0.9rem', color: '#94a3b8' }}>{selectedPatient.profile?.email}</span>
                                     </div>
                                     <StatusBadge status={selectedPatient.reprocann_status} style={{ fontSize: '1rem', padding: '0.5rem 1rem' }}>

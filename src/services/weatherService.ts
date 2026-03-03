@@ -18,14 +18,11 @@ export interface WeatherData {
     daily: DailyWeather[];
 }
 
-const LAT = -34.5175; // Exact user location
-const LON = -58.5331;
-
 export const weatherService = {
-    async getForecast(): Promise<WeatherData | null> {
+    async getForecast(lat: number = -34.5175, lon: number = -58.5331): Promise<WeatherData | null> {
         try {
             const response = await fetch(
-                `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&current=temperature_2m,relative_humidity_2m,weather_code&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=America%2FArgentina%2FBuenos_Aires`
+                `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,weather_code&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=America%2FArgentina%2FBuenos_Aires`
             );
             const data = await response.json();
 

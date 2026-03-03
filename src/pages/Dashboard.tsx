@@ -27,7 +27,6 @@ import { WeatherWidget } from '../components/WeatherWidget';
 import { useAuth } from '../context/AuthContext';
 import { useData } from '../context/DataContext';
 import { LoadingSpinner } from '../components/LoadingSpinner';
-import { GuidedTour } from '../components/GuidedTour';
 import { MedicoDashboard } from '../components/MedicoDashboard';
 
 
@@ -865,7 +864,6 @@ const Dashboard: React.FC = () => {
   if (user?.role === 'medico') {
     return (
       <>
-        <GuidedTour />
         <MedicoDashboard />
       </>
     );
@@ -917,7 +915,6 @@ const Dashboard: React.FC = () => {
 
   return (
     <Container>
-      <GuidedTour />
       <WelcomeHeader className="tour-welcome">
         <h1>Hola, {user?.name || 'Cultivador'}, ¿qué vamos a hacer hoy?</h1>
         <DateDisplay>
@@ -941,7 +938,7 @@ const Dashboard: React.FC = () => {
               </div>
             </StickyNoteCard>
           ))}
-          <AddStickyParams onClick={() => setIsStickyModalOpen(true)}>
+          <AddStickyParams className="tour-stickies" onClick={() => setIsStickyModalOpen(true)}>
             <DashedCircle className="dashed-circle">
               <FaPlus size={20} />
             </DashedCircle>
@@ -979,11 +976,11 @@ const Dashboard: React.FC = () => {
         </ModalOverlay>
       )}
 
-      <WeatherWidget />
+      <WeatherWidget className="tour-weather" />
 
       {/* Stage Countdowns */}
       {rooms.some(r => (r.type === 'vegetation' || r.type === 'flowering') && r.start_date) && (
-        <StickyBoard>
+        <StickyBoard className="tour-countdowns">
           <SectionTitle><FaClock style={{ color: '#805ad5' }} /> Próximos Cambios de Etapa</SectionTitle>
           <CountdownGrid>
             {rooms

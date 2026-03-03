@@ -46,6 +46,7 @@ import './App.css';
 
 import Sidebar from './components/Sidebar';
 import ClickSpark from './components/ClickSpark';
+import { GuidedTour } from './components/GuidedTour';
 
 import { ChatWidget } from './components/AI/ChatWidget';
 import PageTransition from './components/PageTransition';
@@ -98,6 +99,7 @@ function App() {
             easing="ease-in-out"
             extraScale={0.9}
           />
+          {!isPublicRoute && <GuidedTour />}
           {!isPublicRoute && <Sidebar />}
           {/* Temporarily hidden per user request */}
           {/* {!isPublicRoute && <ChatWidget />} */}

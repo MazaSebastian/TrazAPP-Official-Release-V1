@@ -26,7 +26,7 @@ const Header = styled.div`
 
 const Grid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 1.5rem;
   margin-bottom: 2rem;
 
@@ -72,6 +72,10 @@ const Metrics: React.FC = () => {
     const [monthlyMetrics, setMonthlyMetrics] = useState<MonthlyMetric[]>([]);
     const [genetics, setGenetics] = useState<GeneticPerformance[]>([]);
     const [costs, setCosts] = useState<CostCategory[]>([]);
+    const [mortality, setMortality] = useState<{ reason: string, count: number }[]>([]);
+    const [survivalRates, setSurvivalRates] = useState<{ genetic_name: string, survival_rate: number, total: number, discarded: number }[]>([]);
+    const [labYield, setLabYield] = useState<number>(0);
+    const [labYieldByTechnique, setLabYieldByTechnique] = useState<{ technique: string, yield_percentage: number, total_input: number, total_output: number }[]>([]);
     const [year] = useState(new Date().getFullYear());
 
     useEffect(() => {
@@ -82,15 +86,23 @@ const Metrics: React.FC = () => {
     const loadData = async () => {
         setLoading(true);
         try {
-            const [mMetrics, genPerf, costBreakdown] = await Promise.all([
+            const [mMetrics, genPerf, costBreakdown, mort, surv, lYield, lYieldTech] = await Promise.all([
                 metricsService.getMonthlyMetrics(year),
                 metricsService.getGeneticPerformance(),
-                metricsService.getCostBreakdown(`${year}-01-01`, `${year}-12-31`)
+                metricsService.getCostBreakdown(`${year}-01-01`, `${year}-12-31`),
+                metricsService.getMortalityStats(),
+                metricsService.getGeneticSurvivalRate(),
+                metricsService.getLabAverageYield(),
+                metricsService.getLabYieldByTechnique()
             ]);
 
             setMonthlyMetrics(mMetrics);
             setGenetics(genPerf);
             setCosts(costBreakdown);
+            setMortality(mort);
+            setSurvivalRates(surv);
+            setLabYield(lYield);
+            setLabYieldByTechnique(lYieldTech);
         } catch (error) {
             console.error("Error loading metrics:", error);
         } finally {
@@ -104,7 +116,10 @@ const Metrics: React.FC = () => {
     const totalYield = monthlyMetrics.reduce((acc, m) => acc + (Number(m.total_yield) || 0), 0);
     const totalRevenue = monthlyMetrics.reduce((acc, m) => acc + (Number(m.total_revenue) || 0), 0);
     const totalExpenses = monthlyMetrics.reduce((acc, m) => acc + (Number(m.total_expenses) || 0), 0);
-    const costPerGram = totalYield > 0 ? (totalExpenses / totalYield).toFixed(2) : '0.00';
+
+    const totalStarted = survivalRates.reduce((acc, s) => acc + s.total, 0);
+    const totalDiscarded = survivalRates.reduce((acc, s) => acc + s.discarded, 0);
+    const globalEffectiveness = totalStarted > 0 ? ((totalStarted - totalDiscarded) / totalStarted * 100).toFixed(1) : '100.0';
 
 
     return (
@@ -140,10 +155,16 @@ const Metrics: React.FC = () => {
                         color="#f56565"
                     />
                     <KPICard
-                        title="Costo por Gramo"
-                        value={`$${costPerGram}`}
+                        title="Efectividad Global"
+                        value={`${globalEffectiveness}%`}
                         icon={<FaChartLine />}
-                        color={Number(costPerGram) < 500 ? "#48bb78" : "#ecc94b"} // Example threshold
+                        color={Number(globalEffectiveness) >= 80 ? "#48bb78" : "#ecc94b"}
+                    />
+                    <KPICard
+                        title="Retorno Lab"
+                        value={`${labYield.toFixed(1)}%`}
+                        icon={<FaChartLine />}
+                        color={labYield >= 10 ? "#48bb78" : "#ecc94b"}
                     />
                 </Grid>
 
@@ -215,6 +236,88 @@ const Metrics: React.FC = () => {
                         {costs.length === 0 && (
                             <div style={{ padding: '2rem', textAlign: 'center', color: '#64748b' }}>No hay gastos registrados este año</div>
                         )}
+                    </StatsCard>
+                </ChartsGrid>
+
+                {/* Eficiencia Biológica */}
+                <ChartsGrid>
+                    <StatsCard>
+                        <h3 style={{ marginBottom: '1rem', color: '#f8fafc' }}>Efectividad / Enraizamiento</h3>
+                        <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+                            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '400px' }}>
+                                <thead>
+                                    <tr style={{ borderBottom: '2px solid rgba(255, 255, 255, 0.1)', textAlign: 'left' }}>
+                                        <th style={{ padding: '0.5rem', color: '#94a3b8' }}>Genética</th>
+                                        <th style={{ padding: '0.5rem', color: '#94a3b8' }}>Iniciadas</th>
+                                        <th style={{ padding: '0.5rem', color: '#94a3b8' }}>Bajas</th>
+                                        <th style={{ padding: '0.5rem', color: '#94a3b8' }}>Efectividad</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {survivalRates.map((g, i) => (
+                                        <tr key={i} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                                            <td style={{ padding: '0.75rem', fontWeight: 600 }}>{g.genetic_name || 'Desconocida'}</td>
+                                            <td style={{ padding: '0.75rem' }}>{Number(g.total).toLocaleString()} u.</td>
+                                            <td style={{ padding: '0.75rem', color: g.discarded > 0 ? '#f87171' : 'inherit' }}>{Number(g.discarded).toLocaleString()} u.</td>
+                                            <td style={{ padding: '0.75rem', color: g.survival_rate >= 80 ? '#4ade80' : '#fbbf24', fontWeight: 700 }}>{g.survival_rate.toFixed(1)}%</td>
+                                        </tr>
+                                    ))}
+                                    {survivalRates.length === 0 && (
+                                        <tr><td colSpan={4} style={{ padding: '2rem', textAlign: 'center', color: '#64748b' }}>Sin datos registrados</td></tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </StatsCard>
+
+                    <StatsCard>
+                        <h3 style={{ marginBottom: '1rem', color: '#f8fafc' }}>Causas de Mortalidad (Bajas)</h3>
+                        {mortality.map((m, i) => {
+                            const totalM = mortality.reduce((sum, item) => sum + item.count, 0);
+                            const perc = totalM > 0 ? (m.count / totalM) * 100 : 0;
+                            return (
+                                <div key={i} style={{ marginBottom: '0.75rem' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem', fontSize: '0.9rem' }}>
+                                        <span style={{ textTransform: 'capitalize', color: '#cbd5e1' }}>{m.reason}</span>
+                                        <span style={{ fontWeight: 600 }}>{m.count} u. ({perc.toFixed(1)}%)</span>
+                                    </div>
+                                    <div style={{ height: '8px', background: 'rgba(255, 255, 255, 0.1)', borderRadius: '4px', overflow: 'hidden' }}>
+                                        <div style={{ width: `${perc}%`, background: '#f87171', height: '100%' }}></div>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                        {mortality.length === 0 && (
+                            <div style={{ padding: '2rem', textAlign: 'center', color: '#64748b' }}>No hay bajas registradas</div>
+                        )}
+                    </StatsCard>
+                    <StatsCard>
+                        <h3 style={{ marginBottom: '1rem', color: '#f8fafc' }}>Retorno por Técnica (Laboratorio)</h3>
+                        <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+                            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '300px' }}>
+                                <thead>
+                                    <tr style={{ borderBottom: '2px solid rgba(255, 255, 255, 0.1)', textAlign: 'left' }}>
+                                        <th style={{ padding: '0.5rem', color: '#94a3b8' }}>Técnica</th>
+                                        <th style={{ padding: '0.5rem', color: '#94a3b8' }}>Materia (g)</th>
+                                        <th style={{ padding: '0.5rem', color: '#94a3b8' }}>Extracto (g)</th>
+                                        <th style={{ padding: '0.5rem', color: '#94a3b8' }}>Retorno</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {labYieldByTechnique.map((t, i) => (
+                                        <tr key={i} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                                            <td style={{ padding: '0.75rem', fontWeight: 600 }}>{t.technique}</td>
+                                            <td style={{ padding: '0.75rem' }}>{Number(t.total_input).toLocaleString()}</td>
+                                            <td style={{ padding: '0.75rem' }}>{Number(t.total_output).toLocaleString()}</td>
+                                            <td style={{ padding: '0.75rem', color: t.yield_percentage >= 10 ? '#4ade80' : '#fbbf24', fontWeight: 700 }}>{t.yield_percentage.toFixed(1)}%</td>
+                                        </tr>
+                                    ))}
+                                    {labYieldByTechnique.length === 0 && (
+                                        <tr><td colSpan={4} style={{ padding: '2rem', textAlign: 'center', color: '#64748b' }}>Sin datos de extracciones</td></tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
                     </StatsCard>
                 </ChartsGrid>
             </div>

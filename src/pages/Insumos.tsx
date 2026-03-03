@@ -21,6 +21,9 @@ import {
   deleteInsumo,
   getInsumosStats
 } from '../services/insumosService';
+import { useAuth } from '../context/AuthContext';
+import { usersService } from '../services/usersService';
+import { expensesService, CashMovement, getAreaFromRole } from '../services/expensesService';
 
 const fadeIn = keyframes`
   from { opacity: 0; }
@@ -385,6 +388,7 @@ const FormRow = styled.div`
 `;
 
 const Insumos: React.FC = () => {
+  const { user } = useAuth();
   const { currentOrganization } = useOrganization();
   const plan = currentOrganization?.plan || 'individual';
   const planLevel = ['ong', 'enterprise'].includes(plan) ? 3 :
@@ -547,6 +551,43 @@ const Insumos: React.FC = () => {
         const created = await createInsumo(newInsumo);
         if (created) {
           setInsumos(prev => [...prev, created]);
+
+          // --- AUTO-GENERATION OF EXPENSE LOGIC ---
+          try {
+            const orgUsers = await usersService.getUsers();
+
+            // Try to assign the expense to the current user if they have a Cultivo role.
+            let responsibleUser = orgUsers.find(u => u.id === user?.id && getAreaFromRole(u.role) === 'Área de Cultivo');
+
+            // Fallback: the first user in the organization with a Cultivo role.
+            if (!responsibleUser) {
+              responsibleUser = orgUsers.find(u => getAreaFromRole(u.role) === 'Área de Cultivo');
+            }
+
+            // If still nobody is found, default to the currently logged in user (or the first member)
+            if (!responsibleUser) {
+              responsibleUser = orgUsers.find(u => u.id === user?.id) || orgUsers[0];
+            }
+
+            if (responsibleUser) {
+              const totalCost = newInsumo.precio_actual * newInsumo.stock_actual;
+
+              const expense: CashMovement = {
+                id: '',
+                date: new Date().toISOString(),
+                type: 'EGRESO',
+                amount: totalCost,
+                concept: `Compra de insumo: ${newInsumo.nombre}`,
+                payment_method: 'Efectivo',
+                responsible_user_id: responsibleUser.id,
+                owner: responsibleUser.full_name,
+                organization_id: currentOrganization?.id || ''
+              };
+              await expensesService.createMovement(expense);
+            }
+          } catch (expenseError) {
+            console.error('Error al auto-generar gasto de insumo:', expenseError);
+          }
         }
       }
 

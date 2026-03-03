@@ -225,10 +225,11 @@ const getWeatherIcon = (code: number, precip?: number) => {
   return <WiThunderstorm color="#805ad5" />;
 };
 
-export const WeatherWidget: React.FC = () => {
+export const WeatherWidget: React.FC<{ className?: string }> = ({ className }) => {
   const [weather, setWeather] = useState<{ current: { temp: number; humidity: number; code: number }; daily: DailyWeather[] } | null>(null);
   const [loading, setLoading] = useState(true);
   const [isOpen, setIsOpen] = useState(false); // Default closed on mobile, open on desktop? Let's just default to open on desktop, but closed entirely on mobile.
+  const [locationName, setLocationName] = useState('Munro/Olivos');
 
   // Use a media query in JS to set initial state to closed if mobile
   useEffect(() => {
@@ -237,21 +238,45 @@ export const WeatherWidget: React.FC = () => {
     }
   }, []);
 
-  useEffect(() => {
-    async function load() {
-      const data = await weatherService.getForecast();
-      setWeather(data);
-      setLoading(false);
+  const fetchWeather = async () => {
+    // Only set loading to true internally if no data exists to prevent blinking empty states
+    if (!weather) setLoading(true);
+
+    const savedLocation = localStorage.getItem('trazapp_weather_location');
+    let lat = -34.5175;
+    let lon = -58.5331;
+
+    if (savedLocation) {
+      try {
+        const parsed = JSON.parse(savedLocation);
+        if (parsed.lat !== undefined) lat = parsed.lat;
+        if (parsed.lon !== undefined) lon = parsed.lon;
+        if (parsed.name) setLocationName(parsed.name);
+      } catch (e) { }
     }
-    load();
+
+    const data = await weatherService.getForecast(lat, lon);
+    setWeather(data);
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchWeather();
+
+    const handleLocationChange = () => fetchWeather();
+    window.addEventListener('weatherLocationChanged', handleLocationChange);
+
+    return () => {
+      window.removeEventListener('weatherLocationChanged', handleLocationChange);
+    };
   }, []);
 
-  if (loading || !weather) return null;
+  if (!weather) return null;
 
   return (
-    <WidgetContainer>
+    <WidgetContainer className={className}>
       <HeaderContainer onClick={() => setIsOpen(!isOpen)} style={{ marginBottom: isOpen ? '1.5rem' : '0' }}>
-        <Title><WiDaySunny /> Pronóstico (Munro/Olivos)</Title>
+        <Title><WiDaySunny /> Pronóstico ({locationName})</Title>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexDirection: window.innerWidth > 600 ? 'row' : 'column' }}>
           <CurrentTempBadge>
             <div className="metric">

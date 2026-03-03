@@ -12,7 +12,7 @@ import { organizationService } from '../services/organizationService';
 import { planService } from '../services/planService';
 import { Plan, TaskType } from '../types';
 import { tasksService } from '../services/tasksService';
-import { FaUserPlus, FaUserShield, FaTrash, FaTimes, FaTasks, FaPlus } from 'react-icons/fa';
+import { FaUserPlus, FaUserShield, FaTrash, FaTimes, FaTasks, FaPlus, FaMapMarkerAlt, FaPlay } from 'react-icons/fa';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 
 // Animación de aparición para modales
@@ -266,7 +266,7 @@ const ModalContentDetail = styled.div`
 // ----------------------------------------------------
 
 const Settings: React.FC = () => {
-  const { user } = useAuth();
+  const { user, resetTour } = useAuth();
   const { currentOrganization } = useOrganization();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -284,6 +284,11 @@ const Settings: React.FC = () => {
   const [newUserName, setNewUserName] = useState('');
   const [newUserPassword, setNewUserPassword] = useState('');
 
+  // Weather Location State
+  const [locationSearch, setLocationSearch] = useState('');
+  const [locationResults, setLocationResults] = useState<any[]>([]);
+  const [currentLocationName, setCurrentLocationName] = useState('Munro/Olivos');
+
   const [inviting, setInviting] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any | null>(null); // Estado para Modal Móvil
 
@@ -300,6 +305,13 @@ const Settings: React.FC = () => {
 
   useEffect(() => {
     loadData();
+    const savedLocation = localStorage.getItem('trazapp_weather_location');
+    if (savedLocation) {
+      try {
+        const parsed = JSON.parse(savedLocation);
+        if (parsed.name) setCurrentLocationName(parsed.name);
+      } catch (e) { }
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentOrganization]);
 
@@ -459,6 +471,35 @@ const Settings: React.FC = () => {
     } catch (e: any) {
       setToast({ isOpen: true, message: 'Error al eliminar la tarea', type: 'error' });
     }
+  };
+
+  const searchLocations = async (query: string) => {
+    try {
+      const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=5&language=es&format=json`);
+      const data = await res.json();
+      if (data.results) {
+        setLocationResults(data.results);
+      } else {
+        setLocationResults([]);
+      }
+    } catch (error) {
+      console.error('Error fetching locations:', error);
+    }
+  };
+
+  const selectLocation = (result: any) => {
+    const locName = `${result.name}${result.admin1 ? `, ${result.admin1}` : ''}`;
+    setCurrentLocationName(locName);
+    setLocationSearch('');
+    setLocationResults([]);
+    localStorage.setItem('trazapp_weather_location', JSON.stringify({
+      name: locName,
+      lat: result.latitude,
+      lon: result.longitude
+    }));
+    setToast({ isOpen: true, message: 'Ubicación para el clima actualizada', type: 'success' });
+    // Dispatch custom event to trigger update in WeatherWidget immediately
+    window.dispatchEvent(new Event('weatherLocationChanged'));
   };
 
   if (loading) {
@@ -716,6 +757,102 @@ const Settings: React.FC = () => {
           </div>
         </Section>
       )}
+
+      {/* Weather UI Components Module */}
+      <Section>
+        <SectionHeader>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <FaMapMarkerAlt /> Ubicación del Clima
+          </div>
+          <div style={{ fontSize: '0.85rem', fontWeight: 'normal', color: '#94a3b8' }}>
+            Configura tu zona para el Pronóstico
+          </div>
+        </SectionHeader>
+
+        <div style={{ marginBottom: '1.5rem', background: 'rgba(15, 23, 42, 0.5)', padding: '1.5rem', borderRadius: '0.5rem', border: '1px solid rgba(255,255,255,0.05)' }}>
+          <div style={{ marginBottom: '1.5rem' }}>
+            <Label style={{ display: 'block', marginBottom: '0.5rem' }}>Ubicación Actual</Label>
+            <div style={{ color: '#4ade80', fontWeight: 'bold', fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <FaMapMarkerAlt /> {currentLocationName}
+            </div>
+          </div>
+
+          <FormGroup style={{ position: 'relative' }}>
+            <Label>Buscar ciudad o barrio</Label>
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <Input
+                type="text"
+                placeholder="Ej: Córdoba, Rosario, Munro..."
+                value={locationSearch}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                  setLocationSearch(e.target.value);
+                  if (e.target.value.length > 2) searchLocations(e.target.value);
+                  else setLocationResults([]);
+                }}
+              />
+            </div>
+
+            {locationResults.length > 0 && (
+              <div style={{
+                position: 'absolute', top: '100%', left: 0, right: 0, background: '#1e293b',
+                border: '1px solid rgba(255,255,255,0.1)', borderRadius: '0.5rem',
+                marginTop: '0.25rem', zIndex: 50, maxHeight: '200px', overflowY: 'auto',
+                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+              }}>
+                {locationResults.map((result: any, index: number) => (
+                  <div
+                    key={index}
+                    onClick={() => selectLocation(result)}
+                    style={{
+                      padding: '0.75rem 1rem', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.05)',
+                      color: '#f8fafc', display: 'flex', flexDirection: 'column'
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.05)')}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+                  >
+                    <span style={{ fontWeight: 'bold' }}>{result.name}</span>
+                    <span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>
+                      {result.admin1 ? `${result.admin1}, ` : ''}{result.country}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </FormGroup>
+        </div>
+      </Section>
+
+      <Section>
+        <SectionHeader>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <FaPlay /> Opciones de Desarrollo / Tutorial
+          </div>
+          <div style={{ fontSize: '0.85rem', fontWeight: 'normal', color: '#94a3b8' }}>
+            Herramientas para pruebas
+          </div>
+        </SectionHeader>
+
+        <div style={{ marginBottom: '1.5rem', background: 'rgba(15, 23, 42, 0.5)', padding: '1.5rem', borderRadius: '0.5rem', border: '1px solid rgba(255,255,255,0.05)' }}>
+          <div style={{ marginBottom: '1rem' }}>
+            <Label style={{ display: 'block', marginBottom: '0.5rem', color: '#f8fafc' }}>Tutorial Guiado Inicial</Label>
+            <p style={{ color: '#94a3b8', fontSize: '0.9rem', margin: '0 0 1rem 0' }}>
+              Al reiniciar el tutorial, volverá a aparecer el pop-up de bienvenida para realizar el recorrido guiado por la plataforma.
+            </p>
+          </div>
+
+          <SaveButton
+            onClick={async () => {
+              if (window.confirm('¿Seguro que deseas reiniciar el tutorial guiado?')) {
+                await resetTour();
+                setToast({ isOpen: true, message: 'Tutorial reiniciado. Ve al Dashboard para verlo.', type: 'success' });
+              }
+            }}
+            style={{ background: 'rgba(56, 189, 248, 0.2)', color: '#38bdf8', borderColor: 'rgba(56, 189, 248, 0.5)' }}
+          >
+            <FaPlay /> Reiniciar Tutorial Guiado
+          </SaveButton>
+        </div>
+      </Section>
 
       {selectedUser && (
         <ModalOverlay onClick={() => setSelectedUser(null)}>

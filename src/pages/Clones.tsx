@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import styled, { createGlobalStyle, keyframes } from 'styled-components';
 import { useNavigate, Link } from 'react-router-dom';
 import {
-    FaSearch, FaHistory, FaBarcode, FaExchangeAlt, FaMinusCircle, FaEdit, FaTrash,
+    FaBarcode, FaExchangeAlt, FaMinusCircle, FaEdit, FaTrash,
     FaCut, FaTimes, FaLevelUpAlt, FaPlus, FaAngleRight, FaAngleDown,
     FaTint, FaLeaf, FaSun, FaCheckCircle, FaDna, FaPrint, FaHashtag
 } from 'react-icons/fa';
@@ -16,6 +16,7 @@ import { ToastModal } from '../components/ToastModal';
 import { useReactToPrint } from 'react-to-print';
 
 import { Room } from '../types/rooms';
+import { DeleteReasonModal } from '../components/DeleteReasonModal';
 import QRCode from 'react-qr-code';
 import { TuyaManager } from '../components/TuyaManager';
 import { CustomSelect } from '../components/CustomSelect';
@@ -1015,7 +1016,6 @@ const Clones: React.FC = () => {
     // Delete Modal State
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [batchToDelete, setBatchToDelete] = useState<any>(null);
-    const [deleteReason, setDeleteReason] = useState("");
     const [isDeleteAllModalOpen, setIsDeleteAllModalOpen] = useState(false);
 
     // Barcode Modal State
@@ -1403,23 +1403,29 @@ const Clones: React.FC = () => {
             // If it's a child row, just delete it.
             setBatchToDelete({ ...batch, idsToDelete: [batch.id], isGroup: false });
         }
-        setDeleteReason('');
         setIsDeleteModalOpen(true);
     };
 
-    const handleConfirmDelete = async () => {
-        if (!batchToDelete || !batchToDelete.idsToDelete || !deleteReason.trim()) return;
+    const handleConfirmDelete = async (reason: string, notes: string) => {
+        if (!batchToDelete || !batchToDelete.idsToDelete) return;
+        setIsDeleting(true);
+        const actionDetail = notes ? `${reason} - ${notes}` : reason;
 
-        const actionDetail = `Eliminar Lote. Motivo: ${deleteReason}`;
-        const success = await roomsService.deleteBatches(batchToDelete.idsToDelete, actionDetail);
-        if (success) {
-            loadData();
+        try {
+            if (batchToDelete.isUnit && batchToDelete.quantity > 1) {
+                await roomsService.updateBatch(batchToDelete.id, { quantity: batchToDelete.quantity - 1 }, undefined, actionDetail);
+            } else {
+                await roomsService.deleteBatches(batchToDelete.idsToDelete, actionDetail);
+            }
+            loadData(true);
             setIsDeleteModalOpen(false);
             setBatchToDelete(null);
-            setDeleteReason('');
-            showToast("Lote eliminado correctamente.", 'success');
-        } else {
-            showToast("Error al eliminar el lote.", 'error');
+            showToast(batchToDelete.isUnit ? "Unidad eliminada correctamente." : "Lote eliminado correctamente.", 'success');
+        } catch (e) {
+            console.error(e);
+            showToast("Error al eliminar.", 'error');
+        } finally {
+            setIsDeleting(false);
         }
     };
 
@@ -1492,23 +1498,13 @@ const Clones: React.FC = () => {
             ? `la unidad #${unitIndex.toString().padStart(3, '0')} del lote ${batch.name} `
             : `el lote ${batch.name} `;
 
-        if (window.confirm(`¿Seguro que deseas eliminar ${displayDeleteName}?`)) {
-            setLoading(true);
-            try {
-                if (batch.quantity <= 1) {
-                    await roomsService.deleteBatches([batch.id], "Eliminación de unidad individual");
-                } else {
-                    await roomsService.updateBatch(batch.id, { quantity: batch.quantity - 1 }, undefined, "Eliminación de unidad individual");
-                }
-                loadData(true);
-                showToast("Unidad eliminada correctamente.", "success");
-            } catch (e) {
-                console.error(e);
-                showToast("Error al eliminar la unidad.", "error");
-            } finally {
-                setLoading(false);
-            }
-        }
+        setBatchToDelete({
+            ...batch,
+            idsToDelete: [batch.id],
+            isUnit: true,
+            displayDeleteName
+        });
+        setIsDeleteModalOpen(true);
     };
 
     const handleUnitPrintClick = (batch: any, unitIndex: number, autoPrint: boolean = false) => {
@@ -1835,7 +1831,7 @@ const Clones: React.FC = () => {
                                                                         )}
                                                                         <FaBarcode style={{ color: batch.parent_batch_id ? '#94a3b8' : '#f8fafc' }} />
                                                                         <strong>{batch.name}</strong>
-                                                                        {batch.parent_batch_id && <span style={{ fontSize: '0.7rem', color: '#64748b', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '4px', padding: '0 4px' }}>Sub-lote</span>}
+                                                                        {batch.parent_batch_id && <span style={{ fontSize: '0.7rem', color: '#64748b', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px', padding: '0 4px' }}>Sub-lote</span>}
                                                                     </div>
                                                                 </td>
                                                                 <td data-label="Genética" style={cellStyle}>{batch.genetic?.name || 'Desconocida'}</td>
@@ -2293,61 +2289,13 @@ const Clones: React.FC = () => {
             {/* Delete Confirmation */}
             {
                 isDeleteModalOpen && (
-                    <GlassToastOverlay onClick={() => setIsDeleteModalOpen(false)}>
-                        <GlassToastContent onClick={e => e.stopPropagation()}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '1rem' }}>
-                                <h2 style={{ margin: 0, color: '#e53e3e', display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '1.25rem' }}>
-                                    <FaTrash /> Eliminar Lote
-                                </h2>
-                                <button onClick={() => setIsDeleteModalOpen(false)} style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: '1.25rem' }}><FaTimes /></button>
-                            </div>
-
-                            <p style={{ color: '#cbd5e1', marginBottom: '1.5rem', lineHeight: '1.5' }}>
-                                {batchToDelete?.idsToDelete?.length > 1
-                                    ? `¿Estás seguro de que deseas eliminar estos ${batchToDelete.idsToDelete.length} lotes? Esta acción no se puede deshacer.`
-                                    : `¿Estás seguro de que deseas eliminar el lote ${batchToDelete?.name}?`}
-                            </p>
-
-                            <FormGroup>
-                                <label style={{ color: '#cbd5e1' }}>Motivo de la Eliminación <span style={{ color: '#e53e3e' }}>*</span></label>
-                                <input
-                                    type="text"
-                                    placeholder="Ej: Error de carga, Lote duplicado..."
-                                    value={deleteReason}
-                                    onChange={e => setDeleteReason(e.target.value)}
-                                    autoFocus
-                                    style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', width: '100%', padding: '0.75rem', borderRadius: '0.5rem' }}
-                                />
-                            </FormGroup>
-
-                            <ModalActions>
-                                <button
-                                    onClick={() => setIsDeleteModalOpen(false)}
-                                    style={{ padding: '0.75rem 1.5rem', background: 'rgba(255,255,255,0.05)', color: '#cbd5e1', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '0.5rem', cursor: 'pointer', transition: 'all 0.2s' }}
-                                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
-                                    onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
-                                >
-                                    Cancelar
-                                </button>
-                                <button
-                                    onClick={handleConfirmDelete}
-                                    disabled={!deleteReason.trim()}
-                                    style={{
-                                        padding: '0.75rem 1.5rem',
-                                        background: deleteReason.trim() ? '#e53e3e' : 'rgba(229, 62, 62, 0.3)',
-                                        color: deleteReason.trim() ? 'white' : 'rgba(255,255,255,0.5)',
-                                        border: 'none',
-                                        borderRadius: '0.5rem',
-                                        cursor: deleteReason.trim() ? 'pointer' : 'not-allowed',
-                                        fontWeight: 'bold',
-                                        transition: 'all 0.2s'
-                                    }}
-                                >
-                                    Eliminar Lote
-                                </button>
-                            </ModalActions>
-                        </GlassToastContent>
-                    </GlassToastOverlay>
+                    <DeleteReasonModal
+                        isOpen={isDeleteModalOpen}
+                        itemName={batchToDelete?.isUnit ? batchToDelete.displayDeleteName : (batchToDelete?.idsToDelete?.length > 1 ? `${batchToDelete.idsToDelete.length} lotes` : batchToDelete?.name)}
+                        onCancel={() => setIsDeleteModalOpen(false)}
+                        onConfirm={handleConfirmDelete}
+                        isSubmitting={isDeleting}
+                    />
                 )
             }
 

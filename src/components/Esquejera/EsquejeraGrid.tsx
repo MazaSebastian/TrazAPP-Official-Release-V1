@@ -366,8 +366,15 @@ const BatchItem = ({ batch, onClick, cellSize }: { batch: Batch; onClick?: (e: R
     );
 };
 
-// --- Helper Functions ---
-const getRowLabel = (index: number) => String.fromCharCode(65 + index); // 0 -> A, 1 -> B...
+const getRowLabel = (index: number) => {
+    let label = "";
+    let i = index;
+    do {
+        label = String.fromCharCode(65 + (i % 26)) + label;
+        i = Math.floor(i / 26) - 1;
+    } while (i >= 0);
+    return label;
+};
 
 // --- Cell Component ---
 const GridCell = ({ row, col, batch, onClick, isPainting, isSelected, renderActions, cellSize }: { row: number; col: number; batch?: Batch, onClick: (b: Batch | null) => void, isPainting?: boolean, isSelected?: boolean, renderActions?: (batch: Batch) => React.ReactNode; cellSize: number }) => {

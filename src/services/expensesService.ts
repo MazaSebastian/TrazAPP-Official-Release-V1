@@ -13,7 +13,20 @@ export interface CashMovement {
     // Legacy fields likely not needed for new UI but present in DB
     owner_id?: string;
     organization_id?: string;
+    // New fields
+    payment_method?: string;
+    responsible_user_id?: string;
+    profiles?: { full_name: string, role: string }; // For the joined user full name and role
 }
+
+export const getAreaFromRole = (role?: string) => {
+    if (!role) return 'Otros';
+    const lower = role.toLowerCase();
+    if (lower.includes('grower') || lower.includes('cultivo') || lower.includes('operario')) return 'Área de Cultivo';
+    if (lower.includes('medico') || lower.includes('médico')) return 'Área de Medicina';
+    if (lower.includes('admin')) return 'Área Administrativa';
+    return 'Otros';
+};
 
 export const expensesService = {
     async getMovements() {
@@ -21,7 +34,10 @@ export const expensesService = {
         console.log("Fetching movements...");
         const { data, error } = await supabase
             .from('chakra_expenses')
-            .select('*')
+            .select(`
+                *,
+                profiles:responsible_user_id ( full_name, role )
+            `)
             .eq('organization_id', getSelectedOrgId())
             .order('date', { ascending: false });
 

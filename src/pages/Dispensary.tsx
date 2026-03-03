@@ -7,6 +7,7 @@ import { patientsService } from '../services/patientsService';
 import { geneticsService } from '../services/geneticsService';
 import { Genetic } from '../types/genetics';
 import { Tooltip } from '../components/Tooltip';
+import { CustomSelect } from '../components/CustomSelect';
 // Wait, Stock.tsx defined its own Button. I should redefine it here or import a shared one.
 // Looking at Stock.tsx, Button was defined locally. I will copy the definition.
 import { ConfirmModal } from '../components/ConfirmModal';
@@ -16,206 +17,287 @@ import { useReactToPrint } from 'react-to-print';
 // --- Styled Components (Copied from Stock.tsx) ---
 
 const PageContainer = styled.div`
-  padding: 1rem;
-  padding-top: 1.5rem;
-  max-width: 1200px;
-  margin: 0 auto;
-  min-height: 100vh;
-  
-  @media (max-width: 768px) {
+padding: 1rem;
+padding-top: 1.5rem;
+max-width: 1200px;
+margin: 0 auto;
+min-height: 100vh;
+
+@media(max-width: 768px) {
     padding: 0.5rem;
     padding-top: 4rem;
-  }
+}
 `;
 
 const Header = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 2rem;
-  flex-wrap: wrap;
-  gap: 1rem;
-  
-  @media (max-width: 768px) {
+display: flex;
+align-items: center;
+justify-content: space-between;
+margin-bottom: 2rem;
+flex-wrap: wrap;
+gap: 1rem;
+
+@media(max-width: 768px) {
     flex-direction: column;
     align-items: stretch;
     gap: 0.75rem;
-  }
+}
   
   h1 {
-    font-size: 1.875rem;
-    font-weight: 700;
-    color: #1e293b;
+    font-size: 2rem;
+    font-weight: 800;
     margin: 0;
-    
-    @media (max-width: 768px) {
-      font-size: 1.5rem;
+    background: linear-gradient(135deg, #4ade80 0%, #38bdf8 100%);
+    -webkit-background-clip: text;
+    -webkit-text - fill-color: transparent;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+
+    @media(max-width: 768px) {
+        font-size: 1.5rem;
     }
-  }
+}
 `;
 
 const ButtonStyled = styled.button<{ variant?: 'primary' | 'secondary' | 'danger' }>`
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1rem;
-  border: none;
-  border-radius: 0.5rem;
-  font-size: 0.875rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  
-  background: ${props => {
+display: flex;
+align-items: center;
+justify-content: center;
+gap: 0.5rem;
+padding: 0.75rem 1rem;
+border: none;
+border-radius: 0.75rem;
+font-size: 0.875rem;
+font-weight: 600;
+cursor: pointer;
+transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+position: relative;
+overflow: hidden;
+
+background: ${props => {
         switch (props.variant) {
-            case 'primary': return '#3b82f6';
-            case 'secondary': return '#6b7280';
-            case 'danger': return '#ef4444';
-            default: return '#f3f4f6';
+            case 'primary': return 'linear-gradient(135deg, rgba(74, 222, 128, 0.2) 0%, rgba(56, 189, 248, 0.2) 100%)';
+            case 'danger': return 'rgba(239, 68, 68, 0.1)';
+            case 'secondary': return 'rgba(148, 163, 184, 0.1)';
+            default: return 'rgba(255, 255, 255, 0.05)';
         }
-    }};
-  
-  color: ${props => props.variant ? 'white' : '#374151'};
+    }
+    };
+
+border: 1px solid ${props => {
+        switch (props.variant) {
+            case 'primary': return 'rgba(74, 222, 128, 0.3)';
+            case 'danger': return 'rgba(239, 68, 68, 0.3)';
+            case 'secondary': return 'rgba(148, 163, 184, 0.2)';
+            default: return 'rgba(255, 255, 255, 0.1)';
+        }
+    }
+    };
+
+color: ${props => {
+        switch (props.variant) {
+            case 'primary': return '#f8fafc';
+            case 'danger': return '#fca5a5';
+            case 'secondary': return '#e2e8f0';
+            default: return '#f8fafc';
+        }
+    }
+    };
   
   &:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  }
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px ${props => {
+        switch (props.variant) {
+            case 'primary': return 'rgba(74, 222, 128, 0.2)';
+            case 'danger': return 'rgba(239, 68, 68, 0.2)';
+            default: return 'rgba(0, 0, 0, 0.2)';
+        }
+    }
+    };
+    background: ${props => {
+        switch (props.variant) {
+            case 'primary': return 'linear-gradient(135deg, rgba(74, 222, 128, 0.3) 0%, rgba(56, 189, 248, 0.3) 100%)';
+            case 'danger': return 'rgba(239, 68, 68, 0.2)';
+            case 'secondary': return 'rgba(148, 163, 184, 0.2)';
+            default: return 'rgba(255, 255, 255, 0.1)';
+        }
+    }
+    };
+}
   
   &:active {
     transform: translateY(0);
-  }
+}
   
-  @media (max-width: 768px) {
-    padding: 0.5rem 0.75rem;
-    font-size: 0.75rem;
-  }
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
 `;
 
 // Re-using the locally defined ButtonStyled as Button for this file to match Stock.tsx usage
 const ButtonComp = ButtonStyled;
 
 const EmptyState = styled.div`
-  text-align: center;
-  padding: 3rem 1rem;
-  color: #64748b;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
+text-align: center;
+padding: 4rem 2rem;
+color: #94a3b8;
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+background: rgba(30, 41, 59, 0.5);
+backdrop-filter: blur(12px);
+border: 1px solid rgba(255, 255, 255, 0.05);
+border-radius: 1rem;
   
   .empty-icon {
-    font-size: 3rem;
-    margin-bottom: 1rem;
-    opacity: 0.5;
-  }
+    font-size: 4rem;
+    margin-bottom: 1.5rem;
+    background: linear-gradient(135deg, #4ade80 0%, #38bdf8 100%);
+    -webkit-background-clip: text;
+    -webkit-text - fill-color: transparent;
+    opacity: 0.8;
+}
   
   h3 {
-    font-size: 1.25rem;
+    font-size: 1.5rem;
     font-weight: 600;
-    margin-bottom: 0.5rem;
-    color: #374151;
-  }
+    margin-bottom: 0.75rem;
+    color: #f8fafc;
+}
   
   p {
     margin-bottom: 1.5rem;
-  }
+    font-size: 1.1rem;
+    max-width: 400px;
+    line-height: 1.5;
+}
 `;
 
 const Modal = styled.div<{ isOpen: boolean }>`
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: ${props => props.isOpen ? 'flex' : 'none'};
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  padding: 1rem;
+position: fixed;
+top: 0;
+left: 0;
+right: 0;
+bottom: 0;
+background: rgba(15, 23, 42, 0.8);
+backdrop-filter: blur(8px);
+display: ${props => props.isOpen ? 'flex' : 'none'};
+align-items: center;
+justify-content: center;
+z-index: 2000;
+padding: 1rem;
+opacity: ${props => props.isOpen ? 1 : 0};
+transition: opacity 0.3s ease;
 `;
 
 const ModalContent = styled.div`
-  background: white;
-  border-radius: 0.75rem;
-  padding: 2rem;
-  width: 100%;
-  max-width: 500px;
-  
-  @media (max-width: 768px) {
+background: rgba(30, 41, 59, 0.95);
+backdrop-filter: blur(16px);
+border: 1px solid rgba(255, 255, 255, 0.1);
+border-radius: 1rem;
+padding: 2.5rem;
+width: 100%;
+max-width: 500px;
+box-shadow: 0 25px 50px - 12px rgba(0, 0, 0, 0.5);
+transform: translateY(0);
+transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+@media(max-width: 768px) {
     padding: 1.5rem;
-  }
+}
   
   h2 {
     margin: 0 0 1.5rem 0;
     font-size: 1.5rem;
-    font-weight: 600;
-    color: #1e293b;
-  }
+    font-weight: 700;
+    color: #f8fafc;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
 `;
 
 const FormGroup = styled.div`
-  display: grid;
-  gap: 0.5rem;
+display: flex;
+flex-direction: column;
+gap: 0.5rem;
+margin-bottom: 1.5rem;
   
   label {
-    font-weight: 500;
-    color: #374151;
+    font-weight: 600;
+    color: #cbd5e1;
     font-size: 0.875rem;
-  }
-  
-  input, select {
-    padding: 0.75rem;
-    border: 1px solid #d1d5db;
-    border-radius: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+input, select, textarea {
+    padding: 0.875rem 1rem;
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0.75rem;
+    color: #f8fafc;
     font-size: 1rem;
+    transition: all 0.2s;
     
     &:focus {
-      outline: none;
-      border-color: #3b82f6;
-      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        outline: none;
+        border-color: #38bdf8;
+        box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
     }
-  }
+    
+    &::placeholder {
+        color: #64748b;
+    }
+
+    option {
+        background: #1e293b;
+        color: #f8fafc;
+    }
+}
 `;
 
 const ModalActions = styled.div`
-  display: flex;
-  gap: 0.75rem;
-  justify-content: flex-end;
-  margin-top: 1.5rem;
-  
-  @media (max-width: 768px) {
+display: flex;
+gap: 0.75rem;
+justify-content: flex-end;
+margin-top: 1.5rem;
+
+@media(max-width: 768px) {
     flex-direction: column;
-  }
+}
 `;
 
 const PrintableLabel = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  width: 100mm;
-  height: 150mm; // Adjust as needed for specific label size
-  padding: 1rem;
-  background: white;
-  text-align: center;
-  
-  /* Force simple styling for thermal printers */
-  font-family: sans-serif;
-  color: black;
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+width: 100mm;
+height: 150mm; // Adjust as needed for specific label size
+padding: 1rem;
+background: white;
+text-align: center;
+
+/* Force simple styling for thermal printers */
+font-family: sans-serif;
+color: black;
   
   h1 {
     font-size: 24pt;
     margin: 10px 0;
     font-weight: 800;
-  }
+}
   
   h2 {
     font-size: 16pt;
     margin: 5px 0;
     font-weight: normal;
-  }
+}
   
   .batch-code {
     font-size: 14pt;
@@ -224,20 +306,20 @@ const PrintableLabel = styled.div`
     padding: 5px 10px;
     border: 2px solid black;
     border-radius: 5px;
-  }
+}
   
   .qr-container {
     margin: 20px 0;
     border: 4px solid black;
     padding: 10px;
     background: white;
-  }
+}
   
   .logo {
     font-size: 12pt;
     margin-top: auto;
     font-weight: bold;
-  }
+}
 `;
 
 
@@ -363,85 +445,107 @@ const Dispensary: React.FC = () => {
                     <p>Finaliza cultivos para generar stock de producto terminado.</p>
                 </EmptyState>
             ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.5rem' }}>
                     {dispensaryBatches.map(batch => (
                         <div key={batch.id} style={{
-                            background: 'white',
-                            borderRadius: '12px',
-                            border: '1px solid #e2e8f0',
+                            background: 'rgba(30, 41, 59, 0.5)',
+                            backdropFilter: 'blur(12px)',
+                            borderRadius: '16px',
+                            border: '1px solid rgba(255, 255, 255, 0.05)',
                             padding: '1.5rem',
-                            boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+                            boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3)',
                             position: 'relative',
-                            overflow: 'hidden'
+                            overflow: 'hidden',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            transition: 'all 0.3s ease'
                         }}>
+                            {/* Accent Glow */}
+                            <div style={{
+                                position: 'absolute',
+                                top: 0,
+                                left: 0,
+                                right: 0,
+                                height: '2px',
+                                background: batch.status === 'available' ? 'linear-gradient(90deg, #4ade80, #38bdf8)' : '#f59e0b',
+                                opacity: 0.8
+                            }} />
+
                             {/* Status Badge */}
                             <div style={{
                                 position: 'absolute',
                                 top: '1rem',
                                 right: '1rem',
-                                background: batch.status === 'available' ? '#c6f6d5' : '#feebc8',
-                                color: batch.status === 'available' ? '#22543d' : '#744210',
+                                background: batch.status === 'available' ? 'rgba(74, 222, 128, 0.1)' : 'rgba(245, 158, 11, 0.1)',
+                                color: batch.status === 'available' ? '#4ade80' : '#fbbf24',
+                                border: `1px solid ${batch.status === 'available' ? 'rgba(74, 222, 128, 0.2)' : 'rgba(245, 158, 11, 0.2)'} `,
                                 padding: '0.25rem 0.75rem',
                                 borderRadius: '999px',
                                 fontSize: '0.75rem',
                                 fontWeight: 'bold',
-                                textTransform: 'uppercase'
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.05em'
                             }}>
                                 {batch.status === 'available' ? 'Disponible' : batch.status === 'curing' ? 'Curándose' : batch.status}
                             </div>
 
-                            <h3 style={{ margin: '0 0 0.5rem 0', color: '#2d3748', fontSize: '1.25rem' }}>{batch.strain_name}</h3>
-                            <div style={{ color: '#718096', fontSize: '0.85rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                <FaBoxOpen /> {batch.batch_code}
+                            <h3 style={{ margin: '0 0 0.5rem 0', color: '#f8fafc', fontSize: '1.5rem', fontWeight: '700' }}>{batch.strain_name}</h3>
+                            <div style={{ color: '#94a3b8', fontSize: '0.9rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontFamily: 'monospace' }}>
+                                <FaBoxOpen style={{ color: '#38bdf8' }} /> {batch.batch_code}
                             </div>
 
                             {/* Weight Visualization */}
-                            <div style={{ marginBottom: '1.5rem' }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '0.25rem', fontSize: '1.1rem', fontWeight: 'bold', color: '#4a5568' }}>
-                                    <span style={{ fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Stock Actual</span>
-                                    <span>{batch.current_weight}g <span style={{ fontWeight: 'normal', color: '#a0aec0', fontSize: '0.9rem' }}>/ {batch.initial_weight}g</span></span>
+                            <div style={{ padding: '1rem', background: 'rgba(15, 23, 42, 0.5)', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.02)', marginBottom: '1.5rem' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '0.75rem', color: '#cbd5e1' }}>
+                                    <span style={{ fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: '600' }}>Stock Actual</span>
+                                    <span style={{ fontSize: '1.25rem', fontWeight: '800', color: '#f8fafc' }}>
+                                        {batch.current_weight}g
+                                        <span style={{ fontWeight: 'normal', color: '#64748b', fontSize: '0.9rem', marginLeft: '0.25rem' }}>/ {batch.initial_weight}g</span>
+                                    </span>
                                 </div>
-                                <div style={{ width: '100%', height: '8px', background: '#e2e8f0', borderRadius: '4px', overflow: 'hidden' }}>
+                                <div style={{ width: '100%', height: '6px', background: 'rgba(255, 255, 255, 0.05)', borderRadius: '3px', overflow: 'hidden' }}>
                                     <div style={{
-                                        width: `${(batch.current_weight / batch.initial_weight) * 100}%`,
+                                        width: `${(batch.current_weight / batch.initial_weight) * 100}% `,
                                         height: '100%',
-                                        background: `linear-gradient(90deg, #48bb78 0%, #38a169 100%)`,
-                                        borderRadius: '4px'
+                                        background: `linear-gradient(90deg, #4ade80 0%, #38bdf8 100%)`,
+                                        borderRadius: '3px',
+                                        boxShadow: '0 0 10px rgba(74, 222, 128, 0.5)'
                                     }} />
                                 </div>
                             </div>
 
                             {/* Actions */}
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '0.5rem' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '0.75rem', marginTop: 'auto' }}>
                                 <ButtonComp
+                                    variant="primary"
                                     onClick={() => handleOpenDispense(batch)}
-                                    style={{ justifyContent: 'center', background: '#319795', borderColor: '#319795', color: 'white' }}
+                                    style={{ padding: '0.875rem' }}
                                 >
-                                    <FaHandHoldingMedical /> Dispensar
+                                    <FaHandHoldingMedical size={18} /> Entregar
                                 </ButtonComp>
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.5rem' }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem' }}>
                                     <Tooltip text="Ver Código QR">
                                         <ButtonComp
+                                            variant="secondary"
                                             onClick={() => { setQrBatch(batch); setQrModalOpen(true); }}
-                                            style={{ justifyContent: 'center', background: 'white', borderColor: '#e2e8f0', color: '#4a5568', width: '100%' }}
                                         >
-                                            <FaQrcode />
+                                            <FaQrcode size={16} />
                                         </ButtonComp>
                                     </Tooltip>
                                     <Tooltip text="Editar Lote">
                                         <ButtonComp
+                                            variant="secondary"
                                             onClick={() => handleEditDispensary(batch)}
-                                            style={{ justifyContent: 'center', background: 'white', borderColor: '#e2e8f0', color: '#3182ce', width: '100%' }}
                                         >
-                                            <FaEdit />
+                                            <FaEdit size={16} />
                                         </ButtonComp>
                                     </Tooltip>
                                     <Tooltip text="Eliminar Lote">
                                         <ButtonComp
+                                            variant="danger"
                                             onClick={() => handleDeleteDispensary(batch)}
-                                            style={{ justifyContent: 'center', background: 'white', borderColor: '#e2e8f0', color: '#e53e3e', width: '100%' }}
                                         >
-                                            <FaTrash />
+                                            <FaTrash size={16} />
                                         </ButtonComp>
                                     </Tooltip>
                                 </div>
@@ -454,21 +558,25 @@ const Dispensary: React.FC = () => {
             {/* Dispense Modal */}
             <Modal isOpen={dispenseModalOpen}>
                 <ModalContent>
-                    <h2>💊 Dispensar Producto</h2>
-                    <p style={{ marginBottom: '1rem', color: '#4a5568' }}>
-                        Lote: <strong>{batchToDispense?.strain_name}</strong>
-                        <br />
-                        Disponible: {batchToDispense?.current_weight}g
-                        {resolvedPrice > 0 && (
-                            <>
-                                <br />
-                                Precio: <strong>${resolvedPrice}/g</strong>
-                            </>
-                        )}
-                    </p>
+                    <h2>💊 Entregar Producto</h2>
+
+                    <div style={{
+                        margin: '0 0 1.5rem 0',
+                        padding: '1rem',
+                        background: 'rgba(15, 23, 42, 0.4)',
+                        border: '1px solid rgba(255, 255, 255, 0.05)',
+                        borderRadius: '0.75rem'
+                    }}>
+                        <div style={{ marginBottom: '0.5rem', color: '#94a3b8', fontSize: '0.85rem' }}>LOTE SELECCIONADO</div>
+                        <div style={{ color: '#f8fafc', fontSize: '1.25rem', fontWeight: 'bold' }}>{batchToDispense?.strain_name}</div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.5rem' }}>
+                            <span style={{ color: '#cbd5e1' }}>Disponible: <strong style={{ color: '#4ade80' }}>{batchToDispense?.current_weight}g</strong></span>
+                            {resolvedPrice > 0 && <span style={{ padding: '0.25rem 0.5rem', background: 'rgba(56, 189, 248, 0.1)', color: '#38bdf8', borderRadius: '0.25rem', fontSize: '0.85rem', fontWeight: 'bold' }}>${resolvedPrice}/g</span>}
+                        </div>
+                    </div>
 
                     <FormGroup>
-                        <label>Cantidad a Retirar (g)</label>
+                        <label>Cantidad a Entregar (g)</label>
                         <input
                             type="number"
                             autoFocus
@@ -480,60 +588,73 @@ const Dispensary: React.FC = () => {
                     </FormGroup>
 
                     {resolvedPrice > 0 && dispenseForm.amount && !isNaN(parseFloat(dispenseForm.amount)) && (
-                        <div style={{ marginTop: '1rem', padding: '1rem', background: '#f0fff4', borderRadius: '0.5rem', border: '1px solid #c6f6d5', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ color: '#2f855a', fontWeight: '600' }}>Costo Total:</span>
-                            <span style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#22543d' }}>
+                        <div style={{
+                            marginTop: '1rem',
+                            padding: '1rem',
+                            background: 'rgba(74, 222, 128, 0.1)',
+                            borderRadius: '0.75rem',
+                            border: '1px solid rgba(74, 222, 128, 0.2)',
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center'
+                        }}>
+                            <span style={{ color: '#86efac', fontWeight: '600' }}>Costo Total Estimado:</span>
+                            <span style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#4ade80' }}>
                                 ${(parseFloat(dispenseForm.amount) * resolvedPrice).toFixed(2)}
                             </span>
                         </div>
                     )}
 
-                    <FormGroup style={{ marginTop: '1rem' }}>
+                    <FormGroup style={{ marginTop: '1.5rem', marginBottom: '1.5rem' }}>
                         <label>Motivo</label>
-                        <select
+                        <CustomSelect
                             value={dispenseForm.reason}
-                            onChange={e => setDispenseForm({ ...dispenseForm, reason: e.target.value })}
-                        >
-                            <option value="dispensing">Entrega a Socio/Paciente</option>
-                            <option value="quality_control">Control de Calidad / Cata</option>
-                            <option value="adjustment">Ajuste de Inventario / Merma</option>
-                        </select>
+                            onChange={val => setDispenseForm({ ...dispenseForm, reason: val })}
+                            options={[
+                                { value: 'dispensing', label: 'Entrega a Socio/Paciente' },
+                                { value: 'quality_control', label: 'Control de Calidad / Cata' },
+                                { value: 'adjustment', label: 'Ajuste de Inventario / Merma' }
+                            ]}
+                        />
                     </FormGroup>
 
                     {/* Patient Selector */}
                     {dispenseForm.reason === 'dispensing' && (
-                        <FormGroup style={{ marginTop: '1rem' }}>
+                        <FormGroup style={{ marginTop: '1rem', marginBottom: '1.5rem' }}>
                             <label>Paciente / Socio (Opcional)</label>
-                            <select
+                            <CustomSelect
                                 value={dispenseForm.memberId}
-                                onChange={e => setDispenseForm({ ...dispenseForm, memberId: e.target.value })}
-                                style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid #d1d5db' }}
-                            >
-                                <option value="">Seleccionar Paciente...</option>
-                                {patients.map(p => (
-                                    <option key={p.profile_id} value={p.profile_id}>
-                                        {p.profile?.full_name || 'Sin Nombre'} (Límite: {p.monthly_limit}g)
-                                    </option>
-                                ))}
-                            </select>
+                                onChange={val => setDispenseForm({ ...dispenseForm, memberId: val })}
+                                placeholder="Seleccionar Paciente..."
+                                options={patients.map(p => ({
+                                    value: p.profile_id,
+                                    label: `${p.profile?.full_name || 'Sin Nombre'} (Límite: ${p.monthly_limit}g)`
+                                }))}
+                            />
 
                             {consumptionStats && (
-                                <div style={{ marginTop: '0.5rem', padding: '0.75rem', background: '#f7fafc', borderRadius: '0.5rem', border: '1px solid #e2e8f0' }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem', fontSize: '0.8rem', fontWeight: 'bold', color: '#4a5568' }}>
-                                        <span>Consumo Mensual</span>
-                                        <span>{consumptionStats.current}g / {consumptionStats.limit}g</span>
+                                <div style={{
+                                    marginTop: '0.75rem',
+                                    padding: '1rem',
+                                    background: 'rgba(15, 23, 42, 0.4)',
+                                    borderRadius: '0.75rem',
+                                    border: '1px solid rgba(255, 255, 255, 0.05)'
+                                }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', fontSize: '0.85rem', fontWeight: '600', color: '#cbd5e1' }}>
+                                        <span style={{ textTransform: 'uppercase', letterSpacing: '0.05em' }}>Consumo Mensual del Paciente</span>
+                                        <span style={{ color: '#f8fafc' }}>{consumptionStats.current}g / {consumptionStats.limit}g</span>
                                     </div>
-                                    <div style={{ width: '100%', height: '8px', background: '#e2e8f0', borderRadius: '4px', overflow: 'hidden' }}>
+                                    <div style={{ width: '100%', height: '6px', background: 'rgba(255, 255, 255, 0.1)', borderRadius: '3px', overflow: 'hidden' }}>
                                         <div style={{
-                                            width: `${Math.min((consumptionStats.current / consumptionStats.limit) * 100, 100)}%`,
+                                            width: `${Math.min((consumptionStats.current / consumptionStats.limit) * 100, 100)}% `,
                                             height: '100%',
-                                            background: consumptionStats.current >= consumptionStats.limit ? '#e53e3e' : '#38a169',
+                                            background: consumptionStats.current >= consumptionStats.limit ? 'linear-gradient(90deg, #ef4444, #f87171)' : 'linear-gradient(90deg, #4ade80, #38bdf8)',
                                             transition: 'width 0.3s'
                                         }}></div>
                                     </div>
                                     {consumptionStats.current >= consumptionStats.limit && (
-                                        <div style={{ color: '#e53e3e', fontSize: '0.75rem', marginTop: '0.25rem', fontWeight: 'bold' }}>
-                                            ⚠️ Límite mensual excedido ({consumptionStats.limit}g)
+                                        <div style={{ color: '#fca5a5', fontSize: '0.8rem', marginTop: '0.5rem', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                                            <span>⚠️</span> Límite mensual excedido ({consumptionStats.limit}g)
                                         </div>
                                     )}
                                 </div>
@@ -543,7 +664,7 @@ const Dispensary: React.FC = () => {
 
                     <ModalActions>
                         <ButtonComp variant="secondary" onClick={() => setDispenseModalOpen(false)}>Cancelar</ButtonComp>
-                        <ButtonComp variant="primary" onClick={confirmDispense} style={{ background: '#319795', borderColor: '#319795' }}>Confirmar Retiro</ButtonComp>
+                        <ButtonComp variant="primary" onClick={confirmDispense}>Confirmar Entrega</ButtonComp>
                     </ModalActions>
                 </ModalContent>
             </Modal>
@@ -552,23 +673,23 @@ const Dispensary: React.FC = () => {
             <Modal isOpen={qrModalOpen} onClick={() => setQrModalOpen(false)}>
                 <ModalContent onClick={e => e.stopPropagation()} style={{ textAlign: 'center' }}>
                     <h2>📱 Pasaporte Digital</h2>
-                    <p style={{ marginBottom: '2rem', color: '#718096' }}>Escanea este código para ver la Ficha Técnica del Lote</p>
+                    <p style={{ marginBottom: '2rem', color: '#94a3b8' }}>Escanea este código para ver la Ficha Técnica del Lote</p>
 
                     {qrBatch && (
-                        <div style={{ background: 'white', padding: '1rem', display: 'inline-block', border: '1px solid #e2e8f0', borderRadius: '1rem', marginBottom: '1.5rem' }}>
+                        <div style={{ background: 'white', padding: '1rem', display: 'inline-block', border: '1px solid #e2e8f0', borderRadius: '1rem', marginBottom: '1.5rem', boxShadow: '0 0 20px rgba(255, 255, 255, 0.1)' }}>
                             <QRCode
-                                value={`${window.location.origin}/passport/${qrBatch.id}`}
+                                value={`${window.location.origin} /passport/${qrBatch.id} `}
                                 size={200}
                             />
                         </div>
                     )}
 
-                    <p style={{ fontWeight: 'bold', fontSize: '1.1rem', color: '#2d3748' }}>{qrBatch?.strain_name}</p>
-                    <p style={{ fontFamily: 'monospace', color: '#718096' }}>{qrBatch?.batch_code}</p>
+                    <p style={{ fontWeight: 'bold', fontSize: '1.25rem', color: '#f8fafc', marginBottom: '0.25rem' }}>{qrBatch?.strain_name}</p>
+                    <p style={{ fontFamily: 'monospace', color: '#38bdf8', background: 'rgba(56, 189, 248, 0.1)', padding: '0.25rem 0.75rem', borderRadius: '0.5rem', display: 'inline-block' }}>{qrBatch?.batch_code}</p>
 
-                    <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'center', gap: '1rem' }}>
+                    <div style={{ marginTop: '2.5rem', display: 'flex', justifyContent: 'center', gap: '1rem' }}>
                         <ButtonComp variant="secondary" onClick={() => setQrModalOpen(false)}>Cerrar</ButtonComp>
-                        <ButtonComp variant="primary" onClick={() => handlePrintLabel()} style={{ background: '#2d3748', borderColor: '#2d3748' }}>
+                        <ButtonComp variant="primary" onClick={() => handlePrintLabel()}>
                             <FaPrint /> Imprimir Etiqueta
                         </ButtonComp>
                     </div>
@@ -579,7 +700,7 @@ const Dispensary: React.FC = () => {
                             <PrintableLabel>
                                 <h1>{qrBatch?.strain_name}</h1>
                                 <div className="qr-container">
-                                    <QRCode value={`${window.location.origin}/passport/${qrBatch?.id}`} size={250} />
+                                    <QRCode value={`${window.location.origin} /passport/${qrBatch?.id} `} size={250} />
                                 </div>
                                 <div className="batch-code">{qrBatch?.batch_code}</div>
                                 <h2>{qrBatch?.initial_weight}g / {qrBatch?.status}</h2>

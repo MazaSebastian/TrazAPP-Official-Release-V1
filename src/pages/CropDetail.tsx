@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { DeleteProtectionModal } from '../components/DeleteProtectionModal';
-import { QRCodeModal } from '../components/QRCodeModal';
 import { Tooltip } from '../components/Tooltip';
 
 import { useParams, useNavigate } from 'react-router-dom';
@@ -71,6 +70,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { PromptModal } from '../components/PromptModal';
 import { ConfirmModal } from '../components/ConfirmModal';
+import { DeleteReasonModal } from '../components/DeleteReasonModal';
 import { ToastModal } from '../components/ToastModal';
 
 
@@ -1545,11 +1545,11 @@ const CropDetail: React.FC = () => {
   const [batchToDelete, setBatchToDelete] = useState<any | null>(null);
 
 
-  const executeDeleteBatch = async () => {
+  const executeDeleteBatch = async (reason: string, notes: string) => {
     if (!batchToDelete) return;
 
-
-    const success = await roomsService.deleteBatch(batchToDelete.id);
+    const finalReason = notes ? `${reason} - ${notes}` : reason;
+    const success = await roomsService.deleteBatch(batchToDelete.id, finalReason);
 
     if (success) {
       if (id) loadRooms(id);
@@ -2931,14 +2931,12 @@ const CropDetail: React.FC = () => {
       />
 
       {/* Confirm Delete Batch Modal */}
-      <ConfirmModal
+      <DeleteReasonModal
         isOpen={isDeleteBatchConfirmOpen}
         title="Eliminar Lote"
-        message={`¿Estás seguro de que deseas eliminar el lote "${batchToDelete?.name}"? Esta acción no se puede deshacer.`}
-        onClose={() => setIsDeleteBatchConfirmOpen(false)}
+        itemName={batchToDelete?.name}
+        onCancel={() => setIsDeleteBatchConfirmOpen(false)}
         onConfirm={executeDeleteBatch}
-        confirmText="Eliminar Lote"
-        isDanger
       />
 
       {/* Old Transplant Modal removed */}

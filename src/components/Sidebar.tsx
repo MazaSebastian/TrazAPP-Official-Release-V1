@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-import styled from 'styled-components';
+import styled, { keyframes } from 'styled-components';
 import { NavLink, useLocation } from 'react-router-dom';
 import {
   FaChartLine,
@@ -29,6 +29,12 @@ import { useOrganization } from '../context/OrganizationContext';
 
 
 
+
+const tourHeartbeat = keyframes`
+  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+  70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+`;
 
 const SidebarContainer = styled.div<{ isOpen: boolean }>`
   position: fixed;
@@ -174,6 +180,14 @@ const StyledNavLink = styled(NavLink)`
     margin-left: auto;
     opacity: 0.8;
   }
+  &.tour-active-pulse {
+    animation: ${tourHeartbeat} 1.5s infinite;
+    z-index: 10001;
+    position: relative;
+    background: rgba(16, 185, 129, 0.2);
+    border: 1px solid rgba(16, 185, 129, 0.5);
+    color: #4ade80;
+  }
 `;
 
 const SectionTitle = styled.div`
@@ -233,7 +247,7 @@ const HamburgerButton = styled.button`
 const Sidebar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
-  const { user, logout } = useAuth();
+  const { user, logout, tourStepIndex } = useAuth();
   const { currentOrganization, currentRole } = useOrganization();
 
   // Compute plan level for feature access
@@ -293,7 +307,10 @@ const Sidebar: React.FC = () => {
                 <>
                   <SectionTitle>Cultivo</SectionTitle>
 
-                  <StyledNavLink to="/crops">
+                  <StyledNavLink
+                    to="/crops"
+                    className={tourStepIndex === 4 && location.pathname !== '/crops' ? "tour-crops-link tour-active-pulse" : "tour-crops-link"}
+                  >
                     <FaSeedling /> Cultivos
                   </StyledNavLink>
                   <StyledNavLink to="/clones">

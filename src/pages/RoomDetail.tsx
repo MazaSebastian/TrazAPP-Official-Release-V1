@@ -39,6 +39,7 @@ import { useReactToPrint } from 'react-to-print';
 
 
 import { ConfirmationModal } from '../components/ConfirmationModal';
+import { DeleteReasonModal } from '../components/DeleteReasonModal';
 
 import { TransplantModal } from '../components/Esquejera/TransplantModal';
 import { HarvestModal } from '../components/Flowering/HarvestModal';
@@ -1012,19 +1013,8 @@ const RoomHeaderContainer = styled.div`
     justify-content: center;
     margin-bottom: 0.5rem;
   }
-`;
-
-const RoomHeaderLeft = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-
-  @media (max-width: 768px) {
-    width: 100%;
-    flex-direction: column;
     justify-content: center;
-    text-align: center;
-    gap: 0.5rem;
+    margin-bottom: 0.5rem;
   }
 `;
 
@@ -1490,10 +1480,11 @@ const RoomDetail: React.FC = () => {
         setIsBulkDeleteConfirmOpen(true);
     };
 
-    const handleBulkDeleteConfirm = async () => {
+    const handleBulkDeleteConfirm = async (reason: string, notes: string) => {
         setIsDeletingBulk(true);
         try {
-            const success = await roomsService.deleteBatches(Array.from(selectedBatchIds), 'Eliminación Masiva desde Mapa', user?.id);
+            const finalReason = notes ? `${reason} - ${notes}` : reason;
+            const success = await roomsService.deleteBatches(Array.from(selectedBatchIds), finalReason, user?.id);
             if (success) {
                 // Keep modal open but show success toast after small delay or immediately
                 await new Promise(resolve => setTimeout(resolve, 500)); // Smooth UX
@@ -2640,7 +2631,7 @@ const RoomDetail: React.FC = () => {
                     return;
                 }
 
-                const newPosStr = `${String.fromCharCode(65 + newR)}${newC + 1}`;
+                const newPosStr = `${getRowLabel(newR)}${newC + 1}`;
 
                 // Check Collisions
                 if (occupiedPositions.has(newPosStr)) {
@@ -2906,13 +2897,14 @@ const RoomDetail: React.FC = () => {
         }
     };
 
-    const handleConfirmDelete = async () => {
+    const handleConfirmDelete = async (reason: string, notes: string) => {
         const { batch } = deleteConfirm;
         if (!batch) return;
 
         setIsDeletingBatch(true);
         try {
-            await roomsService.deleteBatch(batch.id);
+            const finalReason = notes ? `${reason} - ${notes}` : reason;
+            await roomsService.deleteBatch(batch.id, finalReason);
 
             closeDeleteConfirm();
             if (id) {
@@ -2988,7 +2980,7 @@ const RoomDetail: React.FC = () => {
         for (let r = 0; r < map.grid_rows; r++) {
             for (let c = 0; c < map.grid_columns; c++) {
                 if (assignedCount >= qty) break;
-                const rowLabel = String.fromCharCode(65 + r);
+                const rowLabel = getRowLabel(r);
                 const pos = `${rowLabel}${c + 1}`; // Fixed: Removed trailing space
 
                 if (!occupiedPositions.has(pos)) {
@@ -5451,7 +5443,8 @@ const RoomDetail: React.FC = () => {
                                                                         boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
                                                                         opacity: isVirtual ? 0.7 : 1,
                                                                         fontStyle: isVirtual ? 'italic' : 'normal',
-                                                                        border: isVirtual ? '1px dashed #cbd5e0' : 'none'
+                                                                        border: isVirtual ? '1px dashed #cbd5e0' : 'none',
+                                                                        textDecoration: t.status === 'done' ? 'line-through' : 'none'
                                                                     }}
                                                                     title={isVirtual ? "Proyección futura (Virtual)" : t.title}
                                                                 >
@@ -6564,17 +6557,12 @@ const RoomDetail: React.FC = () => {
 
                 {/* Custom Delete Confirmation Modal */}
                 {
-                    <ConfirmationModal
+                    <DeleteReasonModal
                         isOpen={deleteConfirm.isOpen || isClosingDeleteConfirm}
-                        isClosing={isClosingDeleteConfirm}
-                        title="¿Eliminar definitivamente?"
-                        message={`Estás a punto de eliminar ${deleteConfirm.batch?.tracking_code || deleteConfirm.batch?.name}. Esta acción no se puede deshacer.`}
+                        itemName={deleteConfirm.batch?.tracking_code || deleteConfirm.batch?.name || ''}
                         onConfirm={handleConfirmDelete}
                         onCancel={closeDeleteConfirm}
-                        confirmText={isDeletingBatch ? "Eliminando..." : "Eliminar"}
-                        cancelText="Cancelar"
-                        isDestructive={true}
-                        isLoading={isDeletingBatch}
+                        isSubmitting={isDeletingBatch}
                     />
                 }
 
@@ -7358,17 +7346,12 @@ const RoomDetail: React.FC = () => {
                 {/* Bulk Delete Config Modal */}
                 {
                     (isBulkDeleteConfirmOpen || isClosingBulkDelete) && (
-                        <ConfirmationModal
+                        <DeleteReasonModal
                             isOpen={isBulkDeleteConfirmOpen}
                             onCancel={handleCloseBulkDelete}
                             onConfirm={handleBulkDeleteConfirm}
-                            title="Confirmar Eliminación Masiva"
-                            message={`¿Estás seguro de que deseas eliminar ${selectedBatchIds.size} lotes seleccionados ? Esta acción no se puede deshacer.`}
-                            confirmText="Eliminar Lotes"
-                            cancelText="Cancelar"
-                            isDestructive={true}
-                            isLoading={isDeletingBulk}
-                            isClosing={isClosingBulkDelete}
+                            itemName={`${selectedBatchIds.size} lotes seleccionados`}
+                            isSubmitting={isDeletingBulk}
                         />
                     )
                 } {/* CREATE BATCH MODAL */}

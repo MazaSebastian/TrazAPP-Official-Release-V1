@@ -3,8 +3,9 @@ import styled from 'styled-components';
 import { useParams, useLocation } from 'react-router-dom';
 import { patientsService } from '../services/patientsService';
 import { templatesService, ClinicalTemplate } from '../services/templatesService';
-import { FaHeartbeat, FaPills, FaChartLine, FaUserSecret, FaPlus, FaClipboardList, FaHistory, FaChevronDown, FaChevronUp } from 'react-icons/fa';
+import { FaHeartbeat, FaPills, FaChartLine, FaUserSecret, FaPlus, FaClipboardList, FaHistory, FaChevronDown, FaChevronUp, FaTrash, FaPaperclip, FaUpload } from 'react-icons/fa';
 import { LoadingSpinner } from '../components/LoadingSpinner';
+import { CustomSelect } from '../components/CustomSelect';
 
 // --- Styled Components (Dashboard First) ---
 
@@ -126,13 +127,15 @@ const PatientDetail: React.FC = () => {
 
     // Evolution Form State
     const [isEvolutionModalOpen, setIsEvolutionModalOpen] = useState(false);
+    const [isUploadingEvolution, setIsUploadingEvolution] = useState(false);
     const [newEvolution, setNewEvolution] = useState({
         eva_score: 0,
         notes: '',
         sparing_effect: [] as any[],
         adverse_effects: [] as any[],
         template_id: null as string | null,
-        template_data: {} as Record<string, any>
+        template_data: {} as Record<string, any>,
+        files: [] as File[]
     });
 
     // Admission Form State
@@ -223,6 +226,7 @@ const PatientDetail: React.FC = () => {
     const handleAddEvolution = async () => {
         if (!admission) return;
         try {
+            setIsUploadingEvolution(true);
             let actualEvaScore = newEvolution.eva_score;
 
             // Si el EVA fue cargado a través de una Plantilla Dinámica, sobreescribir el score nativo.
@@ -234,9 +238,43 @@ const PatientDetail: React.FC = () => {
                 }
             }
 
+            let initialEva = admission.baseline_pain_avg;
+
+            // Failsafe: Si no hay baseline configurado en la admisión, tomamos el EVA de la evolución más antigua (ignorando los 0s iniciales por defecto)
+            if (!initialEva || initialEva === 0) {
+                if (evolutions.length > 0) {
+                    // Try to find the oldest evolution that actually has a registered pain > 0 to use as baseline
+                    // Since evolutions are sorted newest first, we iterate from the end (oldest) to the start (newest)
+                    for (let i = evolutions.length - 1; i >= 0; i--) {
+                        if (evolutions[i].eva_score > 0) {
+                            initialEva = evolutions[i].eva_score;
+                            break;
+                        }
+                    }
+                    // If all past evolutions were 0, use the current new score as the future baseline
+                    if (initialEva === 0) {
+                        initialEva = actualEvaScore;
+                    }
+                } else {
+                    // Es la primera evolución de la historia del paciente, actuará como baseline a futuro.
+                    initialEva = actualEvaScore;
+                }
+            }
+
             let improvement = 0;
-            if (admission.baseline_pain_avg > 0) {
-                improvement = ((admission.baseline_pain_avg - actualEvaScore) / admission.baseline_pain_avg) * 100;
+            if (initialEva > 0) {
+                improvement = ((initialEva - actualEvaScore) / initialEva) * 100;
+            } else if (initialEva === 0 && actualEvaScore > 0) {
+                // Empezó en 0 dolor y ahora tiene dolor, empeora al 100% (negativo)
+                improvement = -100;
+            }
+
+            // Upload files
+            const uploadedUrls: string[] = [];
+            for (const file of newEvolution.files) {
+                const path = `evolutions/${id}/${Date.now()}_${file.name}`;
+                const url = await patientsService.uploadDocument(file, path);
+                if (url) uploadedUrls.push(url);
             }
 
             await patientsService.addEvolution({
@@ -248,15 +286,18 @@ const PatientDetail: React.FC = () => {
                 sparing_effect: newEvolution.sparing_effect,
                 adverse_effects: newEvolution.adverse_effects,
                 template_id: newEvolution.template_id,
-                template_data: newEvolution.template_data
+                template_data: newEvolution.template_data,
+                attachments: uploadedUrls
             });
 
             loadData(id || '');
             setIsEvolutionModalOpen(false);
-            setNewEvolution({ eva_score: 0, notes: '', sparing_effect: [], adverse_effects: [], template_id: null, template_data: {} }); // Reset
+            setNewEvolution({ eva_score: 0, notes: '', sparing_effect: [], adverse_effects: [], template_id: null, template_data: {}, files: [] }); // Reset
         } catch (e) {
             console.error(e);
             alert("Error adding evolution");
+        } finally {
+            setIsUploadingEvolution(false);
         }
     };
 
@@ -572,6 +613,23 @@ const PatientDetail: React.FC = () => {
                                                     })}
                                                 </div>
                                             )}
+
+                                            {evo.attachments && evo.attachments.length > 0 && (
+                                                <div style={{ marginTop: '1rem', background: 'rgba(15, 23, 42, 0.4)', padding: '1rem', borderRadius: '0.5rem', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                                                    <strong style={{ color: '#cbd5e1', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}><FaPaperclip /> Archivos Adjuntos ({evo.attachments.length})</strong>
+                                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '0.5rem' }}>
+                                                        {evo.attachments.map((url: string, i: number) => {
+                                                            const fileName = url.split('/').pop()?.split('_').slice(1).join('_') || `Archivo adjunto ${i + 1}`;
+                                                            return (
+                                                                <a key={i} href={url} target="_blank" rel="noopener noreferrer" style={{ background: 'rgba(30, 41, 59, 0.6)', padding: '0.5rem 0.75rem', borderRadius: '0.375rem', border: '1px solid rgba(255, 255, 255, 0.1)', color: '#38bdf8', textDecoration: 'none', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.5rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                                    <FaPaperclip />
+                                                                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{fileName}</span>
+                                                                </a>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
                                     )}
                                 </div>
@@ -585,146 +643,229 @@ const PatientDetail: React.FC = () => {
             {isEvolutionModalOpen && (
                 <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
                     <Card style={{ width: '100%', maxWidth: '500px', maxHeight: '90vh', overflowY: 'auto' }}>
-                        <CardTitle>Registrar Evolución</CardTitle>
+                        <form onSubmit={(e) => { e.preventDefault(); handleAddEvolution(); }}>
+                            <CardTitle>Registrar Evolución</CardTitle>
 
-
-
-                        {/* Template Selector Section */}
-                        <div style={{ background: '#F0FFF4', border: '1px solid #C6F6D5', padding: '1rem', borderRadius: '0.5rem', marginBottom: '1.5rem' }}>
-                            <label style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#276749', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                <FaClipboardList /> Utilizar Plantilla Clínica
-                            </label>
-                            <select
-                                style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid #9AE6B4', fontFamily: 'inherit', background: 'white' }}
-                                value={newEvolution.template_id || ''}
-                                onChange={e => {
-                                    const tId = e.target.value;
-                                    if (!tId) {
-                                        setNewEvolution({ ...newEvolution, template_id: null, template_data: {} });
-                                        return;
-                                    }
-                                    const selected = templates.find(t => t.id === tId);
-                                    const defaultData: Record<string, any> = {};
-                                    selected?.fields.forEach((f: any) => {
-                                        if (f.type === 'checkbox') defaultData[f.id] = [];
-                                        else defaultData[f.id] = '';
-                                    });
-                                    setNewEvolution({ ...newEvolution, template_id: tId, template_data: defaultData });
-                                }}
-                            >
-                                <option value="">No usar plantilla (Evolución Libre)</option>
-                                {templates.map(t => (
-                                    <option key={t.id} value={t.id}>{t.name}</option>
-                                ))}
-                            </select>
-                        </div>
-
-                        {/* Dynamics fields block */}
-                        {newEvolution.template_id && (
-                            <div style={{ background: '#f7fafc', padding: '1rem', borderRadius: '0.5rem', marginBottom: '1.5rem', border: '1px solid #e2e8f0' }}>
-                                <h4 style={{ margin: '0 0 1rem 0', color: '#4A5568' }}>Datos de la Plantilla</h4>
-                                {templates.find(t => t.id === newEvolution.template_id)?.fields.map((field: any) => (
-                                    <div key={field.id} style={{ marginBottom: '1rem' }}>
-                                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: '#4A5568', fontSize: '0.9rem' }}>
-                                            {field.label} {field.required && <span style={{ color: '#e53e3e' }}>*</span>}
-                                        </label>
-
-                                        {field.type === 'text' && (
-                                            <input
-                                                type="text"
-                                                style={{ width: '100%', padding: '0.6rem', borderRadius: '0.375rem', border: '1px solid #CBD5E0' }}
-                                                value={newEvolution.template_data[field.id] || ''}
-                                                onChange={e => setNewEvolution({ ...newEvolution, template_data: { ...newEvolution.template_data, [field.id]: e.target.value } })}
-                                                required={field.required}
-                                            />
-                                        )}
-                                        {field.type === 'textarea' && (
-                                            <textarea
-                                                style={{ width: '100%', padding: '0.6rem', borderRadius: '0.375rem', border: '1px solid #CBD5E0', minHeight: '80px' }}
-                                                value={newEvolution.template_data[field.id] || ''}
-                                                onChange={e => setNewEvolution({ ...newEvolution, template_data: { ...newEvolution.template_data, [field.id]: e.target.value } })}
-                                                required={field.required}
-                                            />
-                                        )}
-                                        {field.type === 'date' && (
-                                            <input
-                                                type="date"
-                                                style={{ width: '100%', padding: '0.6rem', borderRadius: '0.375rem', border: '1px solid #CBD5E0' }}
-                                                value={newEvolution.template_data[field.id] || ''}
-                                                onChange={e => setNewEvolution({ ...newEvolution, template_data: { ...newEvolution.template_data, [field.id]: e.target.value } })}
-                                                required={field.required}
-                                            />
-                                        )}
-                                        {field.type === 'select' && (
-                                            <select
-                                                style={{ width: '100%', padding: '0.6rem', borderRadius: '0.375rem', border: '1px solid #CBD5E0', background: 'white' }}
-                                                value={newEvolution.template_data[field.id] || ''}
-                                                onChange={e => setNewEvolution({ ...newEvolution, template_data: { ...newEvolution.template_data, [field.id]: e.target.value } })}
-                                                required={field.required}
-                                            >
-                                                <option value="">Seleccione...</option>
-                                                {field.options?.map((opt: string) => (
-                                                    <option key={opt} value={opt}>{opt}</option>
-                                                ))}
-                                            </select>
-                                        )}
-                                        {field.type === 'checkbox' && (
-                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', background: 'white', padding: '0.5rem', borderRadius: '0.375rem', border: '1px solid #CBD5E0' }}>
-                                                {field.options?.map((opt: string) => {
-                                                    const isChecked = (newEvolution.template_data[field.id] || []).includes(opt);
-                                                    return (
-                                                        <label key={opt} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem', cursor: 'pointer', margin: 0 }}>
-                                                            <input
-                                                                type="checkbox"
-                                                                checked={isChecked}
-                                                                onChange={e => {
-                                                                    const current = [...(newEvolution.template_data[field.id] || [])];
-                                                                    if (e.target.checked) current.push(opt);
-                                                                    else {
-                                                                        const idx = current.indexOf(opt);
-                                                                        if (idx > -1) current.splice(idx, 1);
-                                                                    }
-                                                                    setNewEvolution({ ...newEvolution, template_data: { ...newEvolution.template_data, [field.id]: current } });
-                                                                }}
-                                                            />
-                                                            {opt}
-                                                        </label>
-                                                    );
-                                                })}
-                                            </div>
-                                        )}
-                                        {field.type === 'eva' && (
-                                            <div style={{ marginTop: '0.5rem', marginBottom: '1rem', background: '#f8fafc', padding: '1rem', borderRadius: '0.5rem', border: '1px solid #CBD5E0' }}>
-                                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', alignItems: 'center' }}>
-                                                    <span style={{ fontSize: '0.85rem', color: '#64748b' }}>0 (Sin Dolor)</span>
-                                                    <span style={{ fontWeight: 'bold', color: '#334155', fontSize: '1.2rem', background: '#e2e8f0', padding: '0.2rem 0.8rem', borderRadius: '0.25rem' }}>{newEvolution.template_data[field.id] || 0}</span>
-                                                    <span style={{ fontSize: '0.85rem', color: '#64748b' }}>10 (Máximo Dolor)</span>
-                                                </div>
-                                                <ChromaticSlider
-                                                    type="range" min="0" max="10"
-                                                    value={newEvolution.template_data[field.id] || 0}
-                                                    onChange={e => setNewEvolution({ ...newEvolution, template_data: { ...newEvolution.template_data, [field.id]: Number(e.target.value) } })}
-                                                    style={{ margin: 0 }}
-                                                />
-                                            </div>
-                                        )}
-                                    </div>
-                                ))}
+                            {/* Template Selector Section */}
+                            <div style={{ background: 'rgba(30, 41, 59, 0.4)', border: '1px solid rgba(255, 255, 255, 0.1)', padding: '1rem', borderRadius: '0.5rem', marginBottom: '1.5rem' }}>
+                                <label style={{ marginBottom: '0.75rem', fontWeight: 'bold', color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                    <FaClipboardList /> Utilizar Plantilla Clínica
+                                </label>
+                                <CustomSelect
+                                    options={[
+                                        { value: '', label: 'No usar plantilla (Evolución Libre)' },
+                                        ...templates.map(t => ({ value: t.id, label: t.name }))
+                                    ]}
+                                    value={newEvolution.template_id || ''}
+                                    onChange={value => {
+                                        if (!value) {
+                                            setNewEvolution({ ...newEvolution, template_id: null, template_data: {} });
+                                            return;
+                                        }
+                                        const selected = templates.find(t => t.id === value);
+                                        const defaultData: Record<string, any> = {};
+                                        selected?.fields.forEach((f: any) => {
+                                            if (f.type === 'checkbox') defaultData[f.id] = [];
+                                            else defaultData[f.id] = '';
+                                        });
+                                        setNewEvolution({ ...newEvolution, template_id: value, template_data: defaultData });
+                                    }}
+                                    placeholder="Seleccione una plantilla"
+                                />
                             </div>
-                        )}
 
-                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold', color: '#4A5568', marginTop: '1.5rem' }}>Notas de Evolución (Adicional)</label>
-                        <textarea
-                            style={{ width: '100%', height: '100px', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid #CBD5E0', fontFamily: 'inherit' }}
-                            placeholder="Notas libres de evolución del paciente..."
-                            value={newEvolution.notes}
-                            onChange={e => setNewEvolution({ ...newEvolution, notes: e.target.value })}
-                        />
+                            {/* Dynamics fields block */}
+                            {newEvolution.template_id && (
+                                <div style={{ background: 'rgba(30, 41, 59, 0.4)', padding: '1rem', borderRadius: '0.5rem', marginBottom: '1.5rem', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
+                                    <h4 style={{ margin: '0 0 1rem 0', color: '#f8fafc' }}>Datos de la Plantilla</h4>
+                                    {templates.find(t => t.id === newEvolution.template_id)?.fields.map((field: any) => (
+                                        <div key={field.id} style={{ marginBottom: '1rem' }}>
+                                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: '#cbd5e1', fontSize: '0.9rem' }}>
+                                                {field.label} {field.required && <span style={{ color: '#ef4444' }}>*</span>}
+                                            </label>
 
-                        <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
-                            <button onClick={() => setIsEvolutionModalOpen(false)} style={{ padding: '0.75rem 1.5rem', background: '#CBD5E0', border: 'none', borderRadius: '0.5rem', cursor: 'pointer' }}>Cancelar</button>
-                            <button onClick={handleAddEvolution} style={{ padding: '0.75rem 1.5rem', background: '#319795', color: 'white', border: 'none', borderRadius: '0.5rem', cursor: 'pointer', fontWeight: 'bold' }}>Guardar</button>
-                        </div>
+                                            {field.type === 'text' && (
+                                                <input
+                                                    type="text"
+                                                    style={{ width: '100%', padding: '0.6rem', borderRadius: '0.375rem', border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(15, 23, 42, 0.5)', color: 'white' }}
+                                                    value={newEvolution.template_data[field.id] || ''}
+                                                    onChange={e => setNewEvolution({ ...newEvolution, template_data: { ...newEvolution.template_data, [field.id]: e.target.value } })}
+                                                    required={field.required}
+                                                />
+                                            )}
+                                            {field.type === 'textarea' && (
+                                                <textarea
+                                                    style={{ width: '100%', padding: '0.6rem', borderRadius: '0.375rem', border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(15, 23, 42, 0.5)', color: 'white', minHeight: '80px' }}
+                                                    value={newEvolution.template_data[field.id] || ''}
+                                                    onChange={e => setNewEvolution({ ...newEvolution, template_data: { ...newEvolution.template_data, [field.id]: e.target.value } })}
+                                                    required={field.required}
+                                                />
+                                            )}
+                                            {field.type === 'date' && (
+                                                <input
+                                                    type="date"
+                                                    style={{ width: '100%', padding: '0.6rem', borderRadius: '0.375rem', border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(15, 23, 42, 0.5)', color: 'white' }}
+                                                    value={newEvolution.template_data[field.id] || ''}
+                                                    onChange={e => setNewEvolution({ ...newEvolution, template_data: { ...newEvolution.template_data, [field.id]: e.target.value } })}
+                                                    required={field.required}
+                                                />
+                                            )}
+                                            {field.type === 'select' && (
+                                                <select
+                                                    style={{ width: '100%', padding: '0.6rem', borderRadius: '0.375rem', border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(15, 23, 42, 0.9)', color: 'white' }}
+                                                    value={newEvolution.template_data[field.id] || ''}
+                                                    onChange={e => setNewEvolution({ ...newEvolution, template_data: { ...newEvolution.template_data, [field.id]: e.target.value } })}
+                                                    required={field.required}
+                                                >
+                                                    <option value="">Seleccione...</option>
+                                                    {field.options?.map((opt: string) => (
+                                                        <option key={opt} value={opt}>{opt}</option>
+                                                    ))}
+                                                </select>
+                                            )}
+                                            {field.type === 'checkbox' && (
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', background: 'rgba(15, 23, 42, 0.5)', padding: '0.5rem', borderRadius: '0.375rem', border: '1px solid rgba(255,255,255,0.2)', color: 'lightgray' }}>
+                                                    {field.options?.map((opt: string) => {
+                                                        const isChecked = (newEvolution.template_data[field.id] || []).includes(opt);
+                                                        return (
+                                                            <label key={opt} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem', cursor: 'pointer', margin: 0 }}>
+                                                                <input
+                                                                    type="checkbox"
+                                                                    checked={isChecked}
+                                                                    onChange={e => {
+                                                                        const current = [...(newEvolution.template_data[field.id] || [])];
+                                                                        if (e.target.checked) current.push(opt);
+                                                                        else {
+                                                                            const idx = current.indexOf(opt);
+                                                                            if (idx > -1) current.splice(idx, 1);
+                                                                        }
+                                                                        setNewEvolution({ ...newEvolution, template_data: { ...newEvolution.template_data, [field.id]: current } });
+                                                                    }}
+                                                                />
+                                                                {opt}
+                                                            </label>
+                                                        );
+                                                    })}
+                                                </div>
+                                            )}
+                                            {field.type === 'eva' && (
+                                                <div style={{ marginTop: '0.5rem', marginBottom: '1rem', background: 'rgba(15, 23, 42, 0.4)', padding: '1rem', borderRadius: '0.5rem', border: '1px solid rgba(255,255,255,0.1)' }}>
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', alignItems: 'center' }}>
+                                                        <span style={{ fontSize: '0.85rem', color: '#94a3b8' }}>0 (Sin Dolor)</span>
+                                                        <span style={{ fontWeight: 'bold', color: '#f8fafc', fontSize: '1.2rem', background: 'rgba(255,255,255,0.1)', padding: '0.2rem 0.8rem', borderRadius: '0.25rem' }}>{newEvolution.template_data[field.id] || 0}</span>
+                                                        <span style={{ fontSize: '0.85rem', color: '#94a3b8' }}>10 (Máximo Dolor)</span>
+                                                    </div>
+                                                    <ChromaticSlider
+                                                        type="range" min="0" max="10"
+                                                        value={newEvolution.template_data[field.id] || 0}
+                                                        onChange={e => setNewEvolution({ ...newEvolution, template_data: { ...newEvolution.template_data, [field.id]: Number(e.target.value) } })}
+                                                        style={{ margin: 0 }}
+                                                    />
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+
+                            {/* Native EVA Score (only if template doesn't provide one) */}
+                            {(!newEvolution.template_id || !templates.find(t => t.id === newEvolution.template_id)?.fields?.some((f: any) => f.type === 'eva')) && (
+                                <div style={{ background: 'rgba(30, 41, 59, 0.4)', padding: '1rem', borderRadius: '0.5rem', marginBottom: '1.5rem', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
+                                    <label style={{ marginBottom: '1rem', fontWeight: 'bold', color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                        <FaChartLine /> Nivel de Dolor Actual (EVA)
+                                    </label>
+                                    <div style={{ background: 'rgba(15, 23, 42, 0.4)', padding: '1rem', borderRadius: '0.5rem', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', alignItems: 'center' }}>
+                                            <span style={{ fontSize: '0.85rem', color: '#94a3b8' }}>0 (Sin Dolor)</span>
+                                            <span style={{ fontWeight: 'bold', color: '#f8fafc', fontSize: '1.2rem', background: 'rgba(255,255,255,0.1)', padding: '0.2rem 0.8rem', borderRadius: '0.25rem' }}>{newEvolution.eva_score}</span>
+                                            <span style={{ fontSize: '0.85rem', color: '#94a3b8' }}>10 (Máximo Dolor)</span>
+                                        </div>
+                                        <ChromaticSlider
+                                            type="range" min="0" max="10"
+                                            value={newEvolution.eva_score}
+                                            onChange={e => setNewEvolution({ ...newEvolution, eva_score: Number(e.target.value) })}
+                                            style={{ margin: 0 }}
+                                        />
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* File Upload Section */}
+                            <div style={{ marginTop: '1.5rem', background: 'rgba(30, 41, 59, 0.4)', border: '1px solid rgba(255, 255, 255, 0.1)', padding: '1rem', borderRadius: '0.5rem', marginBottom: '1.5rem' }}>
+                                <label style={{ marginBottom: '1rem', fontWeight: 'bold', color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                    <FaPaperclip /> Archivos Adjuntos (Estudios, Radiografías, etc.)
+                                </label>
+
+                                <label style={{
+                                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                                    padding: '1.5rem', border: '2px dashed rgba(255, 255, 255, 0.2)', borderRadius: '0.5rem',
+                                    background: 'rgba(15, 23, 42, 0.3)', cursor: 'pointer', transition: 'all 0.2s ease',
+                                    color: '#94a3b8', marginBottom: '1rem'
+                                }}
+                                    onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(15, 23, 42, 0.6)'; e.currentTarget.style.borderColor = 'rgba(56, 189, 248, 0.5)'; e.currentTarget.style.color = '#38bdf8'; }}
+                                    onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(15, 23, 42, 0.3)'; e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)'; e.currentTarget.style.color = '#94a3b8'; }}
+                                >
+                                    <FaUpload size={24} style={{ marginBottom: '0.5rem' }} />
+                                    <span>Click para elegir archivos</span>
+                                    <input
+                                        type="file"
+                                        multiple
+                                        onChange={(e) => {
+                                            if (e.target.files) {
+                                                setNewEvolution(prev => ({ ...prev, files: [...prev.files, ...Array.from(e.target.files!)] }));
+                                                e.target.value = ''; // Reset input to allow adding same file again if removed
+                                            }
+                                        }}
+                                        style={{ display: 'none' }}
+                                    />
+                                </label>
+
+                                {newEvolution.files.length > 0 && (
+                                    <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                                        {newEvolution.files.map((file, idx) => (
+                                            <li key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(15, 23, 42, 0.6)', padding: '0.5rem', borderRadius: '0.25rem', marginBottom: '0.5rem', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                                                <span style={{ fontSize: '0.85rem', color: '#cbd5e1', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '85%' }}>{file.name}</span>
+                                                <button
+                                                    onClick={() => setNewEvolution(prev => ({ ...prev, files: prev.files.filter((_, i) => i !== idx) }))}
+                                                    style={{ background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '0.25rem' }}
+                                                    title="Eliminar archivo"
+                                                ><FaTrash size={12} /></button>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                )}
+                            </div>
+
+                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold', color: '#cbd5e1' }}>Notas de Evolución (Adicional)</label>
+                            <textarea
+                                style={{ width: '100%', height: '100px', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid rgba(255,255,255,0.2)', fontFamily: 'inherit', background: 'rgba(15, 23, 42, 0.5)', color: 'white' }}
+                                placeholder="Notas libres de evolución del paciente..."
+                                value={newEvolution.notes}
+                                onChange={e => setNewEvolution({ ...newEvolution, notes: e.target.value })}
+                                required={!newEvolution.template_id}
+                            />
+
+                            <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
+                                <button
+                                    type="button"
+                                    onClick={() => setIsEvolutionModalOpen(false)}
+                                    style={{ padding: '0.75rem 1.5rem', background: 'rgba(255, 255, 255, 0.05)', color: '#cbd5e1', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '0.5rem', cursor: 'pointer', transition: 'all 0.2s', fontWeight: '500' }}
+                                    onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'; e.currentTarget.style.color = '#f8fafc'; }}
+                                    onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'; e.currentTarget.style.color = '#cbd5e1'; }}
+                                >
+                                    Cancelar
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={isUploadingEvolution}
+                                    style={{ padding: '0.75rem 1.5rem', background: isUploadingEvolution ? 'rgba(49, 151, 149, 0.5)' : 'rgba(49, 151, 149, 0.9)', color: 'white', border: '1px solid rgba(49, 151, 149, 0.5)', borderRadius: '0.5rem', cursor: isUploadingEvolution ? 'wait' : 'pointer', fontWeight: 'bold', boxShadow: isUploadingEvolution ? 'none' : '0 4px 6px -1px rgba(0,0,0,0.3)', transition: 'all 0.2s' }}
+                                    onMouseEnter={(e) => { if (!isUploadingEvolution) e.currentTarget.style.background = 'rgba(49, 151, 149, 1)'; }}
+                                    onMouseLeave={(e) => { if (!isUploadingEvolution) e.currentTarget.style.background = 'rgba(49, 151, 149, 0.9)'; }}
+                                >
+                                    {isUploadingEvolution ? 'Subiendo archivos...' : 'Guardar'}
+                                </button>
+                            </div>
+                        </form>
                     </Card>
                 </div>
             )}

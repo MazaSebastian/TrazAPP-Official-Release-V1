@@ -18,6 +18,15 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [tourStepIndex, setTourStepIndex] = useState<number>(() => {
+    const saved = localStorage.getItem('trazapp_tour_step');
+    return saved ? parseInt(saved, 10) : 0;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('trazapp_tour_step', tourStepIndex.toString());
+  }, [tourStepIndex]);
+
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -307,11 +316,39 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setUser(null);
   };
 
+  const resetTour = async () => {
+    if (!user?.id) return;
+
+    try {
+      // 1. Update Database
+      const { error } = await supabase
+        .from('profiles')
+        .update({ has_completed_tour: false })
+        .eq('id', user.id);
+
+      if (error) {
+        console.error('AuthContext: Error resetting tour in DB', error);
+        throw error;
+      }
+
+      // 2. Update Local State to instantly trigger UI
+      setUser(prev => prev ? { ...prev, has_completed_tour: false } : null);
+      setTourStepIndex(0);
+
+      console.log('AuthContext: Tour reset successfully');
+    } catch (e) {
+      console.error('AuthContext: Unexpected error in resetTour:', e);
+    }
+  };
+
   const value: AuthContextType = {
     user,
     login,
     logout,
-    isLoading
+    isLoading,
+    resetTour,
+    tourStepIndex,
+    setTourStepIndex
   };
 
   return (

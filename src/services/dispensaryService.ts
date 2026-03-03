@@ -409,6 +409,227 @@ export const dispensaryService = {
         return true;
     },
 
+    async bulkDispenseToShop(deductions: { batchId: string, amount: number }[], strainName: string): Promise<boolean> {
+        if (!supabase || deductions.length === 0) return false;
+
+        const { data: { user } } = await supabase.auth.getUser();
+        let totalDispensed = 0;
+
+        // 1. Fetch Source Batches to ensure current_weight is accurate
+        const batchIds = deductions.map(d => d.batchId);
+        const { data: sources } = await supabase.from('chakra_dispensary_batches')
+            .select('*')
+            .in('id', batchIds);
+
+        if (!sources) return false;
+
+        const outMovements = [];
+        const updatePromises = [];
+
+        // 2. Prepare Updates and Out Movements for each valid deduction
+        for (const deduction of deductions) {
+            const source = sources.find(s => s.id === deduction.batchId);
+            if (!source || source.current_weight < deduction.amount) continue;
+
+            totalDispensed += deduction.amount;
+            const newSourceWeight = source.current_weight - deduction.amount;
+
+            // Update source batch
+            updatePromises.push(
+                supabase.from('chakra_dispensary_batches')
+                    .update({ current_weight: newSourceWeight })
+                    .eq('id', source.id)
+            );
+
+            // Out Movement
+            outMovements.push({
+                batch_id: source.id,
+                type: 'adjustment',
+                amount: -deduction.amount,
+                reason: 'Envío a Dispensario (Masivo)',
+                performed_by: user?.id,
+                previous_weight: source.current_weight,
+                new_weight: newSourceWeight
+            });
+        }
+
+        if (totalDispensed <= 0) return false; // Nothing valid to dispense
+
+        // Execute source updates concurrently
+        await Promise.all(updatePromises);
+
+        // Insert Out Movements concurrently
+        if (outMovements.length > 0) {
+            await supabase.from('chakra_dispensary_movements').insert(outMovements);
+        }
+
+        // 3. Update or Create Shop Pool (Single write to avoid race conditions)
+        const { data: existingShopBatches } = await supabase.from('chakra_dispensary_batches')
+            .select('*')
+            .eq('organization_id', getSelectedOrgId())
+            .eq('strain_name', strainName)
+            .eq('status', 'available')
+            .eq('location', 'Dispensario / Shop')
+            .order('created_at', { ascending: false });
+
+        if (existingShopBatches && existingShopBatches.length > 0) {
+            const shopBatch = existingShopBatches[0];
+            const newCurrent = shopBatch.current_weight + totalDispensed;
+            const newInitial = shopBatch.initial_weight + totalDispensed;
+
+            await supabase.from('chakra_dispensary_batches').update({
+                current_weight: newCurrent,
+                initial_weight: newInitial
+            }).eq('id', shopBatch.id);
+
+            await supabase.from('chakra_dispensary_movements').insert([{
+                batch_id: shopBatch.id,
+                type: 'restock',
+                amount: totalDispensed,
+                reason: `Recepción masiva desde Stock (${deductions.length} lotes)`,
+                performed_by: user?.id,
+                previous_weight: shopBatch.current_weight,
+                new_weight: newCurrent
+            }]);
+        } else {
+            const { data: newBatch } = await supabase.from('chakra_dispensary_batches').insert([{
+                strain_name: strainName,
+                batch_code: `${strainName} - Dispensario`,
+                initial_weight: totalDispensed,
+                current_weight: totalDispensed,
+                quality_grade: sources[0]?.quality_grade || 'Standard',
+                status: 'available',
+                location: 'Dispensario / Shop',
+                notes: `Transferido masivo desde stock (${deductions.length} lotes)`,
+                organization_id: getSelectedOrgId()
+            }]).select().single();
+
+            if (newBatch) {
+                await supabase.from('chakra_dispensary_movements').insert([{
+                    batch_id: newBatch.id,
+                    type: 'restock',
+                    amount: totalDispensed,
+                    reason: `Recepción masiva desde Stock inicial (${deductions.length} lotes)`,
+                    performed_by: user?.id,
+                    previous_weight: 0,
+                    new_weight: totalDispensed
+                }]);
+            }
+        }
+        return true;
+    },
+
+    async bulkTransferToLab(deductions: { batchId: string, amount: number }[], strainName: string): Promise<boolean> {
+        if (!supabase || deductions.length === 0) return false;
+
+        const { data: { user } } = await supabase.auth.getUser();
+        let totalTransferred = 0;
+
+        // 1. Fetch Source Batches to ensure current_weight is accurate
+        const batchIds = deductions.map(d => d.batchId);
+        const { data: sources } = await supabase.from('chakra_dispensary_batches')
+            .select('*')
+            .in('id', batchIds);
+
+        if (!sources) return false;
+
+        const outMovements = [];
+        const updatePromises = [];
+
+        // 2. Prepare Updates and Out Movements for each valid deduction
+        for (const deduction of deductions) {
+            const source = sources.find(s => s.id === deduction.batchId);
+            if (!source || source.current_weight < deduction.amount) continue;
+
+            totalTransferred += deduction.amount;
+            const newSourceWeight = source.current_weight - deduction.amount;
+
+            // Update source batch
+            updatePromises.push(
+                supabase.from('chakra_dispensary_batches')
+                    .update({ current_weight: newSourceWeight })
+                    .eq('id', source.id)
+            );
+
+            // Out Movement
+            outMovements.push({
+                batch_id: source.id,
+                type: 'adjustment',
+                amount: -deduction.amount,
+                reason: 'Envío a Laboratorio (Masivo)',
+                performed_by: user?.id,
+                previous_weight: source.current_weight,
+                new_weight: newSourceWeight
+            });
+        }
+
+        if (totalTransferred <= 0) return false;
+
+        // Execute source updates concurrently
+        await Promise.all(updatePromises);
+
+        // Insert Out Movements concurrently
+        if (outMovements.length > 0) {
+            await supabase.from('chakra_dispensary_movements').insert(outMovements);
+        }
+
+        // 3. Update or Create Lab Pool
+        const { data: existingLabBatches } = await supabase.from('chakra_dispensary_batches')
+            .select('*')
+            .eq('organization_id', getSelectedOrgId())
+            .eq('strain_name', strainName)
+            .eq('status', 'available')
+            .eq('location', 'Laboratorio')
+            .order('created_at', { ascending: false });
+
+        if (existingLabBatches && existingLabBatches.length > 0) {
+            const labBatch = existingLabBatches[0];
+            const newCurrent = labBatch.current_weight + totalTransferred;
+            const newInitial = labBatch.initial_weight + totalTransferred;
+
+            await supabase.from('chakra_dispensary_batches').update({
+                current_weight: newCurrent,
+                initial_weight: newInitial
+            }).eq('id', labBatch.id);
+
+            await supabase.from('chakra_dispensary_movements').insert([{
+                batch_id: labBatch.id,
+                type: 'restock',
+                amount: totalTransferred,
+                reason: `Recepción masiva para Laboratorio (${deductions.length} lotes formarán este pool)`,
+                performed_by: user?.id,
+                previous_weight: labBatch.current_weight,
+                new_weight: newCurrent
+            }]);
+        } else {
+            const { data: newBatch } = await supabase.from('chakra_dispensary_batches').insert([{
+                strain_name: strainName,
+                batch_code: `${strainName} - LAB`,
+                initial_weight: totalTransferred,
+                current_weight: totalTransferred,
+                quality_grade: sources[0]?.quality_grade || 'Standard',
+                status: 'available',
+                location: 'Laboratorio',
+                notes: `Transferido masivo para análisis (${deductions.length} lotes de origen)`,
+                organization_id: getSelectedOrgId()
+            }]).select().single();
+
+            if (newBatch) {
+                await supabase.from('chakra_dispensary_movements').insert([{
+                    batch_id: newBatch.id,
+                    type: 'restock',
+                    amount: totalTransferred,
+                    reason: `Recepción masiva para Laboratorio inicial (${deductions.length} lotes de origen)`,
+                    performed_by: user?.id,
+                    previous_weight: 0,
+                    new_weight: totalTransferred
+                }]);
+            }
+        }
+
+        return true;
+    },
+
     async transferToLab(sourceBatchId: string, amount: number): Promise<boolean> {
         if (!supabase) return false;
 

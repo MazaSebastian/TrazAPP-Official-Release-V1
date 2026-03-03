@@ -353,76 +353,77 @@ const getRowLabel = (index: number) => {
 // --- Cell Component ---
 // --- Floating Tooltip Component ---
 
-const FloatingTooltipContainer = styled.div<{ isVisible: boolean }>`
-  position: fixed; /* Fixed to viewport */
-  z-index: 9999; /* Highest priority */
-  pointer-events: none; /* Do not block mouse events */
+const TooltipContainer = styled.div<{ visible: boolean; x: number; y: number }>`
+  position: fixed;
+  top: ${p => p.y}px;
+  left: ${p => p.x}px;
+  transform: translate(-50%, -100%);
   background: rgba(15, 23, 42, 0.95);
   backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #f8fafc;
-  padding: 0.75rem;
-  border-radius: 0.5rem;
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
-  width: max-content;
-  max-width: 250px;
-  font-size: 0.75rem;
-  line-height: 1.4;
-  opacity: ${p => p.isVisible ? 1 : 0};
-  transform: ${p => p.isVisible ? 'translateY(0)' : 'translateY(5px)'};
-  transition: opacity 0.2s ease-out, transform 0.2s ease-out;
-  
-  /* Arrow managed via dynamic styles or disregarded for floating simple view */
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: ${p => p.visible ? 1 : 0};
+  transition: opacity 0.2s ease-in-out;
+  margin-top: -8px;
+  min-width: 150px;
+  text-align: center;
+  color: #f8fafc;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: rgba(15, 23, 42, 0.95) transparent transparent transparent;
+  }
 `;
 
 const FloatingTooltip = ({ batch, x, y, isVisible }: { batch: Batch, x: number, y: number, isVisible: boolean }) => {
-    // Determine position relative to viewport to avoid clipping
-    // Default: Top-Centered relative to cursor/cell
-
-    // Safety margin
-    const margin = 10;
-    const tooltipWidth = 220; // Approx
-    const tooltipHeight = 150; // Approx max
-
-    // Get viewport dimensions
-    const vw = window.innerWidth;
-    // const vh = window.innerHeight; // Unused
-
-    let left = x - tooltipWidth / 2;
-    let top = y - tooltipHeight - 10; // Default above
-
-    // Horizontal Clamp
-    if (left < margin) left = margin;
-    if (left + tooltipWidth > vw - margin) left = vw - tooltipWidth - margin;
-
-    // Vertical Flip if too close to top
-    if (top < margin) {
-        top = y + 20; // Move below
-    }
-
     return createPortal(
-        <FloatingTooltipContainer style={{ top: top, left: left }} isVisible={isVisible}>
-            <div style={{ fontWeight: 'bold', fontSize: '0.85rem', marginBottom: '0.25rem', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', paddingBottom: '0.25rem', color: '#4ade80' }}>
-                {batch.tracking_code || batch.name}
+        <TooltipContainer visible={isVisible} x={x} y={y}>
+            <div style={{ fontWeight: 'bold', color: '#4ade80', marginBottom: '0.25rem' }}>{batch.tracking_code || batch.name}</div>
+
+            <div style={{ fontSize: '0.8rem', color: batch.genetic ? '#cbd5e1' : '#f87171', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.25rem', marginBottom: '0.25rem' }}>
+                {!batch.genetic ? <span title="Genética Eliminada">⚠️</span> : <span style={{ fontSize: '10px' }}>🧬</span>}
+                {batch.genetic?.name || 'Genética Eliminada'}
             </div>
-            {batch.genetic?.name && (
-                <div style={{ marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.9rem', color: '#38bdf8', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                    🧬 {batch.genetic.name}
+
+            <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginBottom: '0.25rem' }}>
+                Etapa: <strong style={{ color: '#f8fafc' }}>{
+                    (() => {
+                        const stageMap: Record<string, string> = {
+                            'seedling': 'Plántula',
+                            'vegetation': 'Vegetación',
+                            'flowering': 'Floración',
+                            'drying': 'Secado',
+                            'curing': 'Curado',
+                            'completed': 'Corte',
+                            'clones': 'Plántula/Esqueje'
+                        };
+                        return stageMap[batch.stage] || (batch.stage.charAt(0).toUpperCase() + batch.stage.slice(1));
+                    })()
+                }</strong>
+            </div>
+
+            {batch.notes && (
+                <div style={{ fontSize: '0.7rem', color: '#718096', marginBottom: '0.25rem', fontStyle: 'italic', maxWidth: '180px', whiteSpace: 'normal', margin: '0 auto' }}>
+                    "{batch.notes.length > 60 ? batch.notes.substring(0, 60) + '...' : batch.notes}"
                 </div>
             )}
-            <div style={{ color: '#94a3b8' }}>
-                📅 {batch.start_date ? new Date(batch.start_date).toLocaleDateString() : 'N/A'}
-            </div>
-            <div style={{ color: '#94a3b8', textTransform: 'capitalize' }}>
-                🌱 {batch.stage}
-            </div>
-            {/* Notes / Alerts */}
-            {(batch.notes) && (
-                <div style={{ marginTop: '0.5rem', paddingTop: '0.25rem', borderTop: '1px dashed rgba(255, 255, 255, 0.1)', color: '#fef3c7', fontStyle: 'italic' }}>
-                    ⚠️ {batch.notes}
+
+            {batch.start_date && (
+                <div style={{ fontSize: '0.7rem', color: '#64748b', marginTop: '0.25rem', borderTop: '1px solid rgba(255, 255, 255, 0.1)', paddingTop: '0.25rem' }}>
+                    {new Date(batch.start_date).toLocaleDateString()}
                 </div>
             )}
-        </FloatingTooltipContainer>,
+        </TooltipContainer>,
         document.body
     );
 };

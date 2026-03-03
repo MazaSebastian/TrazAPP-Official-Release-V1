@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Joyride, { CallBackProps, STATUS, Step } from 'react-joyride';
+import { useLocation } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../services/supabaseClient';
@@ -99,7 +100,8 @@ const SecondaryButton = styled.button`
 `;
 
 export const GuidedTour: React.FC = () => {
-    const { user } = useAuth();
+    const { user, tourStepIndex, setTourStepIndex } = useAuth();
+    const location = useLocation();
     const [run, setRun] = useState(false);
     const [showWelcomeModal, setShowWelcomeModal] = useState(false);
     const [isDismissed, setIsDismissed] = useState(false);
@@ -119,6 +121,22 @@ export const GuidedTour: React.FC = () => {
             return () => clearTimeout(timer);
         }
     }, [user, isDismissed, showWelcomeModal, run]);
+
+    // Handle auto-advancing step 4 -> 5 when navigating to /crops
+    useEffect(() => {
+        if (location.pathname === '/crops' && tourStepIndex === 4) {
+            setTourStepIndex(5);
+        }
+    }, [location.pathname, tourStepIndex, setTourStepIndex]);
+
+    // Complete tour when user enters a crop details page (index 6 active)
+    useEffect(() => {
+        if (location.pathname.startsWith('/crops/') && location.pathname !== '/crops' && tourStepIndex === 6) {
+            setRun(false);
+            setTourStepIndex(0);
+            markTourCompleted();
+        }
+    }, [location.pathname, tourStepIndex, setTourStepIndex]);
 
     const markTourCompleted = async () => {
         try {
@@ -147,11 +165,19 @@ export const GuidedTour: React.FC = () => {
     };
 
     const handleJoyrideCallback = (data: CallBackProps) => {
-        const { status } = data;
+        const { status, action, index, type } = data;
         const finishedStatuses: string[] = [STATUS.FINISHED, STATUS.SKIPPED];
+
+        if (type === 'step:after' || type === 'error:target_not_found') {
+            // Normal progression unless we're on step 4 waiting for manual click
+            if (index !== 4) {
+                setTourStepIndex(index + (action === 'prev' ? -1 : 1));
+            }
+        }
 
         if (finishedStatuses.includes(status)) {
             setRun(false);
+            setTourStepIndex(0);
             markTourCompleted();
         }
     };
@@ -159,19 +185,51 @@ export const GuidedTour: React.FC = () => {
     const steps: Step[] = [
         {
             target: '.tour-welcome',
-            content: '¡Aquí comienza tu viaje! En el Panel de Control tendrás la visión global y en tiempo real de todos tus cultivos.',
+            content: '¡Aquí comienza tu viaje! En el Dashboard inicial tendrás la visión global y en tiempo real de todos tus cultivos.',
             placement: 'bottom',
             disableBeacon: true,
         },
         {
-            target: '.tour-sidebar',
-            content: 'Este es tu Centro de Navegación. Desde aquí administras Cuartos, Laboratorio, Stock, Finanzas y toda tu trazabilidad técnica.',
-            placement: 'right',
+            target: '.tour-stickies',
+            content: 'Tablero de Notas (Stick-it). Utiliza este espacio para pegar recordatorios rápidos para ti o para tu equipo.',
+            placement: 'bottom',
         },
         {
-            target: '.tour-ai-chat',
-            content: 'Conoce a tu Master Grower Virtual. Una IA agronómica dispuesta a resolver tus dudas y acompañarte 24/7.',
-            placement: 'left',
+            target: '.tour-weather',
+            content: 'Pronóstico del Clima. Desde Ajustes (Configuración) puedes cambiar tu ubicación exacta para obtener datos más precisos de tu área productiva.',
+            placement: 'bottom',
+        },
+        {
+            target: '.tour-countdowns',
+            content: 'Próximos Cambios de Etapa. Aquí visualizarás el progreso diario de tus salas activas y sabrás exactamente cuándo pasar a floración o cosechar.',
+            placement: 'top',
+        },
+        {
+            target: '.tour-crops-link',
+            content: 'Ahora simularemos una vuelta completa en nuestro sistema de cultivo. ¡Dale! Ve a la sección Cultivos y crea tu primer ciclo.',
+            placement: 'right',
+            spotlightClicks: true,
+            styles: {
+                buttonNext: {
+                    display: 'none'
+                }
+            }
+        },
+        {
+            target: '.tour-new-crop',
+            content: '¡Estos son tus cultivos! Podés hacer de cuenta que son tus locaciones o lugares físicos (ej: Casa, Depósito).',
+            placement: 'bottom',
+        },
+        {
+            target: '.tour-first-crop-card',
+            content: '¡Este es tu nuevo cultivo! Ingresa en él!',
+            placement: 'bottom',
+            spotlightClicks: true,
+            styles: {
+                buttonNext: {
+                    display: 'none'
+                }
+            }
         }
     ];
 
@@ -203,6 +261,7 @@ export const GuidedTour: React.FC = () => {
             <Joyride
                 steps={steps}
                 run={run}
+                stepIndex={tourStepIndex}
                 continuous
                 showProgress
                 showSkipButton

@@ -20,6 +20,9 @@ export interface AuthContextType {
   login: (credentials: LoginCredentials) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
   isLoading: boolean;
+  resetTour: () => Promise<void>;
+  tourStepIndex: number;
+  setTourStepIndex: (index: number) => void;
 }
 
 // ==========================

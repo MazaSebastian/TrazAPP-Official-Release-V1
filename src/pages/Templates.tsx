@@ -82,6 +82,32 @@ const ActionButton = styled.button`
   }
 `;
 
+const FormRow = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+`;
+
+const StickyFieldHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+  position: sticky;
+  top: -2.1rem; /* Adjust for padding in ModalContent */
+  background: rgba(15, 23, 42, 0.95);
+  padding: 1rem 0;
+  z-index: 50;
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+
+  @media (max-width: 768px) {
+    top: -1.6rem;
+  }
+`;
+
 const CardGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -573,12 +599,12 @@ const Templates: React.FC = () => {
             </div>
 
             <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', margin: '1.5rem 0', paddingTop: '1.5rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
+              <StickyFieldHeader>
                 <h3 style={{ margin: 0, fontSize: '1.2rem' }}>Constructor de Campos</h3>
                 <ActionButton type="button" onClick={handleAddField} style={{ padding: '0.5rem 1rem', fontSize: '0.9rem', width: '100%', justifyContent: 'center', '@media (minWidth: 600px)': { width: 'auto' } } as any}>
                   <FaPlus /> Agregar Variante
                 </ActionButton>
-              </div>
+              </StickyFieldHeader>
 
               {fields.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '2rem', border: '1px dashed rgba(255,255,255,0.1)', borderRadius: '0.5rem', color: '#94a3b8' }}>
