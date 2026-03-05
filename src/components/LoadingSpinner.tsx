@@ -56,7 +56,7 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
   return (
     <Overlay $fullScreen={fullScreen}>
       <SpinnerContainer>
-        <HeartbeatImage src="/carga.png" alt="Cargando..." />
+        <HeartbeatImage src="/logotrazappfix.png" alt="Cargando..." />
       </SpinnerContainer>
     </Overlay>
   );

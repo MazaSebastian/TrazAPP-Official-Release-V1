@@ -56,7 +56,9 @@ const GridContainer = styled.div<{ rows: number; cols: number; cellSize: number 
   grid-template-rows: 40px repeat(${p => p.rows}, ${p => p.cellSize}px);
   gap: ${p => p.cellSize < 40 ? '1px' : '4px'};
   overflow: auto;
+  overscroll-behavior: contain; /* Prevent chaining to parent */
   max-width: 100%;
+  max-height: calc(100vh - 260px); /* Restrict height so it scrolls internally */
   padding: 1rem;
   background: rgba(15, 23, 42, 0.4);
   backdrop-filter: blur(12px);

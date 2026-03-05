@@ -1,0 +1,539 @@
+// supabase/functions/growy-gemini/index.ts
+// Setup type definitions for built-in Supabase Runtime APIs
+import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { GoogleGenerativeAI } from "npm:@google/generative-ai";
+import { createClient } from "jsr:@supabase/supabase-js@2";
+import { growyTools } from "./tools.ts";
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type'
+};
+Deno.serve(async (req) => {
+  // Manejar OPTIONS para CORS config preflight
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', {
+      headers: corsHeaders
+    });
+  }
+  try {
+    const { prompt, orgId, history = [] } = await req.json();
+    if (!prompt) {
+      throw new Error("El campo 'prompt' es requerido.");
+    }
+    if (!orgId) {
+      throw new Error("El campo 'orgId' es requerido para aislar la información de la organización (Multitenancy).");
+    }
+    // Inicializar Google Gemini
+    const apiKey = Deno.env.get('GEMINI_API_KEY');
+    if (!apiKey) {
+      throw new Error("No existe GEMINI_API_KEY configurado en Supabase Secrets.");
+    }
+    const genAI = new GoogleGenerativeAI(apiKey);
+    // Inyectamos Function Declarations (Tools)
+    const model = genAI.getGenerativeModel({
+      model: "gemini-2.5-flash",
+      tools: [
+        {
+          functionDeclarations: growyTools
+        }
+      ]
+    });
+    // Armar el System Prompt / Mensaje base
+    const todayStr = new Date().toISOString().split('T')[0];
+    const systemInstruction = `
+Eres Growy, el Asistente Inteligente de TrazAPP (SaaS de Gestión de Cultivos Cannábicos).
+Tu objetivo es ayudar al usuario respondiendo preguntas sobre sus datos, brindando asistencia técnica y proponiendo acciones operativas.
+Actúa de manera extremadamente profesional, concisa, amigable e infunde confianza como Master Grower.
+
+FECHA ACTUAL: Hoy es ${todayStr}. Úsala como referencia para cualquier cálculo de fechas relativas (mañana, en 10 días, etc.) y envíalas SIEMPRE en formato YYYY-MM-DD a las herramientas.
+
+REGLAS ESTRICTAS PARA ACCIONES (FUNCTION CALLING):
+1. Si el usuario pide crear, editar, eliminar (ej: "crea un cultivo"), **DEBES INVOCAR** la herramienta apropiada. NUNCA respondas con texto diciendo que lo hiciste.
+2. Si el usuario hace una pregunta sobre sus datos (ej:"¿qué cultivos tengo activos?"), **DEBES INVOCAR** la herramienta de lectura (ej: get_active_crops). Recibirás el JSON con la data, y RECIÉN AHÍ podrás responderle en texto.
+3. NUNCA inventes UUIDs corporativos. Búscalos primero usando herramientas read-only si necesitas referencias como 'roomId' o 'cropId'. Usa 'get_rooms_for_crop' para confirmar UUIDs de salas, y 'get_active_crops' para cultivos.
+4. Si necesitas asignar una tarea a una "sala" o "mapa" pero no posees el UUID de la sala, debes PRIMERO averiguar el UUID del cultivo al que pertenece llamando a 'get_active_crops', y SEGUNDO averiguar el UUID de la sala llamando a 'get_rooms_for_crop'. Jamás adivines estos IDs.
+
+REGLAS ESTRICTAS DE FORMATO Y LECTURA (TEXT-TO-SPEECH):
+1. Tu respuesta de texto será leída en voz alta por un motor TTS.
+2. NUNCA menciones ni escribas los "ID" o "UUID" de la base de datos.
+3. NUNCA devuelvas bloques de texto densos tipo "Clave: Valor".
+4. Usa comas y puntos ortográficos generosamente para el TTS.
+5. Usa saltos de línea (\\n\\n) tras listas.
+
+REGLAS ESTRICTAS DE SEMÁNTICA Y REPORTES:
+1. Agrupa lotes por genética si el parent_batch_id es el mismo, reporta "Lote Genética con X plantas".
+2. Si el usuario pide un INFORME DETALLADO de sala, usa metricas como semana actual, días restantes, etc.
+3. NO ALUCINES FUNCIONES RARAS (ej 'today'). En su lugar calcula la fecha usando el FECHA ACTUAL provisto aquí.
+`;
+    const baseHistory = [
+      {
+        role: "user",
+        parts: [
+          {
+            text: systemInstruction
+          }
+        ]
+      },
+      {
+        role: "model",
+        parts: [
+          {
+            text: "Entendido. Soy Growy, el asistente de TrazAPP. ¿En qué te puedo ayudar hoy?"
+          }
+        ]
+      }
+    ];
+    // Mapeamos el history que nos manda el frontend
+    const mappedHistory = history.map((msg) => ({
+      role: msg.role === 'user' ? 'user' : 'model',
+      parts: [
+        {
+          text: msg.content
+        }
+      ]
+    }));
+    const chat = model.startChat({
+      history: [
+        ...baseHistory,
+        ...mappedHistory
+      ],
+      generationConfig: {
+        maxOutputTokens: 1000,
+        temperature: 0.2
+      }
+    });
+    // 1. Primer envío a Gemini
+    console.log("1. Preparando envío del prompt a Gemini:", prompt);
+    console.log("1.1. Tools configuradas:", growyTools.map((t) => t.name).join(", "));
+    let result = await chat.sendMessage(prompt);
+    console.log("2. Respuesta recibida exitosamente desde Gemini.");
+    let response = result.response;
+    // Helper para extraer functionCalls de manera segura
+    const getFunctionCalls = (res) => {
+      let parsedFunctionCalls = [];
+      if (res.candidates && res.candidates.length > 0) {
+        const parts = res.candidates[0].content?.parts || [];
+        for (const part of parts) {
+          if (part.functionCall) parsedFunctionCalls.push(part.functionCall);
+        }
+      }
+      if (parsedFunctionCalls.length === 0 && typeof res.functionCalls === 'function') {
+        const calls = res.functionCalls();
+        if (calls) parsedFunctionCalls = calls;
+      }
+      return parsedFunctionCalls;
+    };
+    let parsedFunctionCalls = getFunctionCalls(response);
+    // Listado de tools seguras de lectura (RAG)
+    const readOnlyTools = [
+      "get_active_crops",
+      "get_rooms_for_crop",
+      "get_pending_tasks",
+      "get_organization_overview",
+      "get_financial_summary",
+      "read_financial_report",
+      "read_agricultural_report"
+    ];
+    let currentResponse = response;
+    let loopCount = 0;
+    const MAX_LOOPS = 4; // Evitar iteración infinita si Gemini se confunde
+    while (loopCount < MAX_LOOPS) {
+      loopCount++;
+      let parsedFunctionCalls = getFunctionCalls(currentResponse);
+      // 1. Si NO hay tools solicitadas, significa que Gemini quiere responder con texto
+      if (parsedFunctionCalls.length === 0) {
+        let finalResponseText = "";
+        try {
+          finalResponseText = currentResponse.text();
+        } catch (e) {
+          console.error("Error al extraer texto final de Gemini:", e);
+        }
+        if (!finalResponseText || finalResponseText.trim() === '') {
+          finalResponseText = "He procesado tu comando y navegado los datos exitosamente.";
+        }
+        console.log(`Bucle completado en ${loopCount} iteraciones. Respuesta:`, finalResponseText);
+        return new Response(JSON.stringify({
+          response: finalResponseText,
+          success: true
+        }), {
+          headers: {
+            ...corsHeaders,
+            'Content-Type': 'application/json'
+          },
+          status: 200
+        });
+      }
+      // 2. Clasificar tools solicitadas en este lote
+      const actionCalls = parsedFunctionCalls.filter((c) => !readOnlyTools.includes(c.name));
+      const ragCalls = parsedFunctionCalls.filter((c) => readOnlyTools.includes(c.name));
+      // 3. Si HAY herramientas de ACCIÓN mutable en el lote -> Rompemos el ciclo y enviamos al Frontend como Lote Atómico
+      if (actionCalls.length > 0) {
+        console.log(`Herramientas de Acción detectadas (${actionCalls.length}):`, actionCalls.map((c) => c.name));
+        // Mapear al nuevo formato de Batch Propsal UI
+        const proposalsArray = actionCalls.map((call, index) => ({
+          id: `tmp_action_${index}`,
+          name: call.name,
+          args: call.args
+        }));
+        return new Response(JSON.stringify({
+          success: true,
+          action_proposals: proposalsArray
+        }), {
+          headers: {
+            ...corsHeaders,
+            'Content-Type': 'application/json'
+          },
+          status: 200
+        });
+      }
+      // Si no hay acciones, significa que solo hay peticiones RAG. Tomamos la primera (como antes) para resolver info.
+      // Podría soportar múltiples RAG pero por la arquitectura actual de Gemini un RAG a la vez o resolver todo junto.
+      // Mantenemos la lógica de RAG tal cual para no romperla.
+      const call = ragCalls[0] || parsedFunctionCalls[0];
+      // 4. Es un Read-Only Tool, ejecutamos silenciosamente el RAG
+      console.log(`Consultando Supabase RAG [${call.name}] para orgId:`, orgId);
+      const authHeader = req.headers.get('Authorization');
+      const supabaseClient = createClient(Deno.env.get('SUPABASE_URL') ?? '', Deno.env.get('SUPABASE_ANON_KEY') ?? '', {
+        global: {
+          headers: {
+            Authorization: authHeader
+          }
+        }
+      });
+      let functionResponseData = {};
+      try {
+        if (call.name === "get_active_crops") {
+          const { data, error } = await supabaseClient.from('chakra_crops').select('id, name, location, status, start_date').eq('organization_id', orgId).eq('status', 'active');
+          if (error) console.error("RAG Error crops:", error);
+          console.log("Supabase response active crops:", data ? data.length : 0);
+          functionResponseData = {
+            items: data || []
+          };
+        } else if (call.name === "get_rooms_for_crop") {
+          // --- 1. Fetch Rooms and internal Batches ---
+          const { data: roomsData, error: roomsError } = await supabaseClient.from('rooms').select(`
+              id,
+              name,
+              type,
+              start_date,
+              operational_days,
+              active_batches:batches!current_room_id(
+                id,
+                name,
+                parent_batch_id,
+                quantity,
+                start_date,
+                clone_map_id,
+                genetic:genetics(name),
+                parent_batch:batches!parent_batch_id(name)
+              )
+            `).eq('spot_id', call.args.cropId);
+          if (roomsError) console.error("RAG Error rooms:", roomsError);
+          console.log("Supabase response rooms:", roomsData ? roomsData.length : 0);
+          let formattedData = [];
+          let orgUsersData = [];
+          if (roomsData && roomsData.length > 0) {
+            const roomIds = roomsData.map((r) => r.id);
+            // --- 2. Fetch external relations independently to avoid PostgREST FK errors ---
+            let mapsData = [];
+            let tasksData = [];
+            let stickiesData = [];
+            const [mapsRes, tasksRes, stickiesRes, orgUsersRes] = await Promise.all([
+              supabaseClient.from('clone_maps').select('id, name, room_id').in('room_id', roomIds),
+              supabaseClient.from('chakra_tasks').select('id, title, status, due_date, room_id').in('room_id', roomIds).eq('status', 'pending'),
+              supabaseClient.from('chakra_stickies').select('id, content, room_id').in('room_id', roomIds),
+              supabaseClient.from('profiles_organizations').select('profile_id, profiles(full_name, role)').eq('organization_id', orgId)
+            ]);
+            mapsData = mapsRes.data;
+            tasksData = tasksRes.data;
+            stickiesData = stickiesRes.data;
+            orgUsersData = orgUsersRes.data;
+            // Create Lookups
+            const mapsByRoom = (mapsData || []).reduce((acc, curr) => {
+              if (!acc[curr.room_id]) acc[curr.room_id] = [];
+              acc[curr.room_id].push(curr);
+              return acc;
+            }, {});
+            const tasksByRoom = (tasksData || []).reduce((acc, curr) => {
+              if (!acc[curr.room_id]) acc[curr.room_id] = [];
+              acc[curr.room_id].push({
+                titulo: curr.title,
+                fecha_vencimiento: curr.due_date
+              });
+              return acc;
+            }, {});
+            const stickiesByRoom = (stickiesData || []).reduce((acc, curr) => {
+              if (!acc[curr.room_id]) acc[curr.room_id] = [];
+              acc[curr.room_id].push(curr.content);
+              return acc;
+            }, {});
+            // --- 3. Formateamos la respuesta para Gemini ---
+            formattedData = roomsData.map((room) => {
+              const total_plants = room.active_batches?.reduce((acc, batch) => acc + (batch.quantity || 0), 0) || 0;
+              // --- CÁLCULO DE SEMANA ACTUAL ---
+              let effectiveStartDate = room.start_date;
+              if (room.active_batches && room.active_batches.length > 0) {
+                const earliestBatchDate = room.active_batches.reduce((min, b) => b.start_date < min ? b.start_date : min, room.active_batches[0].start_date);
+                effectiveStartDate = earliestBatchDate;
+              }
+              let currentWeek = null;
+              if (effectiveStartDate) {
+                const startDate = new Date(effectiveStartDate);
+                const now = new Date();
+                const diffTime = Math.abs(now.getTime() - startDate.getTime());
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                currentWeek = Math.floor(diffDays / 7) + 1;
+              }
+              // --- CÁLCULO DE DÍAS RESTANTES ---
+              let daysRemaining = null;
+              if (room.start_date && room.operational_days) {
+                const start = new Date(room.start_date);
+                const end = new Date(start);
+                end.setDate(start.getDate() + room.operational_days);
+                const now = new Date();
+                const diffDays = Math.ceil((end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+                daysRemaining = diffDays;
+              }
+              // --- AGRUPACIÓN DE LOTES (Respetando Lote Origen) ---
+              const groupedBatches = {};
+              room.active_batches?.forEach((b) => {
+                const loteId = b.parent_batch_id || b.id;
+                let parentName = undefined;
+                if (b.parent_batch) {
+                  parentName = Array.isArray(b.parent_batch) ? b.parent_batch[0]?.name : b.parent_batch.name;
+                }
+                const loteName = parentName || b.name || "Lote Sin Nombre";
+                const geneticName = b.genetic?.name || "Desconocida";
+                if (!groupedBatches[loteId]) {
+                  groupedBatches[loteId] = {
+                    name: loteName,
+                    quantity: 0,
+                    startDate: b.start_date,
+                    genetics: new Set()
+                  };
+                }
+                groupedBatches[loteId].quantity += b.quantity || 1;
+                groupedBatches[loteId].genetics.add(geneticName);
+              });
+              const batches = Object.values(groupedBatches).map((lote) => ({
+                nombre_lote: lote.name,
+                genetitcas: Array.from(lote.genetics).join(", "),
+                fecha_inicio: lote.startDate,
+                cantidad_plantas: lote.quantity
+              }));
+              // --- MAPAS/MESAS (Calculando asignaciones) ---
+              const roomMaps = mapsByRoom[room.id] || [];
+              const activeMaps = roomMaps.map((map) => {
+                const plantsInMap = room.active_batches?.filter((b) => b.clone_map_id === map.id).reduce((acc, b) => acc + (b.quantity || 1), 0) || 0;
+                return {
+                  map_id: map.id,
+                  nombre_mapa: map.name,
+                  plantas_asignadas: plantsInMap
+                };
+              });
+              return {
+                id: room.id,
+                nombre_sala: room.name,
+                tipo_sala: room.type,
+                semana_actual: currentWeek,
+                dias_restantes_vida_util: daysRemaining,
+                plantas_totales_en_sala: total_plants,
+                lotes_activos: batches,
+                mesas_mapas_activos: activeMaps,
+                tareas_pendientes: tasksByRoom[room.id] || [],
+                notas_fijadas: stickiesByRoom[room.id] || []
+              };
+            });
+          }
+          const orgMembers = (orgUsersData || []).map((ou) => ({
+            usuario_id: ou.profile_id,
+            nombre: ou.profiles?.full_name || 'Desconocido',
+            rol: ou.profiles?.role || 'user'
+          }));
+          functionResponseData = {
+            items: formattedData || [],
+            equipo_de_trabajo: orgMembers
+          };
+        } else if (call.name === "get_pending_tasks") {
+          let query = supabaseClient.from('chakra_tasks').select(`
+                id, title, due_date, status, type, description,
+                profiles:assigned_to(full_name)
+            `).eq('organization_id', orgId).in('status', [
+            'pending',
+            'in_progress'
+          ]).order('due_date', {
+            ascending: true
+          }).limit(50);
+          const { data, error } = await query;
+          if (error) console.error("RAG Error tasks:", error);
+          let filteredData = data || [];
+          if (call.args?.assignedToName && filteredData.length > 0) {
+            const searchName = call.args.assignedToName.toLowerCase();
+            filteredData = filteredData.filter((t) => {
+              // Check if profiles is an array (PostgREST sometimes returns an object or array)
+              const fullName = Array.isArray(t.profiles) ? t.profiles[0]?.full_name : t.profiles?.full_name;
+              return fullName?.toLowerCase().includes(searchName);
+            });
+          }
+          console.log("Supabase response tasks:", filteredData.length);
+          functionResponseData = {
+            items: filteredData
+          };
+        } else if (call.name === "get_financial_summary") {
+          const startOfMonth = new Date();
+          startOfMonth.setDate(1);
+          const startStr = startOfMonth.toISOString().split('T')[0];
+          const { data, error } = await supabaseClient.from('chakra_expenses').select('amount, type, category, concept, date').eq('organization_id', orgId).gte('date', startStr);
+          if (error) console.error("RAG Error expenses:", error);
+          let totalIncome = 0;
+          let totalExpense = 0;
+          let breakdown = {};
+          if (data) {
+            data.forEach((m) => {
+              if (m.type === 'INGRESO') totalIncome += m.amount;
+              if (m.type === 'EGRESO') {
+                totalExpense += m.amount;
+                breakdown[m.category] = (breakdown[m.category] || 0) + m.amount;
+              }
+            });
+          }
+          console.log("Supabase response finance records:", data ? data.length : 0);
+          functionResponseData = {
+            summary: {
+              ingresos_mes_actual: totalIncome,
+              gastos_mes_actual: totalExpense,
+              flujo_neto: totalIncome - totalExpense,
+              gastos_por_categoria: breakdown,
+              movimientos_recientes: data ? data.slice(0, 10) : [] // Ultimás transacciones
+            }
+          };
+        } else if (call.name === "get_organization_overview") {
+          const crops = await supabaseClient.from('chakra_crops').select('id', {
+            count: 'exact',
+            head: true
+          }).eq('organization_id', orgId);
+          console.log("Supabase response metrics:", crops.count);
+          functionResponseData = {
+            summary: {
+              total_active_crops: crops.count || 0
+            }
+          };
+        } else if (call.name === "read_financial_report") {
+          const year = call.args?.year || new Date().getFullYear();
+          const startStr = `${year}-01-01`;
+          const endStr = `${year}-12-31`;
+
+          console.log(`Ejecutando reportes financieros para el año ${year} en la org ${orgId}...`);
+          // Ejecutamos las dos RPCs necesarias
+          const [mMetricsRes, cBreakdownRes] = await Promise.all([
+            supabaseClient.rpc('get_monthly_metrics', { query_year: year }),
+            supabaseClient.rpc('get_cost_breakdown', { start_date: startStr, end_date: endStr })
+          ]);
+
+          functionResponseData = {
+            year,
+            monthly_cashflow: mMetricsRes.data || [],
+            cost_breakdown_by_category: cBreakdownRes.data || []
+          };
+        } else if (call.name === "read_agricultural_report") {
+          console.log(`Ejecutando reporte agrícola en la org ${orgId}...`);
+
+          // Recreated direct table queries from metricServices.ts (Mortality & Survival)
+          const [genPerfRes, mortRes, survRes] = await Promise.all([
+            supabaseClient.rpc('get_genetic_performance'),
+            supabaseClient.from('batches').select('discard_reason, quantity').not('discard_reason', 'is', null).neq('discard_reason', 'Distribuido en Mapa (Bulk)').eq('organization_id', orgId),
+            supabaseClient.from('batches').select('discarded_at, discard_reason, quantity, genetics(name)').eq('organization_id', orgId)
+          ]);
+
+          // Recalculating Mortality Stats
+          const mortStats: Record<string, number> = {};
+          mortRes.data?.forEach((b: any) => {
+            const reasonBase = b.discard_reason.split(' - ')[0];
+            mortStats[reasonBase] = (mortStats[reasonBase] || 0) + (b.quantity || 1);
+          });
+          const parsedMortality = Object.entries(mortStats).map(([reason, count]) => ({ reason, count })).sort((a, b) => b.count - a.count);
+
+          // Recalculating Survival Rate
+          const survStats: Record<string, { total: number, discarded: number }> = {};
+          survRes.data?.forEach((b: any) => {
+            const geneticData = Array.isArray(b.genetics) ? b.genetics[0] : b.genetics;
+            const name = geneticData?.name || 'Desconocida';
+            if (!survStats[name]) survStats[name] = { total: 0, discarded: 0 };
+
+            const qty = b.quantity || 1;
+            survStats[name].total += qty;
+            if (b.discarded_at && b.discard_reason !== 'Distribuido en Mapa (Bulk)') {
+              survStats[name].discarded += qty;
+            }
+          });
+          const parsedSurvival = Object.entries(survStats).map(([genetic_name, stat]) => ({
+            genetic_name,
+            total: stat.total,
+            discarded: stat.discarded,
+            survival_rate: stat.total > 0 ? ((stat.total - stat.discarded) / stat.total) * 100 : 0
+          })).sort((a, b) => b.survival_rate - a.survival_rate);
+
+          functionResponseData = {
+            genetic_performance: genPerfRes.data || [],
+            mortality_reasons: parsedMortality,
+            genetic_survival_rates: parsedSurvival
+          };
+        }
+      } catch (e) {
+        console.error("Excepción en consulta RAG:", e);
+        functionResponseData = {
+          error: "Failed to fetch data from database"
+        };
+      }
+      console.log(`Enviando resultado de función [${call.name}] de vuelta a Gemini...`);
+      // 5. Devolvemos la data a Gemini para que el bucle continúe en base a esto
+      const nextResult = await chat.sendMessage([
+        {
+          functionResponse: {
+            name: call.name,
+            response: functionResponseData
+          }
+        }
+      ]);
+      currentResponse = nextResult.response;
+    }
+    // Si el bucle termina por superar el MAX_LOOPS
+    return new Response(JSON.stringify({
+      response: "El proceso analizó demasiadas subrutinas y tuve que detenerlo antes de terminar. ¿Puedes ser más directo con tu consulta?",
+      success: true
+    }), {
+      headers: {
+        ...corsHeaders,
+        'Content-Type': 'application/json'
+      },
+      status: 200
+    });
+  } catch (error) {
+    console.error("Growy Error:", error);
+    // Intentamos recuperar la lista de modelos disponibles para debuggear la API Key
+    let availableModels = "";
+    try {
+      const apiKey = Deno.env.get('GEMINI_API_KEY');
+      if (apiKey) {
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
+        const data = await res.json();
+        if (data.models) {
+          const modelNames = data.models.map((m) => m.name.replace('models/', '')).join(', ');
+          availableModels = ` | Modelos disponibles: ${modelNames}`;
+        }
+      }
+    } catch (e) {
+      console.error("No se pudo obtener la lista de modelos", e);
+    }
+    return new Response(JSON.stringify({
+      error: error.message + availableModels,
+      success: false
+    }), {
+      headers: {
+        ...corsHeaders,
+        'Content-Type': 'application/json'
+      },
+      status: 200
+    });
+  }
+});

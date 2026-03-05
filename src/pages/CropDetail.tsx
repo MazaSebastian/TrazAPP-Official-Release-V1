@@ -4,6 +4,7 @@ import { Tooltip } from '../components/Tooltip';
 
 import { useParams, useNavigate } from 'react-router-dom';
 import styled, { keyframes, css } from 'styled-components';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   format,
   // eachMonthOfInterval removed
@@ -126,6 +127,51 @@ const CreateCard = styled.div`
     span {
       font-size: 0.9rem !important;
     }
+  }
+`;
+
+const GlassSwitchContainer = styled.label`
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  user-select: none;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #cbd5e0;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  background: rgba(30, 41, 59, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  transition: all 0.2s;
+
+  &:hover {
+    background: rgba(30, 41, 59, 0.5);
+    border-color: rgba(74, 222, 128, 0.2);
+  }
+`;
+
+const GlassSwitchTrack = styled.div<{ $checked: boolean }>`
+  position: relative;
+  width: 42px;
+  height: 24px;
+  background: ${props => props.$checked ? 'rgba(74, 222, 128, 0.2)' : 'rgba(15, 23, 42, 0.6)'};
+  border: 1px solid ${props => props.$checked ? 'rgba(74, 222, 128, 0.5)' : 'rgba(255, 255, 255, 0.1)'};
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: ${props => props.$checked ? '20px' : '2px'};
+    width: 18px;
+    height: 18px;
+    background: ${props => props.$checked ? '#4ade80' : '#94a3b8'};
+    border-radius: 50%;
+    transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
   }
 `;
 
@@ -950,9 +996,9 @@ const CropDetail: React.FC = () => {
   // Recurrence State
   const [recurrenceEnabled, setRecurrenceEnabled] = useState(false);
   const [recurrenceConfig, setRecurrenceConfig] = useState<RecurrenceConfig>({
-    type: 'daily',
+    type: 'weekly',
     interval: 1,
-    unit: 'day',
+    unit: 'week',
     daysOfWeek: [],
     endOccurrences: undefined,
     endDate: undefined
@@ -1016,6 +1062,8 @@ const CropDetail: React.FC = () => {
     macetaGeneticId?: string;
     startDate?: string;
     operationalDays?: number; // Optional: Only for alerts
+    hasPreFlowering?: boolean;
+    preFloweringDays?: number;
     tablesList?: { id: string; name: string }[]; // For Esquejera/Clones if complex
   }>({
     name: '',
@@ -1025,6 +1073,8 @@ const CropDetail: React.FC = () => {
     macetaGeneticId: '',
     startDate: new Date().toISOString().split('T')[0], // Default today
     operationalDays: undefined,
+    hasPreFlowering: false,
+    preFloweringDays: undefined,
     tablesList: []
   });
 
@@ -1249,7 +1299,8 @@ const CropDetail: React.FC = () => {
         capacity: 0,
         spot_id: id,
         start_date: roomForm.startDate,
-        operational_days: roomForm.operationalDays ? Number(roomForm.operationalDays) : undefined // Pass to service
+        operational_days: roomForm.operationalDays ? Number(roomForm.operationalDays) : undefined, // Pass to service
+        pre_flowering_days: roomForm.hasPreFlowering && roomForm.preFloweringDays ? Number(roomForm.preFloweringDays) : undefined
       });
 
       if (newRoom) {
@@ -1895,16 +1946,26 @@ const CropDetail: React.FC = () => {
                         end.setDate(start.getDate() + room.operational_days);
 
                         const diffDays = differenceInDays(end, now);
+                        const diffFromStart = differenceInDays(now, start);
 
-                        if (diffDays <= 0) {
-                          isPeriodOver = true;
-                          daysRemainingString = "Periodo finalizado";
-                          alertLevel = 3; // Finished = Critical
+                        // Check if in pre-flowering adaptation phase
+                        if (room.pre_flowering_days && diffFromStart < room.pre_flowering_days) {
+                          const preFlowerRemaining = room.pre_flowering_days - diffFromStart;
+                          daysRemainingString = `${preFlowerRemaining}d de Pre-floración/Adaptación restantes`;
+                          // Alert logic for pre-flowering transition
+                          if (preFlowerRemaining <= 2) alertLevel = 2;
                         } else {
-                          daysRemainingString = `${diffDays} días restantes`;
-                          if (diffDays <= 3) alertLevel = 3;
-                          else if (diffDays <= 5) alertLevel = 2;
-                          else if (diffDays <= 7) alertLevel = 1;
+                          // Standard countdown for operational days
+                          if (diffDays <= 0) {
+                            isPeriodOver = true;
+                            daysRemainingString = "Periodo finalizado";
+                            alertLevel = 3; // Finished = Critical
+                          } else {
+                            daysRemainingString = `${diffDays} días restantes`;
+                            if (diffDays <= 3) alertLevel = 3;
+                            else if (diffDays <= 5) alertLevel = 2;
+                            else if (diffDays <= 7) alertLevel = 1;
+                          }
                         }
                       }
 
@@ -2497,21 +2558,63 @@ const CropDetail: React.FC = () => {
                   <label>Días de Funcionamiento <span style={{ color: 'red' }}>*</span></label>
                   <input
                     type="number"
-                    placeholder="Ej: 30"
+                    placeholder="Ej: 75"
                     value={roomForm.operationalDays || ''}
                     onChange={e => setRoomForm({ ...roomForm, operationalDays: e.target.value ? Number(e.target.value) : undefined })}
                   />
                   <small style={{ display: 'block', marginTop: '0.25rem', color: '#718096' }}>
-                    Definir la duración del ciclo para activar las alertas.
+                    Suma total de días (incluye adaptación, pre-floración y floración).
                   </small>
                 </FormGroup>
+              )}
+
+              {roomForm.type === 'flowering' && (
+                <>
+                  <FormGroup>
+                    <GlassSwitchContainer>
+                      <input
+                        type="checkbox"
+                        checked={roomForm.hasPreFlowering || false}
+                        onChange={(e) => setRoomForm({ ...roomForm, hasPreFlowering: e.target.checked })}
+                        style={{ display: 'none' }}
+                      />
+                      <GlassSwitchTrack $checked={roomForm.hasPreFlowering || false} />
+                      ¿Realiza Pre-Floración / Período de Adaptación?
+                    </GlassSwitchContainer>
+                  </FormGroup>
+
+                  <AnimatePresence>
+                    {roomForm.hasPreFlowering && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                        animate={{ opacity: 1, height: 'auto', marginTop: 16 }}
+                        exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                        transition={{ duration: 0.3, ease: 'easeInOut' }}
+                        style={{ overflow: 'hidden' }}
+                      >
+                        <FormGroup style={{ marginBottom: 0 }}>
+                          <label>Días de Pre-Floración / Adaptación</label>
+                          <input
+                            type="number"
+                            placeholder="Ej: 15"
+                            value={roomForm.preFloweringDays || ''}
+                            onChange={e => setRoomForm({ ...roomForm, preFloweringDays: e.target.value ? Number(e.target.value) : undefined })}
+                          />
+                          <small style={{ display: 'block', marginTop: '0.25rem', color: '#718096' }}>
+                            Estos días determinarán la cuenta regresiva inicial antes de pasar a la cuenta visual completa.
+                          </small>
+                        </FormGroup>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </>
               )}
 
               <FormGroup>
                 <label>Fase de Cultivo</label>
                 <CustomSelect
                   value={roomForm.type}
-                  onChange={(value) => setRoomForm({ ...roomForm, type: value as any })}
+                  onChange={(value) => setRoomForm({ ...roomForm, type: value as any, hasPreFlowering: false, preFloweringDays: undefined })}
                   options={[
                     { value: "vegetation", label: "Vegetación" },
                     { value: "flowering", label: "Floración" },
@@ -2747,8 +2850,8 @@ const CropDetail: React.FC = () => {
                                     }}
                                     style={{
                                       width: '32px', height: '32px', borderRadius: '50%', border: 'none',
-                                      background: isSelected ? '#3182ce' : '#e2e8f0',
-                                      color: isSelected ? 'white' : '#4a5568',
+                                      background: isSelected ? 'rgba(74, 222, 128, 0.2)' : '#e2e8f0',
+                                      color: isSelected ? '#4ade80' : '#4a5568',
                                       fontWeight: 'bold', cursor: 'pointer', fontSize: '0.8rem'
                                     }}
                                   >

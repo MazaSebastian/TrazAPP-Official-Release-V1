@@ -68,6 +68,7 @@ export const metricsService = {
             .from('batches')
             .select('discard_reason, quantity')
             .not('discard_reason', 'is', null)
+            .neq('discard_reason', 'Distribuido en Mapa (Bulk)')
             .eq('organization_id', getSelectedOrgId());
 
         if (error) {
@@ -87,7 +88,7 @@ export const metricsService = {
         if (!supabase) return [];
         const { data, error } = await supabase
             .from('batches')
-            .select('discarded_at, quantity, genetics(name)')
+            .select('discarded_at, discard_reason, quantity, genetics(name)')
             .eq('organization_id', getSelectedOrgId());
 
         if (error) {
@@ -104,7 +105,7 @@ export const metricsService = {
 
             const qty = b.quantity || 1;
             stats[name].total += qty;
-            if (b.discarded_at) {
+            if (b.discarded_at && b.discard_reason !== 'Distribuido en Mapa (Bulk)') {
                 stats[name].discarded += qty;
             }
         });

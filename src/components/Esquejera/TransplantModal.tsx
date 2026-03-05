@@ -622,7 +622,8 @@ export const TransplantModal: React.FC<TransplantModalProps> = ({ isOpen, onClos
                                             placeholder="-- Seleccionar Sala --"
                                             options={targetRooms.map(r => ({
                                                 value: r.id,
-                                                label: `${r.name} (${r.type === 'flowering' ? 'Flora' : 'Veg'})`
+                                                label: `${r.name} (${r.type === 'flowering' ? 'Flora' : 'Veg'})`,
+                                                group: r.spot?.name || 'Cultivo Principal' // Map by crop/spot name
                                             }))}
                                         />
                                     </Section>

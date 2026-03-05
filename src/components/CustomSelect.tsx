@@ -66,6 +66,19 @@ const OptionItem = styled.div<{ $isSelected: boolean }>`
   }
 `;
 
+const GroupLabel = styled.div`
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #94a3b8;
+  background: rgba(0, 0, 0, 0.2);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+`;
+
 const HiddenSelect = styled.select`
   display: none;
 `;
@@ -73,6 +86,7 @@ const HiddenSelect = styled.select`
 interface Option {
     value: string;
     label: string;
+    group?: string;
 }
 
 interface CustomSelectProps {
@@ -167,24 +181,74 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({ value, onChange, opt
                     $coords={coords}
                     onMouseDown={(e) => e.stopPropagation()} // Prevent closing when clicking scrollbar/empty space in dropdown
                 >
-                    {options.map(option => (
-                        <OptionItem
-                            key={option.value}
-                            $isSelected={option.value === value}
-                            onMouseDown={() => handleSelect(option.value)} // Use onMouseDown to fire before blur/click-outside
-                        >
-                            {option.label}
-                        </OptionItem>
-                    ))}
+                    {(() => {
+                        const hasGroups = options.some(opt => opt.group);
+
+                        if (!hasGroups) {
+                            return options.map(option => (
+                                <OptionItem
+                                    key={option.value}
+                                    $isSelected={option.value === value}
+                                    onMouseDown={() => handleSelect(option.value)}
+                                >
+                                    {option.label}
+                                </OptionItem>
+                            ));
+                        }
+
+                        // Group Options
+                        const grouped = options.reduce((acc, opt) => {
+                            const groupName = opt.group || 'Sin Grupo';
+                            if (!acc[groupName]) acc[groupName] = [];
+                            acc[groupName].push(opt);
+                            return acc;
+                        }, {} as Record<string, Option[]>);
+
+                        return Object.entries(grouped).map(([groupName, groupOptions]) => (
+                            <React.Fragment key={groupName}>
+                                <GroupLabel>{groupName}</GroupLabel>
+                                {groupOptions.map(option => (
+                                    <OptionItem
+                                        key={option.value}
+                                        $isSelected={option.value === value}
+                                        onMouseDown={() => handleSelect(option.value)}
+                                        style={{ paddingLeft: '2rem' }} // Indent items in groups
+                                    >
+                                        {option.label}
+                                    </OptionItem>
+                                ))}
+                            </React.Fragment>
+                        ));
+                    })()}
                 </DropdownMenu>,
                 document.body
             )}
 
             {/* Hidden native select for form data/accessibility fallback if needed later */}
             <HiddenSelect value={value} onChange={e => onChange(e.target.value)} tabIndex={-1}>
-                {options.map(opt => (
-                    <option key={opt.value} value={opt.value}>{opt.label}</option>
-                ))}
+                {(() => {
+                    const hasGroups = options.some(opt => opt.group);
+                    if (!hasGroups) {
+                        return options.map(opt => (
+                            <option key={opt.value} value={opt.value}>{opt.label}</option>
+                        ));
+                    }
+
+                    const grouped = options.reduce((acc, opt) => {
+                        const groupName = opt.group || 'Sin Grupo';
+                        if (!acc[groupName]) acc[groupName] = [];
+                        acc[groupName].push(opt);
+                        return acc;
+                    }, {} as Record<string, Option[]>);
+
+                    return Object.entries(grouped).map(([groupName, groupOptions]) => (
+                        <optgroup key={groupName} label={groupName}>
+                            {groupOptions.map(opt => (
+                                <option key={opt.value} value={opt.value}>{opt.label}</option>
+                            ))}
+                        </optgroup>
+                    ));
+                })()}
             </HiddenSelect>
         </SelectContainer>
     );

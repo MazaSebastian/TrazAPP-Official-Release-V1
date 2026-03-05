@@ -35,6 +35,7 @@ export const tasksService = {
                 due_date: task.due_date,
                 crop_id: task.crop_id,
                 room_id: task.room_id,
+                map_id: task.map_id,
                 assigned_to: task.assigned_to,
                 status: 'pending',
                 observations: task.observations,
@@ -144,7 +145,7 @@ export const tasksService = {
             .eq('id', id);
 
         if (error) {
-            console.error('Error deleting task:', error);
+            console.error('Error deleting task:', error, JSON.stringify(error, null, 2));
             return false;
         }
         return true;

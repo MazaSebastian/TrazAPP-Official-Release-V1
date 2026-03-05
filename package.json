@@ -3,9 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@deepgram/sdk": "^4.11.3",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
+    "@google/generative-ai": "^0.24.1",
     "@gsap/react": "^2.1.2",
     "@react-three/fiber": "^8.18.0",
     "@supabase/supabase-js": "^2.56.1",
@@ -84,5 +86,18 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
-  }
+  },
+  "description": "Sistema de gestión y e-commerce para Aurora Del Plata.",
+  "main": "check_db.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MazaSebastian/TrazAPP-Official-Release-V1.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
 }

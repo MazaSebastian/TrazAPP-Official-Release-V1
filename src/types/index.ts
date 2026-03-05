@@ -142,6 +142,7 @@ export interface Task {
   observations?: string;
   photos?: string[];
   crop_id?: string;
+  map_id?: string;
   completed_at?: string;
   recurrence?: RecurrenceConfig;
 }
@@ -153,6 +154,7 @@ export interface CreateTaskInput {
   due_date?: string;
   crop_id?: string;
   room_id?: string;
+  map_id?: string;
   assigned_to?: string;
   observations?: string;
   photos?: string[];
@@ -167,6 +169,7 @@ export interface RecurrenceConfig {
   endDate?: string; // ISO
   endOccurrences?: number;
   currentOccurrence?: number;
+  exceptions?: string[]; // Array of YYYY-MM-DD strings for deleted occurrences
 }
 
 

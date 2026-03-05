@@ -623,81 +623,86 @@ const Genetics: React.FC = () => {
         const activeBatches = await geneticsService.getActiveBatchesForGenetic(genetic.id);
 
         if (activeBatches && activeBatches.length > 0) {
-            // Calculate total plants
-            const totalPlants = activeBatches.reduce((acc: number, b: any) => acc + (b.quantity || 1), 0);
+            // Filter out stages we know are "inactive" just to be safe, though service should handle it
+            const trulyActiveBatches = activeBatches.filter(b => b.stage !== 'completed' && b.stage !== 'discarded');
 
-            // Group by location
-            const groupedLocations = activeBatches.reduce((acc: any, b: any) => {
-                const roomName = b.room?.name || 'Sala Desconocida';
-                const spotName = b.room?.spot?.name ? `Cultivo: ${b.room.spot.name}` : 'Sin Cultivo Asignado';
-                const key = `${spotName} - Sala: ${roomName}`;
+            if (trulyActiveBatches.length > 0) {
+                // Calculate total plants from truly active batches
+                const totalPlants = trulyActiveBatches.reduce((acc: number, b: any) => acc + (b.quantity || 1), 0);
 
-                if (!acc[key]) {
-                    acc[key] = {
-                        qty: 0,
-                        spotId: b.room?.spot_id || null,
-                        roomId: b.room?.id || null,
-                        spotName: spotName,
-                        roomName: `Sala: ${roomName}`
-                    };
-                }
-                acc[key].qty += (b.quantity || 1);
+                // Group by location
+                const groupedLocations = trulyActiveBatches.reduce((acc: any, b: any) => {
+                    const roomName = b.room?.name || 'Sala Desconocida';
+                    const spotName = b.room?.spot?.name ? `Cultivo: ${b.room.spot.name}` : 'Sin Cultivo Asignado';
+                    const key = `${spotName} - Sala: ${roomName}`;
 
-                return acc;
-            }, {});
+                    if (!acc[key]) {
+                        acc[key] = {
+                            qty: 0,
+                            spotId: b.room?.spot_id || null,
+                            roomId: b.room?.id || null,
+                            spotName: spotName,
+                            roomName: `Sala: ${roomName}`
+                        };
+                    }
+                    acc[key].qty += (b.quantity || 1);
 
-            const locationEntries = Object.entries(groupedLocations).map(([key, value]: [string, any]) => ({
-                label: key,
-                qty: value.qty,
-                spotId: value.spotId,
-                roomId: value.roomId,
-                spotName: value.spotName,
-                roomName: value.roomName
-            }));
+                    return acc;
+                }, {});
 
-            // Find orphaned batches (no spot or room)
-            const orphanEntry = locationEntries.find(loc => !loc.spotId && !loc.roomId && loc.spotName === 'Sin Cultivo Asignado');
-            const orphanQty = orphanEntry ? orphanEntry.qty : 0;
+                const locationEntries = Object.entries(groupedLocations).map(([key, value]: [string, any]) => ({
+                    label: key,
+                    qty: value.qty,
+                    spotId: value.spotId,
+                    roomId: value.roomId,
+                    spotName: value.spotName,
+                    roomName: value.roomName
+                }));
 
-            const handleNavigate = (type: 'spot' | 'room', id: string) => {
-                setConfirmDeleteOpen(false);
-                setDeleteValidationError(null);
-                if (type === 'spot') {
-                    navigate(`/crops/${id}`);
-                } else {
-                    navigate(`/rooms/${id}`);
-                }
-            };
+                // Find orphaned batches (no spot or room)
+                const orphanEntry = locationEntries.find(loc => !loc.spotId && !loc.roomId && loc.spotName === 'Sin Cultivo Asignado');
+                const orphanQty = orphanEntry ? orphanEntry.qty : 0;
 
-            const handleOrphansDiscardedContext = () => {
-                setDeleteValidationError(null);
-                setConfirmDeleteOpen(false);
-                setToastMessage(`Las plantas huérfanas derivadas de ${genetic.name} han sido desechadas exitosamente.`);
-                setToastType('success');
-                setToastAnimate(false);
-                setToastOpen(true);
-                // Call handle delete click again to see if there are more
-                setTimeout(() => handleDeleteClick(genetic), 500);
-            };
+                const handleNavigate = (type: 'spot' | 'room', id: string) => {
+                    setConfirmDeleteOpen(false);
+                    setDeleteValidationError(null);
+                    if (type === 'spot') {
+                        navigate(`/crops/${id}`);
+                    } else {
+                        navigate(`/rooms/${id}`);
+                    }
+                };
 
-            const locationsListNode = <ExpandableLocationList locationEntries={locationEntries} onNavigate={handleNavigate} />;
+                const handleOrphansDiscardedContext = () => {
+                    setDeleteValidationError(null);
+                    setConfirmDeleteOpen(false);
+                    setToastMessage(`Las plantas huérfanas derivadas de ${genetic.name} han sido desechadas exitosamente.`);
+                    setToastType('success');
+                    setToastAnimate(false);
+                    setToastOpen(true);
+                    // Call handle delete click again to see if there are more
+                    setTimeout(() => handleDeleteClick(genetic), 500);
+                };
 
-            setDeleteValidationError(
-                <div>
-                    No puedes eliminar la genética <strong>{genetic.name}</strong> porque tienes <strong>{totalPlants} plantas activas</strong> en tu inventario.
-                    {locationsListNode}
-                    Debes cosechar, desechar o finalizar estas plantas antes de poder borrar la Madre de tu catálogo.
+                const locationsListNode = <ExpandableLocationList locationEntries={locationEntries} onNavigate={handleNavigate} />;
 
-                    {orphanQty > 0 && (
-                        <OrphanedBatchesCleaner
-                            geneticId={genetic.id}
-                            orphanQty={orphanQty}
-                            onSuccess={handleOrphansDiscardedContext}
-                        />
-                    )}
-                </div>
-            );
-            return;
+                setDeleteValidationError(
+                    <div>
+                        No puedes eliminar la genética <strong>{genetic.name}</strong> porque tienes <strong>{totalPlants} plantas activas</strong> en tu inventario.
+                        {locationsListNode}
+                        Debes cosechar, desechar o finalizar estas plantas antes de poder borrar la Madre de tu catálogo.
+
+                        {orphanQty > 0 && (
+                            <OrphanedBatchesCleaner
+                                geneticId={genetic.id}
+                                orphanQty={orphanQty}
+                                onSuccess={handleOrphansDiscardedContext}
+                            />
+                        )}
+                    </div>
+                );
+                return;
+            }
         }
 
         setGeneticToDelete(genetic);

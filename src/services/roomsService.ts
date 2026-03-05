@@ -74,6 +74,7 @@ export const roomsService = {
             .insert([{
                 ...room,
                 start_date: room.start_date, // Ensure this is passed
+                pre_flowering_days: room.pre_flowering_days, // Map new field
                 grid_rows: room.grid_rows,
                 grid_columns: room.grid_columns,
                 organization_id: getSelectedOrgId()

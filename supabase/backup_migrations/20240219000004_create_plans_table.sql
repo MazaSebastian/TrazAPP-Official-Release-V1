@@ -14,11 +14,13 @@ CREATE TABLE IF NOT EXISTS public.plans (
 ALTER TABLE public.plans ENABLE ROW LEVEL SECURITY;
 
 -- Allow read access to everyone
+DROP POLICY IF EXISTS "Allow public read access to plans" ON public.plans;
 CREATE POLICY "Allow public read access to plans" ON public.plans
     FOR SELECT USING (true);
 
 -- Allow write access only to admins (assuming you have an admin role or check)
 -- Adjust this policy based on your actual auth setup
+DROP POLICY IF EXISTS "Allow admin write access to plans" ON public.plans;
 CREATE POLICY "Allow admin write access to plans" ON public.plans
     FOR ALL USING (auth.role() = 'service_role'); 
     -- Or specific user role check: (auth.jwt() ->> 'role' = 'admin')

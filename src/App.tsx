@@ -49,6 +49,7 @@ import ClickSpark from './components/ClickSpark';
 import { GuidedTour } from './components/GuidedTour';
 
 import { ChatWidget } from './components/AI/ChatWidget';
+import { GrowyOrb } from './components/GrowyOrb';
 import PageTransition from './components/PageTransition';
 import { LoadingSpinner } from './components/LoadingSpinner';
 import { MainContent } from './components/MainContent';
@@ -103,6 +104,8 @@ function App() {
           {!isPublicRoute && <Sidebar />}
           {/* Temporarily hidden per user request */}
           {/* {!isPublicRoute && <ChatWidget />} */}
+          {/* New Growy Assistant */}
+          {!isPublicRoute && <GrowyOrb />}
 
           <Routes>
             <Route path="/login" element={<Login />} />

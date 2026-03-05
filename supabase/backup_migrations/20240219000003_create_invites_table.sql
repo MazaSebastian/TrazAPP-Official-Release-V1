@@ -16,6 +16,11 @@ ALTER TABLE public.organization_invites ENABLE ROW LEVEL SECURITY;
 
 -- Allow public read/write for now to facilitate the creating of invites from client side (if using client-side logic)
 -- ideally should be service role only for creation, but for this app structure:
+DROP POLICY IF EXISTS "Allow public insert to invites" ON public.organization_invites;
 CREATE POLICY "Allow public insert to invites" ON public.organization_invites FOR INSERT WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow public select to invites" ON public.organization_invites;
 CREATE POLICY "Allow public select to invites" ON public.organization_invites FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Allow public update to invites" ON public.organization_invites;
 CREATE POLICY "Allow public update to invites" ON public.organization_invites FOR UPDATE USING (true);

@@ -1456,6 +1456,22 @@ const RoomDetail: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
 
+    // --- ROOM EDIT STATE (HOISTED) ---
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [isClosingEditRoom, setIsClosingEditRoom] = useState(false);
+    const [isUpdatingRoom, setIsUpdatingRoom] = useState(false);
+
+    const closeEditRoomModal = () => {
+        setIsClosingEditRoom(true);
+        setTimeout(() => {
+            setIsEditModalOpen(false);
+            setIsClosingEditRoom(false);
+        }, 200);
+    };
+    const [editRoomName, setEditRoomName] = useState('');
+    const [editRoomType, setEditRoomType] = useState('');
+    const [editRoomStartDate, setEditRoomStartDate] = useState('');
+
     // --- BULK SELECTION & DELETE ---
     const [isSelectionMode, setIsSelectionMode] = useState(false);
     const [selectedBatchIds, setSelectedBatchIds] = useState<Set<string>>(new Set());
@@ -1631,9 +1647,86 @@ const RoomDetail: React.FC = () => {
     const [tasks, setTasks] = useState<Task[]>([]);
     const [stickies, setStickies] = useState<StickyNote[]>([]);
 
+
     // Day Summary State
     const [isDaySummaryOpen, setIsDaySummaryOpen] = useState(false);
     const [selectedDayForSummary, setSelectedDayForSummary] = useState<Date | null>(null);
+
+    // ==========================================
+    // VIRTUAL TASKS GENERATION (RECURRENCE LOGIC)
+    // ==========================================
+    const [searchParams, setSearchParams] = useSearchParams();
+    const activeMapId = searchParams.get('mapId');
+    const setActiveMapId = (id: string | null) => {
+        setSearchParams(prev => {
+            const newParams = new URLSearchParams(prev);
+            if (id) {
+                newParams.set('mapId', id);
+            } else {
+                newParams.delete('mapId');
+            }
+            return newParams;
+        });
+    };
+
+    const allTasksForView = useMemo(() => {
+        const virtualTasks: Task[] = [];
+        const endOfViewingWindow = endOfMonth(addMonths(currentDate, 1));
+
+        tasks.forEach(task => {
+            if (!task.recurrence || !task.due_date) return;
+
+            const rec = task.recurrence;
+            const [year, month, day] = task.due_date.split('T')[0].split('-');
+            let lastDate = new Date(Number(year), Number(month) - 1, Number(day), 12, 0, 0);
+            if (isNaN(lastDate.getTime())) return;
+
+            let safetyCounter = 0;
+
+            while (lastDate < endOfViewingWindow && safetyCounter < 100) {
+                let nextDate: Date | null = null;
+                const interval = typeof rec.interval === 'string' ? parseInt(rec.interval) || 1 : rec.interval || 1;
+
+                if (rec.type === 'custom' || rec.type === 'daily' || rec.type === 'weekly') {
+                    if (rec.unit === 'day' || rec.type === 'daily') {
+                        nextDate = addDays(lastDate, interval);
+                    } else if (rec.unit === 'week' || rec.type === 'weekly') {
+                        nextDate = addWeeks(lastDate, interval);
+                    } else if (rec.unit === 'month') {
+                        nextDate = addMonths(lastDate, interval);
+                    }
+                }
+
+                if (nextDate && nextDate <= endOfViewingWindow) {
+                    const formattedNextDate = format(nextDate, 'yyyy-MM-dd');
+                    const isExcluded = rec.exceptions && rec.exceptions.includes(formattedNextDate);
+
+                    if (!isExcluded) {
+                        virtualTasks.push({
+                            ...task,
+                            id: `virtual - ${task.id} -${nextDate.getTime()} `,
+                            due_date: formattedNextDate,
+                            status: 'pending',
+                            title: `${task.title} (Proyectada)`,
+                            type: task.type
+                        });
+                    }
+                    lastDate = nextDate;
+                } else {
+                    break;
+                }
+                safetyCounter++;
+            }
+        });
+
+        return [...tasks, ...virtualTasks].filter(t => {
+            if (activeMapId) {
+                return t.map_id === activeMapId;
+            } else {
+                return !t.map_id || t.map_id === null;
+            }
+        });
+    }, [tasks, currentDate, activeMapId]);
 
     // Sticky Modal State
     const [isStickyModalOpen, setIsStickyModalOpen] = useState(false);
@@ -1651,9 +1744,9 @@ const RoomDetail: React.FC = () => {
     // Recurrence State
     const [recurrenceEnabled, setRecurrenceEnabled] = useState(false);
     const [recurrenceConfig, setRecurrenceConfig] = useState<RecurrenceConfig>({
-        type: 'daily',
+        type: 'weekly',
         interval: 1,
-        unit: 'day',
+        unit: 'week',
         daysOfWeek: []
     });
 
@@ -1728,36 +1821,6 @@ const RoomDetail: React.FC = () => {
         message: '',
         type: 'info'
     });
-
-    const [searchParams, setSearchParams] = useSearchParams();
-    const activeMapId = searchParams.get('mapId');
-    const setActiveMapId = (id: string | null) => {
-        setSearchParams(prev => {
-            const newParams = new URLSearchParams(prev);
-            if (id) {
-                newParams.set('mapId', id);
-            } else {
-                newParams.delete('mapId');
-            }
-            return newParams;
-        });
-    };
-
-    // Room Edit State
-    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-    const [isClosingEditRoom, setIsClosingEditRoom] = useState(false);
-    const [isUpdatingRoom, setIsUpdatingRoom] = useState(false);
-
-    const closeEditRoomModal = () => {
-        setIsClosingEditRoom(true);
-        setTimeout(() => {
-            setIsEditModalOpen(false);
-            setIsClosingEditRoom(false);
-        }, 200);
-    };
-    const [editRoomName, setEditRoomName] = useState('');
-    const [editRoomType, setEditRoomType] = useState('');
-    const [editRoomStartDate, setEditRoomStartDate] = useState('');
 
     useEffect(() => {
         if (isEditModalOpen && room) {
@@ -3727,7 +3790,7 @@ const RoomDetail: React.FC = () => {
             setTaskForm({ title: '', type: 'info', due_date: format(day, 'yyyy-MM-dd'), description: '', assigned_to: '', crop_id: null });
             setSelectedTask(null);
             setRecurrenceEnabled(false);
-            setRecurrenceConfig({ type: 'daily', interval: 1, unit: 'day', daysOfWeek: [] });
+            setRecurrenceConfig({ type: 'weekly', interval: 1, unit: 'week', daysOfWeek: [] });
             setIsTaskModalOpen(true);
         }
     };
@@ -3753,7 +3816,7 @@ const RoomDetail: React.FC = () => {
             setRecurrenceConfig(task.recurrence);
         } else {
             setRecurrenceEnabled(false);
-            setRecurrenceConfig({ type: 'daily', interval: 1, unit: 'day', daysOfWeek: [] });
+            setRecurrenceConfig({ type: 'weekly', interval: 1, unit: 'week', daysOfWeek: [] });
         }
         setIsTaskModalOpen(true);
     };
@@ -3796,6 +3859,97 @@ const RoomDetail: React.FC = () => {
 
     const handleToggleTaskStatus = async (task: Task) => {
         if (!task) return;
+
+        // Prevent completing future tasks
+        if (task.due_date && task.status !== 'done') {
+            const taskDate = new Date(task.due_date);
+            const today = new Date();
+            // Reset times to compare only dates
+            taskDate.setHours(0, 0, 0, 0);
+            today.setHours(0, 0, 0, 0);
+
+            if (taskDate > today) {
+                setToastState({ isOpen: true, message: 'No puedes completar tareas que no corresponden a la fecha actual o pasada.', type: 'error' });
+                return;
+            }
+        }
+
+        // If it's a virtual occurrence of a recurring task
+        if (task.id.toString().startsWith('virtual')) {
+            try {
+                const parts = task.id.toString().split(' -');
+                if (parts.length >= 3) {
+                    const parentId = parts[1].trim();
+                    const parentTask = tasks.find(t => t.id === parentId);
+
+                    if (parentTask && parentTask.recurrence && task.due_date) {
+                        const targetDate = task.due_date.split('T')[0];
+
+                        // 1. Exclude this date from the parent's recurrence
+                        const currentExceptions = parentTask.recurrence.exceptions || [];
+                        const newRecurrence = {
+                            ...parentTask.recurrence,
+                            exceptions: [...currentExceptions, targetDate]
+                        };
+
+                        // 2. Create a new single-occurrence task for this date marked as "done"
+                        const newTaskPayload: Partial<Task> = {
+                            title: parentTask.title,
+                            description: parentTask.description,
+                            type: parentTask.type,
+                            status: 'done',
+                            due_date: targetDate,
+                            room_id: parentTask.room_id,
+                            crop_id: parentTask.crop_id,
+                            assigned_to: parentTask.assigned_to,
+                            // Do not pass recurrence so it's a standalone task
+                        };
+
+                        // Optimistic UI for virtual status change
+                        // Remove the virtual task, update parent, add new "done" task
+                        setTasks(prevTasks => {
+                            const withoutVirtual = prevTasks.filter(t => t.id !== task.id);
+                            const updatedParent = withoutVirtual.map(t =>
+                                t.id === parentId ? { ...t, recurrence: newRecurrence } : t
+                            );
+                            const mockCompletedTask: Task = {
+                                ...newTaskPayload,
+                                id: `temp-${Date.now()}`,
+                                created_at: new Date().toISOString()
+                            } as Task;
+                            return [...updatedParent, mockCompletedTask];
+                        });
+
+                        try {
+                            await Promise.all([
+                                tasksService.updateTask(parentId, { recurrence: newRecurrence }),
+                                tasksService.createTask(newTaskPayload as any)
+                            ]);
+
+                            // Re-fetch to get real ID of the new completed task
+                            if (id) {
+                                const updatedTasks = await tasksService.getTasksByRoomId(id);
+                                setTasks(updatedTasks);
+                            }
+                            setToastState({ isOpen: true, message: 'Ocurrencia completada individualmente', type: 'success' });
+                        } catch (err) {
+                            console.error("Error toggling virtual task:", err);
+                            // Re-fetch to revert optimistic update on failure
+                            if (id) {
+                                const originalTasks = await tasksService.getTasksByRoomId(id);
+                                setTasks(originalTasks);
+                            }
+                            setToastState({ isOpen: true, message: 'Ocurrió un error', type: 'error' });
+                        }
+                    }
+                }
+            } catch (err) {
+                console.error("Error parsing virtual task for completion:", err);
+                setToastState({ isOpen: true, message: 'Ocurrió un error al completar', type: 'error' });
+            }
+            return;
+        }
+
         const newStatus = task.status === 'done' ? 'pending' : 'done';
         const originalStatus = task.status;
 
@@ -3813,7 +3967,7 @@ const RoomDetail: React.FC = () => {
             setTasks(prevTasks => prevTasks.map(t =>
                 t.id === task.id ? { ...t, status: originalStatus } : t
             ));
-            alert("No se pudo actualizar el estado de la tarea.");
+            setToastState({ isOpen: true, message: 'No se pudo actualizar el estado de la tarea', type: 'error' });
         }
     };
 
@@ -3824,12 +3978,69 @@ const RoomDetail: React.FC = () => {
     };
 
     const confirmDeleteTask = async () => {
-        if (selectedTask) {
-            await tasksService.deleteTask(selectedTask.id);
-            if (id) {
-                const updatedTasks = await tasksService.getTasksByRoomId(id);
-                setTasks(updatedTasks);
+        if (!selectedTask) return;
+
+        // Check if it's a virtual occurrence of a recurring task
+        if (selectedTask.id.toString().startsWith('virtual')) {
+            try {
+                // Parse virtual task details: ID format is "virtual - {parentId} - {timestamp}"
+                const parts = selectedTask.id.toString().split(' -');
+                if (parts.length >= 3) {
+                    const parentId = parts[1].trim();
+
+                    // Find the original task to update its exceptions
+                    const parentTask = tasks.find(t => t.id === parentId);
+
+                    if (parentTask && parentTask.recurrence && selectedTask.due_date) {
+                        const dateToExclude = selectedTask.due_date.split('T')[0]; // Ensure YYYY-MM-DD
+
+                        // Add date to exceptions array
+                        const currentExceptions = parentTask.recurrence.exceptions || [];
+                        if (!currentExceptions.includes(dateToExclude)) {
+                            const newRecurrence = {
+                                ...parentTask.recurrence,
+                                exceptions: [...currentExceptions, dateToExclude]
+                            };
+
+                            // Update the database
+                            const success = await tasksService.updateTask(parentId, { recurrence: newRecurrence });
+
+                            if (success) {
+                                setToastState({ isOpen: true, message: 'Ocurrencia eliminada del calendario', type: 'success' });
+                                // Update local state to trigger re-calculation without full reload
+                                setTasks(prev => prev.map(t => t.id === parentId ? { ...t, recurrence: newRecurrence } : t));
+                            } else {
+                                setToastState({ isOpen: true, message: 'Error al eliminar ocurrencia recurrente', type: 'error' });
+                            }
+                        }
+                    }
+                }
+            } catch (err) {
+                console.error("Error excluyendo ocurrencia:", err);
+                setToastState({ isOpen: true, message: 'Ocurrió un error al eliminar ocurrencia', type: 'error' });
+            } finally {
+                setIsDeleteConfirmOpen(false);
+                setIsTaskModalOpen(false);
             }
+            return;
+        }
+
+        // Standard task deletion
+        try {
+            const success = await tasksService.deleteTask(selectedTask.id);
+            if (success) {
+                setToastState({ isOpen: true, message: 'Tarea eliminada correctamente', type: 'success' });
+                if (id) {
+                    const updatedTasks = await tasksService.getTasksByRoomId(id);
+                    setTasks(updatedTasks);
+                }
+            } else {
+                setToastState({ isOpen: true, message: 'Ocurrió un error al eliminar la tarea', type: 'error' });
+            }
+        } catch (err) {
+            console.error("Error confirmDeleteTask:", err);
+            setToastState({ isOpen: true, message: 'Ocurrió un error al eliminar la tarea', type: 'error' });
+        } finally {
             setIsDeleteConfirmOpen(false);
             setIsTaskModalOpen(false);
         }
@@ -5244,62 +5455,6 @@ const RoomDetail: React.FC = () => {
 
                                         const calendarDays = eachDayOfInterval({ start: startDate, end: endDate });
 
-                                        // Helper to generate virtual tasks based on recurrence
-                                        const generateVirtualTasks = (currentTasks: Task[], viewingDate: Date): Task[] => {
-                                            const virtualTasks: Task[] = [];
-                                            const monthEnd = endOfMonth(viewingDate);
-
-                                            currentTasks.forEach(task => {
-                                                if (!task.recurrence || !task.due_date) return;
-
-                                                const rec = task.recurrence;
-                                                let lastDate = new Date(task.due_date);
-                                                // Ensure lastDate is valid
-                                                if (isNaN(lastDate.getTime())) return;
-
-                                                // Prevent infinite loops
-                                                let safetyCounter = 0;
-
-                                                while (lastDate < monthEnd && safetyCounter < 50) {
-                                                    let nextDate: Date | null = null;
-                                                    const interval = typeof rec.interval === 'string' ? parseInt(rec.interval) || 1 : rec.interval || 1;
-
-                                                    if (rec.type === 'custom' || rec.type === 'daily' || rec.type === 'weekly') {
-                                                        if (rec.unit === 'day' || rec.type === 'daily') {
-                                                            nextDate = addDays(lastDate, interval);
-                                                        } else if (rec.unit === 'week' || rec.type === 'weekly') {
-                                                            nextDate = addWeeks(lastDate, interval);
-                                                        } else if (rec.unit === 'month') {
-                                                            nextDate = addMonths(lastDate, interval);
-                                                        }
-                                                    }
-
-                                                    if (nextDate && nextDate <= monthEnd) {
-                                                        // Create Virtual Task
-                                                        // Check if a real task already exists on this date for this crop/room to avoid dupes?
-                                                        // For now, simply trust the projection.
-                                                        virtualTasks.push({
-                                                            ...task,
-                                                            id: `virtual - ${task.id} -${nextDate.getTime()} `,
-                                                            due_date: format(nextDate, 'yyyy-MM-dd'),
-                                                            status: 'pending',
-                                                            title: `${task.title} (Proyectada)`,
-                                                            // Add a custom flag handled by UI
-                                                            type: task.type // Keep type for color
-                                                        });
-                                                        lastDate = nextDate;
-                                                    } else {
-                                                        break;
-                                                    }
-                                                    safetyCounter++;
-                                                }
-                                            });
-                                            return virtualTasks;
-                                        };
-
-                                        const allVirtualTasks = generateVirtualTasks(tasks, currentDate);
-                                        const allTasksForView = [...tasks, ...allVirtualTasks];
-
                                         return calendarDays.map((dayItem, idx) => {
                                             const isCurrentMonth = isSameMonth(dayItem, monthStart);
                                             const dateStr = format(dayItem, 'yyyy-MM-dd');
@@ -5615,11 +5770,11 @@ const RoomDetail: React.FC = () => {
                                                                                     }}
                                                                                     style={{
                                                                                         width: '32px', height: '32px', borderRadius: '50%', border: '1px solid',
-                                                                                        borderColor: isSelected ? 'rgba(56, 189, 248, 0.5)' : 'rgba(255, 255, 255, 0.1)',
-                                                                                        background: isSelected ? 'rgba(56, 189, 248, 0.3)' : 'rgba(255, 255, 255, 0.05)',
-                                                                                        color: isSelected ? '#38bdf8' : '#94a3b8',
+                                                                                        borderColor: isSelected ? 'rgba(74, 222, 128, 0.5)' : 'rgba(255, 255, 255, 0.1)',
+                                                                                        background: isSelected ? 'rgba(74, 222, 128, 0.2)' : 'rgba(255, 255, 255, 0.05)',
+                                                                                        color: isSelected ? '#4ade80' : '#94a3b8',
                                                                                         fontWeight: 'bold', cursor: 'pointer', fontSize: '0.8rem',
-                                                                                        boxShadow: isSelected ? '0 0 10px rgba(56, 189, 248, 0.2)' : 'none',
+                                                                                        boxShadow: isSelected ? '0 0 10px rgba(74, 222, 128, 0.2)' : 'none',
                                                                                         transition: 'all 0.2s'
                                                                                     }}
                                                                                 >
@@ -5777,7 +5932,25 @@ const RoomDetail: React.FC = () => {
                                             variant="primary"
                                             onClick={async () => {
                                                 if (selectedTask) {
-                                                    const newStatus = selectedTask.status === 'done' ? 'pending' : 'done';
+                                                    const isCurrentlyDone = selectedTask.status === 'done';
+
+                                                    // Prevent completing future tasks
+                                                    if (!isCurrentlyDone) {
+                                                        const dateToCheck = taskForm.due_date || selectedTask.due_date;
+                                                        if (dateToCheck) {
+                                                            const taskDate = new Date(dateToCheck);
+                                                            const today = new Date();
+                                                            taskDate.setHours(0, 0, 0, 0);
+                                                            today.setHours(0, 0, 0, 0);
+
+                                                            if (taskDate > today) {
+                                                                setToastState({ isOpen: true, message: 'No puedes completar tareas que no corresponden a la fecha actual o pasada.', type: 'error' });
+                                                                return;
+                                                            }
+                                                        }
+                                                    }
+
+                                                    const newStatus = isCurrentlyDone ? 'pending' : 'done';
 
                                                     await tasksService.updateTask(selectedTask.id, {
                                                         observations: taskForm.description,
@@ -5815,10 +5988,10 @@ const RoomDetail: React.FC = () => {
 
                                 <div style={{ marginBottom: '1.5rem' }}>
                                     <h4 style={{ fontSize: '1rem', color: '#94a3b8', marginBottom: '0.5rem' }}>Tareas Asignadas</h4>
-                                    {tasks.filter(t => t.due_date && t.due_date.split('T')[0] === format(selectedDayForSummary, 'yyyy-MM-dd')).length > 0 ? (
+                                    {allTasksForView.filter(t => t.due_date && t.due_date.split('T')[0] === format(selectedDayForSummary, 'yyyy-MM-dd')).length > 0 ? (
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                                            {tasks.filter(t => t.due_date && t.due_date.split('T')[0] === format(selectedDayForSummary, 'yyyy-MM-dd')).map(t => (
-                                                <div key={t.id} style={{
+                                            {allTasksForView.filter(t => t.due_date && t.due_date.split('T')[0] === format(selectedDayForSummary, 'yyyy-MM-dd')).map(t => (
+                                                <div key={t.id.toString()} style={{
                                                     border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '0.5rem', padding: '0.75rem',
                                                     background: t.status === 'done' ? 'rgba(72, 187, 120, 0.2)' : 'rgba(30, 41, 59, 0.5)',
                                                     display: 'flex', justifyContent: 'space-between', alignItems: 'center'
@@ -5867,7 +6040,14 @@ const RoomDetail: React.FC = () => {
                                                         <button
                                                             onClick={() => {
                                                                 setIsDaySummaryOpen(false);
-                                                                handleTaskClick({ stopPropagation: () => { } } as any, t);
+                                                                // Extract the parent task if it's virtual to allow correct editing
+                                                                const parentTaskOption = t.id.toString().startsWith('virtual')
+                                                                    ? tasks.find(pt => pt.id === t.id.toString().split(' -')[1].trim())
+                                                                    : t;
+
+                                                                if (parentTaskOption) {
+                                                                    handleTaskClick({ stopPropagation: () => { } } as any, parentTaskOption);
+                                                                }
                                                             }}
                                                             style={{
                                                                 fontSize: '0.75rem',
