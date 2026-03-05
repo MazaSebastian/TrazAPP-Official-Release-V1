@@ -389,7 +389,17 @@ export const GrowyOrb: React.FC = () => {
             setResponse('');
             setActionProposals([]);
 
-            // 1. Obtener Token Temporal (pre-fetched o fallback)
+            // 1. Pedir permisos de micrófono INMEDIATAMENTE tras el click (Requerido por Safari/iOS)
+            let stream: MediaStream;
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                streamRef.current = stream; // Guardar referencia para forzar apagado
+            } catch (micError: any) {
+                console.error("Mic Error:", micError);
+                throw new Error("Permiso de micrófono denegado. Por favor, habilítalo en la configuración de tu navegador.");
+            }
+
+            // 2. Obtener Token Temporal (pre-fetched o fallback)
             let tokenToUse = deepgramToken;
             if (!tokenToUse) {
                 const { data: tokenData, error } = await supabase.functions.invoke('deepgram-token');
@@ -399,9 +409,6 @@ export const GrowyOrb: React.FC = () => {
                 tokenToUse = tokenData.key;
                 setDeepgramToken(tokenToUse);
             }
-            // 2. Pedir permisos de micrófono
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            streamRef.current = stream; // Guardar referencia para forzar apagado
 
             // 3. Conectar a Deepgram WebSocket
             const deepgram = createClient(tokenToUse as string);
