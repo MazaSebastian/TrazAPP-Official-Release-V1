@@ -8,6 +8,8 @@ export interface User {
   role: 'super_admin' | 'owner' | 'admin' | 'grower' | 'medico' | 'staff' | 'partner';
   avatar?: string;
   has_completed_tour?: boolean;
+  kyc_completed?: boolean;
+  created_at?: string;
 }
 
 export interface LoginCredentials {
@@ -23,6 +25,8 @@ export interface AuthContextType {
   resetTour: () => Promise<void>;
   tourStepIndex: number;
   setTourStepIndex: (index: number) => void;
+  kycStatus?: 'pending' | 'blocked' | 'completed';
+  daysFromRegistration?: number;
 }
 
 // ==========================

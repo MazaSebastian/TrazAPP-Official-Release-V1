@@ -774,6 +774,10 @@ export const GrowyOrb: React.FC = () => {
         }
     };
 
+    if (currentOrganization?.plan !== 'trazapp') {
+        return null; // Growy is exclusive to Plan TrazAPP
+    }
+
     return (
         <OrbContainer>
             <CommandModal $visible={isModalOpen}>

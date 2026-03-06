@@ -23,6 +23,7 @@ import {
   FaLock,
   FaUserCircle,
   FaClipboardList,
+  FaExclamationTriangle
 } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 import { useOrganization } from '../context/OrganizationContext';
@@ -34,6 +35,12 @@ const tourHeartbeat = keyframes`
   0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
   70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
   100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+`;
+
+const warningPulse = keyframes`
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.2); opacity: 0.7; }
+  100% { transform: scale(1); opacity: 1; }
 `;
 
 const SidebarContainer = styled.div<{ isOpen: boolean }>`
@@ -247,13 +254,14 @@ const HamburgerButton = styled.button`
 const Sidebar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
-  const { user, logout, tourStepIndex } = useAuth();
+  const { user, logout, tourStepIndex, kycStatus } = useAuth();
   const { currentOrganization, currentRole } = useOrganization();
 
   // Compute plan level for feature access
   const plan = currentOrganization?.plan || 'individual';
-  const planLevel = ['ong', 'enterprise'].includes(plan) ? 3 :
-    ['equipo', 'pro'].includes(plan) ? 2 : 1;
+  const planLevel = ['trazapp'].includes(plan) ? 4 :
+    ['ong', 'enterprise'].includes(plan) ? 3 :
+      ['equipo', 'pro'].includes(plan) ? 2 : 1;
 
 
   // Close sidebar when route changes only on mobile
@@ -393,6 +401,15 @@ const Sidebar: React.FC = () => {
         <UserSection>
           <StyledNavLink to="/account" style={{ marginBottom: '0.5rem' }}>
             <FaUserCircle /> Mi Cuenta
+            {kycStatus === 'pending' && (
+              <FaExclamationTriangle
+                style={{
+                  color: '#ef4444',
+                  marginLeft: 'auto',
+                  animation: `${warningPulse} 2s infinite`
+                }}
+              />
+            )}
           </StyledNavLink>
           <LogoutButton onClick={logout}>
             <FaSignOutAlt /> Cerrar Sesión

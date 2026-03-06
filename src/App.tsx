@@ -54,6 +54,7 @@ import PageTransition from './components/PageTransition';
 import { LoadingSpinner } from './components/LoadingSpinner';
 import { MainContent } from './components/MainContent';
 import { RoleGuard } from './components/RoleGuard';
+import { KYCGuard } from './components/KYCGuard';
 
 const RequireAuth: React.FC<{ children: React.ReactElement }> = ({ children }) => {
   const { user, isLoading } = useAuth();
@@ -120,33 +121,41 @@ function App() {
             {/* Protected Routes Wrapped in Main Content */}
             <Route path="/" element={
               <RequireAuth>
-                <MainContent>
-                  <Dashboard />
-                </MainContent>
+                <KYCGuard>
+                  <MainContent>
+                    <Dashboard />
+                  </MainContent>
+                </KYCGuard>
               </RequireAuth>
             } />
 
             <Route path="/admin" element={
               <RequireAuth>
-                <MainContent>
-                  <AdminDashboard />
-                </MainContent>
+                <KYCGuard>
+                  <MainContent>
+                    <AdminDashboard />
+                  </MainContent>
+                </KYCGuard>
               </RequireAuth>
             } />
 
             <Route path="/admin/clients" element={
               <RequireAuth>
-                <MainContent>
-                  <ClientManagement />
-                </MainContent>
+                <KYCGuard>
+                  <MainContent>
+                    <ClientManagement />
+                  </MainContent>
+                </KYCGuard>
               </RequireAuth>
             } />
 
             <Route path="/admin/monitoring" element={
               <RequireAuth>
-                <MainContent>
-                  <SystemMonitoring />
-                </MainContent>
+                <KYCGuard>
+                  <MainContent>
+                    <SystemMonitoring />
+                  </MainContent>
+                </KYCGuard>
               </RequireAuth>
             } />
 
@@ -154,18 +163,22 @@ function App() {
             <Route path="/crops" element={
               <RequireAuth>
                 <RoleGuard allowedRoles={['grower', 'staff']}>
-                  <MainContent>
-                    <Crops />
-                  </MainContent>
+                  <KYCGuard>
+                    <MainContent>
+                      <Crops />
+                    </MainContent>
+                  </KYCGuard>
                 </RoleGuard>
               </RequireAuth>
             } />
             <Route path="/crops/:id" element={
               <RequireAuth>
                 <RoleGuard allowedRoles={['grower', 'staff']}>
-                  <MainContent>
-                    <CropDetail />
-                  </MainContent>
+                  <KYCGuard>
+                    <MainContent>
+                      <CropDetail />
+                    </MainContent>
+                  </KYCGuard>
                 </RoleGuard>
               </RequireAuth>
             } />
@@ -173,9 +186,11 @@ function App() {
             <Route path="/rooms" element={
               <RequireAuth>
                 <RoleGuard allowedRoles={['grower', 'staff']}>
-                  <MainContent>
-                    <Rooms />
-                  </MainContent>
+                  <KYCGuard>
+                    <MainContent>
+                      <Rooms />
+                    </MainContent>
+                  </KYCGuard>
                 </RoleGuard>
               </RequireAuth>
             } />
@@ -183,54 +198,66 @@ function App() {
             <Route path="/rooms/:id" element={
               <RequireAuth>
                 <RoleGuard allowedRoles={['grower', 'staff']}>
-                  <MainContent>
-                    <RoomDetail />
-                  </MainContent>
+                  <KYCGuard>
+                    <MainContent>
+                      <RoomDetail />
+                    </MainContent>
+                  </KYCGuard>
                 </RoleGuard>
               </RequireAuth>
             } />
             <Route path="/genetics" element={
               <RequireAuth>
                 <RoleGuard allowedRoles={['grower', 'staff']}>
-                  <MainContent>
-                    <Genetics />
-                  </MainContent>
+                  <KYCGuard>
+                    <MainContent>
+                      <Genetics />
+                    </MainContent>
+                  </KYCGuard>
                 </RoleGuard>
               </RequireAuth>
             } />
             <Route path="/genetic/:id" element={
               <RequireAuth>
                 <RoleGuard allowedRoles={['grower', 'staff']}>
-                  <MainContent>
-                    <GeneticDetail />
-                  </MainContent>
+                  <KYCGuard>
+                    <MainContent>
+                      <GeneticDetail />
+                    </MainContent>
+                  </KYCGuard>
                 </RoleGuard>
               </RequireAuth>
             } />
             <Route path="/clones" element={
               <RequireAuth>
                 <RoleGuard allowedRoles={['grower', 'staff']}>
-                  <MainContent>
-                    <Clones />
-                  </MainContent>
+                  <KYCGuard>
+                    <MainContent>
+                      <Clones />
+                    </MainContent>
+                  </KYCGuard>
                 </RoleGuard>
               </RequireAuth>
             } />
             <Route path="/clones/:id" element={
               <RequireAuth>
                 <RoleGuard allowedRoles={['grower', 'staff']}>
-                  <MainContent>
-                    <BatchDetail />
-                  </MainContent>
+                  <KYCGuard>
+                    <MainContent>
+                      <BatchDetail />
+                    </MainContent>
+                  </KYCGuard>
                 </RoleGuard>
               </RequireAuth>
             } />
             <Route path="/devices" element={
               <RequireAuth>
                 <RoleGuard allowedRoles={['grower', 'staff']}>
-                  <MainContent>
-                    <Devices />
-                  </MainContent>
+                  <KYCGuard>
+                    <MainContent>
+                      <Devices />
+                    </MainContent>
+                  </KYCGuard>
                 </RoleGuard>
               </RequireAuth>
             } />
@@ -238,9 +265,11 @@ function App() {
             <Route path="/laboratory" element={
               <RequireAuth>
                 <RoleGuard allowedRoles={['medico']}>
-                  <MainContent>
-                    <LaboratoryPage />
-                  </MainContent>
+                  <KYCGuard>
+                    <MainContent>
+                      <LaboratoryPage />
+                    </MainContent>
+                  </KYCGuard>
                 </RoleGuard>
               </RequireAuth>
             } />
@@ -248,9 +277,11 @@ function App() {
             <Route path="/extractions" element={
               <RequireAuth>
                 <RoleGuard allowedRoles={['medico']}>
-                  <MainContent>
-                    <Extractions />
-                  </MainContent>
+                  <KYCGuard>
+                    <MainContent>
+                      <Extractions />
+                    </MainContent>
+                  </KYCGuard>
                 </RoleGuard>
               </RequireAuth>
             } />
@@ -258,9 +289,11 @@ function App() {
             <Route path="/insumos" element={
               <RequireAuth>
                 <RoleGuard allowedRoles={['admin', 'grower', 'staff']}>
-                  <MainContent>
-                    <Insumos />
-                  </MainContent>
+                  <KYCGuard>
+                    <MainContent>
+                      <Insumos />
+                    </MainContent>
+                  </KYCGuard>
                 </RoleGuard>
               </RequireAuth>
             } />
@@ -269,9 +302,11 @@ function App() {
             <Route path="/stock" element={
               <RequireAuth>
                 <RoleGuard allowedRoles={['admin', 'grower']}>
-                  <MainContent>
-                    <Stock />
-                  </MainContent>
+                  <KYCGuard>
+                    <MainContent>
+                      <Stock />
+                    </MainContent>
+                  </KYCGuard>
                 </RoleGuard>
               </RequireAuth>
             } />
@@ -279,36 +314,44 @@ function App() {
             <Route path="/settings" element={
               <RequireAuth>
                 <RoleGuard allowedRoles={[]}>
-                  <MainContent>
-                    <Settings />
-                  </MainContent>
+                  <KYCGuard>
+                    <MainContent>
+                      <Settings />
+                    </MainContent>
+                  </KYCGuard>
                 </RoleGuard>
               </RequireAuth>
             } />
             <Route path="/compras" element={
               <RequireAuth>
                 <RoleGuard allowedRoles={['admin']}>
-                  <MainContent>
-                    <Compras />
-                  </MainContent>
+                  <KYCGuard>
+                    <MainContent>
+                      <Compras />
+                    </MainContent>
+                  </KYCGuard>
                 </RoleGuard>
               </RequireAuth>
             } />
             <Route path="/expenses" element={
               <RequireAuth>
                 <RoleGuard allowedRoles={['admin']}>
-                  <MainContent>
-                    <Expenses />
-                  </MainContent>
+                  <KYCGuard>
+                    <MainContent>
+                      <Expenses />
+                    </MainContent>
+                  </KYCGuard>
                 </RoleGuard>
               </RequireAuth>
             } />
             <Route path="/metrics" element={
               <RequireAuth>
                 <RoleGuard allowedRoles={[]}>
-                  <MainContent>
-                    <Metrics />
-                  </MainContent>
+                  <KYCGuard>
+                    <MainContent>
+                      <Metrics />
+                    </MainContent>
+                  </KYCGuard>
                 </RoleGuard>
               </RequireAuth>
             } />
@@ -317,9 +360,11 @@ function App() {
             <Route path="/dispensary" element={
               <RequireAuth>
                 <RoleGuard allowedRoles={['admin', 'medico']}>
-                  <MainContent>
-                    <Dispensary />
-                  </MainContent>
+                  <KYCGuard>
+                    <MainContent>
+                      <Dispensary />
+                    </MainContent>
+                  </KYCGuard>
                 </RoleGuard>
               </RequireAuth>
             } />
@@ -334,27 +379,33 @@ function App() {
             <Route path="/patients" element={
               <RequireAuth>
                 <RoleGuard allowedRoles={['admin', 'medico']}>
-                  <MainContent>
-                    <Patients />
-                  </MainContent>
+                  <KYCGuard>
+                    <MainContent>
+                      <Patients />
+                    </MainContent>
+                  </KYCGuard>
                 </RoleGuard>
               </RequireAuth>
             } />
             <Route path="/patients/:id" element={
               <RequireAuth>
                 <RoleGuard allowedRoles={['admin', 'medico']}>
-                  <MainContent>
-                    <PatientDetail />
-                  </MainContent>
+                  <KYCGuard>
+                    <MainContent>
+                      <PatientDetail />
+                    </MainContent>
+                  </KYCGuard>
                 </RoleGuard>
               </RequireAuth>
             } />
             <Route path="/templates" element={
               <RequireAuth>
                 <RoleGuard allowedRoles={['admin', 'medico']}>
-                  <MainContent>
-                    <Templates />
-                  </MainContent>
+                  <KYCGuard>
+                    <MainContent>
+                      <Templates />
+                    </MainContent>
+                  </KYCGuard>
                 </RoleGuard>
               </RequireAuth>
             } />

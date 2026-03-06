@@ -355,8 +355,9 @@ const FilterContainer = styled.div`
 const Expenses: React.FC = () => {
     const { currentOrganization } = useOrganization();
     const plan = currentOrganization?.plan || 'individual';
-    const planLevel = ['ong', 'enterprise'].includes(plan) ? 3 :
-        ['equipo', 'pro'].includes(plan) ? 2 : 1;
+    const planLevel = ['trazapp'].includes(plan) ? 4 :
+        ['ong', 'enterprise'].includes(plan) ? 3 :
+            ['equipo', 'pro'].includes(plan) ? 2 : 1;
 
     const [movements, setMovements] = useState<CashMovement[]>([]);
     const [loading, setLoading] = useState(true);

@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import { useAuth } from '../context/AuthContext';
 import { useOrganization } from '../context/OrganizationContext';
 import { FaUserCircle, FaEnvelope, FaBuilding, FaUserShield, FaExclamationTriangle } from 'react-icons/fa';
+import { KYCForm } from '../components/KYCForm';
 
 const PageContainer = styled.div`
   padding: 1rem;
@@ -142,131 +143,153 @@ const RoleBadge = styled.span<{ role: string }>`
   text-transform: capitalize;
 
   background: ${props => {
-        switch (props.role?.toLowerCase()) {
-            case 'owner': return 'rgba(168, 85, 247, 0.15)'; // Purple
-            case 'super_admin': return 'rgba(239, 68, 68, 0.15)'; // Red
-            case 'admin': return 'rgba(59, 130, 246, 0.15)'; // Blue
-            case 'grower': return 'rgba(34, 197, 94, 0.15)'; // Green
-            case 'medico': return 'rgba(234, 179, 8, 0.15)'; // Yellow
-            default: return 'rgba(100, 116, 139, 0.15)'; // Slate
-        }
-    }};
+    switch (props.role?.toLowerCase()) {
+      case 'owner': return 'rgba(168, 85, 247, 0.15)'; // Purple
+      case 'super_admin': return 'rgba(239, 68, 68, 0.15)'; // Red
+      case 'admin': return 'rgba(59, 130, 246, 0.15)'; // Blue
+      case 'grower': return 'rgba(34, 197, 94, 0.15)'; // Green
+      case 'medico': return 'rgba(234, 179, 8, 0.15)'; // Yellow
+      default: return 'rgba(100, 116, 139, 0.15)'; // Slate
+    }
+  }};
   
   color: ${props => {
-        switch (props.role?.toLowerCase()) {
-            case 'owner': return '#c084fc';
-            case 'super_admin': return '#f87171';
-            case 'admin': return '#60a5fa';
-            case 'grower': return '#4ade80';
-            case 'medico': return '#facc15';
-            default: return '#94a3b8';
-        }
-    }};
+    switch (props.role?.toLowerCase()) {
+      case 'owner': return '#c084fc';
+      case 'super_admin': return '#f87171';
+      case 'admin': return '#60a5fa';
+      case 'grower': return '#4ade80';
+      case 'medico': return '#facc15';
+      default: return '#94a3b8';
+    }
+  }};
   
   border: 1px solid ${props => {
-        switch (props.role?.toLowerCase()) {
-            case 'owner': return 'rgba(168, 85, 247, 0.3)';
-            case 'super_admin': return 'rgba(239, 68, 68, 0.3)';
-            case 'admin': return 'rgba(59, 130, 246, 0.3)';
-            case 'grower': return 'rgba(34, 197, 94, 0.3)';
-            case 'medico': return 'rgba(234, 179, 8, 0.3)';
-            default: return 'rgba(100, 116, 139, 0.3)';
-        }
-    }};
+    switch (props.role?.toLowerCase()) {
+      case 'owner': return 'rgba(168, 85, 247, 0.3)';
+      case 'super_admin': return 'rgba(239, 68, 68, 0.3)';
+      case 'admin': return 'rgba(59, 130, 246, 0.3)';
+      case 'grower': return 'rgba(34, 197, 94, 0.3)';
+      case 'medico': return 'rgba(234, 179, 8, 0.3)';
+      default: return 'rgba(100, 116, 139, 0.3)';
+    }
+  }};
 `;
 
 const AccountInfo: React.FC = () => {
-    const { user } = useAuth();
-    const { currentOrganization, currentRole } = useOrganization();
+  const { user } = useAuth();
+  const { currentOrganization, currentRole } = useOrganization();
 
-    // Get initials for Avatar
-    const getInitials = (name: string) => {
-        if (!name) return 'U';
-        return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-    };
+  // Get initials for Avatar
+  const getInitials = (name: string) => {
+    if (!name) return 'U';
+    return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+  };
 
-    const roleDisplayNames: Record<string, string> = {
-        'owner': 'Dueño',
-        'admin': 'Administrador',
-        'grower': 'Director de Cultivo',
-        'medico': 'Director Médico',
-        'staff': 'Operario',
-        'super_admin': 'Super Administrador'
-    };
+  const roleDisplayNames: Record<string, string> = {
+    'owner': 'Dueño',
+    'admin': 'Administrador',
+    'grower': 'Director de Cultivo',
+    'medico': 'Director Médico',
+    'staff': 'Operario',
+    'super_admin': 'Super Administrador'
+  };
 
-    const displayRoleName = currentRole ? (roleDisplayNames[currentRole] || currentRole) : 'Usuario';
+  const displayRoleName = currentRole ? (roleDisplayNames[currentRole] || currentRole) : 'Usuario';
 
-    return (
-        <PageContainer>
-            <Header>
-                <h1><FaUserCircle /> Información de Cuenta</h1>
-            </Header>
+  return (
+    <PageContainer>
+      <Header>
+        <h1><FaUserCircle /> Información de Cuenta</h1>
+      </Header>
 
-            <ProfileCard>
-                <ProfileHeader>
-                    <AvatarCircle>
-                        {getInitials(user?.name || user?.email || '')}
-                    </AvatarCircle>
-                    <div>
-                        <UserName>{user?.name || 'Usuario'}</UserName>
-                        <UserEmail>
-                            <FaEnvelope /> {user?.email}
-                        </UserEmail>
-                    </div>
-                </ProfileHeader>
+      <ProfileCard>
+        <ProfileHeader>
+          <AvatarCircle>
+            {getInitials(user?.name || user?.email || '')}
+          </AvatarCircle>
+          <div>
+            <UserName>{user?.name || 'Usuario'}</UserName>
+            <UserEmail>
+              <FaEnvelope /> {user?.email}
+            </UserEmail>
+          </div>
+        </ProfileHeader>
 
-                <InfoGrid>
-                    <InfoCard>
-                        <h3><FaUserShield /> Permisos y Rol</h3>
-                        <InfoRow>
-                            <span className="label">Nivel de Acceso</span>
-                            <div style={{ marginTop: '0.25rem' }}>
-                                <RoleBadge role={currentRole || 'N/A'}>
-                                    {displayRoleName}
-                                </RoleBadge>
-                            </div>
-                        </InfoRow>
-                        <InfoRow>
-                            <span className="label">Identificador de Usuario (ID)</span>
-                            <span className="value" style={{ fontSize: '0.85rem', color: '#94a3b8', wordBreak: 'break-all' }}>
-                                {user?.id}
-                            </span>
-                        </InfoRow>
-                    </InfoCard>
+        <InfoGrid>
+          <InfoCard>
+            <h3><FaUserShield /> Permisos y Rol</h3>
+            <InfoRow>
+              <span className="label">Nivel de Acceso</span>
+              <div style={{ marginTop: '0.25rem' }}>
+                <RoleBadge role={currentRole || 'N/A'}>
+                  {displayRoleName}
+                </RoleBadge>
+              </div>
+            </InfoRow>
+            <InfoRow>
+              <span className="label">Identificador de Usuario (ID)</span>
+              <span className="value" style={{ fontSize: '0.85rem', color: '#94a3b8', wordBreak: 'break-all' }}>
+                {user?.id}
+              </span>
+            </InfoRow>
+          </InfoCard>
 
-                    <InfoCard>
-                        <h3><FaBuilding /> Organización Actual</h3>
-                        {currentOrganization ? (
-                            <>
-                                <InfoRow>
-                                    <span className="label">Nombre</span>
-                                    <span className="value">{currentOrganization.name}</span>
-                                </InfoRow>
-                                <InfoRow>
-                                    <span className="label">Tipo de Plan</span>
-                                    <span className="value" style={{ textTransform: 'capitalize' }}>
-                                        {currentOrganization.plan || 'Free'}
-                                    </span>
-                                </InfoRow>
-                                <InfoRow>
-                                    <span className="label">Organización ID</span>
-                                    <span className="value" style={{ fontSize: '0.85rem', color: '#94a3b8', wordBreak: 'break-all' }}>
-                                        {currentOrganization.id}
-                                    </span>
-                                </InfoRow>
-                            </>
-                        ) : (
-                            <div style={{ color: '#94a3b8', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                <FaExclamationTriangle style={{ color: '#facc15' }} />
-                                No estás asociado a ninguna organización activa.
-                            </div>
-                        )}
-                    </InfoCard>
-                </InfoGrid>
+          <InfoCard>
+            <h3><FaBuilding /> Organización Actual</h3>
+            {currentOrganization ? (
+              <>
+                <InfoRow>
+                  <span className="label">Nombre</span>
+                  <span className="value">{currentOrganization.name}</span>
+                </InfoRow>
+                <InfoRow>
+                  <span className="label">Tipo de Plan</span>
+                  <span className="value" style={{ textTransform: 'capitalize' }}>
+                    {currentOrganization.plan || 'Free'}
+                  </span>
+                </InfoRow>
+                <InfoRow>
+                  <span className="label">Fecha de alta</span>
+                  <span className="value">
+                    {new Date(currentOrganization.created_at).toLocaleDateString('es-ES')}
+                  </span>
+                </InfoRow>
+                <InfoRow>
+                  <span className="label">Fecha de renovación</span>
+                  <span className="value" style={{ color: '#4ade80' }}>
+                    {(() => {
+                      const d = new Date(currentOrganization.created_at);
+                      d.setMonth(d.getMonth() + 1);
+                      return d.toLocaleDateString('es-ES');
+                    })()}
+                  </span>
+                </InfoRow>
+                <InfoRow>
+                  <span className="label">Organización ID</span>
+                  <span className="value" style={{ fontSize: '0.85rem', color: '#94a3b8', wordBreak: 'break-all' }}>
+                    {currentOrganization.id}
+                  </span>
+                </InfoRow>
+              </>
+            ) : (
+              <div style={{ color: '#94a3b8', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <FaExclamationTriangle style={{ color: '#facc15' }} />
+                No estás asociado a ninguna organización activa.
+              </div>
+            )}
+          </InfoCard>
+        </InfoGrid>
 
-            </ProfileCard>
-        </PageContainer>
-    );
+      </ProfileCard>
+
+      {/* Show KYC Form only for Owners */}
+      {currentRole === 'owner' && (
+        <KYCForm />
+      )}
+
+    </PageContainer>
+  );
 };
 
 export default AccountInfo;

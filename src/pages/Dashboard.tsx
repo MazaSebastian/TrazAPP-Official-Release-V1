@@ -28,6 +28,7 @@ import { useAuth } from '../context/AuthContext';
 import { useData } from '../context/DataContext';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { MedicoDashboard } from '../components/MedicoDashboard';
+import { KYCBanner } from '../components/KYCBanner';
 
 
 // --- Styled Components (Premium Eco-Tech Theme) ---
@@ -925,6 +926,8 @@ const Dashboard: React.FC = () => {
           {format(currentTime, "HH:mm")}
         </DateDisplay>
       </WelcomeHeader>
+
+      <KYCBanner />
 
       <StickyBoard>
         <SectionTitle><FaStickyNote /> Tablero de Notas (Stick-it)</SectionTitle>

@@ -18,6 +18,8 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [kycStatus, setKycStatus] = useState<'pending' | 'blocked' | 'completed' | undefined>(undefined);
+  const [daysFromRegistration, setDaysFromRegistration] = useState<number | undefined>(undefined);
   const [tourStepIndex, setTourStepIndex] = useState<number>(() => {
     const saved = localStorage.getItem('trazapp_tour_step');
     return saved ? parseInt(saved, 10) : 0;
@@ -39,6 +41,31 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setIsLoading(false);
       }
     }, 3000);
+
+    const calculateKycStatus = (createdAtString: string | undefined, isComplete: boolean | undefined) => {
+      if (isComplete) {
+        setKycStatus('completed');
+        return;
+      }
+
+      if (!createdAtString) {
+        setKycStatus('pending');
+        return;
+      }
+
+      const createdDate = new Date(createdAtString);
+      const now = new Date();
+      const diffTime = Math.abs(now.getTime() - createdDate.getTime());
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+      setDaysFromRegistration(diffDays);
+
+      if (diffDays >= 30) {
+        setKycStatus('blocked');
+      } else {
+        setKycStatus('pending');
+      }
+    };
 
     const fetchProfile = async (sessionUser: any) => {
       try {
@@ -116,6 +143,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             // Always update cache if we get a valid role
             if (dbRole) localStorage.setItem('userRole', dbRole);
 
+            if (dbRole === 'owner') {
+              calculateKycStatus(profile?.created_at, profile?.kyc_completed);
+            } else {
+              setKycStatus('completed'); // Only owners need to do KYC for now
+            }
+
             setUser(prev => {
               if (!prev || prev.id !== session.user.id) return prev;
 
@@ -127,7 +160,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                   ...prev,
                   name: dbName || prev.name,
                   avatar: profile?.avatar_url || prev.avatar,
-                  has_completed_tour: profile?.has_completed_tour ?? false
+                  has_completed_tour: profile?.has_completed_tour ?? false,
+                  kyc_completed: profile?.kyc_completed,
+                  created_at: profile?.created_at
                 };
               }
 
@@ -136,7 +171,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 name: dbName || prev.name,
                 role: dbRole || prev.role,
                 avatar: profile?.avatar_url || prev.avatar,
-                has_completed_tour: profile?.has_completed_tour ?? false
+                has_completed_tour: profile?.has_completed_tour ?? false,
+                kyc_completed: profile?.kyc_completed,
+                created_at: profile?.created_at
               };
             });
           }
@@ -348,7 +385,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     isLoading,
     resetTour,
     tourStepIndex,
-    setTourStepIndex
+    setTourStepIndex,
+    kycStatus,
+    daysFromRegistration
   };
 
   return (

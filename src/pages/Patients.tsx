@@ -321,8 +321,9 @@ const Patients: React.FC = () => {
     const navigate = useNavigate();
     const { currentOrganization } = useOrganization();
     const plan = currentOrganization?.plan || 'individual';
-    const planLevel = ['ong', 'enterprise'].includes(plan) ? 3 :
-        ['equipo', 'pro'].includes(plan) ? 2 : 1;
+    const planLevel = ['trazapp'].includes(plan) ? 4 :
+        ['ong', 'enterprise'].includes(plan) ? 3 :
+            ['equipo', 'pro'].includes(plan) ? 2 : 1;
 
     const [patients, setPatients] = useState<Patient[]>([]);
     const [isLoading, setIsLoading] = useState(true);

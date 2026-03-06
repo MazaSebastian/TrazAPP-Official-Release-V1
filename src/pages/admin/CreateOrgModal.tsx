@@ -240,7 +240,8 @@ export const CreateOrgModal: React.FC<CreateOrgModalProps> = ({ onClose, onSucce
                             options={[
                                 { value: 'individual', label: 'Individual' },
                                 { value: 'equipo', label: 'Equipo' },
-                                { value: 'ong', label: 'ONG' }
+                                { value: 'ong', label: 'ONG' },
+                                { value: 'trazapp', label: 'Plan TrazAPP' }
                             ]}
                         />
                     </FormGroup>
