@@ -12,10 +12,13 @@ import { useGridSelection } from '../../hooks/useGridSelection';
 const GridWrapper = styled.div`
   position: relative;
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   min-height: 100%;
+  overflow: hidden;
 
   @media print {
     display: block !important;
@@ -73,8 +76,9 @@ const GridContainer = styled.div<{ rows: number; cols: number; cellSize: number 
   gap: ${p => p.cellSize < 40 ? '1px' : '4px'}; /* Pixel Perfect Gap */
   overflow: auto;
   overscroll-behavior: contain; /* Prevent chaining to parent */
-  max-width: 100%;
-  max-height: 75vh; /* Restricted height for internal scrolling */
+  width: 100%;
+  min-width: 0;
+  height: 75vh; /* Fixed height so changing zoom doesn't shift page layout */
   padding: 1rem;
   background: rgba(15, 23, 42, 0.4);
   backdrop-filter: blur(12px);
@@ -161,7 +165,7 @@ const getStageBorderColor = (stage: BatchStage | undefined) => {
 const CellStyled = styled.div<{ $isOver?: boolean; $isOccupied?: boolean; $stage?: BatchStage; $geneticColor?: string; $isSelected?: boolean; cellSize: number; $hasAlert?: boolean; $isCompleted?: boolean; $disableTransition?: boolean }>`
   /* Background Logic */
   background: ${p => p.$isSelected ? 'rgba(74, 222, 128, 0.2)' : p.$isOccupied ? (p.$geneticColor || 'rgba(30, 41, 59, 0.8)') : p.$isOver ? 'rgba(56, 189, 248, 0.1)' : 'rgba(30, 41, 59, 0.3)'};
-  backdrop-filter: ${p => p.$isOccupied ? 'none' : 'blur(4px)'};
+  /* backdrop-filter removed for performance on large grids */
   
   /* Border Logic - Simplified for cleaner look with gap */
   border: ${p => p.$isSelected

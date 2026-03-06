@@ -4706,7 +4706,7 @@ const RoomDetail: React.FC = () => {
                                 <div className="map-and-sidebar-container" style={{ display: 'flex', gap: '2rem', alignItems: 'flex-start' }}>
 
                                     {/* MAIN CONTENT AREA */}
-                                    <div className="main-content-wrapper" style={{ flex: 3 }}>
+                                    <div className="main-content-wrapper" style={{ flex: 3, minWidth: 0 }}>
                                         {!activeMapId ? (
                                             /* MAPS LIST VIEW */
                                             <div className="map-list-container">

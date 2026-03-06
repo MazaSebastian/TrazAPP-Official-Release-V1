@@ -125,10 +125,10 @@ const PatientDetail: React.FC = () => {
     // UI State for Accordion
     const [expandedEvos, setExpandedEvos] = useState<number[]>([]);
 
-    // Evolution Form State
     const [isEvolutionModalOpen, setIsEvolutionModalOpen] = useState(false);
     const [isUploadingEvolution, setIsUploadingEvolution] = useState(false);
     const [newEvolution, setNewEvolution] = useState({
+        title: '',
         eva_score: 0,
         notes: '',
         sparing_effect: [] as any[],
@@ -201,10 +201,10 @@ const PatientDetail: React.FC = () => {
                 patient_hash: hash // Override with generated hash
             });
 
-            // Automatically create the baseline evolution if a template was selected
             if (createdAdmission && newAdmission.template_id) {
                 await patientsService.addEvolution({
                     admission_id: createdAdmission.id,
+                    title: 'Admisión Inicial (Línea Base)',
                     date: new Date().toISOString().split('T')[0],
                     eva_score: 0,
                     improvement_percent: 0,
@@ -279,6 +279,7 @@ const PatientDetail: React.FC = () => {
 
             await patientsService.addEvolution({
                 admission_id: admission.id,
+                title: newEvolution.title,
                 date: new Date().toISOString().split('T')[0], // Today
                 eva_score: actualEvaScore,
                 improvement_percent: parseFloat(improvement.toFixed(2)),
@@ -292,7 +293,7 @@ const PatientDetail: React.FC = () => {
 
             loadData(id || '');
             setIsEvolutionModalOpen(false);
-            setNewEvolution({ eva_score: 0, notes: '', sparing_effect: [], adverse_effects: [], template_id: null, template_data: {}, files: [] }); // Reset
+            setNewEvolution({ title: '', eva_score: 0, notes: '', sparing_effect: [], adverse_effects: [], template_id: null, template_data: {}, files: [] }); // Reset
         } catch (e) {
             console.error(e);
             alert("Error adding evolution");
@@ -576,9 +577,20 @@ const PatientDetail: React.FC = () => {
                                         onClick={() => setExpandedEvos(prev => isExpanded ? prev.filter(i => i !== idx) : [...prev, idx])}
                                         style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', paddingBottom: isExpanded ? '0.75rem' : '0' }}
                                     >
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                                            <div style={{ fontWeight: 'bold', color: '#e2e8f0', fontSize: '1.1rem' }}>
-                                                {evo.date} {timeString && <span style={{ fontSize: '0.85rem', color: '#94a3b8', marginLeft: '0.25rem', fontWeight: 'normal' }}>{timeString}</span>}
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+                                            <div style={{ fontWeight: 'bold', color: '#e2e8f0', fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                                {evo.date}
+                                                {timeString && <span style={{ fontSize: '0.85rem', color: '#94a3b8', fontWeight: 'normal' }}>{timeString}</span>}
+                                                {evo.title && (
+                                                    <span style={{
+                                                        marginLeft: '0.5rem',
+                                                        paddingLeft: '0.5rem',
+                                                        borderLeft: '2px solid rgba(255, 255, 255, 0.2)',
+                                                        color: '#f8fafc'
+                                                    }}>
+                                                        {evo.title}
+                                                    </span>
+                                                )}
                                             </div>
                                             <div style={{ color: evo.improvement_percent >= 0 ? '#4ade80' : '#f87171', fontWeight: 'bold', fontSize: '0.85rem', background: evo.improvement_percent >= 0 ? 'rgba(74, 222, 128, 0.1)' : 'rgba(248, 113, 113, 0.1)', padding: '0.2rem 0.5rem', borderRadius: '0.25rem' }}>
                                                 {evo.improvement_percent > 0 ? '+' : ''}{evo.improvement_percent}%
@@ -645,6 +657,20 @@ const PatientDetail: React.FC = () => {
                     <Card style={{ width: '100%', maxWidth: '500px', maxHeight: '90vh', overflowY: 'auto' }}>
                         <form onSubmit={(e) => { e.preventDefault(); handleAddEvolution(); }}>
                             <CardTitle>Registrar Evolución</CardTitle>
+
+                            {/* Title Section (New) */}
+                            <div style={{ marginBottom: '1.5rem' }}>
+                                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', fontWeight: 'bold', color: '#f8fafc' }}>
+                                    <FaChartLine /> Título de la Evolución / Resumen
+                                </label>
+                                <input
+                                    type="text"
+                                    placeholder="Ej: Seguimiento Mensual, Dolor Cervical Agudo..."
+                                    style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid rgba(255,255,255,0.2)', fontFamily: 'inherit', background: 'rgba(15, 23, 42, 0.5)', color: 'white' }}
+                                    value={newEvolution.title}
+                                    onChange={e => setNewEvolution({ ...newEvolution, title: e.target.value })}
+                                />
+                            </div>
 
                             {/* Template Selector Section */}
                             <div style={{ background: 'rgba(30, 41, 59, 0.4)', border: '1px solid rgba(255, 255, 255, 0.1)', padding: '1rem', borderRadius: '0.5rem', marginBottom: '1.5rem' }}>

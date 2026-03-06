@@ -1,5 +1,5 @@
 // Reemplaza esto con tu API Key real
-const API_KEY = "AIzaSyCXZLzmo8M7yLpXv15W6SYpKvwvDqPhXjI";
+const API_KEY = "REDACTED_OLD_API_KEY";
 
 async function listarModelosCompatibles() {
     const url = `https://generativelanguage.googleapis.com/v1beta/models?key=${API_KEY}`;

@@ -11,6 +11,25 @@ import { createPortal } from 'react-dom';
 // --- Styled Components ---
 // Trigger new deploy
 
+const GridWrapper = styled.div`
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow: hidden;
+
+  @media print {
+    display: block !important;
+    position: static !important;
+    height: auto !important;
+    width: 100% !important;
+    overflow: visible !important;
+  }
+`;
+
 // Zoom Controls Components (copied/adapted from LivingSoilGrid)
 const ControlsContainer = styled.div`
   display: flex;
@@ -57,8 +76,9 @@ const GridContainer = styled.div<{ rows: number; cols: number; cellSize: number 
   gap: ${p => p.cellSize < 40 ? '1px' : '4px'};
   overflow: auto;
   overscroll-behavior: contain; /* Prevent chaining to parent */
-  max-width: 100%;
-  max-height: calc(100vh - 260px); /* Restrict height so it scrolls internally */
+  width: 100%;
+  min-width: 0;
+  height: calc(100vh - 260px); /* Fixed height so changing zoom doesn't shift page layout */
   padding: 1rem;
   background: rgba(15, 23, 42, 0.4);
   backdrop-filter: blur(12px);
@@ -133,7 +153,7 @@ const HeaderCell = styled.div<{ cellSize: number }>`
 
 const CellStyled = styled.div<{ $isOver?: boolean; $isOccupied?: boolean; $geneticColor?: string; $isPainting?: boolean; $isSelected?: boolean; cellSize: number; $hasAlert?: boolean }>`
   background: ${p => p.$isSelected ? 'rgba(74, 222, 128, 0.2)' : p.$isOccupied ? (p.$geneticColor || 'rgba(30, 41, 59, 0.8)') : p.$isOver ? 'rgba(56, 189, 248, 0.1)' : 'rgba(30, 41, 59, 0.3)'};
-  backdrop-filter: ${p => p.$isOccupied ? 'none' : 'blur(4px)'};
+  /* backdrop-filter removed for performance on large grids */
   
   /* Border Logic matching LivingSoilGrid */
   border: ${p => p.$isSelected
@@ -579,7 +599,7 @@ export const EsquejeraGrid: React.FC<EsquejeraGridProps> = ({ rows, cols, batche
     const rowHeaders = Array.from({ length: rows }, (_, i) => getRowLabel(i));
 
     return (
-        <div>
+        <GridWrapper>
             {/* Print Debug Indicator */}
             <div className="print-debug-indicator" style={{ display: 'none', color: 'red', fontWeight: 'bold', fontSize: '20px', padding: '10px' }}>
                 DEBUG: ESQUEJERA GRID RENDERED ({rows}x{cols})
@@ -657,6 +677,6 @@ export const EsquejeraGrid: React.FC<EsquejeraGridProps> = ({ rows, cols, batche
                     </React.Fragment>
                 ))}
             </GridContainer>
-        </div>
+        </GridWrapper>
     );
 };
