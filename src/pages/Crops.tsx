@@ -269,7 +269,7 @@ const ModalOverlay = styled.div<{ isClosing?: boolean }>`
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: 9999;
   backdrop-filter: blur(4px);
   animation: ${p => p.isClosing ? fadeOut : fadeIn} 0.2s ease-in-out forwards;
 `;
@@ -421,7 +421,7 @@ const DashedCircle = styled.div`
 `;
 
 const Crops: React.FC = () => {
-  const { tourStepIndex } = useAuth();
+  const { tourStepIndex, setTourStepIndex } = useAuth();
   const [crops, setCrops] = useState<Crop[]>([]);
   // Toast State
   const [toastOpen, setToastOpen] = useState(false);
@@ -502,6 +502,16 @@ const Crops: React.FC = () => {
     loadCrops(true);
   }, [loadCrops]);
 
+  // Safely advance tour after modal animation completes to prevent Joyride DOM errors
+  React.useEffect(() => {
+    if (isModalOpen && tourStepIndex === 5) {
+      const timer = setTimeout(() => {
+        setTourStepIndex(6);
+      }, 350); // 350ms to allow Modal scaleIn animation to finish
+      return () => clearTimeout(timer);
+    }
+  }, [isModalOpen, tourStepIndex, setTourStepIndex]);
+
 
 
   const handleCreate = async () => {
@@ -541,6 +551,11 @@ const Crops: React.FC = () => {
         setToastType('success');
         setToastAnimate(true);
         setToastOpen(true);
+
+        // Advance tour if active
+        if (tourStepIndex === 7) {
+          setTourStepIndex(8);
+        }
       } else {
         setToastMessage("Error al crear el cultivo. El servicio devolvió null.");
         setToastType('error');
@@ -694,7 +709,7 @@ const Crops: React.FC = () => {
         {crops.map((crop, index) => (
           <Card
             key={crop.id}
-            className={index === 0 ? `tour-first-crop-card ${tourStepIndex === 6 ? 'tour-crop-pulse' : ''}` : ''}
+            className={index === 0 ? `tour-first-crop-card ${tourStepIndex === 8 ? 'tour-crop-pulse' : ''}` : ''}
             onClick={() => handleCardClick(crop.id)}
             forceHover={
               editingCrop?.id === crop.id ||
@@ -838,7 +853,6 @@ const Crops: React.FC = () => {
             </div>
           </Card>
         ))}
-        {/* Add New Crop Card */}
         <CreateCard className="tour-new-crop" onClick={() => setIsModalOpen(true)}>
           <DashedCircle>
             <FaPlus />
@@ -866,6 +880,7 @@ const Crops: React.FC = () => {
             <FormGroup>
               <label>Nombre del Cultivo</label>
               <input
+                className="tour-crop-name-input"
                 type="text"
                 placeholder="Complete el nombre de su cultivo (Ej: Locación)"
                 value={formData.name}
@@ -878,7 +893,7 @@ const Crops: React.FC = () => {
 
             <ModalActions>
               <Button variant="secondary" onClick={() => setIsClosingCreate(true)}>Cancelar</Button>
-              <Button onClick={handleCreate} disabled={isCreating}>
+              <Button className="tour-create-crop-button" onClick={handleCreate} disabled={isCreating}>
                 {isCreating ? 'Creando...' : 'Crear Cultivo'}
               </Button>
             </ModalActions>

@@ -862,21 +862,26 @@ export const roomsService = {
         }
 
         // STANDARD MOVE (or full move)
-        // We first need to get the existing notes to append the new action without destroying custom observations
+        // Fetch to see if grid_position changed for trace log
         const { data: existingBatch } = await getClient()
             .from('batches')
-            .select('notes')
+            .select('grid_position')
             .eq('id', batchId)
             .single();
 
-        let newNotes = existingBatch?.notes || '';
-        if (notes) {
-            newNotes = newNotes ? `${newNotes}\n[${new Date().toLocaleDateString()}]: ${notes}` : `[${new Date().toLocaleDateString()}]: ${notes}`;
+        // Format visual transition for map relocations (e.g. A1 ---> B2) for the TIMELINE only
+        const oldPos = existingBatch?.grid_position;
+        const newPos = gridPosition;
+        let formattedNote = notes || '';
+
+        if (newPos && oldPos && oldPos !== newPos) {
+            const transitionString = `[${oldPos}] ---> [${newPos}]`;
+            formattedNote = formattedNote ? `${transitionString} - ${formattedNote}` : transitionString;
         }
 
         const updates: any = {
             current_room_id: toRoomId,
-            notes: newNotes // Append note instead of overwriting
+            // We NO LONGER append notes to the batch's personal notes to avoid cluttering its tooltip.
         };
 
         if (gridPosition !== undefined) updates.grid_position = gridPosition;
@@ -897,7 +902,7 @@ export const roomsService = {
             batch_id: batchId,
             from_room_id: fromRoomId,
             to_room_id: toRoomId,
-            notes: notes,
+            notes: formattedNote,
             created_by: userId
         }]);
 
@@ -1470,11 +1475,18 @@ export const roomsService = {
             return false;
         }
 
-        // 4. Archive/Delete from Room Batches
-        // We'll delete it to remove from the room view
+        // 4. Archive from Room Batches instead of deleting
+        // We mark it as discarded so it disappears from the room but keeps its history
         const { error: delError } = await getClient()
             .from('batches')
-            .delete()
+            .update({
+                discarded_at: new Date().toISOString(),
+                current_room_id: null,
+                clone_map_id: null,
+                grid_position: null,
+                discard_reason: 'Finalizado a Stock',
+                notes: `Finalizado y enviado a stock. Rinde Total: ${finalWeight}g. ${notes}`
+            })
             .eq('id', batchId);
 
         if (delError) {

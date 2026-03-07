@@ -23,6 +23,7 @@ import {
   FaLock,
   FaUserCircle,
   FaClipboardList,
+  FaFileAlt, // Added for Informes
   FaExclamationTriangle
 } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
@@ -364,10 +365,19 @@ const Sidebar: React.FC = () => {
               )}
 
               {['owner', 'admin', 'grower', 'staff'].includes(currentRole || '') && (
-                <StyledNavLink to="/insumos" style={{ opacity: planLevel >= 2 ? 1 : 0.6 }}>
-                  <FaShoppingBag /> Insumos
-                  {planLevel < 2 && <FaLock className="lock-icon" title="Requiere Plan Equipo" />}
-                </StyledNavLink>
+                <>
+                  <StyledNavLink
+                    to="/insumos"
+                    style={{ opacity: planLevel >= 2 ? 1 : 0.6 }}
+                    className={tourStepIndex === 15 && location.pathname !== '/insumos' ? "tour-inventory-link tour-active-pulse" : "tour-inventory-link"}
+                  >
+                    <FaShoppingBag /> Insumos
+                    {planLevel < 2 && <FaLock className="lock-icon" title="Requiere Plan Equipo" />}
+                  </StyledNavLink>
+                  <StyledNavLink to="/informes">
+                    <FaFileAlt /> Informes
+                  </StyledNavLink>
+                </>
               )}
 
               {['owner', 'admin', 'grower'].includes(currentRole || '') && (

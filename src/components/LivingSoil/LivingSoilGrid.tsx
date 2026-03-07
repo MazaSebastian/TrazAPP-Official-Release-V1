@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import styled from 'styled-components';
+import styled, { keyframes, css } from 'styled-components';
 import { useDroppable } from '@dnd-kit/core';
 import { Batch, BatchStage } from '../../types/rooms';
 import { FaSearchPlus, FaSearchMinus } from 'react-icons/fa';
@@ -155,18 +155,25 @@ const getStageBorderColor = (stage: BatchStage | undefined) => {
     }
 }
 
-// Keep getStageIcon for legacy or tooltips if needed, but we won't use it in the grid cell main view anymore.
-// Or we can remove it if unused. Let's keep it for now in case we need it elsewhere.
-// getStageIcon removed as it was unused.
-
+const pulseGlow = keyframes`
+  0% { box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.4); background: rgba(56, 189, 248, 0.1); }
+  50% { box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.1); background: rgba(56, 189, 248, 0.2); }
+  100% { box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.4); background: rgba(56, 189, 248, 0.1); }
+`;
 
 // --- Styled Components ---
 
-const CellStyled = styled.div<{ $isOver?: boolean; $isOccupied?: boolean; $stage?: BatchStage; $geneticColor?: string; $isSelected?: boolean; cellSize: number; $hasAlert?: boolean; $isCompleted?: boolean; $disableTransition?: boolean }>`
+const CellStyled = styled.div<{ $isOver?: boolean; $isOccupied?: boolean; $stage?: BatchStage; $geneticColor?: string; $isSelected?: boolean; cellSize: number; $hasAlert?: boolean; $isCompleted?: boolean; $disableTransition?: boolean; $isRelocatingTarget?: boolean }>`
   /* Background Logic */
   background: ${p => p.$isSelected ? 'rgba(74, 222, 128, 0.2)' : p.$isOccupied ? (p.$geneticColor || 'rgba(30, 41, 59, 0.8)') : p.$isOver ? 'rgba(56, 189, 248, 0.1)' : 'rgba(30, 41, 59, 0.3)'};
   /* backdrop-filter removed for performance on large grids */
   
+  /* Relocating Target Glow Animation */
+  ${p => p.$isRelocatingTarget && !p.$isOccupied && !p.$isSelected && css`
+    animation: ${pulseGlow} 2s infinite ease-in-out;
+    border: 1px dashed rgba(56, 189, 248, 0.5) !important;
+  `}
+
   /* Border Logic - Simplified for cleaner look with gap */
   border: ${p => p.$isSelected
         ? '2px solid rgba(74, 222, 128, 0.5)' // Green for selection
@@ -441,7 +448,8 @@ const GridCell = React.memo(({
     cellSize,
     onMouseEnter,
     onMouseLeave,
-    disableTransition
+    disableTransition,
+    isRelocating
 }: {
     row: number;
     col: number;
@@ -452,6 +460,7 @@ const GridCell = React.memo(({
     onMouseEnter: (e: React.MouseEvent, batch: Batch) => void;
     onMouseLeave: () => void;
     disableTransition?: boolean;
+    isRelocating?: boolean;
 }) => {
     const positionId = `${getRowLabel(row)}${col + 1}`;
 
@@ -477,6 +486,7 @@ const GridCell = React.memo(({
             $hasAlert={!!batch?.notes}
             $isCompleted={batch?.stage === 'completed'}
             $disableTransition={disableTransition}
+            $isRelocatingTarget={isRelocating}
             cellSize={cellSize}
             onClick={(e) => {
                 e.preventDefault();
@@ -532,9 +542,10 @@ interface LivingSoilGridProps {
     isSelectionMode?: boolean;
     onToggleSelectionMode?: (enabled: boolean) => void; // New Prop
     mapId?: string;
+    isRelocating?: boolean;
 }
 
-export const LivingSoilGrid: React.FC<LivingSoilGridProps> = ({ rows, cols, batches, onBatchClick, selectedBatchIds, onSelectionChange, isSelectionMode, onToggleSelectionMode, mapId }) => {
+export const LivingSoilGrid: React.FC<LivingSoilGridProps> = ({ rows, cols, batches, onBatchClick, selectedBatchIds, onSelectionChange, isSelectionMode, onToggleSelectionMode, mapId, isRelocating }) => {
 
     // Create Ref for internal grid scrolling
     const gridContainerRef = React.useRef<HTMLDivElement>(null);
@@ -982,6 +993,7 @@ export const LivingSoilGrid: React.FC<LivingSoilGridProps> = ({ rows, cols, batc
                         onMouseEnter={handleCellEnter}
                         onMouseLeave={handleCellLeave}
                         disableTransition={isMaskingSelection ? true : false}
+                        isRelocating={isRelocating}
                     />
                 );
             }

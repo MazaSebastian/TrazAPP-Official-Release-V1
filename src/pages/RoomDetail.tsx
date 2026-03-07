@@ -4,7 +4,47 @@ import { createPortal } from 'react-dom';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';
 import { useAuth } from '../context/AuthContext';
-import { FaArrowLeft, FaThermometerHalf, FaPlus, FaCalendarAlt, FaSeedling, FaMapMarkedAlt, FaExchangeAlt, FaExpandArrowsAlt, FaStickyNote, FaTrash, FaHistory, FaDna, FaClock, FaCheck, FaExclamationTriangle, FaPrint, FaCut, FaPen, FaEdit, FaChevronDown, FaTasks, FaTimes, FaSpinner, FaChevronLeft, FaChevronRight, FaCircleNotch, FaLeaf, FaSpa, FaLock } from 'react-icons/fa';
+import {
+    FaArrowLeft, FaThermometerHalf, FaPlus, FaCalendarAlt, FaSeedling, FaMapMarkedAlt, FaExchangeAlt, FaExpandArrowsAlt, FaWater,
+    FaBolt,
+    FaSpa,
+    FaLeaf,
+    FaListUl,
+    FaCalendarCheck,
+    FaPrint,
+    FaTemperatureLow,
+    FaStickyNote,
+    FaEye,
+    FaEllipsisV,
+    FaLayerGroup,
+    FaArrowsAlt,
+    FaArrowsAltV,
+    FaRulerVertical,
+    FaBoxOpen,
+    FaFileInvoice,
+    FaBoxes,
+    FaLink,
+    FaCompressArrowsAlt,
+    FaWarehouse,
+    FaSpinner,
+    FaPen,
+    FaTrash,
+    FaCircleNotch,
+    FaCheck,
+    FaHistory,
+    FaExclamationTriangle,
+    FaChevronDown,
+    FaChevronLeft,
+    FaChevronRight,
+    FaLock,
+    FaCut,
+    FaTasks,
+    FaTimes,
+    FaEdit,
+    FaDna,
+    FaClock,
+    FaHeartbeat
+} from 'react-icons/fa';
 // FaExclamationTriangle, FaTint, FaCut, FaSkull, FaLeaf, FaFlask, FaBroom
 import {
     format, startOfWeek, endOfWeek, startOfMonth, endOfMonth,
@@ -2349,21 +2389,26 @@ const RoomDetail: React.FC = () => {
                         if (batch) {
                             // Enqueue operation
                             groupPromises.push((async () => {
-                                // Move the batch
-                                await roomsService.moveBatch(
-                                    batchId,
-                                    room.id,
-                                    destinationRoomId,
-                                    undefined // Pass undefined to preserve notes
-                                );
-
+                                // Update batch info without logging a redundant movement
                                 await roomsService.updateBatch(batchId, {
                                     stage: newStage, // Set dynamically instead of hardcoded 'vegetation'
                                     group_name: group.name, // Native DB grouping via new column
                                     current_room_id: destinationRoomId,
                                     clone_map_id: null,
                                     grid_position: null
-                                }, user?.id, `Transplante: Inicio de ${newStage === 'flowering' ? 'Floración' : 'Vegetación'}`);
+                                }); // Note omitted intentionally to prevent double-logging
+
+                                // Move the batch physically AND log the Transplant event simultaneously
+                                await roomsService.moveBatch(
+                                    batchId,
+                                    room.id,
+                                    destinationRoomId,
+                                    `Transplante: Inicio de ${newStage === 'flowering' ? 'Floración' : 'Vegetación'}`,
+                                    undefined,
+                                    undefined,
+                                    undefined,
+                                    user?.id // Triggers the unified batch_movement write
+                                );
                             })());
                         }
                     }
@@ -4140,7 +4185,7 @@ const RoomDetail: React.FC = () => {
             <Container>
                 <GlobalPrintStyles />
                 <RoomHeaderContainer className="no-print">
-                    <BackButton onClick={() => navigate(-1)}><FaArrowLeft /> Volver</BackButton>
+                    <BackButton onClick={() => navigate(room?.spot_id ? `/crops/${room.spot_id}` : '/rooms')}><FaArrowLeft /> Volver</BackButton>
                     <Title>{room?.name} <Badge stage={room?.type}>{room?.type === 'vegetation' ? 'Vegetación' : room?.type === 'flowering' ? 'Floración' : (room?.type === 'drying' || room?.type === 'curing') ? 'Secado' : room?.type === 'living_soil' ? 'Agro/Living Soil' : room?.type}</Badge></Title>
                 </RoomHeaderContainer>
 
@@ -4330,7 +4375,7 @@ const RoomDetail: React.FC = () => {
                         <div style={{ padding: '2rem' }} className="room-actions-wrapper">
                             <div className="no-print" style={{ marginBottom: '2rem', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
 
-                                <div className="action-buttons-container" style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', justifyContent: 'center' }}>
+                                <div className="action-buttons-container tour-change-stage" style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', justifyContent: 'center' }}>
                                     {/* Hide "Nueva Tarea" for Clones/Esquejes/Germination rooms */}
                                     {!['clones', 'esquejes', 'esquejera', 'germination'].includes((room?.type as string)?.toLowerCase()) && (
                                         <StyledActionButton
@@ -5087,6 +5132,7 @@ const RoomDetail: React.FC = () => {
                                                                     isSelectionMode={isSelectionMode}
                                                                     onToggleSelectionMode={setIsSelectionMode}
                                                                     onSelectionChange={(newSet) => { if (!isRelocatingSelection) setSelectedBatchIds(newSet); }}
+                                                                    isRelocating={!!movingBatch || isRelocatingSelection}
                                                                 />
                                                             ) : (
                                                                 <EsquejeraGrid
@@ -5103,6 +5149,7 @@ const RoomDetail: React.FC = () => {
                                                                     selectedBatchIds={selectedBatchIds}
                                                                     selectionMode={isSelectionMode}
                                                                     onSelectionChange={(newSet) => { if (!isRelocatingSelection) setSelectedBatchIds(newSet); }}
+                                                                    isRelocating={!!movingBatch || isRelocatingSelection}
                                                                 />
                                                             )}
 
@@ -5202,7 +5249,7 @@ const RoomDetail: React.FC = () => {
                                     }}>
                                         <div style={{ flexShrink: 0 }}>
                                             <h4 style={{ margin: '0 0 1rem 0', color: '#f8fafc', fontSize: '1rem' }}>Lotes Disponibles</h4>
-                                            <ActionButton onClick={() => {
+                                            <ActionButton className="tour-add-batch" onClick={() => {
                                                 setNewBatch({
                                                     geneticId: '',
                                                     quantity: '',
@@ -7251,18 +7298,35 @@ const RoomDetail: React.FC = () => {
                                     />
                                 </div>
 
-                                <div style={{ marginBottom: '1rem' }}>
-                                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#f8fafc' }}>Etapa de cultivo</label>
-                                    <CustomSelect
-                                        value={editRoomType}
-                                        onChange={(val) => setEditRoomType(val)}
-                                        options={[
-                                            { value: 'vegetation', label: 'Vegetación' },
-                                            { value: 'flowering', label: 'Floración' },
-                                            { value: 'drying', label: 'Secado' },
-                                            { value: 'living_soil', label: 'Agro/Living Soil' }
-                                        ]}
-                                    />
+                                <div style={{ marginBottom: '1.5rem' }}>
+                                    <label style={{ display: 'block', marginBottom: '0.75rem', fontWeight: 600, color: '#f8fafc' }}>Etapa de cultivo</label>
+                                    <div style={{
+                                        display: 'grid',
+                                        gridTemplateColumns: ['clones', 'vegetation', 'flowering'].includes(room?.type || '') ? '1fr 1fr' : 'repeat(4, minmax(0, 1fr))',
+                                        gap: '0.5rem'
+                                    }}>
+                                        {[
+                                            { id: 'vegetation', label: 'Vege', icon: <FaLeaf /> },
+                                            { id: 'flowering', label: 'Flora', icon: <FaSpa /> },
+                                            { id: 'drying', label: 'Secado', icon: <FaWarehouse /> },
+                                            { id: 'living_soil', label: 'Agro', icon: <FaSeedling /> }
+                                        ].filter(option => {
+                                            if (['clones', 'vegetation', 'flowering'].includes(room?.type || '')) {
+                                                return ['vegetation', 'flowering'].includes(option.id);
+                                            }
+                                            return true;
+                                        }).map(option => (
+                                            <StageButton
+                                                key={option.id}
+                                                onClick={() => setEditRoomType(option.id as any)}
+                                                isActive={editRoomType === option.id}
+                                                style={{ padding: '0.5rem', minHeight: '80px' }}
+                                            >
+                                                <div style={{ fontSize: '1.25rem', marginBottom: '0.25rem' }}>{option.icon}</div>
+                                                <span style={{ fontSize: '0.75rem', textAlign: 'center', lineHeight: '1.1' }}>{option.label}</span>
+                                            </StageButton>
+                                        ))}
+                                    </div>
                                 </div>
 
                                 <div style={{ marginBottom: '1.5rem' }}>

@@ -105,6 +105,7 @@ export const GuidedTour: React.FC = () => {
     const [run, setRun] = useState(false);
     const [showWelcomeModal, setShowWelcomeModal] = useState(false);
     const [isDismissed, setIsDismissed] = useState(false);
+    const [cropName, setCropName] = useState('');
 
     useEffect(() => {
         console.log("GuidedTour check:", {
@@ -125,16 +126,109 @@ export const GuidedTour: React.FC = () => {
     // Handle auto-advancing step 4 -> 5 when navigating to /crops
     useEffect(() => {
         if (location.pathname === '/crops' && tourStepIndex === 4) {
-            setTourStepIndex(5);
+            let timeoutId: NodeJS.Timeout;
+
+            const targetClass = '.tour-new-crop';
+
+            const checkAndAdvance = () => {
+                const element = document.querySelector(targetClass);
+                if (element) {
+                    setTourStepIndex(5);
+                    clearTimeout(timeoutId);
+                    return true;
+                }
+                return false;
+            };
+
+            // Immediate check in case it's already there
+            if (!checkAndAdvance()) {
+                // Poll every 100ms as a fallback
+                const intervalId = setInterval(() => {
+                    if (checkAndAdvance()) {
+                        clearInterval(intervalId);
+                    }
+                }, 100);
+
+                // Set a failsafe timeout to prevent infinite searching
+                timeoutId = setTimeout(() => {
+                    clearInterval(intervalId);
+                }, 5000); // Give up after 5 seconds
+
+                return () => {
+                    clearInterval(intervalId);
+                    clearTimeout(timeoutId);
+                };
+            }
+        }
+    }, [location.pathname, tourStepIndex, setTourStepIndex]);
+    // Auto advance from input (step 6) to create button after 3 seconds
+    useEffect(() => {
+        if (tourStepIndex === 6) {
+            const timer = setTimeout(() => {
+                setTourStepIndex(7);
+            }, 3000); // 3 seconds
+            return () => clearTimeout(timer);
+        }
+    }, [tourStepIndex, setTourStepIndex]);
+
+    // Advance tour when user enters a crop details page (index 8 active)
+    useEffect(() => {
+        if (location.pathname.startsWith('/crops/') && location.pathname !== '/crops' && tourStepIndex === 8) {
+            let timeoutId: NodeJS.Timeout;
+
+            const intervalId = setInterval(() => {
+                const titleEl = document.querySelector('.tour-crop-detail-title');
+                if (titleEl && titleEl.textContent && titleEl.textContent.trim() !== '') {
+                    clearInterval(intervalId);
+                    clearTimeout(timeoutId);
+                    setCropName(titleEl.textContent.trim());
+                    setTourStepIndex(9); // Move to title step
+                }
+            }, 100);
+
+            timeoutId = setTimeout(() => {
+                clearInterval(intervalId);
+                setTourStepIndex(9);
+            }, 5000);
+
+            return () => {
+                clearInterval(intervalId);
+                clearTimeout(timeoutId);
+            };
         }
     }, [location.pathname, tourStepIndex, setTourStepIndex]);
 
-    // Complete tour when user enters a crop details page (index 6 active)
+    // Handle auto-advancing step 15 -> 16 when navigating to /insumos
     useEffect(() => {
-        if (location.pathname.startsWith('/crops/') && location.pathname !== '/crops' && tourStepIndex === 6) {
-            setRun(false);
-            setTourStepIndex(0);
-            markTourCompleted();
+        if (location.pathname === '/insumos' && tourStepIndex === 15) {
+            let timeoutId: NodeJS.Timeout;
+
+            const checkAndAdvance = () => {
+                const element = document.querySelector('.tour-add-product');
+                if (element) {
+                    setTourStepIndex(16);
+                    clearTimeout(timeoutId);
+                    return true;
+                }
+                return false;
+            };
+
+            if (!checkAndAdvance()) {
+                const intervalId = setInterval(() => {
+                    if (checkAndAdvance()) {
+                        clearInterval(intervalId);
+                    }
+                }, 100);
+
+                timeoutId = setTimeout(() => {
+                    clearInterval(intervalId);
+                }, 5000);
+
+                return () => {
+                    clearInterval(intervalId);
+                    clearTimeout(timeoutId);
+                };
+            }
         }
     }, [location.pathname, tourStepIndex, setTourStepIndex]);
 
@@ -169,8 +263,8 @@ export const GuidedTour: React.FC = () => {
         const finishedStatuses: string[] = [STATUS.FINISHED, STATUS.SKIPPED];
 
         if (type === 'step:after' || type === 'error:target_not_found') {
-            // Normal progression unless we're on step 4 waiting for manual click
-            if (index !== 4) {
+            // Normal progression unless we're waiting for manual transitions/clicks
+            if (![4, 5, 7, 8, 10, 11, 12, 15].includes(index)) {
                 setTourStepIndex(index + (action === 'prev' ? -1 : 1));
             }
         }
@@ -217,8 +311,36 @@ export const GuidedTour: React.FC = () => {
         },
         {
             target: '.tour-new-crop',
-            content: '¡Estos son tus cultivos! Podés hacer de cuenta que son tus locaciones o lugares físicos (ej: Casa, Depósito).',
+            content: '¡Estos son tus cultivos! Podés hacer de cuenta que son tus locaciones o lugares físicos (ej: Casa, Depósito). Crea tu primer cultivo aquí.',
             placement: 'bottom',
+            spotlightClicks: true,
+            styles: {
+                buttonNext: {
+                    display: 'none'
+                }
+            }
+        },
+        {
+            target: '.tour-crop-name-input',
+            content: 'Primero, asignale un nombre o identificador a tu lugar de cultivo.',
+            placement: 'bottom',
+            spotlightClicks: true,
+            styles: {
+                buttonNext: {
+                    display: 'none'
+                }
+            }
+        },
+        {
+            target: '.tour-create-crop-button',
+            content: 'Ahora haz clic en Crear Cultivo para guardar los datos.',
+            placement: 'bottom',
+            spotlightClicks: true,
+            styles: {
+                buttonNext: {
+                    display: 'none'
+                }
+            }
         },
         {
             target: '.tour-first-crop-card',
@@ -230,6 +352,71 @@ export const GuidedTour: React.FC = () => {
                     display: 'none'
                 }
             }
+        },
+        {
+            target: '.tour-crop-detail-title',
+            content: `Este es tu cultivo${cropName ? ` "${cropName}"` : ''}, acá tendrás el total de tus distintas salas activas en tu cultivo.`,
+            placement: 'bottom',
+        },
+        {
+            target: '.tour-create-first-room',
+            content: '¡Dale! Crea tu primera sala.',
+            placement: 'bottom',
+            spotlightClicks: true,
+            styles: {
+                buttonNext: {
+                    display: 'none'
+                }
+            }
+        },
+        {
+            target: '.tour-new-room-create',
+            content: 'Haz clic en Crear Sala para comenzar a trabajar en ella.',
+            placement: 'right',
+            spotlightClicks: true,
+            disableOverlay: true,
+            styles: {
+                buttonNext: {
+                    display: 'none'
+                }
+            }
+        },
+        {
+            target: '.tour-active-room-card',
+            content: '¡Esta es tu primer sala de cultivo activa! Entrá a tu nueva sala de cultivo.',
+            placement: 'bottom',
+            spotlightClicks: true,
+            styles: {
+                buttonNext: {
+                    display: 'none'
+                }
+            }
+        },
+        {
+            target: '.tour-change-stage',
+            content: 'Desde las acciones generales de la sala podrás configurar una Nueva Tarea, revisar el Historial, Transplantar o Editar la Sala entera.',
+            placement: 'bottom',
+        },
+        {
+            target: '.tour-add-batch',
+            content: 'Aquí es donde nacen tus plantas/esquejes. Utiliza este botón para registrar un nuevo lote de plantas dentro de la sala.',
+            placement: 'right',
+        },
+        {
+            target: '.tour-inventory-link',
+            content: 'Ahora vamos a gestionar nuestros suministros. ¡Haz clic en Insumos!',
+            placement: 'right',
+            spotlightClicks: true,
+            styles: {
+                buttonNext: {
+                    display: 'none'
+                }
+            }
+        },
+        {
+            target: '.tour-add-product',
+            content: 'Guarda tus sustratos, fertilizantes, y demás en tu inventario; aquí creas y agregas un nuevo producto para descontar su uso luego en cada riego o tarea.',
+            placement: 'bottom',
         }
     ];
 

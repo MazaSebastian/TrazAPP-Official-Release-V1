@@ -28,6 +28,7 @@ import Compras from './pages/Compras';
 import Insumos from './pages/Insumos';
 import Expenses from './pages/Expenses';
 import Metrics from './pages/Metrics'; // New Import
+import Informes from './pages/Informes'; // Added Informes route
 import Patients from './pages/Patients';
 import PatientDetail from './pages/PatientDetail';
 import Templates from './pages/Templates';
@@ -350,6 +351,17 @@ function App() {
                   <KYCGuard>
                     <MainContent>
                       <Metrics />
+                    </MainContent>
+                  </KYCGuard>
+                </RoleGuard>
+              </RequireAuth>
+            } />
+            <Route path="/informes" element={
+              <RequireAuth>
+                <RoleGuard allowedRoles={['admin', 'grower', 'staff', 'medico']}>
+                  <KYCGuard>
+                    <MainContent>
+                      <Informes />
                     </MainContent>
                   </KYCGuard>
                 </RoleGuard>

@@ -160,7 +160,7 @@ export const GeneticDetail: React.FC = () => {
         return (
             <Container>
                 <Header>
-                    <BackButton onClick={() => navigate(-1)}><FaArrowLeft /></BackButton>
+                    <BackButton onClick={() => navigate('/genetics')}><FaArrowLeft /></BackButton>
                     <h1>Error</h1>
                 </Header>
                 <GlassCard style={{ textAlign: 'center', padding: '4rem 2rem' }}>
@@ -179,7 +179,7 @@ export const GeneticDetail: React.FC = () => {
     return (
         <Container>
             <Header>
-                <BackButton onClick={() => navigate(-1)} title="Volver"><FaArrowLeft /></BackButton>
+                <BackButton onClick={() => navigate('/genetics')} title="Volver"><FaArrowLeft /></BackButton>
                 <h1><FaDna style={{ color: '#4ade80' }} /> Ficha de Genética</h1>
             </Header>
 

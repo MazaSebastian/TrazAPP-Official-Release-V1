@@ -50,10 +50,10 @@ export const dispensaryService = {
         return data as DispensaryBatch[];
     },
 
-    async getMovements(limit = 100): Promise<DispensaryMovement[]> {
+    async getMovements(limit = 100, startDate?: Date, endDate?: Date): Promise<DispensaryMovement[]> {
         if (!supabase) return [];
 
-        const { data, error } = await supabase
+        let query = supabase
             .from('chakra_dispensary_movements')
             .select(`
                 *,
@@ -61,9 +61,24 @@ export const dispensaryService = {
                     batch_code,
                     strain_name,
                     organization_id
+                ),
+                profile:member_id (
+                    full_name
                 )
             `)
-            .eq('batch.organization_id', getSelectedOrgId())
+            .eq('batch.organization_id', getSelectedOrgId());
+
+        if (startDate) {
+            query = query.gte('created_at', startDate.toISOString());
+        }
+        if (endDate) {
+            // Set to end of day
+            const endOfDay = new Date(endDate);
+            endOfDay.setHours(23, 59, 59, 999);
+            query = query.lte('created_at', endOfDay.toISOString());
+        }
+
+        const { data, error } = await query
             .order('created_at', { ascending: false })
             .limit(limit);
 

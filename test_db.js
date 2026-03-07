@@ -1,45 +1,17 @@
-import { createClient } from '@supabase/supabase-js';
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
+const { createClient } = require('@supabase/supabase-js');
+require('dotenv').config({ path: '.env' });
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const supabase = createClient(process.env.REACT_APP_SUPABASE_URL, process.env.REACT_APP_SUPABASE_ANON_KEY);
 
-const envFile = fs.readFileSync(path.join(__dirname, '.env'), 'utf-8');
-const envConfig = {};
-envFile.split('\n').forEach(line => {
-    const [key, value] = line.split('=');
-    if (key && value) {
-        envConfig[key.trim()] = value.trim();
-    }
-});
+async function run() {
+    console.log("Fetching all movements...");
+    const { data: allMovs, error: e1 } = await supabase.from('chakra_dispensary_movements').select('*').order('created_at', { ascending: false }).limit(5);
+    console.log("All movements (raw):", JSON.stringify(allMovs, null, 2));
+    if (e1) console.error(e1);
 
-const supabaseUrl = envConfig['VITE_SUPABASE_URL'];
-const supabaseKey = envConfig['VITE_SUPABASE_ANON_KEY'];
-
-const supabase = createClient(supabaseUrl, supabaseKey);
-
-async function checkRooms() {
-    const { data: crops } = await supabase.from('chakra_crops').select('id, name');
-    console.log("All Crops:", crops);
-
-    if (!crops || crops.length === 0) return;
-
-    for (const crop of crops) {
-        if (crop.name.toLowerCase().includes('beccar')) {
-            console.log(`\nFound Crop Beccar: ${crop.id}`);
-            const { data: rooms } = await supabase.from('rooms').select('id, name').eq('spot_id', crop.id);
-            console.log(`Rooms in Beccar:`, rooms);
-
-            if (rooms) {
-                for (const r of rooms) {
-                    const { data: maps } = await supabase.from('clone_maps').select('id, name').eq('room_id', r.id);
-                    console.log(`  Maps in ${r.name}:`, maps);
-                }
-            }
-        }
-    }
+    console.log("Fetching all batches...");
+    const { data: allBatches, error: e2 } = await supabase.from('chakra_dispensary_batches').select('id, organization_id, strain_name').limit(2);
+    console.log("Batches:", JSON.stringify(allBatches, null, 2));
+    if (e2) console.error(e2);
 }
-
-checkRooms();
+run();

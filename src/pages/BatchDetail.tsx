@@ -267,7 +267,7 @@ export const BatchDetail: React.FC = () => {
         return (
             <Container>
                 <Header>
-                    <BackButton onClick={() => navigate(-1)}><FaArrowLeft /></BackButton>
+                    <BackButton onClick={() => navigate('/clones')}><FaArrowLeft /></BackButton>
                     <h1>Error</h1>
                 </Header>
                 <GlassCard style={{ textAlign: 'center', padding: '4rem 2rem' }}>
@@ -329,7 +329,7 @@ export const BatchDetail: React.FC = () => {
                     <ActionButton onClick={handlePrint} title="Imprimir Ficha">
                         <FaPrint /> Imprimir
                     </ActionButton>
-                    <ActionButton onClick={() => navigate(-1)} title="Volver al Listado">
+                    <ActionButton onClick={() => navigate('/clones')} title="Volver al Listado">
                         <FaArrowLeft /> Volver
                     </ActionButton>
                 </div>

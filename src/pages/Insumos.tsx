@@ -668,7 +668,7 @@ const Insumos: React.FC = () => {
       <div style={{ filter: planLevel < 2 ? 'blur(4px)' : 'none', pointerEvents: planLevel < 2 ? 'none' : 'auto', userSelect: planLevel < 2 ? 'none' : 'auto', opacity: planLevel < 2 ? 0.5 : 1 }}>
         <Header>
           <h1>Gestión de Insumos</h1>
-          <Button onClick={() => handleOpenModal()}>
+          <Button className="tour-add-product" onClick={() => handleOpenModal()}>
             <FaPlus /> Nuevo Insumo
           </Button>
         </Header>
@@ -687,7 +687,7 @@ const Insumos: React.FC = () => {
             <div className="stat-label">Con Variación</div>
           </StatCard>
           <StatCard>
-            <div className="stat-value">${stats.totalValor.toFixed(2)}</div>
+            <div className="stat-value">${stats.totalValor.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</div>
             <div className="stat-label">Valor Total</div>
           </StatCard>
         </StatsGrid>
@@ -747,10 +747,10 @@ const Insumos: React.FC = () => {
                     <Badge variant="gray">{insumo.categoria}</Badge>
                   </div>
                   <div>
-                    <div style={{ fontWeight: 600 }}>${insumo.precio_actual}</div>
+                    <div style={{ fontWeight: 600 }}>${insumo.precio_actual.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</div>
                     {insumo.precio_anterior && (
                       <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
-                        Antes: ${insumo.precio_anterior}
+                        Antes: ${insumo.precio_anterior.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                       </div>
                     )}
                   </div>

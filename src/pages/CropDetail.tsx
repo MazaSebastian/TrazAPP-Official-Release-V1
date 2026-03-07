@@ -48,6 +48,7 @@ import { dailyLogsService } from '../services/dailyLogsService';
 
 import { CustomDatePicker } from '../components/CustomDatePicker';
 import { CustomSelect } from '../components/CustomSelect';
+import { useAuth } from '../context/AuthContext';
 import {
   DndContext,
   DragOverlay,
@@ -979,6 +980,7 @@ const SortableRoomItem = ({ room, children }: { room: any, children: React.React
 
 const CropDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const { tourStepIndex, setTourStepIndex } = useAuth();
   console.log("CropDetail Render. ID:", id); // Verify ID availability
   const navigate = useNavigate();
   const [crop, setCrop] = useState<Crop | null>(null);
@@ -1045,6 +1047,16 @@ const CropDetail: React.FC = () => {
 
   // New Room Form
   const [isRoomModalOpen, setIsRoomModalOpen] = useState(false);
+
+  // Safely advance tour after room modal animation completes to prevent Joyride DOM errors
+  React.useEffect(() => {
+    if (isRoomModalOpen && tourStepIndex === 10) {
+      const timer = setTimeout(() => {
+        setTourStepIndex(11);
+      }, 350); // 350ms to allow Modal scaleIn animation to finish
+      return () => clearTimeout(timer);
+    }
+  }, [isRoomModalOpen, tourStepIndex, setTourStepIndex]);
   const [isRoomModalClosing, setIsRoomModalClosing] = useState(false);
 
   const handleCloseRoomModal = () => {
@@ -1305,7 +1317,18 @@ const CropDetail: React.FC = () => {
 
       if (newRoom) {
         console.log("Room created successfully:", newRoom);
+
+        // Optimistically add the new room so Joyride finds the target instantly
+        setRooms(prev => [{ ...newRoom as any, batches: [] }, ...prev]);
+
         handleCloseRoomModal(); // Close first!
+
+        // Advance tour if active
+        // Give 600ms so modal animation fully closes and DOM stabilizes before Joyride hunts for .tour-active-room-card
+        if (tourStepIndex === 11) {
+          setTimeout(() => setTourStepIndex(12), 600);
+        }
+
         await loadRooms(id, 2000); // Then load with delay
         setRoomForm({
           name: '',
@@ -1853,7 +1876,7 @@ const CropDetail: React.FC = () => {
         </div>
 
         <TitleSection>
-          <div>
+          <div className="tour-crop-detail-title">
             <CropTitle>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                 <FaSeedling /> {/* Changed icon to Seedling/Spot concept */}
@@ -1904,7 +1927,7 @@ const CropDetail: React.FC = () => {
                   <p style={{ fontSize: '1.1rem', fontWeight: 500, margin: 0 }}>No hay salas/cultivos activos</p>
                 </div>
 
-                <CreateCard onClick={() => setIsRoomModalOpen(true)}>
+                <CreateCard className="tour-create-first-room" onClick={() => setIsRoomModalOpen(true)}>
                   <DashedCircle>
                     <FaPlus />
                   </DashedCircle>
@@ -1917,7 +1940,7 @@ const CropDetail: React.FC = () => {
               <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
                 <SortableContext items={rooms.map((r: any) => r.id)} strategy={rectSortingStrategy}>
                   <GridContainer>
-                    {rooms.map(room => {
+                    {rooms.map((room, index) => {
                       // Calculate logic
                       let weekInfo = "";
                       let startDateDisplay = "-";
@@ -1997,7 +2020,15 @@ const CropDetail: React.FC = () => {
                       return (
                         <SortableRoomItem key={room.id} room={room}>
                           <div
-                            onClick={() => navigate(`/rooms/${room.id}`)}
+                            className={index === 0 ? "tour-active-room-card" : ""}
+                            onClick={() => {
+                              if (tourStepIndex === 12 && index === 0) {
+                                setTourStepIndex(13);
+                                setTimeout(() => navigate(`/rooms/${room.id}`), 50);
+                              } else {
+                                navigate(`/rooms/${room.id}`);
+                              }
+                            }}
                             style={{
                               cursor: 'pointer'
                             }}
@@ -2532,6 +2563,7 @@ const CropDetail: React.FC = () => {
               <FormGroup>
                 <label>Nombre de la Sala</label>
                 <input
+                  className="tour-new-room-modal"
                   autoFocus
                   type="text"
                   placeholder="Ej: Sala Vege 1"
@@ -2628,7 +2660,7 @@ const CropDetail: React.FC = () => {
 
               <ModalActions>
                 <Button $variant="secondary" onClick={handleCloseRoomModal}>Cancelar</Button>
-                <Button onClick={handleCreateRoom} disabled={isCreatingRoom} $variant="primary">{isCreatingRoom ? 'Creando...' : 'Crear Sala'}</Button>
+                <Button className="tour-new-room-create" onClick={handleCreateRoom} disabled={isCreatingRoom} $variant="primary">{isCreatingRoom ? 'Creando...' : 'Crear Sala'}</Button>
               </ModalActions>
             </Modal>
           </ModalOverlay>

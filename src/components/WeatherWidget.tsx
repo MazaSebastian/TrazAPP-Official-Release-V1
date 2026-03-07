@@ -10,9 +10,19 @@ import {
   WiRain,
   WiThunderstorm,
   WiSnow,
-  WiFog
+  WiFog,
+  WiSunrise,
+  WiSunset,
+  WiMoonAltNew,
+  WiMoonAltWaxingCrescent3,
+  WiMoonAltFirstQuarter,
+  WiMoonAltWaxingGibbous3,
+  WiMoonAltFull,
+  WiMoonAltWaningGibbous3,
+  WiMoonAltThirdQuarter,
+  WiMoonAltWaningCrescent3
 } from 'react-icons/wi';
-import { FaChevronDown, FaTint } from 'react-icons/fa';
+import { FaChevronDown, FaTint, FaSun } from 'react-icons/fa';
 
 const WidgetContainer = styled.div`
   background: rgba(15, 23, 42, 0.75);
@@ -92,6 +102,53 @@ const CurrentTempBadge = styled.div`
     font-size: 1rem;
     padding: 0.4rem 0.8rem;
     gap: 0.75rem;
+  }
+
+  /* Custom Tooltip Styles */
+  .tooltip-wrapper {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    cursor: help;
+  }
+
+  .tooltip-wrapper .tooltip-text {
+    visibility: hidden;
+    opacity: 0;
+    width: max-content;
+    background-color: rgba(15, 23, 42, 0.95);
+    color: #f8fafc;
+    text-align: center;
+    border-radius: 0.375rem;
+    padding: 0.25rem 0.5rem;
+    position: absolute;
+    z-index: 50;
+    bottom: 125%;
+    left: 50%;
+    transform: translateX(-50%) translateY(10px);
+    transition: all 0.2s ease-in-out;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+    pointer-events: none;
+  }
+
+  .tooltip-wrapper .tooltip-text::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: rgba(15, 23, 42, 0.95) transparent transparent transparent;
+  }
+
+  .tooltip-wrapper:hover .tooltip-text {
+    visibility: visible;
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
   }
 `;
 
@@ -219,14 +276,45 @@ const getWeatherIcon = (code: number, precip?: number) => {
   if (code <= 67) return <WiRain color="#4299e1" />;
   // 71-77: Snow
   if (code <= 77) return <WiSnow color="#63b3ed" />;
-  // 80-82: Rain showers
-  if (code <= 82) return <WiRain color="#4299e1" />;
   // 95-99: Thunderstorm
   return <WiThunderstorm color="#805ad5" />;
 };
 
+// Calculate moon phase based on Conway's method
+const getMoonPhase = (date: Date) => {
+  let year = date.getFullYear();
+  let month = date.getMonth() + 1;
+  const day = date.getDate();
+
+  if (month < 3) {
+    year--;
+    month += 12;
+  }
+  ++month;
+  const c = 365.25 * year;
+  const e = 30.6 * month;
+  const jd = c + e + day - 694039.09; // julian date
+  let phase = jd / 29.5305882; // divide by the moon cycle
+  phase -= Math.floor(phase); // get fractional part
+
+  // Convert to 8 phases
+  const p = Math.round(phase * 8) % 8;
+
+  switch (p) {
+    case 0: return { icon: <WiMoonAltNew color="#cbd5e1" />, name: 'Luna Nueva' };
+    case 1: return { icon: <WiMoonAltWaxingCrescent3 color="#cbd5e1" />, name: 'Creciente' };
+    case 2: return { icon: <WiMoonAltFirstQuarter color="#cbd5e1" />, name: 'Cuarto Creciente' };
+    case 3: return { icon: <WiMoonAltWaxingGibbous3 color="#cbd5e1" />, name: 'Gibosa Creciente' };
+    case 4: return { icon: <WiMoonAltFull color="#cbd5e1" />, name: 'Luna Llena' };
+    case 5: return { icon: <WiMoonAltWaningGibbous3 color="#cbd5e1" />, name: 'Gibosa Menguante' };
+    case 6: return { icon: <WiMoonAltThirdQuarter color="#cbd5e1" />, name: 'Cuarto Menguante' };
+    case 7: return { icon: <WiMoonAltWaningCrescent3 color="#cbd5e1" />, name: 'Menguante' };
+    default: return { icon: <WiMoonAltFull color="#cbd5e1" />, name: 'Llena' };
+  }
+};
+
 export const WeatherWidget: React.FC<{ className?: string }> = ({ className }) => {
-  const [weather, setWeather] = useState<{ current: { temp: number; humidity: number; code: number }; daily: DailyWeather[] } | null>(null);
+  const [weather, setWeather] = useState<{ current: { temp: number; humidity: number; code: number; sunrise: string; sunset: string; uvIndex: number; }; daily: DailyWeather[] } | null>(null);
   const [loading, setLoading] = useState(true);
   const [isOpen, setIsOpen] = useState(false); // Default closed on mobile, open on desktop? Let's just default to open on desktop, but closed entirely on mobile.
   const [locationName, setLocationName] = useState('Munro/Olivos');
@@ -288,6 +376,26 @@ export const WeatherWidget: React.FC<{ className?: string }> = ({ className }) =
               <FaTint size={14} />
               <span>{Math.round(weather.current.humidity)}%</span>
             </div>
+
+            {/* Added Extra Metrics inside badge, hiding on mobile if it gets too crowded or using small font. */}
+            <div className="divider" />
+            <div className="metric tooltip-wrapper" style={{ color: '#fbbf24', fontSize: '0.9rem' }}>
+              <WiSunrise size={20} />
+              <span style={{ marginLeft: '-4px' }}>{format(new Date(weather.current.sunrise), 'HH:mm')}</span>
+              <span className="tooltip-text">Amanecer</span>
+            </div>
+            <div className="divider" />
+            <div className="metric tooltip-wrapper" style={{ color: '#f87171', fontSize: '0.9rem' }}>
+              <WiSunset size={20} />
+              <span style={{ marginLeft: '-4px' }}>{format(new Date(weather.current.sunset), 'HH:mm')}</span>
+              <span className="tooltip-text">Atardecer</span>
+            </div>
+            <div className="divider" />
+            <div className="metric tooltip-wrapper" style={{ color: '#cbd5e1', fontSize: '1.2rem', marginTop: '2px' }}>
+              {getMoonPhase(new Date()).icon}
+              <span className="tooltip-text">{getMoonPhase(new Date()).name}</span>
+            </div>
+
           </CurrentTempBadge>
           <ChevronIcon $isOpen={isOpen} />
         </div>

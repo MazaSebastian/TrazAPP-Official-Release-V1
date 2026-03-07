@@ -1,5 +1,5 @@
 import React from 'react';
-import styled from 'styled-components';
+import styled, { keyframes, css } from 'styled-components';
 import { useDroppable } from '@dnd-kit/core';
 import { Batch } from '../../types/rooms';
 import { FaLeaf, FaSearchPlus, FaSearchMinus } from 'react-icons/fa';
@@ -10,6 +10,14 @@ import { createPortal } from 'react-dom';
 
 // --- Styled Components ---
 // Trigger new deploy
+
+
+
+const pulseGlow = keyframes`
+  0% { box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.4); background: rgba(56, 189, 248, 0.1); }
+  50% { box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.1); background: rgba(56, 189, 248, 0.2); }
+  100% { box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.4); background: rgba(56, 189, 248, 0.1); }
+`;
 
 const GridWrapper = styled.div`
   position: relative;
@@ -151,7 +159,7 @@ const HeaderCell = styled.div<{ cellSize: number }>`
   }
 `;
 
-const CellStyled = styled.div<{ $isOver?: boolean; $isOccupied?: boolean; $geneticColor?: string; $isPainting?: boolean; $isSelected?: boolean; cellSize: number; $hasAlert?: boolean }>`
+const CellStyled = styled.div<{ $isOver?: boolean; $isOccupied?: boolean; $geneticColor?: string; $isPainting?: boolean; $isSelected?: boolean; cellSize: number; $hasAlert?: boolean; $isRelocatingTarget?: boolean }>`
   background: ${p => p.$isSelected ? 'rgba(74, 222, 128, 0.2)' : p.$isOccupied ? (p.$geneticColor || 'rgba(30, 41, 59, 0.8)') : p.$isOver ? 'rgba(56, 189, 248, 0.1)' : 'rgba(30, 41, 59, 0.3)'};
   /* backdrop-filter removed for performance on large grids */
   
@@ -162,6 +170,12 @@ const CellStyled = styled.div<{ $isOver?: boolean; $isOccupied?: boolean; $genet
             ? '1px solid ' + (p.$isOccupied ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.05)')
             : '2px ' + (p.$isOccupied ? 'solid rgba(255, 255, 255, 0.1)' : 'dashed rgba(255, 255, 255, 0.05)')
     };
+
+  /* Relocating Target Glow Animation */
+  ${p => p.$isRelocatingTarget && !p.$isOccupied && !p.$isSelected && css`
+    animation: ${pulseGlow} 2s infinite ease-in-out;
+    border: 1px dashed rgba(56, 189, 248, 0.5) !important;
+  `}
 
   box-sizing: border-box;
   width: 100%;
@@ -399,7 +413,7 @@ const getRowLabel = (index: number) => {
 };
 
 // --- Cell Component ---
-const GridCell = ({ row, col, batch, onClick, isPainting, isSelected, renderActions, cellSize }: { row: number; col: number; batch?: Batch, onClick: (b: Batch | null) => void, isPainting?: boolean, isSelected?: boolean, renderActions?: (batch: Batch) => React.ReactNode; cellSize: number }) => {
+const GridCell = ({ row, col, batch, onClick, isPainting, isSelected, renderActions, cellSize, isRelocating }: { row: number; col: number; batch?: Batch, onClick: (b: Batch | null) => void, isPainting?: boolean, isSelected?: boolean, renderActions?: (batch: Batch) => React.ReactNode; cellSize: number; isRelocating?: boolean }) => {
     const positionId = `${getRowLabel(row)}${col + 1}`; // "A1", "B2"
 
     const { setNodeRef, isOver } = useDroppable({
@@ -417,6 +431,7 @@ const GridCell = ({ row, col, batch, onClick, isPainting, isSelected, renderActi
             $geneticColor={batch ? (batch.genetic ? getGeneticColor(batch.genetic.name || batch.name, batch.genetic.color).bg : '#475569') : undefined}
             $isSelected={isSelected}
             $hasAlert={!!batch?.notes}
+            $isRelocatingTarget={isRelocating}
             cellSize={cellSize}
             onClick={() => {
                 // In selection mode, click propagates up.
@@ -480,9 +495,10 @@ interface EsquejeraGridProps {
     renderCellActions?: (batch: Batch) => React.ReactNode;
     onSelectionChange?: (selectedIds: Set<string>) => void;
     onToggleSelectionMode?: (isMode: boolean) => void;
+    isRelocating?: boolean;
 }
 
-export const EsquejeraGrid: React.FC<EsquejeraGridProps> = ({ rows, cols, batches, onBatchClick, paintingMode = false, selectedBatchIds, selectionMode = false, renderCellActions, onSelectionChange, onToggleSelectionMode }) => {
+export const EsquejeraGrid: React.FC<EsquejeraGridProps> = ({ rows, cols, batches, onBatchClick, paintingMode = false, selectedBatchIds, selectionMode = false, renderCellActions, onSelectionChange, onToggleSelectionMode, isRelocating }) => {
     // Map batches by position "A1" -> Batch
     const batchMap = React.useMemo(() => {
         const map: Record<string, Batch> = {};
@@ -670,6 +686,7 @@ export const EsquejeraGrid: React.FC<EsquejeraGridProps> = ({ rows, cols, batche
                                         isSelected={isSel || inDrag}
                                         renderActions={renderCellActions}
                                         cellSize={cellSize}
+                                        isRelocating={isRelocating}
                                     />
                                 </div>
                             );
