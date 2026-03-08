@@ -34,7 +34,10 @@ export const metricsService = {
     // RPC Calls
     async getMonthlyMetrics(year: number): Promise<MonthlyMetric[]> {
         if (!supabase) return [];
-        const { data, error } = await supabase.rpc('get_monthly_metrics', { query_year: year });
+        const { data, error } = await supabase.rpc('get_monthly_metrics', {
+            query_year: year,
+            org_id: getSelectedOrgId()
+        });
         if (error) {
             console.error('Error fetching monthly metrics:', error);
             return [];
@@ -44,7 +47,9 @@ export const metricsService = {
 
     async getGeneticPerformance(): Promise<GeneticPerformance[]> {
         if (!supabase) return [];
-        const { data, error } = await supabase.rpc('get_genetic_performance');
+        const { data, error } = await supabase.rpc('get_genetic_performance', {
+            org_id: getSelectedOrgId()
+        });
         if (error) {
             console.error('Error fetching genetic performance:', error);
             return [];
@@ -54,7 +59,11 @@ export const metricsService = {
 
     async getCostBreakdown(startDate: string, endDate: string): Promise<CostCategory[]> {
         if (!supabase) return [];
-        const { data, error } = await supabase.rpc('get_cost_breakdown', { start_date: startDate, end_date: endDate });
+        const { data, error } = await supabase.rpc('get_cost_breakdown', {
+            start_date: startDate,
+            end_date: endDate,
+            org_id: getSelectedOrgId()
+        });
         if (error) {
             console.error('Error fetching cost breakdown:', error);
             return [];

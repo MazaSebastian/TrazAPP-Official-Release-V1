@@ -3,6 +3,11 @@ import { supabase, getSelectedOrgId } from './supabaseClient';
 
 export interface DispensaryBatch {
     id: string;
+    product_type?: 'flower' | 'oil' | 'cream' | 'edible' | 'extract' | 'other';
+    unit?: 'g' | 'ml' | 'u';
+    unit_volume?: number | null;
+    unit_volume_type?: string | null;
+    product_name?: string;
     strain_name: string;
     batch_code: string;
     initial_weight: number;
@@ -60,7 +65,15 @@ export const dispensaryService = {
                 batch:batch_id!inner (
                     batch_code,
                     strain_name,
-                    organization_id
+                    id,
+                    product_type,
+                    unit,
+                    unit_volume,
+                    unit_volume_type,
+                    product_name,
+                    strain_name,
+                    batch_code,
+                    current_weight
                 ),
                 profile:member_id (
                     full_name

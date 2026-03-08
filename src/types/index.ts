@@ -7,6 +7,7 @@ export interface User {
   name: string;
   role: 'super_admin' | 'owner' | 'admin' | 'grower' | 'medico' | 'staff' | 'partner';
   avatar?: string;
+  professional_signature_url?: string;
   has_completed_tour?: boolean;
   kyc_completed?: boolean;
   created_at?: string;

@@ -12,9 +12,54 @@ import { CustomSelect } from '../components/CustomSelect';
 // Looking at Stock.tsx, Button was defined locally. I will copy the definition.
 import { ConfirmModal } from '../components/ConfirmModal';
 import { EditDispensaryModal } from '../components/EditDispensaryModal';
+import { CreateDispensaryProductModal } from '../components/CreateDispensaryProductModal';
 import { useReactToPrint } from 'react-to-print';
 
 // --- Styled Components (Copied from Stock.tsx) ---
+
+const TabsContainer = styled.div`
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 1px;
+  overflow-x: auto;
+  
+  ::-webkit-scrollbar {
+    height: 4px;
+  }
+`;
+
+const TabButton = styled.button<{ $isActive: boolean }>`
+  background: none;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: ${props => props.$isActive ? '#3b82f6' : '#94a3b8'};
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  white-space: nowrap;
+
+  &:hover {
+    color: ${props => props.$isActive ? '#3b82f6' : '#f8fafc'};
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: ${props => props.$isActive ? '#3b82f6' : 'transparent'};
+    transition: all 0.2s;
+  }
+`;
 
 const PageContainer = styled.div`
 padding: 1rem;
@@ -324,6 +369,9 @@ color: black;
 
 
 const Dispensary: React.FC = () => {
+    const [activeTab, setActiveTab] = useState<'flower' | 'oil' | 'cream' | 'edible' | 'extract' | 'other'>('flower');
+    const [createModalOpen, setCreateModalOpen] = useState(false);
+
     const [dispensaryBatches, setDispensaryBatches] = useState<DispensaryBatch[]>([]);
     const [dispenseModalOpen, setDispenseModalOpen] = useState(false);
     const [batchToDispense, setBatchToDispense] = useState<DispensaryBatch | null>(null);
@@ -432,13 +480,42 @@ const Dispensary: React.FC = () => {
         }
     };
 
+    const handleTranslateType = (type: string) => {
+        switch (type) {
+            case 'flower': return 'Flores';
+            case 'oil': return 'Aceites';
+            case 'cream': return 'Cremas / Cosmética';
+            case 'edible': return 'Comestibles';
+            case 'extract': return 'Extractos / Resinas';
+            case 'other': return 'Otros';
+            default: return 'Flores';
+        }
+    };
+
+    const filteredBatches = dispensaryBatches.filter(b => (b.product_type || 'flower') === activeTab);
+
     return (
         <PageContainer>
             <Header>
                 <h1><FaHandHoldingMedical style={{ marginRight: '10px' }} />Dispensario</h1>
+                <ButtonComp variant="primary" onClick={() => setCreateModalOpen(true)}>
+                    + Nuevo Producto
+                </ButtonComp>
             </Header>
 
-            {dispensaryBatches.length === 0 ? (
+            <TabsContainer>
+                {(['flower', 'extract', 'oil', 'cream', 'edible', 'other'] as const).map(tab => (
+                    <TabButton
+                        key={tab}
+                        $isActive={activeTab === tab}
+                        onClick={() => setActiveTab(tab)}
+                    >
+                        {handleTranslateType(tab)}
+                    </TabButton>
+                ))}
+            </TabsContainer>
+
+            {filteredBatches.length === 0 ? (
                 <EmptyState>
                     <div className="empty-icon">🏥</div>
                     <h3>El Dispensario está vacío</h3>
@@ -489,9 +566,9 @@ const Dispensary: React.FC = () => {
                                 {batch.status === 'available' ? 'Disponible' : batch.status === 'curing' ? 'Curándose' : batch.status}
                             </div>
 
-                            <h3 style={{ margin: '0 0 0.5rem 0', color: '#f8fafc', fontSize: '1.5rem', fontWeight: '700' }}>{batch.strain_name}</h3>
+                            <h3 style={{ margin: '0 0 0.5rem 0', color: '#f8fafc', fontSize: '1.5rem', fontWeight: '700' }}>{batch.product_name || batch.strain_name}</h3>
                             <div style={{ color: '#94a3b8', fontSize: '0.9rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontFamily: 'monospace' }}>
-                                <FaBoxOpen style={{ color: '#38bdf8' }} /> {batch.batch_code}
+                                <FaBoxOpen style={{ color: '#38bdf8' }} /> {batch.batch_code} {batch.product_name ? `(${batch.strain_name})` : ''}
                             </div>
 
                             {/* Weight Visualization */}
@@ -499,8 +576,11 @@ const Dispensary: React.FC = () => {
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '0.75rem', color: '#cbd5e1' }}>
                                     <span style={{ fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: '600' }}>Stock Actual</span>
                                     <span style={{ fontSize: '1.25rem', fontWeight: '800', color: '#f8fafc' }}>
-                                        {batch.current_weight}g
-                                        <span style={{ fontWeight: 'normal', color: '#64748b', fontSize: '0.9rem', marginLeft: '0.25rem' }}>/ {batch.initial_weight}g</span>
+                                        {batch.current_weight}{batch.unit === 'u' ? ' u' : batch.unit || 'g'}
+                                        {batch.unit === 'u' && batch.unit_volume && <span style={{ fontSize: '0.9rem', color: '#94a3b8', marginLeft: '0.25rem' }}>de {batch.unit_volume}{batch.unit_volume_type}</span>}
+                                        <span style={{ fontWeight: 'normal', color: '#64748b', fontSize: '0.9rem', marginLeft: '0.25rem' }}>
+                                            / {batch.initial_weight}{batch.unit === 'u' ? ' u' : batch.unit || 'g'}
+                                        </span>
                                     </span>
                                 </div>
                                 <div style={{ width: '100%', height: '6px', background: 'rgba(255, 255, 255, 0.05)', borderRadius: '3px', overflow: 'hidden' }}>
@@ -567,18 +647,24 @@ const Dispensary: React.FC = () => {
                         border: '1px solid rgba(255, 255, 255, 0.05)',
                         borderRadius: '0.75rem'
                     }}>
-                        <div style={{ marginBottom: '0.5rem', color: '#94a3b8', fontSize: '0.85rem' }}>LOTE SELECCIONADO</div>
-                        <div style={{ color: '#f8fafc', fontSize: '1.25rem', fontWeight: 'bold' }}>{batchToDispense?.strain_name}</div>
+                        <div style={{ marginBottom: '0.5rem', color: '#94a3b8', fontSize: '0.85rem' }}>PRODUCTO SELECCIONADO</div>
+                        <div style={{ color: '#f8fafc', fontSize: '1.25rem', fontWeight: 'bold' }}>{batchToDispense?.product_name || batchToDispense?.strain_name}</div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.5rem' }}>
-                            <span style={{ color: '#cbd5e1' }}>Disponible: <strong style={{ color: '#4ade80' }}>{batchToDispense?.current_weight}g</strong></span>
-                            {resolvedPrice > 0 && <span style={{ padding: '0.25rem 0.5rem', background: 'rgba(56, 189, 248, 0.1)', color: '#38bdf8', borderRadius: '0.25rem', fontSize: '0.85rem', fontWeight: 'bold' }}>${resolvedPrice}/g</span>}
+                            <span style={{ color: '#cbd5e1' }}>
+                                Disponible: <strong style={{ color: '#4ade80' }}>
+                                    {batchToDispense?.current_weight}{batchToDispense?.unit === 'u' ? ' u' : batchToDispense?.unit || 'g'}
+                                    {batchToDispense?.unit === 'u' && batchToDispense?.unit_volume ? ` de ${batchToDispense?.unit_volume}${batchToDispense?.unit_volume_type}` : ''}
+                                </strong>
+                            </span>
+                            {resolvedPrice > 0 && <span style={{ padding: '0.25rem 0.5rem', background: 'rgba(56, 189, 248, 0.1)', color: '#38bdf8', borderRadius: '0.25rem', fontSize: '0.85rem', fontWeight: 'bold' }}>${resolvedPrice}/{batchToDispense?.unit === 'u' ? 'u' : batchToDispense?.unit || 'g'}</span>}
                         </div>
                     </div>
 
                     <FormGroup>
-                        <label>Cantidad a Entregar (g)</label>
+                        <label>Cantidad a Entregar ({batchToDispense?.unit === 'u' ? 'Envases/Unidades' : batchToDispense?.unit || 'g'})</label>
                         <input
                             type="number"
+                            step={batchToDispense?.unit === 'u' ? "1" : "any"}
                             autoFocus
                             placeholder="0.0"
                             value={dispenseForm.amount}
@@ -632,7 +718,7 @@ const Dispensary: React.FC = () => {
                                 }))}
                             />
 
-                            {consumptionStats && (
+                            {consumptionStats && batchToDispense?.unit === 'g' && (
                                 <div style={{
                                     marginTop: '0.75rem',
                                     padding: '1rem',
@@ -654,7 +740,7 @@ const Dispensary: React.FC = () => {
                                     </div>
                                     {consumptionStats.current >= consumptionStats.limit && (
                                         <div style={{ color: '#fca5a5', fontSize: '0.8rem', marginTop: '0.5rem', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                                            <span>⚠️</span> Límite mensual excedido ({consumptionStats.limit}g)
+                                            <span>⚠️</span> Límite mensual de flores excedido ({consumptionStats.limit}g)
                                         </div>
                                     )}
                                 </div>
@@ -731,6 +817,14 @@ const Dispensary: React.FC = () => {
                 onClose={() => setEditDispensaryModalOpen(false)}
                 onSuccess={() => {
                     setEditDispensaryModalOpen(false);
+                    loadDispensaryStock();
+                }}
+            />
+            <CreateDispensaryProductModal
+                isOpen={createModalOpen}
+                onClose={() => setCreateModalOpen(false)}
+                onSuccess={() => {
+                    setCreateModalOpen(false);
                     loadDispensaryStock();
                 }}
             />

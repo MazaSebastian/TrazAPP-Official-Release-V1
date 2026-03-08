@@ -5,6 +5,7 @@ export interface Profile {
     full_name: string;
     role: string;
     avatar_url?: string;
+    professional_signature_url?: string;
     email?: string;
 }
 
@@ -25,6 +26,7 @@ export const usersService = {
                     full_name,
                     role,
                     avatar_url,
+                    professional_signature_url,
                     email
                 )
             `)

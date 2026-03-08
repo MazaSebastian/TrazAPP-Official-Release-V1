@@ -774,7 +774,7 @@ const Informes = () => {
                     <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.1)', color: '#94a3b8', fontSize: '0.875rem' }}>
                       <th style={{ padding: '1rem 0.5rem', width: '150px' }}>Fecha</th>
                       <th style={{ padding: '1rem 0.5rem' }}>Socio / Receptor</th>
-                      <th style={{ padding: '1rem 0.5rem' }}>Genética</th>
+                      <th style={{ padding: '1rem 0.5rem' }}>Producto / Genética</th>
                       <th style={{ padding: '1rem 0.5rem', width: '120px' }}>Salida</th>
                       <th style={{ padding: '1rem 0.5rem' }}>Motivo</th>
                     </tr>
@@ -789,10 +789,17 @@ const Informes = () => {
                           {(evt as any).profile?.full_name || 'Sin Asignar'}
                         </td>
                         <td style={{ padding: '1rem 0.5rem', color: '#38bdf8' }}>
-                          <Badge>{evt.batch?.strain_name || 'Desconocida'}</Badge>
+                          <Badge>{evt.batch?.product_name || evt.batch?.strain_name || 'Desconocida'}</Badge>
                         </td>
                         <td style={{ padding: '1rem 0.5rem', fontWeight: '600', color: '#ef4444' }}>
-                          {Math.abs(evt.amount)} g
+                          <div>
+                            {Math.abs(evt.amount)} {evt.batch?.unit === 'u' ? 'u' : evt.batch?.unit || 'g'}
+                          </div>
+                          {evt.batch?.unit === 'u' && evt.batch?.unit_volume && (
+                            <div style={{ fontSize: '0.8rem', color: '#94a3b8', marginTop: '0.2rem', fontWeight: 'normal' }}>
+                              de {evt.batch.unit_volume}{evt.batch.unit_volume_type}
+                            </div>
+                          )}
                         </td>
                         <td style={{ padding: '1rem 0.5rem', color: '#94a3b8', fontSize: '0.9rem' }}>
                           {(() => {

@@ -1,27 +1,32 @@
 import React, { useState, useEffect } from "react";
 import styled from "styled-components";
-import { useParams, useLocation } from "react-router-dom";
+import { useParams } from "react-router-dom";
+import { addMonths, differenceInDays } from "date-fns";
 import { patientsService } from "../services/patientsService";
 import {
   templatesService,
   ClinicalTemplate,
 } from "../services/templatesService";
 import {
-  FaHeartbeat,
-  FaPills,
   FaChartLine,
   FaUserSecret,
   FaPlus,
   FaClipboardList,
   FaHistory,
   FaChevronDown,
-  FaChevronUp,
   FaTrash,
   FaPaperclip,
   FaUpload,
+  FaNotesMedical,
+  FaFilePdf,
+  FaSyringe,
+  FaThermometerHalf,
+  FaClock,
 } from "react-icons/fa";
 import { LoadingSpinner } from "../components/LoadingSpinner";
+import { useAuth } from "../context/AuthContext";
 import { CustomSelect } from "../components/CustomSelect";
+import Swal from "sweetalert2";
 
 // --- Styled Components (Dashboard First) ---
 
@@ -66,6 +71,15 @@ const Grid = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
   gap: 1.5rem;
+`;
+
+const InfoBox = styled.div`
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-top: 4px solid ${(props) => props.color || "rgba(255, 255, 255, 0.1)"};
+  position: relative;
+  overflow: hidden;
+  color: #f8fafc;
 `;
 
 const Card = styled.div<{ color?: string }>`
@@ -138,7 +152,7 @@ const calculateAge = (dob: string | undefined) => {
 
 const PatientDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const location = useLocation();
+  const { user } = useAuth();
 
   const [loading, setLoading] = useState(true);
   const [patient, setPatient] = useState<any | null>(null);
@@ -160,6 +174,7 @@ const PatientDetail: React.FC = () => {
     template_id: null as string | null,
     template_data: {} as Record<string, any>,
     files: [] as File[],
+    next_follow_up_months: 6, // DEFAULT: 6 months
   });
 
   // Admission Form State
@@ -216,10 +231,20 @@ const PatientDetail: React.FC = () => {
       const cleanId = id.replace(/-/g, "").substring(0, 8).toUpperCase();
       const hash = `ANON-${cleanId}`;
 
+      // Obtener el valor real del EVA desde la plantilla, si existe.
+      let baselineEva = 0;
+      if (newAdmission.template_id) {
+        const template = templates.find((t: any) => t.id === newAdmission.template_id);
+        const evaField = template?.fields?.find((f: any) => f.type === 'eva');
+        if (evaField && newAdmission.template_data[evaField.id] !== undefined) {
+          baselineEva = Number(newAdmission.template_data[evaField.id]);
+        }
+      }
+
       const createdAdmission = await patientsService.createClinicalAdmission({
         patient_id: id,
         baseline_qol: 0,
-        baseline_pain_avg: 0,
+        baseline_pain_avg: baselineEva,
         baseline_pain_worst: 0,
         diagnosis_cie11: [],
         patient_hash: hash, // Override with generated hash
@@ -230,13 +255,14 @@ const PatientDetail: React.FC = () => {
           admission_id: createdAdmission.id,
           title: "Admisión Inicial (Línea Base)",
           date: new Date().toISOString().split("T")[0],
-          eva_score: 0,
+          eva_score: baselineEva,
           improvement_percent: 0,
           notes: "Línea base (Admisión Clínica)",
           sparing_effect: [],
           adverse_effects: [],
           template_id: newAdmission.template_id,
           template_data: newAdmission.template_data,
+          next_follow_up_months: 6,
         });
       }
 
@@ -264,34 +290,19 @@ const PatientDetail: React.FC = () => {
         }
       }
 
-      let initialEva = admission.baseline_pain_avg;
+      let previousEva = admission.baseline_pain_avg;
 
-      // Failsafe: Si no hay baseline configurado en la admisión, tomamos el EVA de la evolución más antigua (ignorando los 0s iniciales por defecto)
-      if (!initialEva || initialEva === 0) {
-        if (evolutions.length > 0) {
-          // Try to find the oldest evolution that actually has a registered pain > 0 to use as baseline
-          // Since evolutions are sorted newest first, we iterate from the end (oldest) to the start (newest)
-          for (let i = evolutions.length - 1; i >= 0; i--) {
-            if (evolutions[i].eva_score > 0) {
-              initialEva = evolutions[i].eva_score;
-              break;
-            }
-          }
-          // If all past evolutions were 0, use the current new score as the future baseline
-          if (initialEva === 0) {
-            initialEva = actualEvaScore;
-          }
-        } else {
-          // Es la primera evolución de la historia del paciente, actuará como baseline a futuro.
-          initialEva = actualEvaScore;
-        }
+      // Buscar el EVA de la evolución INMEDIATAMENTE ANTERIOR (la última registrada)
+      if (evolutions.length > 0) {
+        // Como 'evolutions' está ordenado de más reciente a más antigua, el índice 0 es la última visita.
+        previousEva = evolutions[0].eva_score;
       }
 
       let improvement = 0;
-      if (initialEva > 0) {
-        improvement = ((initialEva - actualEvaScore) / initialEva) * 100;
-      } else if (initialEva === 0 && actualEvaScore > 0) {
-        // Empezó en 0 dolor y ahora tiene dolor, empeora al 100% (negativo)
+      if (previousEva > 0) {
+        improvement = ((previousEva - actualEvaScore) / previousEva) * 100;
+      } else if (previousEva === 0 && actualEvaScore > 0) {
+        // Empezó la sesión anterior sin dolor y ahora tiene dolor, empeora al 100% (negativo)
         improvement = -100;
       }
 
@@ -315,6 +326,7 @@ const PatientDetail: React.FC = () => {
         template_id: newEvolution.template_id,
         template_data: newEvolution.template_data,
         attachments: uploadedUrls,
+        next_follow_up_months: newEvolution.next_follow_up_months,
       });
 
       loadData(id || "");
@@ -328,6 +340,7 @@ const PatientDetail: React.FC = () => {
         template_id: null,
         template_data: {},
         files: [],
+        next_follow_up_months: 6,
       }); // Reset
     } catch (e) {
       console.error(e);
@@ -837,7 +850,8 @@ const PatientDetail: React.FC = () => {
       {ProfileHeaderContent}
 
       <Grid>
-        {/* 2. Pharmacology Card */}
+        {/* 2. Pharmacology Card (Ocultado a petición del usuario) */}
+        {/*
         <Card color="#805AD5">
           <CardTitle>
             <FaPills /> Farmacología Actual
@@ -866,6 +880,7 @@ const PatientDetail: React.FC = () => {
             </div>
           )}
         </Card>
+        */}
 
         {/* 3. Evolution / Progress Highlight */}
         <Card color="#48BB78">
@@ -880,15 +895,55 @@ const PatientDetail: React.FC = () => {
           ) : (
             <div>
               {/* Latest Evolution Highlight */}
-              <p
-                style={{
-                  fontSize: "0.9rem",
-                  color: "#94a3b8",
-                  marginBottom: "1rem",
-                }}
-              >
-                Última visita: {evolutions[0].date}
-              </p>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1rem" }}>
+                <p
+                  style={{
+                    fontSize: "0.9rem",
+                    color: "#94a3b8",
+                    margin: 0,
+                  }}
+                >
+                  Última visita: {evolutions[0].date}
+                </p>
+
+                {/* 6-Month Mandatory Follow-up Tracker */}
+                {(() => {
+                  // Ensure we parse the date correctly by forcing local time at noon
+                  const lastDate = new Date(`${evolutions[0].date}T12:00:00`);
+                  const followUpMonths = evolutions[0].next_follow_up_months || 6;
+                  const nextDate = addMonths(lastDate, followUpMonths);
+                  const daysLeft = differenceInDays(nextDate, new Date());
+                  const isUrgent = daysLeft <= 30;
+
+                  return (
+                    <div style={{
+                      padding: "0.5rem 0.75rem",
+                      background: isUrgent ? "rgba(239, 68, 68, 0.15)" : "rgba(15, 23, 42, 0.4)",
+                      border: `1px solid ${isUrgent ? "rgba(239, 68, 68, 0.4)" : "rgba(255, 255, 255, 0.1)"}`,
+                      borderRadius: "0.5rem",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "0.75rem",
+                      textAlign: "right"
+                    }}>
+                      <div style={{ fontSize: "1.2rem", color: isUrgent ? "#ef4444" : "#38bdf8" }}>
+                        {isUrgent ? "⚠️" : "📅"}
+                      </div>
+                      <div style={{ textAlign: "left" }}>
+                        <div style={{ color: isUrgent ? "#ef4444" : "#cbd5e1", fontWeight: "bold", fontSize: "0.85rem" }}>
+                          {isUrgent ? "Seguimiento Legal Pendiente" : "Próximo Seguimiento Legal"}
+                        </div>
+                        <div style={{ color: isUrgent ? "#fca5a5" : "#94a3b8", fontSize: "0.75rem", marginTop: "0.1rem" }}>
+                          {nextDate.toLocaleDateString("es-AR")}
+                          <span style={{ fontWeight: "bold", marginLeft: "0.25rem" }}>
+                            ({daysLeft > 0 ? `Faltan ${daysLeft} días` : `Vencido hace ${Math.abs(daysLeft)} días`})
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
               <div
                 style={{ display: "flex", alignItems: "center", gap: "1rem" }}
               >
@@ -969,7 +1024,29 @@ const PatientDetail: React.FC = () => {
             <FaHistory /> Historial Clínico
           </span>
           <button
-            onClick={() => setIsEvolutionModalOpen(true)}
+            onClick={() => {
+              const roleNeedsSignature = user?.role === "medico";
+              const missingSignature = roleNeedsSignature && !user?.professional_signature_url;
+
+              if (missingSignature) {
+                Swal.fire({
+                  title: 'Firma Requerida',
+                  html: 'Por requerimientos legales, debes cargar tu <b>Firma Profesional</b> en la sección <b>Mi Cuenta</b> para registrar nuevas evoluciones clínicas.',
+                  icon: 'warning',
+                  iconColor: '#ef4444',
+                  background: 'rgba(30, 41, 59, 0.95)',
+                  color: '#f8fafc',
+                  confirmButtonColor: '#3b82f6',
+                  confirmButtonText: 'Entendido',
+                  customClass: {
+                    popup: 'glass-modal border border-white/10 rounded-xl',
+                  }
+                });
+                return;
+              }
+
+              setIsEvolutionModalOpen(true);
+            }}
             style={{
               background: "rgba(49, 130, 206, 0.2)",
               color: "#63b3ed",
@@ -1005,9 +1082,9 @@ const PatientDetail: React.FC = () => {
               // Format HH:mm from created_at if available
               const timeString = evo.created_at
                 ? new Date(evo.created_at).toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })
                 : "";
 
               return (
@@ -1356,6 +1433,45 @@ const PatientDetail: React.FC = () => {
                 />
               </div>
 
+              {/* Follow-up Timeline Section (New) */}
+              <div style={{ marginBottom: "1.5rem" }}>
+                <label
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.5rem",
+                    marginBottom: "0.5rem",
+                    fontWeight: "bold",
+                    color: "#f8fafc",
+                  }}
+                >
+                  <FaClock /> Próximo Seguimiento (en Plazo Legal)
+                </label>
+                <select
+                  style={{
+                    width: "100%",
+                    padding: "0.75rem",
+                    borderRadius: "0.5rem",
+                    border: "1px solid rgba(255,255,255,0.2)",
+                    fontFamily: "inherit",
+                    background: "rgba(15, 23, 42, 0.9)",
+                    color: "white",
+                  }}
+                  value={newEvolution.next_follow_up_months}
+                  onChange={(e) =>
+                    setNewEvolution({ ...newEvolution, next_follow_up_months: Number(e.target.value) })
+                  }
+                >
+                  <option value={1}>1 Mes</option>
+                  <option value={3}>3 Meses</option>
+                  <option value={6}>6 Meses</option>
+                  <option value={12}>12 Meses</option>
+                </select>
+                <small style={{ color: "#94a3b8", display: "block", marginTop: "0.25rem" }}>
+                  Altera cuándo se activará la alarma visual obligando al paciente a un nuevo chequeo clínico.
+                </small>
+              </div>
+
               {/* Template Selector Section */}
               <div
                 style={{
@@ -1678,78 +1794,78 @@ const PatientDetail: React.FC = () => {
                 !templates
                   .find((t) => t.id === newEvolution.template_id)
                   ?.fields?.some((f: any) => f.type === "eva")) && (
-                <div
-                  style={{
-                    background: "rgba(30, 41, 59, 0.4)",
-                    padding: "1rem",
-                    borderRadius: "0.5rem",
-                    marginBottom: "1.5rem",
-                    border: "1px solid rgba(255, 255, 255, 0.1)",
-                  }}
-                >
-                  <label
-                    style={{
-                      marginBottom: "1rem",
-                      fontWeight: "bold",
-                      color: "#f8fafc",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "0.5rem",
-                    }}
-                  >
-                    <FaChartLine /> Nivel de Dolor Actual (EVA)
-                  </label>
                   <div
                     style={{
-                      background: "rgba(15, 23, 42, 0.4)",
+                      background: "rgba(30, 41, 59, 0.4)",
                       padding: "1rem",
                       borderRadius: "0.5rem",
-                      border: "1px solid rgba(255,255,255,0.05)",
+                      marginBottom: "1.5rem",
+                      border: "1px solid rgba(255, 255, 255, 0.1)",
                     }}
                   >
-                    <div
+                    <label
                       style={{
+                        marginBottom: "1rem",
+                        fontWeight: "bold",
+                        color: "#f8fafc",
                         display: "flex",
-                        justifyContent: "space-between",
-                        marginBottom: "0.5rem",
                         alignItems: "center",
+                        gap: "0.5rem",
                       }}
                     >
-                      <span style={{ fontSize: "0.85rem", color: "#94a3b8" }}>
-                        0 (Sin Dolor)
-                      </span>
-                      <span
+                      <FaChartLine /> Nivel de Dolor Actual (EVA)
+                    </label>
+                    <div
+                      style={{
+                        background: "rgba(15, 23, 42, 0.4)",
+                        padding: "1rem",
+                        borderRadius: "0.5rem",
+                        border: "1px solid rgba(255,255,255,0.05)",
+                      }}
+                    >
+                      <div
                         style={{
-                          fontWeight: "bold",
-                          color: "#f8fafc",
-                          fontSize: "1.2rem",
-                          background: "rgba(255,255,255,0.1)",
-                          padding: "0.2rem 0.8rem",
-                          borderRadius: "0.25rem",
+                          display: "flex",
+                          justifyContent: "space-between",
+                          marginBottom: "0.5rem",
+                          alignItems: "center",
                         }}
                       >
-                        {newEvolution.eva_score}
-                      </span>
-                      <span style={{ fontSize: "0.85rem", color: "#94a3b8" }}>
-                        10 (Máximo Dolor)
-                      </span>
+                        <span style={{ fontSize: "0.85rem", color: "#94a3b8" }}>
+                          0 (Sin Dolor)
+                        </span>
+                        <span
+                          style={{
+                            fontWeight: "bold",
+                            color: "#f8fafc",
+                            fontSize: "1.2rem",
+                            background: "rgba(255,255,255,0.1)",
+                            padding: "0.2rem 0.8rem",
+                            borderRadius: "0.25rem",
+                          }}
+                        >
+                          {newEvolution.eva_score}
+                        </span>
+                        <span style={{ fontSize: "0.85rem", color: "#94a3b8" }}>
+                          10 (Máximo Dolor)
+                        </span>
+                      </div>
+                      <ChromaticSlider
+                        type="range"
+                        min="0"
+                        max="10"
+                        value={newEvolution.eva_score}
+                        onChange={(e) =>
+                          setNewEvolution({
+                            ...newEvolution,
+                            eva_score: Number(e.target.value),
+                          })
+                        }
+                        style={{ margin: 0 }}
+                      />
                     </div>
-                    <ChromaticSlider
-                      type="range"
-                      min="0"
-                      max="10"
-                      value={newEvolution.eva_score}
-                      onChange={(e) =>
-                        setNewEvolution({
-                          ...newEvolution,
-                          eva_score: Number(e.target.value),
-                        })
-                      }
-                      style={{ margin: 0 }}
-                    />
                   </div>
-                </div>
-              )}
+                )}
 
               {/* File Upload Section */}
               <div

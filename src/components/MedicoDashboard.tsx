@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import styled from 'styled-components';
+import styled, { keyframes } from 'styled-components';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { FaCalendarCheck, FaClock, FaUsers, FaPrescriptionBottleAlt, FaVial, FaNotesMedical, FaCheckCircle, FaExclamationTriangle } from 'react-icons/fa';
@@ -39,6 +39,69 @@ const WelcomeHeader = styled.div`
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     letter-spacing: -0.025em;
+  }
+`;
+
+const fadeIn = keyframes`
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+`;
+
+const SignatureAlertBanner = styled.div`
+  background: rgba(127, 29, 29, 0.2);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-left: 4px solid #ef4444;
+  color: #fca5a5;
+  padding: 1.25rem 1.5rem;
+  border-radius: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  animation: ${fadeIn} 0.5s ease-out;
+
+  .icon-alert {
+    font-size: 1.5rem;
+    color: #ef4444;
+  }
+
+  .alert-text {
+    flex: 1;
+    font-size: 1rem;
+    line-height: 1.4;
+
+    strong {
+      color: #f8fafc;
+      font-weight: 700;
+    }
+  }
+
+  .action-btn {
+    background: #ef4444;
+    color: white;
+    text-decoration: none;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: background 0.2s;
+    white-space: nowrap;
+
+    &:hover {
+      background: #dc2626;
+    }
+  }
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 1rem;
+    gap: 0.75rem;
+
+    .action-btn {
+      width: 100%;
+      text-align: center;
+    }
   }
 `;
 
@@ -582,6 +645,18 @@ export const MedicoDashboard: React.FC = () => {
           {format(currentTime, "HH:mm")}
         </DateDisplay>
       </WelcomeHeader>
+
+      {!user?.professional_signature_url && (
+        <SignatureAlertBanner>
+          <FaExclamationTriangle className="icon-alert" />
+          <div className="alert-text">
+            <strong>Firma Profesional Faltante.</strong> Debes cargar tu firma profesional en la sección "Mi Cuenta" para poder operar y realizar evoluciones a pacientes legalmente.
+          </div>
+          <Link to="/account" className="action-btn">
+            Cargar Firma Ahora
+          </Link>
+        </SignatureAlertBanner>
+      )}
 
       <KPISection>
         <KPICard onClick={() => setActiveModal('activePatients')}>

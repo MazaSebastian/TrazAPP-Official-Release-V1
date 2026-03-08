@@ -120,7 +120,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           id: session.user.id,
           email: session.user.email || '',
           name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'Usuario',
-          role: effectiveRole,
+          role: effectiveRole as any,
           avatar: session.user.user_metadata?.avatar,
           has_completed_tour: true // Optimistically assume true until DB confirms it's false for new users
         };
@@ -160,6 +160,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                   ...prev,
                   name: dbName || prev.name,
                   avatar: profile?.avatar_url || prev.avatar,
+                  professional_signature_url: profile?.professional_signature_url || prev.professional_signature_url,
                   has_completed_tour: profile?.has_completed_tour ?? false,
                   kyc_completed: profile?.kyc_completed,
                   created_at: profile?.created_at
@@ -171,6 +172,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 name: dbName || prev.name,
                 role: dbRole || prev.role,
                 avatar: profile?.avatar_url || prev.avatar,
+                professional_signature_url: profile?.professional_signature_url || prev.professional_signature_url,
                 has_completed_tour: profile?.has_completed_tour ?? false,
                 kyc_completed: profile?.kyc_completed,
                 created_at: profile?.created_at
@@ -312,7 +314,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           email: data.user.email || '',
           name: dbName || data.user.user_metadata?.name || data.user.email?.split('@')[0] || 'Usuario',
           role: dbRole || data.user.user_metadata?.role || 'partner',
-          avatar: profile?.avatar_url || data.user.user_metadata?.avatar
+          avatar: profile?.avatar_url || data.user.user_metadata?.avatar,
+          professional_signature_url: profile?.professional_signature_url
         };
 
         if (dbRole) localStorage.setItem('userRole', dbRole);

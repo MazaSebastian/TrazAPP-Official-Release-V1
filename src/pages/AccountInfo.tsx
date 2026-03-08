@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useOrganization } from '../context/OrganizationContext';
 import { FaUserCircle, FaEnvelope, FaBuilding, FaUserShield, FaExclamationTriangle } from 'react-icons/fa';
 import { KYCForm } from '../components/KYCForm';
+import { ProfessionalSignature } from '../components/ProfessionalSignature';
 
 const PageContainer = styled.div`
   padding: 1rem;
@@ -282,6 +283,19 @@ const AccountInfo: React.FC = () => {
         </InfoGrid>
 
       </ProfileCard>
+
+      {/* Show Signature Component for Medical Roles only*/}
+      {currentRole === 'medico' && user && (
+        <ProfessionalSignature
+          userId={user.id}
+          currentSignatureUrl={user.professional_signature_url}
+          onSignatureUpdate={(url) => {
+            // We trigger a hard reload of context or rely on local window refresh to ensure the App picks up the URL change.
+            // Typically in TrazAPP we can force a page reload to avoid complex Context invalidation logic.
+            window.location.reload();
+          }}
+        />
+      )}
 
       {/* Show KYC Form only for Owners */}
       {currentRole === 'owner' && (
