@@ -7116,7 +7116,7 @@ const RoomDetail: React.FC = () => {
                             batches={harvestTargetMapId
                                 ? (room.batches?.filter(b => b.clone_map_id === harvestTargetMapId && (room.type !== 'living_soil' || b.stage === 'completed')) || [])
                                 : (room.batches?.filter(b => room.type !== 'living_soil' || b.stage === 'completed') || [])}
-                            rooms={allRooms}
+                            rooms={allRooms.filter(r => r.spot_id === room.spot_id)}
                             onConfirm={handleHarvestConfirm}
                             overrideGroupName={harvestTargetMapId ? (room.clone_maps?.find(m => m.id === harvestTargetMapId)?.name) : undefined}
                         />

@@ -728,11 +728,30 @@ const Informes = () => {
               {`
                   @media print {
                       @page { margin: 15mm; size: landscape; }
-                      body { background: white; color: black; }
-                      .informes-print-area { background: white !important; color: black !important; box-shadow: none; border: none; }
+                      html, body, #root, #__next { 
+                          background-color: white !important;
+                          background: white !important;
+                          height: 100% !important;
+                          min-height: 100vh !important;
+                      }
+                      .informes-print-area, .informes-print-area * { 
+                          background-color: transparent !important; 
+                          color: black !important; 
+                          box-shadow: none !important;
+                      }
+                      .informes-print-area { 
+                          background: white !important; 
+                          border: none !important; 
+                          display: block !important;
+                          overflow: visible !important;
+                      }
+                      .informes-print-area > div {
+                          overflow: visible !important;
+                          display: block !important;
+                      }
                       table { width: 100%; border-collapse: collapse; }
                       th, td { border: 1px solid #cbd5e1 !important; padding: 12px; text-align: left; }
-                      th { background: #f1f5f9 !important; -webkit-print-color-adjust: exact; font-weight: bold; color: #0f172a !important; }
+                      th { background: #f1f5f9 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; font-weight: bold; color: #0f172a !important; }
                       td { color: #334155 !important; }
                       h2 { color: #0f172a !important; margin-bottom: 2rem !important; }
                   }

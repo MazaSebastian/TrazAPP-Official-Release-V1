@@ -6,20 +6,24 @@ import {
   FaTrash,
   FaBoxes,
   FaTimesCircle,
-  FaDownload
+  FaDownload,
+  FaPaperclip,
+  FaFileInvoice
 } from 'react-icons/fa';
 import { CustomSelect } from '../components/CustomSelect';
 import { useOrganization } from '../context/OrganizationContext';
 import UpgradeOverlay from '../components/common/UpgradeOverlay';
 import { ConfirmModal } from '../components/ConfirmModal';
 import { ToastModal } from '../components/ToastModal';
-import type { Insumo } from '../types';
+import type { Insumo, InsumoCategory } from '../types';
 import {
   getInsumos,
   createInsumo,
   updateInsumo,
   deleteInsumo,
-  getInsumosStats
+  getInsumosStats,
+  uploadTicket,
+  getInsumoCategories
 } from '../services/insumosService';
 import { useAuth } from '../context/AuthContext';
 import { usersService } from '../services/usersService';
@@ -220,7 +224,7 @@ const Table = styled.div`
 
 const TableHeader = styled.div`
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr auto;
+  grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr auto;
   gap: 1rem;
   padding: 1rem;
   background: rgba(15, 23, 42, 0.4);
@@ -232,7 +236,7 @@ const TableHeader = styled.div`
 
 const TableRow = styled.div<{ isSelected?: boolean }>`
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr auto;
+  grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr auto;
   gap: 1rem;
   padding: 1rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
@@ -397,6 +401,7 @@ const Insumos: React.FC = () => {
 
   const [insumos, setInsumos] = useState<Insumo[]>([]);
   const [filteredInsumos, setFilteredInsumos] = useState<Insumo[]>([]);
+  const [categories, setCategories] = useState<InsumoCategory[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -405,7 +410,7 @@ const Insumos: React.FC = () => {
   const [editingInsumo, setEditingInsumo] = useState<Insumo | null>(null);
   const [formData, setFormData] = useState({
     nombre: '',
-    categoria: 'semillas' as 'semillas' | 'fertilizantes' | 'sustratos' | 'herramientas' | 'pesticidas' | 'otros',
+    categoria: '',
     unidad_medida: '',
     precio_actual: '',
     proveedor: '',
@@ -413,6 +418,7 @@ const Insumos: React.FC = () => {
     stock_minimo: '',
     notas: ''
   });
+  const [ticketFile, setTicketFile] = useState<File | null>(null);
 
   // Delete / Edit Modal States
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
@@ -427,14 +433,18 @@ const Insumos: React.FC = () => {
   // Cargar insumos desde Supabase
   useEffect(() => {
     loadInsumos();
-  }, []);
+  }, [currentOrganization]);
 
   const loadInsumos = async () => {
     try {
-      const data = await getInsumos();
+      const [data, cats] = await Promise.all([
+        getInsumos(),
+        getInsumoCategories()
+      ]);
       setInsumos(data);
+      setCategories(cats);
     } catch (error) {
-      console.error('Error al cargar insumos:', error);
+      console.error('Error al cargar datos:', error);
     }
   };
 
@@ -508,7 +518,7 @@ const Insumos: React.FC = () => {
       setEditingInsumo(null);
       setFormData({
         nombre: '',
-        categoria: 'semillas',
+        categoria: categories.length > 0 ? categories[0].name : '',
         unidad_medida: '',
         precio_actual: '',
         proveedor: '',
@@ -517,6 +527,7 @@ const Insumos: React.FC = () => {
         notas: ''
       });
     }
+    setTicketFile(null); // Always clear the file input when opening
     setIsModalOpen(true);
   };
 
@@ -538,6 +549,19 @@ const Insumos: React.FC = () => {
         notas: formData.notas || undefined,
         activo: true
       };
+
+      // Handle Ticket File Upload if any
+      let uploadedUrl: string | null = null;
+      if (ticketFile) {
+        uploadedUrl = await uploadTicket(ticketFile);
+        if (uploadedUrl) {
+          newInsumo.ticket_url = uploadedUrl;
+        } else {
+          setToastMessage('Error al subir el comprobante. El insumo se guardará sin archivo.');
+          setToastType('error');
+          setToastOpen(true);
+        }
+      }
 
       if (editingInsumo) {
         // Actualizar insumo existente
@@ -704,12 +728,7 @@ const Insumos: React.FC = () => {
               onChange={(val: string) => setSelectedCategory(val)}
               options={[
                 { value: '', label: 'Todas las categorías' },
-                { value: 'semillas', label: 'Semillas' },
-                { value: 'fertilizantes', label: 'Fertilizantes' },
-                { value: 'sustratos', label: 'Sustratos' },
-                { value: 'herramientas', label: 'Herramientas' },
-                { value: 'pesticidas', label: 'Pesticidas' },
-                { value: 'otros', label: 'Otros' }
+                ...categories.map(c => ({ value: c.name, label: c.name }))
               ]}
             />
           </div>
@@ -728,6 +747,7 @@ const Insumos: React.FC = () => {
               <div>Stock</div>
               <div>Proveedor</div>
               <div>Última Compra</div>
+              <div>Ticket / Factura</div>
               <div>Acciones</div>
             </TableHeader>
 
@@ -784,6 +804,15 @@ const Insumos: React.FC = () => {
                       new Date(insumo.fecha_ultima_compra).toLocaleDateString('es-AR') :
                       '—'
                     }
+                  </div>
+                  <div>
+                    {insumo.ticket_url ? (
+                      <a href={insumo.ticket_url} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#38bdf8', textDecoration: 'none', fontSize: '0.85rem', fontWeight: 600 }}>
+                        <FaFileInvoice /> Ver Ticket
+                      </a>
+                    ) : (
+                      <span style={{ color: '#64748b', fontSize: '0.85rem' }}>Sin archivo</span>
+                    )}
                   </div>
                   <div style={{ display: 'flex', gap: '0.5rem' }}>
                     <Button
@@ -856,15 +885,8 @@ const Insumos: React.FC = () => {
                   <div style={{ position: 'relative', zIndex: 1001 }}>
                     <CustomSelect
                       value={formData.categoria}
-                      onChange={(val: string) => setFormData(prev => ({ ...prev, categoria: val as any }))}
-                      options={[
-                        { value: 'semillas', label: 'Semillas' },
-                        { value: 'fertilizantes', label: 'Fertilizantes' },
-                        { value: 'sustratos', label: 'Sustratos' },
-                        { value: 'herramientas', label: 'Herramientas' },
-                        { value: 'pesticidas', label: 'Pesticidas' },
-                        { value: 'otros', label: 'Otros' }
-                      ]}
+                      onChange={(val: string) => setFormData(prev => ({ ...prev, categoria: val }))}
+                      options={categories.map(c => ({ value: c.name, label: c.name }))}
                     />
                   </div>
                 </FormGroup>
@@ -939,6 +961,46 @@ const Insumos: React.FC = () => {
                   onChange={(e) => setFormData(prev => ({ ...prev, notas: e.target.value }))}
                   placeholder="Información adicional sobre el insumo..."
                 />
+              </FormGroup>
+
+              <FormGroup>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <FaPaperclip /> Comprobante (Ticket/Factura)
+                </label>
+                <div style={{
+                  border: '1px dashed rgba(168, 85, 247, 0.5)',
+                  background: 'rgba(30, 41, 59, 0.4)',
+                  padding: '1rem',
+                  borderRadius: '0.5rem',
+                  textAlign: 'center',
+                  cursor: 'pointer',
+                  position: 'relative'
+                }}>
+                  <input
+                    type="file"
+                    accept="image/*,.pdf"
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files.length > 0) {
+                        setTicketFile(e.target.files[0]);
+                      }
+                    }}
+                    style={{
+                      position: 'absolute',
+                      top: 0, left: 0, right: 0, bottom: 0,
+                      opacity: 0,
+                      cursor: 'pointer'
+                    }}
+                  />
+                  {ticketFile ? (
+                    <span style={{ color: '#4ade80', fontWeight: 600, fontSize: '0.85rem' }}>
+                      Archivo seleccionado: {ticketFile.name}
+                    </span>
+                  ) : (
+                    <span style={{ color: '#94a3b8', fontSize: '0.85rem' }}>
+                      Clic para adjuntar imagen o PDF
+                    </span>
+                  )}
+                </div>
               </FormGroup>
 
               <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end', position: 'relative', zIndex: 1 }}>

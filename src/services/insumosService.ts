@@ -1,6 +1,34 @@
 import { supabase, getSelectedOrgId } from './supabaseClient';
-import type { Insumo, HistorialPrecio } from '../types';
+import type { Insumo, HistorialPrecio, InsumoCategory } from '../types';
 import { notificationService } from './notificationService';
+import { v4 as uuidv4 } from 'uuid';
+
+export async function uploadTicket(file: File): Promise<string | null> {
+  try {
+    if (!supabase) return null;
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${uuidv4()}.${fileExt}`;
+    const filePath = `${getSelectedOrgId()}/${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('supply_tickets')
+      .upload(filePath, file);
+
+    if (uploadError) {
+      console.error('Error subiendo ticket:', uploadError);
+      return null;
+    }
+
+    const { data } = supabase.storage
+      .from('supply_tickets')
+      .getPublicUrl(filePath);
+
+    return data.publicUrl;
+  } catch (err) {
+    console.error('Error in uploadTicket:', err);
+    return null;
+  }
+}
 
 // Obtener todos los insumos
 export async function getInsumos(): Promise<Insumo[]> {
@@ -124,7 +152,8 @@ export async function updateInsumoPrecio(
   nuevoPrecio: number,
   motivo: string,
   proveedor?: string,
-  cantidadComprada?: number
+  cantidadComprada?: number,
+  ticketUrl?: string
 ): Promise<boolean> {
   try {
     if (!supabase) return false;
@@ -143,7 +172,8 @@ export async function updateInsumoPrecio(
       motivo_cambio: motivo as any,
       proveedor,
       cantidad_comprada: cantidadComprada,
-      costo_total: cantidadComprada ? nuevoPrecio * cantidadComprada : undefined
+      costo_total: cantidadComprada ? nuevoPrecio * cantidadComprada : undefined,
+      ticket_url: ticketUrl
     };
 
     const { error: historialError } = await supabase
@@ -155,7 +185,6 @@ export async function updateInsumoPrecio(
       throw historialError;
     }
 
-    // Actualizar insumo con nuevo precio
     const { error: updateError } = await supabase
       .from('chakra_stock_items')
       .update({
@@ -163,7 +192,8 @@ export async function updateInsumoPrecio(
         precio_actual: nuevoPrecio,
         fecha_ultimo_precio: new Date().toISOString().split('T')[0],
         fecha_ultima_compra: cantidadComprada ? new Date().toISOString().split('T')[0] : insumoActual.fecha_ultima_compra,
-        stock_actual: cantidadComprada ? insumoActual.stock_actual + cantidadComprada : insumoActual.stock_actual
+        stock_actual: cantidadComprada ? insumoActual.stock_actual + cantidadComprada : insumoActual.stock_actual,
+        ticket_url: ticketUrl !== undefined ? ticketUrl : insumoActual.ticket_url // Actualizar el ticket general si se envió
       })
       .eq('id', id);
 
@@ -318,4 +348,75 @@ export function subscribeToHistorialChanges(callback: (payload: any) => void) {
       callback
     )
     .subscribe();
+}
+
+// ==========================================
+// MÉTODOS PARA CATEGORÍAS PERSONALIZADAS
+// ==========================================
+
+export async function getInsumoCategories(): Promise<InsumoCategory[]> {
+  try {
+    if (!supabase) return [];
+    const orgId = getSelectedOrgId();
+    if (!orgId) return [];
+
+    const { data, error } = await supabase
+      .from('chakra_insumo_categories')
+      .select('*')
+      .eq('organization_id', orgId)
+      .order('name');
+
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    console.error('Error in getInsumoCategories:', error);
+    return [];
+  }
+}
+
+export async function createInsumoCategory(name: string): Promise<InsumoCategory | null> {
+  try {
+    if (!supabase) return null;
+    const orgId = getSelectedOrgId();
+    if (!orgId) return null;
+
+    const { data, error } = await supabase
+      .from('chakra_insumo_categories')
+      .insert([{ organization_id: orgId, name: name.trim() }])
+      .select()
+      .single();
+
+    if (error) {
+      if (error.code === '23505') { throw new Error('Ya existe una categoría con este nombre'); }
+      throw error;
+    }
+    return data;
+  } catch (error) {
+    console.error('Error in createInsumoCategory:', error);
+    throw error;
+  }
+}
+
+export async function deleteInsumoCategory(id: string): Promise<boolean> {
+  try {
+    if (!supabase) return false;
+
+    // Optional: Verifica si hay insumos usando esta categoría e impede el borrado
+    const { data: usageCount, error: countError } = await supabase
+      .from('chakra_stock_items')
+      .select('id', { count: 'exact', head: true })
+      .eq('organization_id', getSelectedOrgId())
+      .limit(1); // Realmente requeriría JOIN o check cruzado en API.
+
+    const { error } = await supabase
+      .from('chakra_insumo_categories')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
+    return true;
+  } catch (error) {
+    console.error('Error in deleteInsumoCategory:', error);
+    throw error;
+  }
 }

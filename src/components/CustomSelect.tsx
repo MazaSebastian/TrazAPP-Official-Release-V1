@@ -37,6 +37,7 @@ const DropdownMenu = styled.div<{ $coords: { top: number; left: number; width: n
   margin-top: 0.5rem;
   background: rgba(15, 23, 42, 0.95);
   backdrop-filter: blur(16px);
+  visibility: ${p => p.$coords.width > 0 ? 'visible' : 'hidden'};
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 0.5rem;
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
@@ -117,13 +118,21 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({ value, onChange, opt
         }
     };
 
-    const toggleOpen = () => {
-        if (!isOpen) {
+    // Calculate position immediately upon opening
+    useEffect(() => {
+        if (isOpen) {
             updatePosition();
-            setIsOpen(true);
+            // Short delay to ensure layout shifts are captured
+            const timeoutId = setTimeout(updatePosition, 10);
+            return () => clearTimeout(timeoutId);
         } else {
-            setIsOpen(false);
+            // Reset coords to hide it immediately when closed to avoid glitch on next open
+            setCoords({ top: 0, left: 0, width: 0 });
         }
+    }, [isOpen]);
+
+    const toggleOpen = () => {
+        setIsOpen(!isOpen);
     };
 
     // Close when clicking outside - Updated to handle Portal clicks
@@ -150,14 +159,14 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({ value, onChange, opt
         };
 
         if (isOpen) {
-            document.addEventListener('mousedown', handleClickOutside);
+            document.addEventListener('mousedown', handleClickOutside, { capture: true });
             // Update coords on scroll/resize to prevent detachment
             window.addEventListener('scroll', handleScroll, { capture: true });
             window.addEventListener('resize', updatePosition);
         }
 
         return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
+            document.removeEventListener('mousedown', handleClickOutside, { capture: true });
             window.removeEventListener('scroll', handleScroll, { capture: true });
             window.removeEventListener('resize', updatePosition);
         };

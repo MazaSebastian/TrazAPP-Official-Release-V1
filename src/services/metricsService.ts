@@ -78,6 +78,7 @@ export const metricsService = {
             .select('discard_reason, quantity')
             .not('discard_reason', 'is', null)
             .neq('discard_reason', 'Distribuido en Mapa (Bulk)')
+            .not('discard_reason', 'ilike', '%Finalizado a Stock%')
             .eq('organization_id', getSelectedOrgId());
 
         if (error) {
@@ -114,7 +115,7 @@ export const metricsService = {
 
             const qty = b.quantity || 1;
             stats[name].total += qty;
-            if (b.discarded_at && b.discard_reason !== 'Distribuido en Mapa (Bulk)') {
+            if (b.discarded_at && b.discard_reason !== 'Distribuido en Mapa (Bulk)' && !b.discard_reason?.includes('Finalizado a Stock')) {
                 stats[name].discarded += qty;
             }
         });

@@ -1076,6 +1076,7 @@ const CropDetail: React.FC = () => {
     operationalDays?: number; // Optional: Only for alerts
     hasPreFlowering?: boolean;
     preFloweringDays?: number;
+    isIndoor?: boolean;
     tablesList?: { id: string; name: string }[]; // For Esquejera/Clones if complex
   }>({
     name: '',
@@ -1087,6 +1088,7 @@ const CropDetail: React.FC = () => {
     operationalDays: undefined,
     hasPreFlowering: false,
     preFloweringDays: undefined,
+    isIndoor: true,
     tablesList: []
   });
 
@@ -1312,7 +1314,8 @@ const CropDetail: React.FC = () => {
         spot_id: id,
         start_date: roomForm.startDate,
         operational_days: roomForm.operationalDays ? Number(roomForm.operationalDays) : undefined, // Pass to service
-        pre_flowering_days: roomForm.hasPreFlowering && roomForm.preFloweringDays ? Number(roomForm.preFloweringDays) : undefined
+        pre_flowering_days: roomForm.hasPreFlowering && roomForm.preFloweringDays ? Number(roomForm.preFloweringDays) : undefined,
+        is_indoor: roomForm.isIndoor
       });
 
       if (newRoom) {
@@ -1338,6 +1341,7 @@ const CropDetail: React.FC = () => {
           macetaGeneticId: '',
           startDate: new Date().toISOString().split('T')[0],
           operationalDays: undefined,
+          isIndoor: true,
           tablesList: []
         });
       } else {
@@ -1510,39 +1514,59 @@ const CropDetail: React.FC = () => {
 
 
   // Edit Modal State
+  // DEPRECATED Prompt Modal State (still used for spots)
   const [editModalOpen, setEditModalOpen] = useState(false);
-  const [editType, setEditType] = useState<'room' | 'spot' | null>(null);
+  const [editType, setEditType] = useState<'spot' | null>(null);
   const [editData, setEditData] = useState<{ id: string, name: string } | null>(null);
+
+  // New Enhanced Room Edit Modal State
+  const [isRoomEditModalOpen, setIsRoomEditModalOpen] = useState(false);
+  const [roomEditForm, setRoomEditForm] = useState<{ id: string, name: string, type: any, operational_days: number | undefined, start_date: string, isIndoor?: boolean }>({
+    id: '', name: '', type: 'general', operational_days: undefined, start_date: '', isIndoor: true
+  });
 
   const handleEditRoomName = (e: React.MouseEvent, room: any) => {
     e.stopPropagation();
-    setEditType('room');
-    setEditData({ id: room.id, name: room.name });
-    setEditModalOpen(true);
+    setRoomEditForm({
+      id: room.id,
+      name: room.name || '',
+      type: room.type || 'vegetation',
+      operational_days: room.operational_days,
+      start_date: room.start_date ? room.start_date.split('T')[0] : '',
+      isIndoor: room.is_indoor !== false // Defaults to true if missing
+    });
+    setIsRoomEditModalOpen(true);
   };
 
+  const handleSaveRoomEdit = async () => {
+    if (!roomEditForm.id || !roomEditForm.name.trim()) return;
 
+    const payload: any = {
+      name: roomEditForm.name,
+      type: roomEditForm.type,
+      start_date: roomEditForm.start_date ? `${roomEditForm.start_date}T12:00:00Z` : null,
+      operational_days: roomEditForm.operational_days || null,
+      is_indoor: roomEditForm.isIndoor
+    };
+
+    const success = await roomsService.updateRoom(roomEditForm.id, payload);
+    if (success) {
+      if (id) loadRooms(id);
+      setIsRoomEditModalOpen(false);
+    } else {
+      alert("Error al actualizar la sala.");
+    }
+  };
 
   const handleConfirmEditName = async (newName: string) => {
     if (!editData || !newName.trim()) return;
 
-    if (editType === 'room') {
-
-      const success = await roomsService.updateRoom(editData.id, { name: newName });
-      if (success) {
-        if (id) loadRooms(id);
-        setEditModalOpen(false);
-      } else {
-        alert("Error al renombrar la sala.");
-      }
-    } else if (editType === 'spot') {
-      const success = await cropsService.updateCrop(editData.id, { name: newName });
-      if (success) {
-        setCrop(prev => prev ? { ...prev, name: newName } : null);
-        setEditModalOpen(false);
-      } else {
-        alert("Error al renombrar el spot.");
-      }
+    const success = await cropsService.updateCrop(editData.id, { name: newName });
+    if (success) {
+      setCrop(prev => prev ? { ...prev, name: newName } : null);
+      setEditModalOpen(false);
+    } else {
+      alert("Error al renombrar el spot.");
     }
   };
 
@@ -2572,6 +2596,46 @@ const CropDetail: React.FC = () => {
                 />
               </FormGroup>
 
+              <FormGroup>
+                <label>Entorno de Cultivo</label>
+                <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.25rem' }}>
+                  <button
+                    type="button"
+                    onClick={() => setRoomForm({ ...roomForm, isIndoor: true })}
+                    style={{
+                      flex: 1,
+                      padding: '0.5rem',
+                      borderRadius: '0.5rem',
+                      border: `1px solid ${roomForm.isIndoor !== false ? 'rgba(74, 222, 128, 0.5)' : 'rgba(255,255,255,0.1)'}`,
+                      background: roomForm.isIndoor !== false ? 'rgba(74, 222, 128, 0.1)' : 'rgba(15, 23, 42, 0.4)',
+                      color: roomForm.isIndoor !== false ? '#4ade80' : '#94a3b8',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                      fontWeight: roomForm.isIndoor !== false ? 'bold' : 'normal'
+                    }}
+                  >
+                    Cultivo Indoor
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setRoomForm({ ...roomForm, isIndoor: false })}
+                    style={{
+                      flex: 1,
+                      padding: '0.5rem',
+                      borderRadius: '0.5rem',
+                      border: `1px solid ${roomForm.isIndoor === false ? 'rgba(74, 222, 128, 0.5)' : 'rgba(255,255,255,0.1)'}`,
+                      background: roomForm.isIndoor === false ? 'rgba(74, 222, 128, 0.1)' : 'rgba(15, 23, 42, 0.4)',
+                      color: roomForm.isIndoor === false ? '#4ade80' : '#94a3b8',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                      fontWeight: roomForm.isIndoor === false ? 'bold' : 'normal'
+                    }}
+                  >
+                    Cultivo Exterior
+                  </button>
+                </div>
+              </FormGroup>
+
               {/* --- Date Logic --- */}
               <FormGroup>
                 <label>Fecha de Inicio del Cultivo</label>
@@ -3030,16 +3094,133 @@ const CropDetail: React.FC = () => {
         )
       }
 
-      {/* Rename Modal */}
+      {/* Rename Spot Modal */}
       <PromptModal
         isOpen={editModalOpen}
-        title={editType === 'room' ? "Renombrar Sala" : "Renombrar Spot"}
+        title={"Renombrar Spot"}
         initialValue={editData?.name || ''}
         placeholder="Nuevo nombre..."
         onClose={() => setEditModalOpen(false)}
         onConfirm={handleConfirmEditName}
         confirmButtonColor="green"
       />
+
+      {/* Enhanced Edit Room Modal */}
+      {
+        isRoomEditModalOpen && (
+          <ModalOverlay>
+            <Modal>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 600, color: '#f8fafc' }}>Editar Sala</h3>
+                <button
+                  onClick={() => setIsRoomEditModalOpen(false)}
+                  style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: '#a0aec0' }}
+                >
+                  &times;
+                </button>
+              </div>
+
+              <FormGroup>
+                <label>Nombre de la Sala</label>
+                <input
+                  type="text"
+                  placeholder="Ej: Esquejes A"
+                  value={roomEditForm.name}
+                  onChange={(e) => setRoomEditForm({ ...roomEditForm, name: e.target.value })}
+                />
+              </FormGroup>
+
+              <FormGroup>
+                <label>Entorno de Cultivo</label>
+                <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.25rem' }}>
+                  <button
+                    type="button"
+                    onClick={() => setRoomEditForm({ ...roomEditForm, isIndoor: true })}
+                    style={{
+                      flex: 1,
+                      padding: '0.5rem',
+                      borderRadius: '0.5rem',
+                      border: `1px solid ${roomEditForm.isIndoor !== false ? 'rgba(74, 222, 128, 0.5)' : 'rgba(255,255,255,0.1)'}`,
+                      background: roomEditForm.isIndoor !== false ? 'rgba(74, 222, 128, 0.1)' : 'rgba(15, 23, 42, 0.4)',
+                      color: roomEditForm.isIndoor !== false ? '#4ade80' : '#94a3b8',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                      fontWeight: roomEditForm.isIndoor !== false ? 'bold' : 'normal'
+                    }}
+                  >
+                    Cultivo Indoor
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setRoomEditForm({ ...roomEditForm, isIndoor: false })}
+                    style={{
+                      flex: 1,
+                      padding: '0.5rem',
+                      borderRadius: '0.5rem',
+                      border: `1px solid ${roomEditForm.isIndoor === false ? 'rgba(74, 222, 128, 0.5)' : 'rgba(255,255,255,0.1)'}`,
+                      background: roomEditForm.isIndoor === false ? 'rgba(74, 222, 128, 0.1)' : 'rgba(15, 23, 42, 0.4)',
+                      color: roomEditForm.isIndoor === false ? '#4ade80' : '#94a3b8',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                      fontWeight: roomEditForm.isIndoor === false ? 'bold' : 'normal'
+                    }}
+                  >
+                    Cultivo Exterior
+                  </button>
+                </div>
+              </FormGroup>
+
+              <FormGroup>
+                <label>Tipo de Sala / Etapa</label>
+                <select
+                  value={roomEditForm.type}
+                  onChange={(e) => setRoomEditForm({ ...roomEditForm, type: e.target.value as any })}
+                >
+                  <option value="mother">Madres</option>
+                  <option value="clones">Esquejera</option>
+                  <option value="vegetation">Vegetación</option>
+                  <option value="flowering">Floración</option>
+                  <option value="drying">Secado</option>
+                  <option value="curing">Curado</option>
+                  <option value="living_soil">Living Soil (Ciclo Completo)</option>
+                </select>
+              </FormGroup>
+
+              <FormGroup>
+                <label>Fecha de Inicio</label>
+                <CustomDatePicker
+                  selected={roomEditForm.start_date ? new Date(roomEditForm.start_date + 'T12:00:00') : new Date()}
+                  onChange={(date) => {
+                    const dateStr = date ? date.toISOString().split('T')[0] : '';
+                    setRoomEditForm({ ...roomEditForm, start_date: dateStr });
+                  }}
+                  dateFormat="dd/MM/yyyy"
+                />
+              </FormGroup>
+
+              {roomEditForm.type !== 'living_soil' && (
+                <FormGroup>
+                  <label>Días de Funcionamiento Totales</label>
+                  <input
+                    type="number"
+                    placeholder="Ej: 75"
+                    value={roomEditForm.operational_days || ''}
+                    onChange={(e) => setRoomEditForm({ ...roomEditForm, operational_days: e.target.value ? Number(e.target.value) : undefined })}
+                  />
+                  <small style={{ display: 'block', marginTop: '0.25rem', color: '#718096' }}>
+                    Suma total de días que esta sala estará activa (para la barra de progreso).
+                  </small>
+                </FormGroup>
+              )}
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '2rem' }}>
+                <Button $variant="secondary" onClick={() => setIsRoomEditModalOpen(false)}>Cancelar</Button>
+                <Button $variant="primary" onClick={handleSaveRoomEdit}>Guardar Cambios</Button>
+              </div>
+            </Modal>
+          </ModalOverlay>
+        )
+      }
 
       {
         crop && (

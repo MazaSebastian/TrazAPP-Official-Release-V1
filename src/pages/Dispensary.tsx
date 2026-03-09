@@ -14,6 +14,7 @@ import { ConfirmModal } from '../components/ConfirmModal';
 import { EditDispensaryModal } from '../components/EditDispensaryModal';
 import { CreateDispensaryProductModal } from '../components/CreateDispensaryProductModal';
 import { useReactToPrint } from 'react-to-print';
+import { useAuth } from '../context/AuthContext';
 
 // --- Styled Components (Copied from Stock.tsx) ---
 
@@ -122,13 +123,15 @@ overflow: hidden;
 
 background: ${props => {
         switch (props.variant) {
-            case 'primary': return 'linear-gradient(135deg, rgba(74, 222, 128, 0.2) 0%, rgba(56, 189, 248, 0.2) 100%)';
+            case 'primary': return 'rgba(74, 222, 128, 0.15)';
             case 'danger': return 'rgba(239, 68, 68, 0.1)';
             case 'secondary': return 'rgba(148, 163, 184, 0.1)';
             default: return 'rgba(255, 255, 255, 0.05)';
         }
     }
     };
+
+backdrop-filter: ${props => props.variant === 'primary' ? 'blur(8px)' : 'none'};
 
 border: 1px solid ${props => {
         switch (props.variant) {
@@ -142,7 +145,7 @@ border: 1px solid ${props => {
 
 color: ${props => {
         switch (props.variant) {
-            case 'primary': return '#f8fafc';
+            case 'primary': return '#4ade80';
             case 'danger': return '#fca5a5';
             case 'secondary': return '#e2e8f0';
             default: return '#f8fafc';
@@ -154,7 +157,7 @@ color: ${props => {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px ${props => {
         switch (props.variant) {
-            case 'primary': return 'rgba(74, 222, 128, 0.2)';
+            case 'primary': return 'rgba(74, 222, 128, 0.3)';
             case 'danger': return 'rgba(239, 68, 68, 0.2)';
             default: return 'rgba(0, 0, 0, 0.2)';
         }
@@ -369,6 +372,7 @@ color: black;
 
 
 const Dispensary: React.FC = () => {
+    const { user } = useAuth();
     const [activeTab, setActiveTab] = useState<'flower' | 'oil' | 'cream' | 'edible' | 'extract' | 'other'>('flower');
     const [createModalOpen, setCreateModalOpen] = useState(false);
 
@@ -492,7 +496,14 @@ const Dispensary: React.FC = () => {
         }
     };
 
-    const filteredBatches = dispensaryBatches.filter(b => (b.product_type || 'flower') === activeTab);
+
+    const filteredBatches = dispensaryBatches.filter(batch => {
+        // Fallback for older batches without a product_type
+        if (!batch.product_type) {
+            return activeTab === 'flower';
+        }
+        return batch.product_type === activeTab;
+    });
 
     return (
         <PageContainer>
@@ -519,11 +530,11 @@ const Dispensary: React.FC = () => {
                 <EmptyState>
                     <div className="empty-icon">🏥</div>
                     <h3>El Dispensario está vacío</h3>
-                    <p>Finaliza cultivos para generar stock de producto terminado.</p>
+                    <p>No hay productos de esta categoría disponibles.</p>
                 </EmptyState>
             ) : (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.5rem' }}>
-                    {dispensaryBatches.map(batch => (
+                    {filteredBatches.map(batch => (
                         <div key={batch.id} style={{
                             background: 'rgba(30, 41, 59, 0.5)',
                             backdropFilter: 'blur(12px)',
@@ -567,9 +578,15 @@ const Dispensary: React.FC = () => {
                             </div>
 
                             <h3 style={{ margin: '0 0 0.5rem 0', color: '#f8fafc', fontSize: '1.5rem', fontWeight: '700' }}>{batch.product_name || batch.strain_name}</h3>
-                            <div style={{ color: '#94a3b8', fontSize: '0.9rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontFamily: 'monospace' }}>
+                            <div style={{ color: '#94a3b8', fontSize: '0.9rem', marginBottom: batch.notes ? '0.75rem' : '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontFamily: 'monospace' }}>
                                 <FaBoxOpen style={{ color: '#38bdf8' }} /> {batch.batch_code} {batch.product_name ? `(${batch.strain_name})` : ''}
                             </div>
+
+                            {batch.notes && (
+                                <div style={{ color: '#cbd5e1', fontSize: '0.85rem', marginBottom: '1.5rem', fontStyle: 'italic', lineHeight: '1.4' }}>
+                                    "{batch.notes}"
+                                </div>
+                            )}
 
                             {/* Weight Visualization */}
                             <div style={{ padding: '1rem', background: 'rgba(15, 23, 42, 0.5)', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.02)', marginBottom: '1.5rem' }}>
@@ -603,31 +620,39 @@ const Dispensary: React.FC = () => {
                                 >
                                     <FaHandHoldingMedical size={18} /> Entregar
                                 </ButtonComp>
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem' }}>
-                                    <Tooltip text="Ver Código QR">
-                                        <ButtonComp
-                                            variant="secondary"
-                                            onClick={() => { setQrBatch(batch); setQrModalOpen(true); }}
-                                        >
-                                            <FaQrcode size={16} />
-                                        </ButtonComp>
-                                    </Tooltip>
-                                    <Tooltip text="Editar Lote">
-                                        <ButtonComp
-                                            variant="secondary"
-                                            onClick={() => handleEditDispensary(batch)}
-                                        >
-                                            <FaEdit size={16} />
-                                        </ButtonComp>
-                                    </Tooltip>
-                                    <Tooltip text="Eliminar Lote">
-                                        <ButtonComp
-                                            variant="danger"
-                                            onClick={() => handleDeleteDispensary(batch)}
-                                        >
-                                            <FaTrash size={16} />
-                                        </ButtonComp>
-                                    </Tooltip>
+                                <div style={{ display: 'grid', gridTemplateColumns: user?.role === 'medico' ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)', gap: '0.75rem' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'center' }}>
+                                        <Tooltip text="Ver Código QR">
+                                            <ButtonComp
+                                                variant="secondary"
+                                                onClick={() => { setQrBatch(batch); setQrModalOpen(true); }}
+                                            >
+                                                <FaQrcode size={16} />
+                                            </ButtonComp>
+                                        </Tooltip>
+                                    </div>
+                                    <div style={{ display: 'flex', justifyContent: 'center' }}>
+                                        <Tooltip text="Editar Lote">
+                                            <ButtonComp
+                                                variant="secondary"
+                                                onClick={() => handleEditDispensary(batch)}
+                                            >
+                                                <FaEdit size={16} />
+                                            </ButtonComp>
+                                        </Tooltip>
+                                    </div>
+                                    {user?.role !== 'medico' && (
+                                        <div style={{ display: 'flex', justifyContent: 'center' }}>
+                                            <Tooltip text="Eliminar Lote">
+                                                <ButtonComp
+                                                    variant="danger"
+                                                    onClick={() => handleDeleteDispensary(batch)}
+                                                >
+                                                    <FaTrash size={16} />
+                                                </ButtonComp>
+                                            </Tooltip>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>

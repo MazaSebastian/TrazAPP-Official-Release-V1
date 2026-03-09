@@ -224,7 +224,7 @@ export const EditDispensaryModal: React.FC<EditDispensaryModalProps> = ({
     };
 
     return (
-        <ModalOverlay onClick={onClose}>
+        <ModalOverlay>
             <ModalContent onClick={e => e.stopPropagation()}>
                 <Header>
                     <div>

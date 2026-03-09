@@ -182,10 +182,17 @@ export interface RecurrenceConfig {
 // Tipos para Gestión de Insumos (Materia Prima)
 // ==========================
 
+export interface InsumoCategory {
+  id: string;
+  organization_id: string;
+  name: string;
+  created_at: string;
+}
+
 export interface Insumo {
   id: string;
   nombre: string;
-  categoria: 'semillas' | 'fertilizantes' | 'sustratos' | 'herramientas' | 'pesticidas' | 'otros';
+  categoria: string;
   unidad_medida: string;
   precio_actual: number;
   precio_anterior?: number;
@@ -200,6 +207,7 @@ export interface Insumo {
   updated_at: string;
   created_by?: string;
   updated_by?: string;
+  ticket_url?: string;
 }
 
 export interface HistorialPrecio {
@@ -213,6 +221,7 @@ export interface HistorialPrecio {
   costo_total?: number;
   created_at: string;
   created_by?: string;
+  ticket_url?: string;
 }
 
 export interface InsumoConHistorial extends Insumo {

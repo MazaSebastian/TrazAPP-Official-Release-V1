@@ -441,6 +441,19 @@ const Stock: React.FC = () => {
     return () => document.removeEventListener('click', handleOutsideClick);
   }, []);
 
+  // Expandable Rows State
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+
+  const toggleRow = (strainName: string) => {
+    const newExpanded = new Set(expandedRows);
+    if (newExpanded.has(strainName)) {
+      newExpanded.delete(strainName);
+    } else {
+      newExpanded.add(strainName);
+    }
+    setExpandedRows(newExpanded);
+  };
+
   // History State
   const [movements, setMovements] = useState<DispensaryMovement[]>([]);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
@@ -983,14 +996,20 @@ const Stock: React.FC = () => {
             <tbody>
               {visibleStock.map((item) => {
                 const percent = item.totalInitialWeight > 0 ? (item.totalWeight / item.totalInitialWeight * 100).toFixed(1) : '0';
+                const isExpanded = expandedRows.has(item.strain);
 
                 return (
                   <React.Fragment key={item.strain}>
                     <tr
-                      style={{ background: 'transparent', transition: 'background 0.2s' }}
+                      style={{ background: isExpanded ? 'rgba(30, 41, 59, 0.4)' : 'transparent', transition: 'background 0.2s', cursor: 'pointer' }}
+                      onClick={() => toggleRow(item.strain)}
                     >
                       <td style={{ textAlign: 'center', color: '#94a3b8' }}>
-                        <FaBoxes style={{ opacity: 0.5 }} />
+                        <FaChevronDown style={{
+                          opacity: 0.5,
+                          transform: isExpanded ? 'rotate(180deg)' : 'rotate(-90deg)',
+                          transition: 'transform 0.2s ease'
+                        }} />
                       </td>
                       <td style={{ fontWeight: 'bold' }}>{item.strain}</td>
                       <td style={{ textAlign: 'right', fontWeight: 'bold', color: '#f8fafc' }}>{item.totalWeight.toFixed(1)}g</td>
@@ -1035,6 +1054,52 @@ const Stock: React.FC = () => {
                         </ActionMenuContainer>
                       </td>
                     </tr>
+
+                    {/* Sub-batches Accordion */}
+                    <ExpandedRow $expanded={isExpanded}>
+                      <td colSpan={6}>
+                        <CollapsibleWrapper isOpen={isExpanded}>
+                          <div style={{ padding: '1rem', background: 'rgba(15, 23, 42, 0.4)', borderTop: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                            <DetailTable>
+                              <thead>
+                                <tr>
+                                  <th style={{ color: '#94a3b8', padding: '0.5rem', textAlign: 'left', fontWeight: 600 }}>CÓDIGO DE LOTE</th>
+                                  <th style={{ color: '#94a3b8', padding: '0.5rem', textAlign: 'left', fontWeight: 600 }}>INGRESO</th>
+                                  <th style={{ color: '#94a3b8', padding: '0.5rem', textAlign: 'right', fontWeight: 600 }}>PESO ACTUAL / INICIAL</th>
+                                  <th style={{ color: '#94a3b8', padding: '0.5rem', textAlign: 'left', fontWeight: 600 }}>OBSERVACIONES</th>
+                                  <th style={{ color: '#94a3b8', padding: '0.5rem', textAlign: 'right', fontWeight: 600 }}>ACCIONES DE LOTE</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {item.batches.map(batch => (
+                                  <tr key={batch.id}>
+                                    <td style={{ fontFamily: 'monospace', color: '#38bdf8' }}>{batch.batch_code}</td>
+                                    <td>{new Date(batch.created_at).toLocaleDateString()}</td>
+                                    <td style={{ textAlign: 'right', fontWeight: 600 }}>
+                                      {batch.current_weight}g <span style={{ color: '#64748b', fontWeight: 'normal' }}>/ {batch.initial_weight}g</span>
+                                    </td>
+                                    <td style={{ fontStyle: 'italic', color: '#cbd5e1' }}>{batch.notes || '-'}</td>
+                                    <td style={{ textAlign: 'right' }}>
+                                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
+                                        <IconButton color="#3182ce" title="Editar Lote" onClick={(e) => { e.stopPropagation(); openEdit(batch); }}>
+                                          <FaEdit size={12} />
+                                        </IconButton>
+                                        <IconButton color="#805ad5" title="Enviar al Laboratorio" onClick={(e) => { e.stopPropagation(); setLabTransferBatch(batch); setLabTransferAmount(''); setIsLabTransferOpen(true); }}>
+                                          <FaFlask size={12} />
+                                        </IconButton>
+                                        <IconButton color="#e53e3e" title="Dar de Baja" onClick={(e) => { e.stopPropagation(); initDelete(batch); }}>
+                                          <FaTrash size={12} />
+                                        </IconButton>
+                                      </div>
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </DetailTable>
+                          </div>
+                        </CollapsibleWrapper>
+                      </td>
+                    </ExpandedRow>
                   </React.Fragment>
                 );
               })}

@@ -16,6 +16,7 @@ export interface Room {
     start_date?: string; // Added for user-defined start date
     operational_days?: number; // Configured duration in days
     pre_flowering_days?: number; // Optional days for pre-flowering/adaptation
+    is_indoor?: boolean; // Cultivo Indoor o Exterior
     order_index?: number; // Added for custom ordering
     grid_rows?: number; // For Esquejera (Clones) Battleship Grid
     grid_columns?: number; // For Esquejera (Clones) Battleship Grid

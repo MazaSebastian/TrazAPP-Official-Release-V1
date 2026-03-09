@@ -78,6 +78,8 @@ const GridContainer = styled.div<{ rows: number; cols: number; cellSize: number 
   overscroll-behavior: contain; /* Prevent chaining to parent */
   width: 100%;
   min-width: 0;
+  max-width: 100vw; /* CRITICAL FIX: Ensures grid never pushes screen width on mobile */
+  box-sizing: border-box;
   height: 75vh; /* Fixed height so changing zoom doesn't shift page layout */
   padding: 1rem;
   background: rgba(15, 23, 42, 0.4);

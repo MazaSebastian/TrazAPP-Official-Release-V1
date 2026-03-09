@@ -103,14 +103,15 @@ const FormGroup = styled.div`
 const SubmitButton = styled.button`
   width: 100%;
   padding: 1rem;
-  background: linear-gradient(135deg, #4ade80 0%, #38bdf8 100%);
-  color: #0f172a;
-  border: none;
+  background: rgba(74, 222, 128, 0.15);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(74, 222, 128, 0.3);
+  color: #4ade80;
   border-radius: 0.75rem;
   font-size: 1rem;
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.3s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -142,6 +143,7 @@ export const CreateDispensaryProductModal: React.FC<Props> = ({ isOpen, onClose,
   const [initialAmount, setInitialAmount] = useState('');
   const [unitVolume, setUnitVolume] = useState('');
   const [unitVolumeType, setUnitVolumeType] = useState('ml');
+  const [notes, setNotes] = useState('');
 
   const [genetics, setGenetics] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -157,6 +159,7 @@ export const CreateDispensaryProductModal: React.FC<Props> = ({ isOpen, onClose,
       setInitialAmount('');
       setUnitVolume('');
       setUnitVolumeType('ml');
+      setNotes('');
     }
   }, [isOpen]);
 
@@ -198,6 +201,7 @@ export const CreateDispensaryProductModal: React.FC<Props> = ({ isOpen, onClose,
       quality_grade: 'Standard' as const,
       status: 'available' as const,
       location: 'Dispensario Base',
+      notes: notes || undefined,
       organization_id: getSelectedOrgId()
     };
 
@@ -261,9 +265,9 @@ export const CreateDispensaryProductModal: React.FC<Props> = ({ isOpen, onClose,
           </FormGroup>
 
           {unit === 'u' ? (
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '1rem' }}>
               <FormGroup>
-                <label>Cant. Envases</label>
+                <label>Unidades</label>
                 <input
                   type="number"
                   step="1"
@@ -274,31 +278,35 @@ export const CreateDispensaryProductModal: React.FC<Props> = ({ isOpen, onClose,
                 />
               </FormGroup>
 
-              <FormGroup>
-                <label>Vol. x Envase</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  placeholder="Ej. 30"
-                  value={unitVolume}
-                  onChange={e => setUnitVolume(e.target.value)}
-                  required={unit === 'u'}
-                />
-              </FormGroup>
+              {['oil', 'cream'].includes(productType) && (
+                <FormGroup>
+                  <label>Vol. x Envase</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    placeholder="Ej. 30"
+                    value={unitVolume}
+                    onChange={e => setUnitVolume(e.target.value)}
+                  />
+                </FormGroup>
+              )}
 
-              <FormGroup>
-                <label>Medida</label>
-                <CustomSelect
-                  value={unitVolumeType}
-                  onChange={setUnitVolumeType}
-                  options={[
-                    { value: 'ml', label: 'Mililitros (ml)' },
-                    { value: 'cc', label: 'Centímetros Cúb. (cc)' },
-                    { value: 'g', label: 'Gramos (g)' },
-                    { value: 'mg', label: 'Miligramos (mg)' }
-                  ]}
-                />
-              </FormGroup>
+              {productType !== 'edible' && (
+                <FormGroup>
+                  <label>Medida</label>
+                  <CustomSelect
+                    value={unitVolumeType}
+                    onChange={setUnitVolumeType}
+                    options={[
+                      { value: 'ml', label: 'Mililitros (ml)' },
+                      { value: 'cc', label: 'Centímetros Cúb. (cc)' },
+                      { value: 'g', label: 'Gramos (g)' },
+                      { value: 'mg', label: 'Miligramos (mg)' },
+                      { value: 'u', label: 'Unidad (u)' }
+                    ]}
+                  />
+                </FormGroup>
+              )}
             </div>
           ) : (
             <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1rem' }}>
@@ -322,6 +330,21 @@ export const CreateDispensaryProductModal: React.FC<Props> = ({ isOpen, onClose,
               </FormGroup>
             </div>
           )}
+
+          <FormGroup>
+            <label>Descripción del producto</label>
+            <textarea
+              placeholder="Breve descripción del producto (máx. 150 caracteres)"
+              maxLength={150}
+              rows={2}
+              value={notes}
+              onChange={e => setNotes(e.target.value)}
+              style={{ padding: '0.875rem 1rem', background: 'rgba(15, 23, 42, 0.6)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '0.75rem', color: '#f8fafc', fontSize: '1rem', resize: 'none' }}
+            />
+            <div style={{ textAlign: 'right', fontSize: '0.75rem', color: notes.length === 150 ? '#ef4444' : '#94a3b8', marginTop: '0.25rem' }}>
+              {notes.length}/150
+            </div>
+          </FormGroup>
 
           <SubmitButton type="submit" disabled={loading}>
             <FaSave /> {loading ? 'Creando...' : 'Crear Producto'}

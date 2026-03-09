@@ -50,6 +50,7 @@ export const reportsService = {
             `)
             .or('quantity.gt.1,and(quantity.eq.0,discard_reason.ilike.%Distribuido%)') // Lots are NOT individual plants, BUT we keep the "parents" that were emptied after assignment
             .is('clone_map_id', null) // Exclude active map individual plants just in case
+            .eq('organization_id', getSelectedOrgId())
             .order('created_at', { ascending: false });
 
         if (error) {

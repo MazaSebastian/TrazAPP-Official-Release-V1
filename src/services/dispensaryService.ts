@@ -415,7 +415,7 @@ export const dispensaryService = {
                 quality_grade: source.quality_grade,
                 status: 'available',
                 location: 'Dispensario / Shop',
-                notes: `Transferido desde stock: ${source.batch_code}`,
+                notes: "",
                 harvest_log_id: source.harvest_log_id,
                 organization_id: getSelectedOrgId()
             }]).select().single();
@@ -528,7 +528,7 @@ export const dispensaryService = {
                 quality_grade: sources[0]?.quality_grade || 'Standard',
                 status: 'available',
                 location: 'Dispensario / Shop',
-                notes: `Transferido masivo desde stock (${deductions.length} lotes)`,
+                notes: "",
                 organization_id: getSelectedOrgId()
             }]).select().single();
 

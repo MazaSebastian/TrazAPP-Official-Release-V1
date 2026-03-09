@@ -10,10 +10,12 @@ import { useOrganization } from '../context/OrganizationContext';
 import { useAuth } from '../context/AuthContext';
 import { organizationService } from '../services/organizationService';
 import { planService } from '../services/planService';
-import { Plan, TaskType } from '../types';
+import { getInsumoCategories, createInsumoCategory, deleteInsumoCategory } from '../services/insumosService';
+import { Plan, TaskType, InsumoCategory } from '../types';
 import { tasksService } from '../services/tasksService';
-import { FaUserPlus, FaUserShield, FaTrash, FaTimes, FaTasks, FaPlus, FaMapMarkerAlt, FaPlay } from 'react-icons/fa';
+import { FaUserPlus, FaUserShield, FaTrash, FaTimes, FaTasks, FaPlus, FaMapMarkerAlt, FaPlay, FaBoxes } from 'react-icons/fa';
 import { LoadingSpinner } from '../components/LoadingSpinner';
+import Swal from 'sweetalert2';
 
 // Animación de aparición para modales
 import { keyframes } from 'styled-components';
@@ -279,6 +281,11 @@ const Settings: React.FC = () => {
   const [newTaskTypeName, setNewTaskTypeName] = useState('');
   const [creatingTaskType, setCreatingTaskType] = useState(false);
 
+  // Insumo Categories State
+  const [insumoCategories, setInsumoCategories] = useState<InsumoCategory[]>([]);
+  const [newInsumoCategoryName, setNewInsumoCategoryName] = useState('');
+  const [creatingInsumoCategory, setCreatingInsumoCategory] = useState(false);
+
   const [newUserEmail, setNewUserEmail] = useState('');
   const [newUserRole, setNewUserRole] = useState('grower');
   const [newUserName, setNewUserName] = useState('');
@@ -330,6 +337,9 @@ const Settings: React.FC = () => {
 
         const tData = await tasksService.getTaskTypes();
         setTaskTypes(tData);
+
+        const icData = await getInsumoCategories();
+        setInsumoCategories(icData);
       }
     } catch (e) {
       console.error("Error loading settings data:", e);
@@ -461,7 +471,27 @@ const Settings: React.FC = () => {
   };
 
   const handleDeleteTaskType = async (id: string) => {
-    if (!window.confirm("¿Seguro que deseas eliminar este tipo de tarea? Las tareas existentes con este tipo no se borrarán, pero ya no se podrá seleccionar.")) return;
+    const result = await Swal.fire({
+      title: '¿Eliminar tipo de tarea?',
+      text: 'Las tareas existentes con este tipo no se borrarán, pero ya no se podrá seleccionar al crear nuevas tareas.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#ef4444',
+      cancelButtonColor: '#64748b',
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar',
+      background: 'rgba(30, 41, 59, 0.95)',
+      color: '#f8fafc',
+      backdrop: 'rgba(15, 23, 42, 0.8)',
+      customClass: {
+        popup: 'swal2-dark-glass',
+        title: 'swal2-title-white',
+        htmlContainer: 'swal2-text-light'
+      }
+    });
+
+    if (!result.isConfirmed) return;
+
     try {
       const success = await tasksService.deleteTaskType(id);
       if (success) {
@@ -470,6 +500,56 @@ const Settings: React.FC = () => {
       }
     } catch (e: any) {
       setToast({ isOpen: true, message: 'Error al eliminar la tarea', type: 'error' });
+    }
+  };
+
+  const handleCreateInsumoCategory = async () => {
+    if (!newInsumoCategoryName.trim()) return;
+    setCreatingInsumoCategory(true);
+    try {
+      const newCat = await createInsumoCategory(newInsumoCategoryName.trim());
+      if (newCat) {
+        setInsumoCategories([...insumoCategories, newCat]);
+        setNewInsumoCategoryName('');
+        setToast({ isOpen: true, message: 'Categoría de insumo creada', type: 'success' });
+      }
+    } catch (e: any) {
+      setToast({ isOpen: true, message: e.message || 'Error al crear la categoría', type: 'error' });
+    } finally {
+      setCreatingInsumoCategory(false);
+    }
+  };
+
+  const handleDeleteInsumoCategory = async (id: string) => {
+    const result = await Swal.fire({
+      title: '¿Eliminar categoría?',
+      text: 'Si hay insumos actualmente usando esta categoría, podrías afectar visualmente sus agrupaciones.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#ef4444',
+      cancelButtonColor: '#64748b',
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar',
+      background: 'rgba(30, 41, 59, 0.95)',
+      color: '#f8fafc',
+      backdrop: 'rgba(15, 23, 42, 0.8)',
+      customClass: {
+        popup: 'swal2-dark-glass',
+        title: 'swal2-title-white',
+        htmlContainer: 'swal2-text-light'
+      }
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      const success = await deleteInsumoCategory(id);
+      if (success) {
+        setInsumoCategories(insumoCategories.filter(c => c.id !== id));
+        setToast({ isOpen: true, message: 'Categoría eliminada', type: 'success' });
+      }
+    } catch (e: any) {
+      setToast({ isOpen: true, message: 'Error al eliminar la categoría', type: 'error' });
     }
   };
 
@@ -752,6 +832,73 @@ const Settings: React.FC = () => {
             ) : (
               <div style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>
                 No hay tipos de tarea personalizados registrados.
+              </div>
+            )}
+          </div>
+        </Section>
+      )}
+
+      {canManageTasks && (
+        <Section>
+          <SectionHeader>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <FaBoxes /> Gestor de Categorías de Insumos
+            </div>
+            <div style={{ fontSize: '0.85rem', fontWeight: 'normal', color: '#94a3b8' }}>
+              Crea filtros personalizados para tu inventario
+            </div>
+          </SectionHeader>
+
+          <div style={{ marginBottom: '1.5rem', background: 'rgba(15, 23, 42, 0.5)', padding: '1.5rem', borderRadius: '0.5rem', border: '1px solid rgba(255,255,255,0.05)' }}>
+            <h3 style={{ margin: '0 0 1rem 0', fontSize: '1rem', color: '#cbd5e1' }}>Añadir Nueva Categoría</h3>
+            <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+              <FormGroup style={{ flex: '1 1 200px' }}>
+                <Label>Nombre de Categoría (Ej: 'Iluminación')</Label>
+                <Input
+                  type="text"
+                  placeholder="Escriba aquí..."
+                  value={newInsumoCategoryName}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewInsumoCategoryName(e.target.value)}
+                  onKeyPress={(e: React.KeyboardEvent<HTMLInputElement>) => e.key === 'Enter' && handleCreateInsumoCategory()}
+                />
+              </FormGroup>
+              <SaveButton
+                onClick={handleCreateInsumoCategory}
+                disabled={creatingInsumoCategory || !newInsumoCategoryName.trim()}
+                style={{ width: 'auto', background: '#3b82f6' }}
+              >
+                {creatingInsumoCategory ? 'Guardando...' : <><FaPlus /> Añadir</>}
+              </SaveButton>
+            </div>
+          </div>
+
+          <div style={{ background: 'rgba(15, 23, 42, 0.5)', borderRadius: '0.5rem', border: '1px solid rgba(255,255,255,0.05)', overflow: 'hidden' }}>
+            {insumoCategories.length > 0 ? (
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
+                <thead>
+                  <tr style={{ background: 'rgba(255, 255, 255, 0.02)', borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                    <th style={{ padding: '1rem', textAlign: 'left', color: '#94a3b8', fontWeight: 600 }}>TIPO DE CATEGORÍA</th>
+                    <th style={{ padding: '1rem', textAlign: 'center', color: '#94a3b8', fontWeight: 600, width: '100px' }}>ACCIONES</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {insumoCategories.map(c => (
+                    <tr key={c.id} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                      <td style={{ padding: '1rem', color: '#f8fafc', fontWeight: 500 }}>
+                        {c.name}
+                      </td>
+                      <td style={{ padding: '1rem', textAlign: 'center' }}>
+                        <ActionButton $danger onClick={() => handleDeleteInsumoCategory(c.id)} title="Eliminar categoría">
+                          <FaTrash />
+                        </ActionButton>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <div style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>
+                No hay categorías de insumos registradas.
               </div>
             )}
           </div>
