@@ -413,12 +413,21 @@ const FormGroup = styled.div`
 `;
 
 // --- Interfaces ---
+interface SubGroup {
+  groupName: string;
+  batches: DispensaryBatch[];
+  totalWeight: number;
+  totalInitialWeight: number;
+  batchesCount: number;
+}
+
 interface AggregatedStock {
   strain: string;
   totalWeight: number;
   totalInitialWeight: number;
   batchesCount: number;
   batches: DispensaryBatch[];
+  subGroups: SubGroup[];
 }
 
 const Stock: React.FC = () => {
@@ -428,6 +437,7 @@ const Stock: React.FC = () => {
   const [genetics, setGenetics] = useState<Genetic[]>([]);
   const [aggregatedStock, setAggregatedStock] = useState<AggregatedStock[]>([]);
   const [openActionMenuId, setOpenActionMenuId] = useState<string | null>(null);
+  const [modalUnitsData, setModalUnitsData] = useState<{ isOpen: boolean, originName: string, batches: DispensaryBatch[] }>({ isOpen: false, originName: '', batches: [] });
 
   // Close ActionMenu on outside click
   useEffect(() => {
@@ -592,15 +602,38 @@ const Stock: React.FC = () => {
 
     // Aggregate Data
     const items: { [key: string]: AggregatedStock } = {};
+
+    const getGroupName = (batch: DispensaryBatch) => {
+      if (batch.notes && batch.notes.startsWith('Finalizado desde Secado. ')) {
+        return batch.notes.replace('Finalizado desde Secado. ', '').trim();
+      }
+      if (batch.location === 'Dispensario / Shop') return "Dispensario / Shop";
+      if (batch.location === 'Laboratorio') return "Laboratorio";
+      return batch.batch_code || 'Lote Sin Nombre';
+    };
+
     batches.forEach(b => {
+      // 1. Group by Genetic (Level 1)
       const strainName = b.strain_name || 'Sin Genética';
       if (!items[strainName]) {
-        items[strainName] = { strain: strainName, totalWeight: 0, totalInitialWeight: 0, batchesCount: 0, batches: [] };
+        items[strainName] = { strain: strainName, totalWeight: 0, totalInitialWeight: 0, batchesCount: 0, batches: [], subGroups: [] };
       }
       items[strainName].totalWeight += b.current_weight;
       items[strainName].totalInitialWeight += b.initial_weight || b.current_weight;
       items[strainName].batchesCount += 1;
-      items[strainName].batches.push(b);
+      items[strainName].batches.push(b); // Keeping for backward compatibility 
+
+      // 2. Group by Lote Origen (Level 2)
+      const groupName = getGroupName(b);
+      let subGroup = items[strainName].subGroups.find(sg => sg.groupName === groupName);
+      if (!subGroup) {
+        subGroup = { groupName, batches: [], totalWeight: 0, totalInitialWeight: 0, batchesCount: 0 };
+        items[strainName].subGroups.push(subGroup);
+      }
+      subGroup.totalWeight += b.current_weight;
+      subGroup.totalInitialWeight += b.initial_weight || b.current_weight;
+      subGroup.batchesCount += 1;
+      subGroup.batches.push(b);
     });
 
     setAggregatedStock(Object.values(items).sort((a, b) => b.totalWeight - a.totalWeight));
@@ -1055,7 +1088,7 @@ const Stock: React.FC = () => {
                       </td>
                     </tr>
 
-                    {/* Sub-batches Accordion */}
+                    {/* Sub-batches Accordion (Level 2: Origin Batches) */}
                     <ExpandedRow $expanded={isExpanded}>
                       <td colSpan={6}>
                         <CollapsibleWrapper isOpen={isExpanded}>
@@ -1063,33 +1096,34 @@ const Stock: React.FC = () => {
                             <DetailTable>
                               <thead>
                                 <tr>
-                                  <th style={{ color: '#94a3b8', padding: '0.5rem', textAlign: 'left', fontWeight: 600 }}>CÓDIGO DE LOTE</th>
+                                  <th style={{ color: '#94a3b8', padding: '0.5rem', textAlign: 'left', fontWeight: 600 }}>LOTE ORIGEN / AGRUPACIÓN</th>
                                   <th style={{ color: '#94a3b8', padding: '0.5rem', textAlign: 'left', fontWeight: 600 }}>INGRESO</th>
                                   <th style={{ color: '#94a3b8', padding: '0.5rem', textAlign: 'right', fontWeight: 600 }}>PESO ACTUAL / INICIAL</th>
-                                  <th style={{ color: '#94a3b8', padding: '0.5rem', textAlign: 'left', fontWeight: 600 }}>OBSERVACIONES</th>
-                                  <th style={{ color: '#94a3b8', padding: '0.5rem', textAlign: 'right', fontWeight: 600 }}>ACCIONES DE LOTE</th>
+                                  <th style={{ color: '#94a3b8', padding: '0.5rem', textAlign: 'right', fontWeight: 600 }}>CANT. UNIDADES</th>
+                                  <th style={{ color: '#94a3b8', padding: '0.5rem', textAlign: 'right', fontWeight: 600 }}>ACCIONES</th>
                                 </tr>
                               </thead>
                               <tbody>
-                                {item.batches.map(batch => (
-                                  <tr key={batch.id}>
-                                    <td style={{ fontFamily: 'monospace', color: '#38bdf8' }}>{batch.batch_code}</td>
-                                    <td>{new Date(batch.created_at).toLocaleDateString()}</td>
+                                {item.subGroups.map((subGroup, idx) => (
+                                  <tr key={idx}>
+                                    <td style={{ fontWeight: 600, color: '#38bdf8' }}>{subGroup.groupName}</td>
+                                    <td style={{ color: '#cbd5e1' }}>{new Date(subGroup.batches[0]?.created_at || Date.now()).toLocaleDateString()}</td>
                                     <td style={{ textAlign: 'right', fontWeight: 600 }}>
-                                      {batch.current_weight}g <span style={{ color: '#64748b', fontWeight: 'normal' }}>/ {batch.initial_weight}g</span>
+                                      {subGroup.totalWeight.toFixed(1)}g <span style={{ color: '#64748b', fontWeight: 'normal' }}>/ {subGroup.totalInitialWeight.toFixed(1)}g</span>
                                     </td>
-                                    <td style={{ fontStyle: 'italic', color: '#cbd5e1' }}>{batch.notes || '-'}</td>
+                                    <td style={{ textAlign: 'right', color: '#cbd5e1' }}>{subGroup.batchesCount} u.</td>
                                     <td style={{ textAlign: 'right' }}>
                                       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
-                                        <IconButton color="#3182ce" title="Editar Lote" onClick={(e) => { e.stopPropagation(); openEdit(batch); }}>
-                                          <FaEdit size={12} />
-                                        </IconButton>
-                                        <IconButton color="#805ad5" title="Enviar al Laboratorio" onClick={(e) => { e.stopPropagation(); setLabTransferBatch(batch); setLabTransferAmount(''); setIsLabTransferOpen(true); }}>
-                                          <FaFlask size={12} />
-                                        </IconButton>
-                                        <IconButton color="#e53e3e" title="Dar de Baja" onClick={(e) => { e.stopPropagation(); initDelete(batch); }}>
-                                          <FaTrash size={12} />
-                                        </IconButton>
+                                        <ActionButton variant="info" style={{ padding: '0.25rem 0.75rem', fontSize: '0.8rem' }} onClick={(e) => {
+                                          e.stopPropagation();
+                                          setModalUnitsData({
+                                            isOpen: true,
+                                            originName: subGroup.groupName,
+                                            batches: subGroup.batches
+                                          });
+                                        }}>
+                                          <FaBoxes /> Ver Unidades
+                                        </ActionButton>
                                       </div>
                                     </td>
                                   </tr>
@@ -1479,6 +1513,53 @@ const Stock: React.FC = () => {
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '2rem' }}>
           <ActionButton variant="secondary" onClick={() => setIsLabTransferOpen(false)}>Cancelar</ActionButton>
           <ActionButton variant="primary" onClick={confirmLabTransfer}>Confirmar Envío</ActionButton>
+        </div>
+      </AnimatedModal>
+
+      {/* UNITS MODAL (Level 3 - Lote Origen Details) */}
+      <AnimatedModal isOpen={modalUnitsData.isOpen} onClose={() => setModalUnitsData(prev => ({ ...prev, isOpen: false }))}>
+        <CloseIcon onClick={() => setModalUnitsData(prev => ({ ...prev, isOpen: false }))}><FaTimes /></CloseIcon>
+        <h2 style={{ marginBottom: '1.5rem', color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <FaBoxes /> Unidades del lote: {modalUnitsData.originName}
+        </h2>
+
+        <div style={{ maxHeight: '60vh', overflowY: 'auto', paddingRight: '0.5rem' }}>
+          <DetailTable>
+            <thead>
+              <tr>
+                <th style={{ color: '#94a3b8', padding: '0.5rem', textAlign: 'left', fontWeight: 600, fontSize: '0.8rem' }}>CÓDIGO DE UNIDAD</th>
+                <th style={{ color: '#94a3b8', padding: '0.5rem', textAlign: 'right', fontWeight: 600, fontSize: '0.8rem' }}>PESO ACT/INI</th>
+                <th style={{ color: '#94a3b8', padding: '0.5rem', textAlign: 'left', fontWeight: 600, fontSize: '0.8rem' }}>OBSERVACIONES</th>
+                <th style={{ color: '#94a3b8', padding: '0.5rem', textAlign: 'right', fontWeight: 600, fontSize: '0.8rem' }}>ACCIONES DE LOTE</th>
+              </tr>
+            </thead>
+            <tbody>
+              {modalUnitsData.batches.map(batch => (
+                <tr key={batch.id}>
+                  <td style={{ fontFamily: 'monospace', color: '#38bdf8', fontSize: '0.9rem' }}>{batch.batch_code}</td>
+                  <td style={{ textAlign: 'right', fontWeight: 600, fontSize: '0.9rem' }}>
+                    {batch.current_weight}g <span style={{ color: '#64748b', fontWeight: 'normal' }}>/ {batch.initial_weight}g</span>
+                  </td>
+                  <td style={{ fontStyle: 'italic', color: '#cbd5e1', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '0.85rem' }} title={batch.notes || ''}>
+                    {batch.notes || '-'}
+                  </td>
+                  <td style={{ textAlign: 'right' }}>
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
+                      <IconButton color="#3182ce" title="Editar Lote" onClick={(e) => { e.stopPropagation(); setModalUnitsData(prev => ({ ...prev, isOpen: false })); openEdit(batch); }}>
+                        <FaEdit size={12} />
+                      </IconButton>
+                      <IconButton color="#805ad5" title="Enviar al Laboratorio" onClick={(e) => { e.stopPropagation(); setModalUnitsData(prev => ({ ...prev, isOpen: false })); setLabTransferBatch(batch); setLabTransferAmount(''); setIsLabTransferOpen(true); }}>
+                        <FaFlask size={12} />
+                      </IconButton>
+                      <IconButton color="#e53e3e" title="Dar de Baja" onClick={(e) => { e.stopPropagation(); setModalUnitsData(prev => ({ ...prev, isOpen: false })); initDelete(batch); }}>
+                        <FaTrash size={12} />
+                      </IconButton>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </DetailTable>
         </div>
       </AnimatedModal>
 

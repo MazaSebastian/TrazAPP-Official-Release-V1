@@ -3,6 +3,7 @@ import styled, { keyframes } from 'styled-components';
 import { supabase } from '../../services/supabaseClient';
 import { Organization } from '../../types';
 import { CreateOrgModal } from './CreateOrgModal';
+import { ManageOrgModal } from './ManageOrgModal';
 import { ConfirmModal } from '../../components/ConfirmModal';
 import { FaPlus, FaUsers, FaTrash, FaCheck, FaBan, FaClock } from 'react-icons/fa';
 
@@ -252,6 +253,12 @@ const ClientManagement: React.FC = () => {
         confirmMsg: ''
     });
 
+    // Modal de Gestión (Super Admin SaaS)
+    const [manageModal, setManageModal] = useState<{ isOpen: boolean, org: Organization | null }>({
+        isOpen: false,
+        org: null
+    });
+
     useEffect(() => {
         fetchOrgs();
     }, []);
@@ -431,7 +438,7 @@ const ClientManagement: React.FC = () => {
 
                                 {org.status === 'active' && (
                                     <>
-                                        <SmallBtn variant="neutral" onClick={() => alert('Próximamente: Gestionar')} title="Gestionar (Próximamente)">
+                                        <SmallBtn variant="neutral" onClick={() => setManageModal({ isOpen: true, org })} title="Gestionar Cliente">
                                             Gestionar
                                         </SmallBtn>
                                         <SmallBtn variant="danger" onClick={() => handleUpdateStatus(org.id, 'suspended')} title="Suspender Acceso">
@@ -463,6 +470,14 @@ const ClientManagement: React.FC = () => {
                 <CreateOrgModal
                     onClose={() => setShowModal(false)}
                     onSuccess={fetchOrgs}
+                />
+            )}
+
+            {manageModal.isOpen && manageModal.org && (
+                <ManageOrgModal
+                    organization={manageModal.org}
+                    onClose={() => setManageModal({ isOpen: false, org: null })}
+                    onUpdate={fetchOrgs}
                 />
             )}
 

@@ -29,6 +29,7 @@ import { useData } from '../context/DataContext';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { MedicoDashboard } from '../components/MedicoDashboard';
 import { KYCBanner } from '../components/KYCBanner';
+import { useOrganization } from '../context/OrganizationContext';
 
 
 // --- Styled Components (Premium Eco-Tech Theme) ---
@@ -60,6 +61,12 @@ const scaleUp = keyframes`
 const scaleDown = keyframes`
   from { transform: scale(1); opacity: 1; }
   to { transform: scale(0.95); opacity: 0; }
+`;
+
+const pulseHover = keyframes`
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
 `;
 
 const Container = styled.div`
@@ -774,8 +781,68 @@ const AlertActions = styled.div`
   gap: 0.5rem;
 `;
 
+const DemoBanner = styled.div`
+  background: linear-gradient(135deg, rgba(234, 179, 8, 0.9), rgba(202, 138, 4, 0.9));
+  border: 1px solid #fef08a;
+  border-radius: 1rem;
+  padding: 1.5rem 2rem;
+  margin-bottom: 2rem;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  box-shadow: 0 10px 25px -5px rgba(234, 179, 8, 0.3);
+  color: #422006;
+  animation: ${fadeIn} 0.5s ease-out;
 
+  @media (max-width: 768px) {
+    flex-direction: column;
+    text-align: center;
+    padding: 1rem;
+    gap: 1rem;
+  }
 
+  .demo-icon {
+    font-size: 2.5rem;
+    color: #713f12;
+    animation: ${pulseHover} 3s infinite;
+  }
+
+  .demo-text {
+    flex: 1;
+    h3 {
+      margin: 0 0 0.25rem 0;
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: #713f12;
+    }
+    p {
+      margin: 0;
+      font-size: 1rem;
+      font-weight: 500;
+      color: #854d0e;
+    }
+  }
+
+  .demo-days {
+    background: #fef08a;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.75rem;
+    font-weight: 800;
+    font-size: 1.25rem;
+    color: #854d0e;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+
+    span {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      opacity: 0.8;
+    }
+  }
+`;
 
 // ... (existing imports)
 
@@ -804,7 +871,7 @@ const Dashboard: React.FC = () => {
     `
   });
 
-
+  const { currentOrganization } = useOrganization();
   const { tasks, crops, rooms, stickies, isLoading, refreshData, updateStickies, updateTasks } = useData();
   const [alerts, setAlerts] = useState<any[]>([]);
 
@@ -926,6 +993,22 @@ const Dashboard: React.FC = () => {
           {format(currentTime, "HH:mm")}
         </DateDisplay>
       </WelcomeHeader>
+
+      {currentOrganization?.plan === 'demo' && (
+        <DemoBanner>
+          <div className="demo-icon"><FaExclamationTriangle /></div>
+          <div className="demo-text">
+            <h3>Versión Demo de TrazAPP</h3>
+            <p>Estás utilizando una versión de prueba gratuita. Actualiza tu plan para evitar interrupciones en el servicio.</p>
+          </div>
+          <div className="demo-days">
+            {currentOrganization.valid_until
+              ? Math.max(0, differenceInDays(new Date(currentOrganization.valid_until), new Date()))
+              : 15}
+            <span>Días Restantes</span>
+          </div>
+        </DemoBanner>
+      )}
 
       <KYCBanner />
 

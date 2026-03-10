@@ -12,6 +12,7 @@ interface HarvestModalProps {
     rooms: Room[]; // Available rooms to potentially move to (Drying)
     onConfirm: (selectedBatchesData: { id: string, weight: number }[], targetRoomId?: string) => Promise<void>;
     overrideGroupName?: string;
+    maps?: any[]; // Allow passing table/map definitions to group by them
 }
 
 const fadeIn = keyframes`from { opacity: 0; } to { opacity: 1; }`;
@@ -164,7 +165,7 @@ const Checkbox = styled.div<{ $checked: boolean }>`
   color: #0f172a; font-size: 0.8rem;
 `;
 
-export const HarvestModal: React.FC<HarvestModalProps> = ({ isOpen, isClosing, onClose, batches, rooms, onConfirm, overrideGroupName }) => {
+export const HarvestModal: React.FC<HarvestModalProps> = ({ isOpen, isClosing, onClose, batches, rooms, onConfirm, overrideGroupName, maps }) => {
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
     const [lastSelectedId, setLastSelectedId] = useState<string | null>(null);
     const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set()); // Track expanded groups
@@ -211,15 +212,20 @@ export const HarvestModal: React.FC<HarvestModalProps> = ({ isOpen, isClosing, o
             const groupMatch = b.notes?.match(/\[Grupo:\s*(.*?)\]/);
             const customGroupName = groupMatch ? groupMatch[1].trim() : null;
 
-            // 3. Use custom group name if available, otherwise parent_batch name, otherwise fallback to Genetic
-            const loteName = customGroupName || b.parent_batch?.name || `Lote ${b.genetic?.name || 'Desconocido'}`;
+            // 3. Prioritize map name, parent batch name, or tracking code
+            const mapName = b.clone_map_id && maps ? maps.find(m => m.id === b.clone_map_id)?.name : null;
+            const parentName = b.parent_batch?.name;
+            const ownName = b.tracking_code ? `${b.tracking_code} - ${b.name}` : b.name;
+            const fallbackGenetic = `Lote ${b.genetic?.name || 'Desconocida'}`;
+
+            const loteName = overrideGroupName || customGroupName || mapName || parentName || ownName || fallbackGenetic;
             const groupKey = loteName;
 
             if (!groups[groupKey]) groups[groupKey] = [];
             groups[groupKey].push(b);
         });
         return groups;
-    }, [batches, overrideGroupName]);
+    }, [batches, overrideGroupName, maps]);
 
     const toggleBatch = (id: string, e?: React.MouseEvent) => {
         if (e) e.stopPropagation();

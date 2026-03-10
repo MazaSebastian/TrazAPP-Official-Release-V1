@@ -379,7 +379,7 @@ const Dispensary: React.FC = () => {
     const [dispensaryBatches, setDispensaryBatches] = useState<DispensaryBatch[]>([]);
     const [dispenseModalOpen, setDispenseModalOpen] = useState(false);
     const [batchToDispense, setBatchToDispense] = useState<DispensaryBatch | null>(null);
-    const [dispenseForm, setDispenseForm] = useState({ amount: '', reason: 'dispensing', memberId: '' });
+    const [dispenseForm, setDispenseForm] = useState({ amount: '', reason: 'dispensing', memberId: '', transactionValue: '' });
     const [deleteDispensaryModalOpen, setDeleteDispensaryModalOpen] = useState(false);
     const [batchToDeleteDispensary, setBatchToDeleteDispensary] = useState<DispensaryBatch | null>(null);
     const [editDispensaryModalOpen, setEditDispensaryModalOpen] = useState(false);
@@ -427,7 +427,7 @@ const Dispensary: React.FC = () => {
 
     const handleOpenDispense = (batch: DispensaryBatch) => {
         setBatchToDispense(batch);
-        setDispenseForm({ amount: '', reason: 'dispensing', memberId: '' });
+        setDispenseForm({ amount: '', reason: 'dispensing', memberId: '', transactionValue: '' });
         setDispenseModalOpen(true);
     };
 
@@ -450,7 +450,20 @@ const Dispensary: React.FC = () => {
             return;
         }
 
-        const success = await dispensaryService.dispense(batchToDispense.id, amount, dispenseForm.reason, dispenseForm.memberId, resolvedPrice);
+        // Calculate transaction value: user input or fallback to amount * generic price
+        const fallbackValue = amount * resolvedPrice;
+        let txValue = 0;
+        if (dispenseForm.transactionValue !== '') {
+            txValue = parseFloat(dispenseForm.transactionValue);
+            if (isNaN(txValue) || txValue < 0) {
+                alert("Valor de transacción inválido");
+                return;
+            }
+        } else {
+            txValue = fallbackValue;
+        }
+
+        const success = await dispensaryService.dispense(batchToDispense.id, amount, dispenseForm.reason, dispenseForm.memberId, txValue);
         if (success) {
             setDispenseModalOpen(false);
             loadDispensaryStock(); // Refresh stock
@@ -698,7 +711,7 @@ const Dispensary: React.FC = () => {
                         />
                     </FormGroup>
 
-                    {resolvedPrice > 0 && dispenseForm.amount && !isNaN(parseFloat(dispenseForm.amount)) && (
+                    {resolvedPrice > 0 && dispenseForm.amount && !isNaN(parseFloat(dispenseForm.amount)) && dispenseForm.reason === 'dispensing' && (
                         <div style={{
                             marginTop: '1rem',
                             padding: '1rem',
@@ -709,11 +722,27 @@ const Dispensary: React.FC = () => {
                             justifyContent: 'space-between',
                             alignItems: 'center'
                         }}>
-                            <span style={{ color: '#86efac', fontWeight: '600' }}>Costo Total Estimado:</span>
+                            <span style={{ color: '#86efac', fontWeight: '600' }}>Precio Sugerido (Catálogo):</span>
                             <span style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#4ade80' }}>
                                 ${(parseFloat(dispenseForm.amount) * resolvedPrice).toFixed(2)}
                             </span>
                         </div>
+                    )}
+
+                    {dispenseForm.reason === 'dispensing' && (
+                        <FormGroup style={{ marginTop: '1.5rem' }}>
+                            <label>Valor de Transacción / Ingreso ($)</label>
+                            <input
+                                type="number"
+                                step="any"
+                                placeholder={resolvedPrice > 0 && dispenseForm.amount ? (parseFloat(dispenseForm.amount) * resolvedPrice).toString() : "0.00"}
+                                value={dispenseForm.transactionValue}
+                                onChange={e => setDispenseForm({ ...dispenseForm, transactionValue: e.target.value })}
+                            />
+                            <small style={{ color: '#94a3b8', fontSize: '0.8rem', marginTop: '0.25rem' }}>
+                                Este valor se registrará como ingreso final para las métricas mensuales. Déjalo en blanco si fue una donación.
+                            </small>
+                        </FormGroup>
                     )}
 
                     <FormGroup style={{ marginTop: '1.5rem', marginBottom: '1.5rem' }}>

@@ -125,7 +125,7 @@ export const dispensaryService = {
         return data;
     },
 
-    async dispense(batchId: string, amount: number, reason: string, memberId?: string, unitPrice: number = 0): Promise<boolean> {
+    async dispense(batchId: string, amount: number, reason: string, memberId?: string, transactionValue: number = 0): Promise<boolean> {
         if (!supabase) return false;
 
         const { data: batch, error: fetchError } = await supabase
@@ -159,7 +159,7 @@ export const dispensaryService = {
                 batch_id: batchId,
                 type: 'dispense',
                 amount: -amount,
-                transaction_value: unitPrice * amount,
+                transaction_value: transactionValue, // Save exact financial value input by user
                 reason: reason,
                 performed_by: user?.id,
                 member_id: memberId || null,

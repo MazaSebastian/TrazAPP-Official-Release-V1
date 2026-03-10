@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 import styled from "styled-components";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { addMonths, differenceInDays } from "date-fns";
 import { patientsService } from "../services/patientsService";
+import { supabase } from "../services/supabaseClient";
 import {
   templatesService,
   ClinicalTemplate,
@@ -14,6 +15,9 @@ import {
   FaClipboardList,
   FaHistory,
   FaChevronDown,
+  FaMicrophone,
+  FaMagic,
+  FaSpinner,
   FaTrash,
   FaPaperclip,
   FaUpload,
@@ -27,6 +31,7 @@ import { LoadingSpinner } from "../components/LoadingSpinner";
 import { useAuth } from "../context/AuthContext";
 import { CustomSelect } from "../components/CustomSelect";
 import Swal from "sweetalert2";
+import AudioRecorderWidget from "../components/AudioRecorderWidget";
 
 // --- Styled Components (Dashboard First) ---
 
@@ -152,8 +157,10 @@ const calculateAge = (dob: string | undefined) => {
 
 const PatientDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const { user } = useAuth();
-
+  // Fetch Org ID from local storage as per application patterns (fallback to empty)
+  const selectedOrgId = localStorage.getItem("selectedOrgId") || "";
   const [loading, setLoading] = useState(true);
   const [patient, setPatient] = useState<any | null>(null);
   const [admission, setAdmission] = useState<any | null>(null);
@@ -162,7 +169,9 @@ const PatientDetail: React.FC = () => {
 
   // UI State for Accordion
   const [expandedEvos, setExpandedEvos] = useState<number[]>([]);
+  const [transcribingEvoId, setTranscribingEvoId] = useState<string | null>(null);
 
+  // New Evolution State
   const [isEvolutionModalOpen, setIsEvolutionModalOpen] = useState(false);
   const [isUploadingEvolution, setIsUploadingEvolution] = useState(false);
   const [newEvolution, setNewEvolution] = useState({
@@ -175,6 +184,7 @@ const PatientDetail: React.FC = () => {
     template_data: {} as Record<string, any>,
     files: [] as File[],
     next_follow_up_months: 6, // DEFAULT: 6 months
+    audio_url: null as string | null,
   });
 
   // Admission Form State
@@ -211,8 +221,13 @@ const PatientDetail: React.FC = () => {
         const evos = await patientsService.getEvolutions(adm.id);
         setEvolutions(evos);
       }
-    } catch (error) {
-      console.error(error);
+    } catch (err: any) {
+      console.error(err);
+      Swal.fire(
+        "Error",
+        "Ocurrió un error al cargar los datos del paciente.",
+        "error"
+      );
     } finally {
       setLoading(false);
 
@@ -273,6 +288,44 @@ const PatientDetail: React.FC = () => {
     }
   };
 
+  const handleTranscribeAudio = async (evoId: string, audioUrl: string) => {
+    try {
+      setTranscribingEvoId(evoId);
+
+      const { data, error } = await supabase.functions.invoke('process-clinical-audio', {
+        body: { evolution_id: evoId, audio_url: audioUrl }
+      });
+
+      if (error) throw error;
+
+      if (data?.success) {
+        Swal.fire({
+          title: 'Transcripción Exitosa',
+          text: 'La Inteligencia Artificial ha extraído el legajo.',
+          icon: 'success',
+          background: "rgba(30, 41, 59, 0.95)",
+          color: "#f8fafc",
+          customClass: { popup: 'glass-modal border border-white/10 rounded-xl' }
+        });
+        loadData(id || ""); // Refresh to show the ai_transcript
+      } else {
+        throw new Error(data?.error || "Error desconocido en el servidor de IA");
+      }
+    } catch (err: any) {
+      console.error("Transcribe Error:", err);
+      Swal.fire({
+        title: 'Fallo de IA',
+        text: err.message || 'No se pudo procesar el audio en este momento.',
+        icon: 'error',
+        background: "rgba(30, 41, 59, 0.95)",
+        color: "#f8fafc",
+        customClass: { popup: 'glass-modal border border-white/10 rounded-xl' }
+      });
+    } finally {
+      setTranscribingEvoId(null);
+    }
+  };
+
   const handleAddEvolution = async () => {
     if (!admission) return;
     try {
@@ -327,6 +380,7 @@ const PatientDetail: React.FC = () => {
         template_data: newEvolution.template_data,
         attachments: uploadedUrls,
         next_follow_up_months: newEvolution.next_follow_up_months,
+        audio_url: newEvolution.audio_url,
       });
 
       loadData(id || "");
@@ -341,6 +395,7 @@ const PatientDetail: React.FC = () => {
         template_data: {},
         files: [],
         next_follow_up_months: 6,
+        audio_url: null,
       }); // Reset
     } catch (e) {
       console.error(e);
@@ -1359,6 +1414,150 @@ const PatientDetail: React.FC = () => {
                           </div>
                         </div>
                       )}
+
+                      {/* AI Transcript Section */}
+                      <div style={{ marginTop: "1rem" }}>
+                        {/* 1. Has audio but NO transcript yet */}
+                        {evo.audio_url && (!evo.ai_transcript || Object.keys(evo.ai_transcript).length === 0) && (
+                          <div style={{
+                            background: "rgba(139, 92, 246, 0.1)",
+                            border: "1px dashed rgba(139, 92, 246, 0.3)",
+                            padding: "1rem",
+                            borderRadius: "0.5rem",
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                          }}>
+                            <div>
+                              <h4 style={{ color: "#c4b5fd", margin: "0 0 0.25rem 0", fontSize: "0.95rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                                <FaMicrophone /> Audio Pendiente de Procesar
+                              </h4>
+                              <p style={{ color: "#a78bfa", fontSize: "0.85rem", margin: 0 }}>
+                                Existe una grabación adjunta a esta evolución.
+                              </p>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => handleTranscribeAudio(evo.id, evo.audio_url)}
+                              disabled={transcribingEvoId === evo.id}
+                              style={{
+                                background: transcribingEvoId === evo.id ? "#6d28d9" : "#8b5cf6",
+                                color: "white",
+                                border: "none",
+                                padding: "0.6rem 1rem",
+                                borderRadius: "0.5rem",
+                                fontWeight: "bold",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "0.5rem",
+                                cursor: transcribingEvoId === evo.id ? "wait" : "pointer",
+                                transition: "all 0.2s"
+                              }}
+                            >
+                              {transcribingEvoId === evo.id ? (
+                                <><FaSpinner className="fa-spin" /> Analizando...</>
+                              ) : (
+                                <><FaMagic /> Extraer Legajo con IA</>
+                              )}
+                            </button>
+                          </div>
+                        )}
+
+                        {/* 2. Has AI Transcript Results */}
+                        {evo.ai_transcript && Object.keys(evo.ai_transcript).length > 0 && (
+                          <div style={{
+                            background: "linear-gradient(145deg, rgba(88, 28, 135, 0.1) 0%, rgba(15, 23, 42, 0.4) 100%)",
+                            border: "1px solid rgba(139, 92, 246, 0.3)",
+                            borderRadius: "0.75rem",
+                            padding: "1.25rem",
+                            position: "relative",
+                            overflow: "hidden"
+                          }}>
+                            <div style={{
+                              position: "absolute",
+                              top: 0,
+                              left: 0,
+                              height: "4px",
+                              width: "100%",
+                              background: "linear-gradient(90deg, #8b5cf6 0%, #d946ef 100%)"
+                            }} />
+
+                            <h4 style={{ color: "#d8b4fe", display: "flex", alignItems: "center", gap: "0.5rem", marginTop: 0, marginBottom: "1rem", fontSize: "1.05rem" }}>
+                              <FaMagic /> Análisis Clínico IA
+                            </h4>
+
+                            {evo.ai_transcript.resumen_motivo_consulta && (
+                              <div style={{ marginBottom: "1rem" }}>
+                                <strong style={{ color: "#c4b5fd", fontSize: "0.85rem", textTransform: "uppercase" }}>Motivo / Resumen</strong>
+                                <p style={{ color: "#f8fafc", margin: "0.25rem 0 0 0", fontSize: "0.95rem", lineHeight: "1.5" }}>
+                                  {evo.ai_transcript.resumen_motivo_consulta}
+                                </p>
+                              </div>
+                            )}
+
+                            {evo.ai_transcript.sintomas && evo.ai_transcript.sintomas.length > 0 && (
+                              <div style={{ marginBottom: "1rem" }}>
+                                <strong style={{ color: "#c4b5fd", fontSize: "0.85rem", textTransform: "uppercase" }}>Síntomas Identificados</strong>
+                                <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem", marginTop: "0.5rem" }}>
+                                  {evo.ai_transcript.sintomas.map((s: string, idx: number) => (
+                                    <span key={idx} style={{
+                                      background: "rgba(139, 92, 246, 0.2)",
+                                      color: "#ddd6fe",
+                                      padding: "0.2rem 0.6rem",
+                                      borderRadius: "1rem",
+                                      fontSize: "0.8rem",
+                                      border: "1px solid rgba(139, 92, 246, 0.3)"
+                                    }}>
+                                      {s}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                              {evo.ai_transcript.observaciones_clinicas && (
+                                <div>
+                                  <strong style={{ color: "#c4b5fd", fontSize: "0.85rem", textTransform: "uppercase" }}>Observaciones</strong>
+                                  <p style={{ color: "#cbd5e1", margin: "0.25rem 0 0 0", fontSize: "0.9rem" }}>{evo.ai_transcript.observaciones_clinicas}</p>
+                                </div>
+                              )}
+                              {evo.ai_transcript.recomendaciones_tratamiento && (
+                                <div>
+                                  <strong style={{ color: "#c4b5fd", fontSize: "0.85rem", textTransform: "uppercase" }}>Recomendaciones</strong>
+                                  <p style={{ color: "#cbd5e1", margin: "0.25rem 0 0 0", fontSize: "0.9rem" }}>{evo.ai_transcript.recomendaciones_tratamiento}</p>
+                                </div>
+                              )}
+                            </div>
+
+                            <div style={{ marginTop: "1rem", paddingTop: "0.75rem", borderTop: "1px solid rgba(139, 92, 246, 0.2)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                              {evo.ai_transcript.nivel_dolor_eva_mencionado !== null && evo.ai_transcript.nivel_dolor_eva_mencionado !== undefined ? (
+                                <span style={{ color: "#e2e8f0", fontSize: "0.85rem" }}>
+                                  <strong>Dolor Relatado (EVA):</strong> <span style={{ color: "#fbbf24", fontWeight: "bold" }}>{evo.ai_transcript.nivel_dolor_eva_mencionado}/10</span>
+                                </span>
+                              ) : <span />}
+
+                              {evo.audio_url && (
+                                <a
+                                  href={`${supabase.storage.from("ai_clinical_audio").getPublicUrl(evo.audio_url.replace('ai_clinical_audio/', '')).data.publicUrl}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  style={{
+                                    fontSize: "0.8rem",
+                                    color: "#8b5cf6",
+                                    textDecoration: "underline",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "0.3rem"
+                                  }}
+                                >
+                                  <FaMicrophone /> Escuchar Audio Original
+                                </a>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   )}
                 </div>
@@ -1433,6 +1632,13 @@ const PatientDetail: React.FC = () => {
                 />
               </div>
 
+              {/* AI Clinical Audio Recording Section */}
+              <AudioRecorderWidget
+                orgId={selectedOrgId || ""}
+                patientId={id || ""}
+                onAudioRecorded={(url) => setNewEvolution((prev) => ({ ...prev, audio_url: url }))}
+              />
+
               {/* Follow-up Timeline Section (New) */}
               <div style={{ marginBottom: "1.5rem" }}>
                 <label
@@ -1447,26 +1653,19 @@ const PatientDetail: React.FC = () => {
                 >
                   <FaClock /> Próximo Seguimiento (en Plazo Legal)
                 </label>
-                <select
-                  style={{
-                    width: "100%",
-                    padding: "0.75rem",
-                    borderRadius: "0.5rem",
-                    border: "1px solid rgba(255,255,255,0.2)",
-                    fontFamily: "inherit",
-                    background: "rgba(15, 23, 42, 0.9)",
-                    color: "white",
-                  }}
-                  value={newEvolution.next_follow_up_months}
-                  onChange={(e) =>
-                    setNewEvolution({ ...newEvolution, next_follow_up_months: Number(e.target.value) })
+                <CustomSelect
+                  options={[
+                    { value: "1", label: "1 Mes" },
+                    { value: "3", label: "3 Meses" },
+                    { value: "6", label: "6 Meses" },
+                    { value: "12", label: "12 Meses" },
+                  ]}
+                  value={String(newEvolution.next_follow_up_months)}
+                  onChange={(value) =>
+                    setNewEvolution({ ...newEvolution, next_follow_up_months: Number(value) })
                   }
-                >
-                  <option value={1}>1 Mes</option>
-                  <option value={3}>3 Meses</option>
-                  <option value={6}>6 Meses</option>
-                  <option value={12}>12 Meses</option>
-                </select>
+                  placeholder="Seleccionar plazo..."
+                />
                 <small style={{ color: "#94a3b8", display: "block", marginTop: "0.25rem" }}>
                   Altera cuándo se activará la alarma visual obligando al paciente a un nuevo chequeo clínico.
                 </small>

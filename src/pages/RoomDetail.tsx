@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { supabase } from '../services/supabaseClient';
 import { createPortal } from 'react-dom';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import Swal from 'sweetalert2';
 import styled, { keyframes } from 'styled-components';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -1313,6 +1314,23 @@ const groupBatchesByGeneticDate = (batches: Batch[], groupByGenetic: boolean = f
             if (key.startsWith('GROUP|')) {
                 const groupName = key.split('|')[1];
                 primary.root._virtualGroupName = groupName;
+            } else if (key.startsWith('GENETIC|')) {
+                // If grouping by genetic, try to inherit the richest parent_batch metadata from any child
+                // so the Drying Room can correctly reconstruct the HarvestModal name.
+                if (!primary.root.parent_batch) {
+                    const richerChild = bundledGroups.find(g => g.root.parent_batch);
+                    if (richerChild) {
+                        primary.root.parent_batch = richerChild.root.parent_batch;
+                    }
+                }
+
+                // Also try to inherit the clone_map_id if present
+                if (!primary.root.clone_map_id) {
+                    const richerChildMap = bundledGroups.find(g => g.root.clone_map_id);
+                    if (richerChildMap) {
+                        primary.root.clone_map_id = richerChildMap.root.clone_map_id;
+                    }
+                }
             }
 
             rest.forEach(g => {
@@ -1365,8 +1383,16 @@ const SidebarBatchGroup = ({ group, expanded, onToggleExpand, childrenRender, on
         displayName = root._virtualGroupName;
     } else {
         // Use the saved name (which has the correct time string) and prepend the code
-        const codePart = root.tracking_code ? `Lote ${root.tracking_code} - ` : '';
-        displayName = `${codePart}${root.name}`;
+        const dateObj = new Date(root.created_at);
+        const formattedDate = `${dateObj.getDate().toString().padStart(2, '0')}/${(dateObj.getMonth() + 1).toString().padStart(2, '0')}/${dateObj.getFullYear().toString().slice(-2)} ${dateObj.getHours().toString().padStart(2, '0')}:${dateObj.getMinutes().toString().padStart(2, '0')}`;
+
+        const geneticStr = root.genetic?.name || root.name || 'Desconocida';
+
+        const originalCode = root.tracking_code ? root.tracking_code :
+            (root.name && root.name.includes("Lote ")) ? root.name.replace("Lote ", "").substring(0, 4) :
+                root.id.substring(0, 4);
+
+        displayName = `${originalCode} - ${geneticStr} - ${formattedDate}`;
     }
 
     const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
@@ -2027,6 +2053,10 @@ const RoomDetail: React.FC = () => {
     const [isDeletingBatch, setIsDeletingBatch] = useState(false);
     const [isClosingDeleteConfirm, setIsClosingDeleteConfirm] = useState(false);
 
+    // Custom Modal for Available Batches
+    const [availableBatchToDelete, setAvailableBatchToDelete] = useState<Batch | null>(null);
+    const [isDeletingAvailable, setIsDeletingAvailable] = useState(false);
+
     const closeDeleteConfirm = () => {
         setIsClosingDeleteConfirm(true);
         setTimeout(() => {
@@ -2659,9 +2689,32 @@ const RoomDetail: React.FC = () => {
         handleOpenEditBatch(batch);
     };
 
-    const handleDeleteBatchClick = (e: React.MouseEvent, batch: Batch) => {
+    const handleDeleteBatchClick = async (e: React.MouseEvent, batch: Batch) => {
         e.stopPropagation();
+
+        if (!batch.clone_map_id) {
+            setAvailableBatchToDelete(batch);
+            return;
+        }
+
+        // If it's already in the room, trigger the mortality reason modal
         setDeleteConfirm({ isOpen: true, batch });
+    };
+
+    const handleConfirmDeleteAvailable = async () => {
+        if (!availableBatchToDelete) return;
+        setIsDeletingAvailable(true);
+        try {
+            await roomsService.deleteBatch(availableBatchToDelete.id, 'Eliminado de Lotes Disponibles (No contabilizado en bajas)');
+            if (id) await loadData(id, false, false);
+            showToast("Lote disponible eliminado exitosamente", 'success');
+        } catch (error) {
+            console.error("Error al eliminar lote disponible:", error);
+            showToast("Ocurrió un error al eliminar el lote disponible", 'error');
+        } finally {
+            setIsDeletingAvailable(false);
+            setAvailableBatchToDelete(null);
+        }
     };
 
     const [isBulkActionsOpen, setIsBulkActionsOpen] = useState(false); // Dropdown State
@@ -3519,7 +3572,16 @@ const RoomDetail: React.FC = () => {
             const rows = Math.ceil(total / cols);
 
             // 2. Create Map
-            const newMapName = `${pendingMapBatch.name} -${format(new Date(), 'dd/MM HH:mm')} `;
+            // Fix timezone shift by extracting local date correctly from ISO string
+            const d = new Date(pendingMapBatch.start_date || pendingMapBatch.created_at);
+            d.setMinutes(d.getMinutes() + d.getTimezoneOffset());
+            const displayDate = `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getFullYear()}`;
+
+            // Try to extract genetic prefix if name is generic, or just use the whole name if it already looks like a prefix
+            const cleanName = pendingMapBatch.name.replace("Lote ", "").split(" - ")[0];
+            const prefix = cleanName.substring(0, 6).toUpperCase();
+
+            const newMapName = `Lote ${prefix} ${displayDate}`;
 
             const newMap = await roomsService.createCloneMap({
                 room_id: room.id,
@@ -3584,8 +3646,14 @@ const RoomDetail: React.FC = () => {
             } else {
                 const geneticName = root.genetic?.name || root.name || 'Desconocida';
                 const prefix = geneticName.substring(0, 6).toUpperCase();
-                const displayDate = new Date(root.start_date || root.created_at).toLocaleDateString();
-                newMapName = `Lote ${prefix} ${displayDate} `; // Consistent naming without hyphen
+
+                // Fix timezone shift by extracting local date correctly from ISO string
+                const d = new Date(root.start_date || root.created_at);
+                // Get the offset in minutes and add it back to get the actual local day
+                d.setMinutes(d.getMinutes() + d.getTimezoneOffset());
+                const displayDate = `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getFullYear()}`;
+
+                newMapName = `Lote ${prefix} ${displayDate}`; // Consistent naming without hyphen
             }
 
             const newMap = await roomsService.createCloneMap({
@@ -5336,14 +5404,27 @@ const RoomDetail: React.FC = () => {
                                     const totalQty = root.quantity + children.reduce((acc: number, c: any) => acc + c.quantity, 0);
                                     const groupName = root.genetic?.name || root.name; // Logic from SidebarBatchGroup
 
-                                    // Specific display name for the group header
-                                    let displayName = groupName;
-                                    if (root._virtualGroupName) displayName = root._virtualGroupName;
-                                    else {
-                                        const geneticName = root.genetic?.name || root.name || 'Desconocida';
-                                        // Use ID prefix as 6-digit code
-                                        const code = root.id.substring(0, 6).toUpperCase();
-                                        displayName = `Lote ${geneticName} #${code}`;
+                                    let displayName = '';
+
+                                    // 1. Try Virtual Group Name
+                                    if (root._virtualGroupName) {
+                                        displayName = root._virtualGroupName;
+                                    } else {
+                                        // 2. Same prioritization as HarvestModal Map/Parent association
+                                        const mapName = root.clone_map_id && room?.clone_maps ? room.clone_maps.find((m: any) => m.id === root.clone_map_id)?.name : null;
+                                        const parentName = root.parent_batch?.name;
+
+                                        if (mapName || parentName) {
+                                            displayName = mapName || parentName || '';
+                                        } else {
+                                            // 3. Fallback: Forcefully rebuild the exact string format used in HarvestModal
+                                            const geneticStr = root.genetic?.name || root.name || 'Desconocida';
+                                            const prefix = geneticStr.substring(0, 6).toUpperCase();
+                                            const d = new Date(root.start_date || root.created_at);
+                                            d.setMinutes(d.getMinutes() + d.getTimezoneOffset());
+                                            const displayDate = `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getFullYear()}`;
+                                            displayName = `Lote ${prefix} ${displayDate}`;
+                                        }
                                     }
 
                                     return (
@@ -6839,6 +6920,51 @@ const RoomDetail: React.FC = () => {
                     )
                 }
 
+                {/* Delete Available Batch Modal */}
+                {
+                    availableBatchToDelete && (
+                        <PortalModalOverlay>
+                            <ModalContent style={{ width: '400px', textAlign: 'center' }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
+                                    <div style={{
+                                        width: '60px', height: '60px', borderRadius: '50%', background: 'rgba(229, 62, 62, 0.1)',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fc8181', fontSize: '2rem'
+                                    }}>
+                                        <FaTrash />
+                                    </div>
+                                    <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold', margin: '0' }}>¿Eliminar Lote Disponible?</h2>
+                                    <p style={{ color: '#a0aec0', fontSize: '0.95rem', margin: '0 0 1rem 0' }}>
+                                        Vas a eliminar permanentemente el lote: <strong style={{ color: '#f8fafc' }}>{availableBatchToDelete.tracking_code || availableBatchToDelete.name}</strong>.
+                                    </p>
+                                    <div style={{
+                                        background: 'rgba(236, 201, 75, 0.1)',
+                                        border: '1px solid rgba(236, 201, 75, 0.3)',
+                                        borderRadius: '0.5rem',
+                                        padding: '0.75rem',
+                                        width: '100%'
+                                    }}>
+                                        <p style={{ color: '#ecc94b', fontSize: '0.85rem', margin: '0', fontWeight: 600 }}>
+                                            ⚠️ Esta acción no generará registro de mortalidad en tus métricas.
+                                        </p>
+                                    </div>
+                                </div>
+                                <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem', justifyContent: 'center' }}>
+                                    <CancelButton onClick={() => setAvailableBatchToDelete(null)} disabled={isDeletingAvailable} style={{ flex: 1 }}>Cancelar</CancelButton>
+                                    <ActionButton
+                                        $variant="danger"
+                                        onClick={handleConfirmDeleteAvailable}
+                                        disabled={isDeletingAvailable}
+                                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', flex: 1 }}
+                                    >
+                                        {isDeletingAvailable && <FaCircleNotch className="spin" />}
+                                        {isDeletingAvailable ? 'Eliminando...' : 'Sí, eliminar'}
+                                    </ActionButton>
+                                </div>
+                            </ModalContent>
+                        </PortalModalOverlay>
+                    )
+                }
+
                 {/* Bulk Edit Modal */}
                 {
                     isBulkEditModalOpen && (
@@ -7119,6 +7245,7 @@ const RoomDetail: React.FC = () => {
                             rooms={allRooms.filter(r => r.spot_id === room.spot_id)}
                             onConfirm={handleHarvestConfirm}
                             overrideGroupName={harvestTargetMapId ? (room.clone_maps?.find(m => m.id === harvestTargetMapId)?.name) : undefined}
+                            maps={room.clone_maps}
                         />
                     )
                 }
@@ -7142,8 +7269,12 @@ const RoomDetail: React.FC = () => {
 
                                     const geneticName = pendingMapGroup.root.genetic?.name || pendingMapGroup.root.name || 'Desconocida';
                                     const prefix = geneticName.substring(0, 6).toUpperCase();
-                                    const displayDate = new Date(pendingMapGroup.root.start_date || pendingMapGroup.root.created_at).toLocaleDateString();
-                                    const displayName = `Lote ${prefix} ${displayDate} `;
+
+                                    const d = new Date(pendingMapGroup.root.start_date || pendingMapGroup.root.created_at);
+                                    d.setMinutes(d.getMinutes() + d.getTimezoneOffset());
+                                    const displayDate = `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getFullYear()}`;
+
+                                    const displayName = `Lote ${prefix} ${displayDate}`;
 
                                     return (
                                         <p style={{ color: '#cbd5e1', marginBottom: '1rem', fontSize: '1.05rem', lineHeight: '1.5' }}>

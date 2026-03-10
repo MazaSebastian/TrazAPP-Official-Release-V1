@@ -1452,6 +1452,26 @@ export const roomsService = {
             code = `HAR-${year}-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`;
         }
 
+        // 3a. Record Harvest in Logs for Metrics
+        const harvestLog = {
+            crop_id: batchId, // Schema uses crop_id instead of batch_id
+            room_name: 'Secado', // The metric requires a room_name
+            yield_amount: finalWeight,
+            yield_unit: 'g',
+            organization_id: batch.organization_id || getSelectedOrgId(),
+        };
+
+        const { data: hLogData, error: hLogError } = await getClient()
+            .from('chakra_harvest_logs')
+            .insert([harvestLog])
+            .select('id')
+            .single();
+
+        if (hLogError) {
+            console.error("Error creating harvest log", hLogError);
+            // We can proceed even if log fails, but ideally it shouldn't
+        }
+
         // 3. Create in Dispensary (Stock)
         const dispensaryBatch = {
             strain_name: batch.genetic?.name || batch.name,
@@ -1463,7 +1483,8 @@ export const roomsService = {
             location: 'Depósito General',
             notes: `Finalizado desde Secado. ${notes}`,
             created_at: new Date().toISOString(),
-            organization_id: batch.organization_id || getSelectedOrgId()
+            organization_id: batch.organization_id || getSelectedOrgId(),
+            harvest_log_id: hLogData?.id || null
         };
 
         const { error: dispError } = await getClient()

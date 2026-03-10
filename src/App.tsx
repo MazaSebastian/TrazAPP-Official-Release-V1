@@ -52,6 +52,7 @@ import { GuidedTour } from './components/GuidedTour';
 import { ChatWidget } from './components/AI/ChatWidget';
 import { GrowyOrb } from './components/GrowyOrb';
 import PageTransition from './components/PageTransition';
+import { SystemBroadcastBanner } from './components/SystemBroadcastBanner';
 import { LoadingSpinner } from './components/LoadingSpinner';
 import { MainContent } from './components/MainContent';
 import { RoleGuard } from './components/RoleGuard';
@@ -108,6 +109,8 @@ function App() {
           {/* {!isPublicRoute && <ChatWidget />} */}
           {/* New Growy Assistant */}
           {!isPublicRoute && <GrowyOrb />}
+
+          <SystemBroadcastBanner />
 
           <Routes>
             <Route path="/login" element={<Login />} />

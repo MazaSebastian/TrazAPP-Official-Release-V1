@@ -3,9 +3,10 @@ import styled from 'styled-components';
 import { KPICard } from '../components/charts/KPICard';
 import { TrendChart } from '../components/charts/TrendChart';
 import { metricsService, MonthlyMetric, GeneticPerformance, CostCategory } from '../services/metricsService';
-import { FaChartLine, FaLeaf, FaDollarSign, FaBolt } from 'react-icons/fa';
+import { FaChartLine, FaLeaf, FaDollarSign, FaBolt, FaTrashRestore } from 'react-icons/fa';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { useOrganization } from '../context/OrganizationContext';
+import toast from 'react-hot-toast';
 import UpgradeOverlay from '../components/common/UpgradeOverlay';
 
 const Container = styled.div`
@@ -19,9 +20,40 @@ const Container = styled.div`
 `;
 
 const Header = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
   margin-bottom: 2rem;
-  h1 { font-size: 2rem; color: #f8fafc; }
-  p { color: #94a3b8; }
+  h1 { font-size: 2rem; color: #f8fafc; margin: 0; }
+  p { color: #94a3b8; margin: 0.5rem 0 0 0; }
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    gap: 1rem;
+  }
+`;
+
+const ClearButton = styled.button`
+  background: rgba(229, 62, 62, 0.1);
+  color: #fc8181;
+  border: 1px solid rgba(229, 62, 62, 0.3);
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s;
+
+  &:hover {
+    background: rgba(229, 62, 62, 0.2);
+  }
+  
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
 `;
 
 const Grid = styled.div`
@@ -79,6 +111,8 @@ const Metrics: React.FC = () => {
     const [labYieldByTechnique, setLabYieldByTechnique] = useState<{ technique: string, yield_percentage: number, total_input: number, total_output: number }[]>([]);
     const [year] = useState(new Date().getFullYear());
 
+    const [isClearing, setIsClearing] = useState(false);
+
     useEffect(() => {
         loadData();
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -111,6 +145,28 @@ const Metrics: React.FC = () => {
         }
     };
 
+    const handleClearData = async () => {
+        if (!window.confirm("⚠️ ADVERTENCIA DE DESARROLLO ⚠️\n\nEstás a punto de borrar TODOS los lotes físicos, gastos, historial de bajas (mortalidad) y caché de métricas de esta organización para dejar las estadísticas en 0.\n\n¿Estás completamente seguro de continuar?")) {
+            return;
+        }
+
+        setIsClearing(true);
+        try {
+            const success = await metricsService.clearTestData();
+            if (success) {
+                toast.success("Datos de prueba limpiados correctamente");
+                await loadData(); // Reload empty metrics
+            } else {
+                toast.error("Error al limpiar los datos de prueba");
+            }
+        } catch (error) {
+            console.error("Error clearing data:", error);
+            toast.error("Ocurrió un error inesperado al limpiar");
+        } finally {
+            setIsClearing(false);
+        }
+    };
+
     if (loading) return <LoadingSpinner fullScreen />;
 
     // Aggregate Totals
@@ -129,8 +185,14 @@ const Metrics: React.FC = () => {
 
             <div style={{ filter: planLevel < 2 ? 'blur(4px)' : 'none', pointerEvents: planLevel < 2 ? 'none' : 'auto', userSelect: planLevel < 2 ? 'none' : 'auto', opacity: planLevel < 2 ? 0.5 : 1 }}>
                 <Header>
-                    <h1>Reportes y Métricas</h1>
-                    <p>Análisis de rendimiento y financiero del año {year}</p>
+                    <div>
+                        <h1>Reportes y Métricas</h1>
+                        <p>Análisis de rendimiento y financiero del año {year}</p>
+                    </div>
+                    <ClearButton onClick={handleClearData} disabled={isClearing}>
+                        <FaTrashRestore />
+                        {isClearing ? 'Limpiando Base de Datos...' : 'Limpiar Datos de Prueba'}
+                    </ClearButton>
                 </Header>
 
                 {/* KPI Cards */}

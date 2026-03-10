@@ -89,7 +89,7 @@ export const metricsService = {
         const stats: Record<string, number> = {};
         data?.forEach((b: any) => {
             const reasonBase = b.discard_reason.split(' - ')[0]; // Group by base reason enum
-            stats[reasonBase] = (stats[reasonBase] || 0) + (b.quantity || 1);
+            stats[reasonBase] = (stats[reasonBase] || 0) + (b.quantity ?? 1);
         });
         return Object.entries(stats).map(([reason, count]) => ({ reason, count })).sort((a, b) => b.count - a.count);
     },
@@ -113,7 +113,7 @@ export const metricsService = {
             const name = geneticData?.name || 'Desconocida';
             if (!stats[name]) stats[name] = { total: 0, discarded: 0 };
 
-            const qty = b.quantity || 1;
+            const qty = b.quantity ?? 1;
             stats[name].total += qty;
             if (b.discarded_at && b.discard_reason !== 'Distribuido en Mapa (Bulk)' && !b.discard_reason?.includes('Finalizado a Stock')) {
                 stats[name].discarded += qty;
@@ -205,5 +205,23 @@ export const metricsService = {
         const { error } = await supabase.from('chakra_expenses').delete().eq('id', id);
         if (error) return false;
         return true;
+    },
+
+    // Developer / Testing tool: Wipe data
+    async clearTestData(): Promise<boolean> {
+        if (!supabase) return false;
+        try {
+            const { error } = await supabase.rpc('clear_test_metrics', {
+                p_org_id: getSelectedOrgId()
+            });
+            if (error) {
+                console.error('Error clearing test metrics:', error);
+                return false;
+            }
+            return true;
+        } catch (err) {
+            console.error('Exception clearing test metrics:', err);
+            return false;
+        }
     }
 };
