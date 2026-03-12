@@ -283,34 +283,50 @@ export const roomsService = {
     // --- BATCHES ---
     async getBatches(): Promise<Batch[]> {
         const fetchAllBatches = async () => {
-            let allData: any[] = [];
-            let from = 0;
+            const orgId = getSelectedOrgId();
+            
+            // 1. Get total count first
+            const { count, error: countError } = await getClient()
+                .from('batches')
+                .select('*', { count: 'exact', head: true })
+                .eq('organization_id', orgId)
+                .is('discarded_at', null);
+                
+            if (countError) {
+                console.error('Error fetching batches count:', countError);
+                return [];
+            }
+            
+            const totalCount = count || 0;
+            if (totalCount === 0) return [];
+            
             const limit = 1000;
-            let keepFetching = true;
-
-            while (keepFetching) {
-                const { data, error } = await getClient()
+            const pages = Math.ceil(totalCount / limit);
+            
+            // 2. Fetch all pages concurrently
+            const promises = Array.from({ length: pages }, (_, i) => {
+                const start = i * limit;
+                const end = start + limit - 1;
+                
+                return getClient()
                     .from('batches')
                     .select('*, room:rooms(id, name, type, spot_id, spot:chakra_crops(id, name)), genetic:genetics(name, type)')
-                    .eq('organization_id', getSelectedOrgId())
-                    .is('discarded_at', null) // Only active batches
+                    .eq('organization_id', orgId)
+                    .is('discarded_at', null)
                     .order('created_at', { ascending: false })
-                    .range(from, from + limit - 1);
-
-                if (error) {
-                    console.error('Error fetching batches:', error);
-                    return [];
+                    .range(start, end);
+            });
+            
+            const results = await Promise.all(promises);
+            let allData: any[] = [];
+            
+            results.forEach(result => {
+                if (result.error) {
+                    console.error('Error fetching batches chunk:', result.error);
+                } else if (result.data) {
+                    allData = [...allData, ...result.data];
                 }
-
-                if (data && data.length > 0) {
-                    allData = [...allData, ...data];
-                    from += limit;
-                }
-                
-                if (!data || data.length < limit) {
-                    keepFetching = false;
-                }
-            }
+            });
 
             return allData;
         };
@@ -384,35 +400,53 @@ export const roomsService = {
 
     async getBatchesByRoom(roomId: string): Promise<Batch[]> {
         const fetchAllBatchesByRoom = async () => {
-            let allData: any[] = [];
-            let from = 0;
+            const orgId = getSelectedOrgId();
+            
+            // 1. Get total count
+            const { count, error: countError } = await getClient()
+                .from('batches')
+                .select('*', { count: 'exact', head: true })
+                .eq('organization_id', orgId)
+                .eq('current_room_id', roomId)
+                .is('discarded_at', null);
+                
+            if (countError) {
+                console.error('Error fetching batches count for room:', countError);
+                return [];
+            }
+            
+            const totalCount = count || 0;
+            if (totalCount === 0) return [];
+            
             const limit = 1000;
-            let keepFetching = true;
-
-            while (keepFetching) {
-                const { data, error } = await getClient()
+            const pages = Math.ceil(totalCount / limit);
+            
+            // 2. Fetch pages concurrently
+            const promises = Array.from({ length: pages }, (_, i) => {
+                const start = i * limit;
+                const end = start + limit - 1;
+                
+                return getClient()
                     .from('batches')
                     .select('*')
-                    .eq('organization_id', getSelectedOrgId())
+                    .eq('organization_id', orgId)
                     .eq('current_room_id', roomId)
-                    .is('discarded_at', null) // Only active batches
+                    .is('discarded_at', null)
                     .order('created_at', { ascending: false })
-                    .range(from, from + limit - 1);
-
-                if (error) {
-                    console.error('Error fetching batches for room:', error);
-                    return [];
+                    .range(start, end);
+            });
+            
+            const results = await Promise.all(promises);
+            let allData: any[] = [];
+            
+            results.forEach(result => {
+                if (result.error) {
+                    console.error('Error fetching batches chunk for room:', result.error);
+                } else if (result.data) {
+                    allData = [...allData, ...result.data];
                 }
-
-                if (data && data.length > 0) {
-                    allData = [...allData, ...data];
-                    from += limit;
-                }
-                
-                if (!data || data.length < limit) {
-                    keepFetching = false;
-                }
-            }
+            });
+            
             return allData;
         };
 
