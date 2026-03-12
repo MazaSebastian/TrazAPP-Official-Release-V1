@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, Navigate } from 'react-router-dom';
-import { format, differenceInDays } from 'date-fns';
+import { format, differenceInDays, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { tasksService } from '../services/tasksService';
 import { stickiesService } from '../services/stickiesService';
@@ -999,12 +999,10 @@ const Dashboard: React.FC = () => {
           <div className="demo-icon"><FaExclamationTriangle /></div>
           <div className="demo-text">
             <h3>Versión Demo de TrazAPP</h3>
-            <p>Estás utilizando una versión de prueba gratuita. Actualiza tu plan para evitar interrupciones en el servicio.</p>
+            <p>Estás utilizando una versión de prueba gratuita. Te quedan {Math.max(0, 15 - differenceInDays(new Date(), currentOrganization.created_at ? parseISO(currentOrganization.created_at) : new Date()))} días de prueba.</p>
           </div>
           <div className="demo-days">
-            {currentOrganization.valid_until
-              ? Math.max(0, differenceInDays(new Date(currentOrganization.valid_until), new Date()))
-              : 15}
+            {Math.max(0, 15 - differenceInDays(new Date(), currentOrganization.created_at ? parseISO(currentOrganization.created_at) : new Date()))}
             <span>Días Restantes</span>
           </div>
         </DemoBanner>

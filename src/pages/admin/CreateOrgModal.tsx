@@ -238,6 +238,7 @@ export const CreateOrgModal: React.FC<CreateOrgModalProps> = ({ onClose, onSucce
                             value={plan}
                             onChange={setPlan}
                             options={[
+                                { value: 'demo', label: 'Demo (15 Días)' },
                                 { value: 'individual', label: 'Individual' },
                                 { value: 'equipo', label: 'Equipo' },
                                 { value: 'ong', label: 'ONG' },

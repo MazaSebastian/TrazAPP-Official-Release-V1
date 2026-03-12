@@ -18,7 +18,7 @@ import { LoadingSpinner } from '../components/LoadingSpinner';
 export const LaboratoryPage: React.FC = () => {
     const { currentOrganization } = useOrganization();
     const plan = currentOrganization?.plan || 'individual';
-    const planLevel = ['trazapp'].includes(plan) ? 4 :
+    const planLevel = ['trazapp', 'demo'].includes(plan) ? 4 :
         ['ong', 'enterprise'].includes(plan) ? 3 :
             ['equipo', 'pro'].includes(plan) ? 2 : 1;
 

@@ -774,7 +774,7 @@ export const GrowyOrb: React.FC = () => {
         }
     };
 
-    if (currentOrganization?.plan !== 'trazapp') {
+    if (!['trazapp', 'demo'].includes(currentOrganization?.plan || '')) {
         return null; // Growy is exclusive to Plan TrazAPP
     }
 

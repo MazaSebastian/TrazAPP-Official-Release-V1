@@ -57,6 +57,7 @@ import { LoadingSpinner } from './components/LoadingSpinner';
 import { MainContent } from './components/MainContent';
 import { RoleGuard } from './components/RoleGuard';
 import { KYCGuard } from './components/KYCGuard';
+import { DemoGuard } from './components/DemoGuard';
 
 const RequireAuth: React.FC<{ children: React.ReactElement }> = ({ children }) => {
   const { user, isLoading } = useAuth();
@@ -75,7 +76,9 @@ const RequireAuth: React.FC<{ children: React.ReactElement }> = ({ children }) =
 
   return (
     <PageTransition key={location.key}>
-      {children}
+      <DemoGuard>
+        {children}
+      </DemoGuard>
     </PageTransition>
   );
 };
