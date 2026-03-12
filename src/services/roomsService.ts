@@ -282,18 +282,40 @@ export const roomsService = {
 
     // --- BATCHES ---
     async getBatches(): Promise<Batch[]> {
-        const { data, error } = await getClient()
-            .from('batches')
-            .select('*, room:rooms(id, name, type, spot_id, spot:chakra_crops(id, name)), genetic:genetics(name, type)')
-            .eq('organization_id', getSelectedOrgId())
-            .is('discarded_at', null) // Only active batches
-            .order('created_at', { ascending: false });
+        const fetchAllBatches = async () => {
+            let allData: any[] = [];
+            let from = 0;
+            const limit = 1000;
+            let keepFetching = true;
 
-        if (error) {
-            console.error('Error fetching batches:', error);
-            return [];
-        }
-        return data || [];
+            while (keepFetching) {
+                const { data, error } = await getClient()
+                    .from('batches')
+                    .select('*, room:rooms(id, name, type, spot_id, spot:chakra_crops(id, name)), genetic:genetics(name, type)')
+                    .eq('organization_id', getSelectedOrgId())
+                    .is('discarded_at', null) // Only active batches
+                    .order('created_at', { ascending: false })
+                    .range(from, from + limit - 1);
+
+                if (error) {
+                    console.error('Error fetching batches:', error);
+                    return [];
+                }
+
+                if (data && data.length > 0) {
+                    allData = [...allData, ...data];
+                    from += limit;
+                }
+                
+                if (!data || data.length < limit) {
+                    keepFetching = false;
+                }
+            }
+
+            return allData;
+        };
+
+        return await fetchAllBatches();
     },
 
     async getBatchById(id: string): Promise<Batch | null> {
@@ -361,19 +383,40 @@ export const roomsService = {
     },
 
     async getBatchesByRoom(roomId: string): Promise<Batch[]> {
-        const { data, error } = await getClient()
-            .from('batches')
-            .select('*')
-            .eq('organization_id', getSelectedOrgId())
-            .eq('current_room_id', roomId)
-            .is('discarded_at', null) // Only active batches
-            .order('created_at', { ascending: false });
+        const fetchAllBatchesByRoom = async () => {
+            let allData: any[] = [];
+            let from = 0;
+            const limit = 1000;
+            let keepFetching = true;
 
-        if (error) {
-            console.error('Error fetching batches for room:', error);
-            return [];
-        }
-        return data || [];
+            while (keepFetching) {
+                const { data, error } = await getClient()
+                    .from('batches')
+                    .select('*')
+                    .eq('organization_id', getSelectedOrgId())
+                    .eq('current_room_id', roomId)
+                    .is('discarded_at', null) // Only active batches
+                    .order('created_at', { ascending: false })
+                    .range(from, from + limit - 1);
+
+                if (error) {
+                    console.error('Error fetching batches for room:', error);
+                    return [];
+                }
+
+                if (data && data.length > 0) {
+                    allData = [...allData, ...data];
+                    from += limit;
+                }
+                
+                if (!data || data.length < limit) {
+                    keepFetching = false;
+                }
+            }
+            return allData;
+        };
+
+        return await fetchAllBatchesByRoom();
     },
 
     async createBatch(batch: Omit<Batch, 'id' | 'created_at'>, userId?: string): Promise<Batch | null> {
