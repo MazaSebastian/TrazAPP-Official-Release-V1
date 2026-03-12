@@ -16,6 +16,12 @@ import { tasksService } from '../services/tasksService';
 import { FaUserPlus, FaUserShield, FaTrash, FaTimes, FaTasks, FaPlus, FaMapMarkerAlt, FaPlay, FaBoxes } from 'react-icons/fa';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import Swal from 'sweetalert2';
+import { MapSelector } from '../components/MapSelector';
+import { useJsApiLoader } from '@react-google-maps/api';
+import usePlacesAutocomplete, {
+  getGeocode,
+  getLatLng,
+} from "use-places-autocomplete";
 
 // Animación de aparición para modales
 import { keyframes } from 'styled-components';
@@ -265,7 +271,7 @@ const ModalContentDetail = styled.div`
   animation: ${scaleUp} 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
 `;
-// ----------------------------------------------------
+const placesLibrary: "places"[] = ["places"];
 
 const Settings: React.FC = () => {
   const { user, resetTour } = useAuth();
@@ -273,6 +279,13 @@ const Settings: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [genetics, setGenetics] = useState<Genetic[]>([]);
+  
+  // Google Maps Loader for Places Autocomplete
+  const { isLoaded: isGoogleMapsLoaded } = useJsApiLoader({
+    id: 'google-map-script',
+    googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY || '',
+    libraries: placesLibrary,
+  });
   const [members, setMembers] = useState<any[]>([]);
   const [orgPlan, setOrgPlan] = useState<Plan | null>(null);
 
@@ -292,9 +305,23 @@ const Settings: React.FC = () => {
   const [newUserPassword, setNewUserPassword] = useState('');
 
   // Weather Location State
-  const [locationSearch, setLocationSearch] = useState('');
-  const [locationResults, setLocationResults] = useState<any[]>([]);
+  const {
+    ready,
+    value,
+    suggestions: { status, data },
+    setValue,
+    clearSuggestions,
+  } = usePlacesAutocomplete({
+    requestOptions: {
+      /* Define search scope here if needed */
+    },
+    debounce: 300,
+    initOnMount: isGoogleMapsLoaded,
+  });
+
   const [currentLocationName, setCurrentLocationName] = useState('Munro/Olivos');
+  const [currentLat, setCurrentLat] = useState<number>(-34.5882);
+  const [currentLng, setCurrentLng] = useState<number>(-58.4552);
 
   const [inviting, setInviting] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any | null>(null); // Estado para Modal Móvil
@@ -317,6 +344,8 @@ const Settings: React.FC = () => {
       try {
         const parsed = JSON.parse(savedLocation);
         if (parsed.name) setCurrentLocationName(parsed.name);
+        if (parsed.lat !== undefined && parsed.lat !== null) setCurrentLat(parsed.lat);
+        if (parsed.lon !== undefined && parsed.lon !== null) setCurrentLng(parsed.lon);
       } catch (e) { }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -553,33 +582,30 @@ const Settings: React.FC = () => {
     }
   };
 
-  const searchLocations = async (query: string) => {
-    try {
-      const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=5&language=es&format=json`);
-      const data = await res.json();
-      if (data.results) {
-        setLocationResults(data.results);
-      } else {
-        setLocationResults([]);
-      }
-    } catch (error) {
-      console.error('Error fetching locations:', error);
-    }
-  };
+  const handleSelectPlace = async (address: string) => {
+    setValue(address, false);
+    clearSuggestions();
 
-  const selectLocation = (result: any) => {
-    const locName = `${result.name}${result.admin1 ? `, ${result.admin1}` : ''}`;
-    setCurrentLocationName(locName);
-    setLocationSearch('');
-    setLocationResults([]);
-    localStorage.setItem('trazapp_weather_location', JSON.stringify({
-      name: locName,
-      lat: result.latitude,
-      lon: result.longitude
-    }));
-    setToast({ isOpen: true, message: 'Ubicación para el clima actualizada', type: 'success' });
-    // Dispatch custom event to trigger update in WeatherWidget immediately
-    window.dispatchEvent(new Event('weatherLocationChanged'));
+    try {
+      const results = await getGeocode({ address });
+      const { lat, lng } = await getLatLng(results[0]);
+      
+      setCurrentLocationName(address);
+      setCurrentLat(lat);
+      setCurrentLng(lng);
+      
+      localStorage.setItem('trazapp_weather_location', JSON.stringify({
+        name: address,
+        lat: lat,
+        lon: lng
+      }));
+      setToast({ isOpen: true, message: 'Ubicación para el clima actualizada', type: 'success' });
+      // Dispatch custom event to trigger update in WeatherWidget immediately
+      window.dispatchEvent(new Event('weatherLocationChanged'));
+    } catch (error) {
+      console.error("Error: ", error);
+      setToast({ isOpen: true, message: 'No se pudo obtener la ubicación exacta de este lugar', type: 'error' });
+    }
   };
 
   if (loading) {
@@ -906,7 +932,7 @@ const Settings: React.FC = () => {
       )}
 
       {/* Weather UI Components Module */}
-      <Section>
+      <Section style={{ position: 'relative', zIndex: 10 }}>
         <SectionHeader>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <FaMapMarkerAlt /> Ubicación del Clima
@@ -925,31 +951,42 @@ const Settings: React.FC = () => {
           </div>
 
           <FormGroup style={{ position: 'relative' }}>
-            <Label>Buscar ciudad o barrio</Label>
+            <Label>Buscar dirección exacta o barrio (Google Maps)</Label>
             <div style={{ display: 'flex', gap: '0.5rem' }}>
-              <Input
+              <input
+                id="search-address-input"
                 type="text"
-                placeholder="Ej: Córdoba, Rosario, Munro..."
-                value={locationSearch}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                  setLocationSearch(e.target.value);
-                  if (e.target.value.length > 2) searchLocations(e.target.value);
-                  else setLocationResults([]);
+                placeholder="Ej: Av. del Libertador 1000, Buenos Aires..."
+                value={value}
+                onChange={(e) => {
+                  setValue(e.target.value);
+                }}
+                disabled={!ready || !isGoogleMapsLoaded}
+                style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    background: 'rgba(15, 23, 42, 0.5)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    borderRadius: '0.5rem',
+                    color: '#f8fafc',
+                    outline: 'none',
+                    transition: 'border-color 0.2s',
+                    boxSizing: 'border-box'
                 }}
               />
             </div>
-
-            {locationResults.length > 0 && (
+            
+            {status === "OK" && (
               <div style={{
                 position: 'absolute', top: '100%', left: 0, right: 0, background: '#1e293b',
                 border: '1px solid rgba(255,255,255,0.1)', borderRadius: '0.5rem',
                 marginTop: '0.25rem', zIndex: 50, maxHeight: '200px', overflowY: 'auto',
                 boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
               }}>
-                {locationResults.map((result: any, index: number) => (
+                {data.map(({ place_id, description }) => (
                   <div
-                    key={index}
-                    onClick={() => selectLocation(result)}
+                    key={place_id}
+                    onClick={() => handleSelectPlace(description)}
                     style={{
                       padding: '0.75rem 1rem', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.05)',
                       color: '#f8fafc', display: 'flex', flexDirection: 'column'
@@ -957,15 +994,33 @@ const Settings: React.FC = () => {
                     onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.05)')}
                     onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
                   >
-                    <span style={{ fontWeight: 'bold' }}>{result.name}</span>
-                    <span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>
-                      {result.admin1 ? `${result.admin1}, ` : ''}{result.country}
-                    </span>
+                    <span style={{ fontWeight: '500' }}>{description}</span>
                   </div>
                 ))}
               </div>
             )}
           </FormGroup>
+
+          {currentLat !== null && currentLng !== null && (
+            <div style={{ marginTop: '2rem', zIndex: 5, position: 'relative' }}>
+              <Label style={{ display: 'block', marginBottom: '0.5rem', color: '#f8fafc' }}>Ajustar Ubicación Exacta (Pin Arrastrable)</Label>
+              <MapSelector 
+                lat={currentLat} 
+                lng={currentLng} 
+                onChange={(lat, lng) => {
+                  setCurrentLat(lat);
+                  setCurrentLng(lng);
+                  setCurrentLocationName(`Ajuste Manual (${lat.toFixed(4)}, ${lng.toFixed(4)})`);
+                  localStorage.setItem('trazapp_weather_location', JSON.stringify({
+                    name: `Ajuste Manual (${lat.toFixed(4)}, ${lng.toFixed(4)})`,
+                    lat: lat,
+                    lon: lng
+                  }));
+                  window.dispatchEvent(new Event('weatherLocationChanged'));
+                }} 
+              />
+            </div>
+          )}
         </div>
       </Section>
 
