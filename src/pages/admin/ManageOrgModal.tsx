@@ -290,7 +290,8 @@ export const ManageOrgModal: React.FC<ManageOrgModalProps> = ({ organization, on
 
         return {
             plan: organization.plan || 'demo',
-            valid_until: defaultValidUntil
+            valid_until: defaultValidUntil,
+            is_revenue_exempt: organization.is_revenue_exempt || false
         };
     });
     const [isSavingBilling, setIsSavingBilling] = useState(false);
@@ -337,7 +338,10 @@ export const ManageOrgModal: React.FC<ManageOrgModalProps> = ({ organization, on
     const handleUpdateBilling = async () => {
         setIsSavingBilling(true);
         try {
-            const payload: any = { plan: billingForm.plan };
+            const payload: any = { 
+                plan: billingForm.plan,
+                is_revenue_exempt: billingForm.is_revenue_exempt 
+            };
             if (billingForm.valid_until) {
                 payload.valid_until = `${billingForm.valid_until}T23:59:59Z`;
             } else {
@@ -548,6 +552,20 @@ export const ManageOrgModal: React.FC<ManageOrgModalProps> = ({ organization, on
                                         onChange={(e) => setBillingForm({ ...billingForm, valid_until: e.target.value })}
                                     />
                                     <small style={{ color: '#64748b' }}>Dejar en blanco para acceso vitalicio sin cortes.</small>
+                                </div>
+
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginTop: '1rem', background: 'rgba(15, 23, 42, 0.4)', padding: '1rem', borderRadius: '8px', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                                    <input 
+                                        type="checkbox" 
+                                        id="exempt_revenue"
+                                        checked={billingForm.is_revenue_exempt}
+                                        onChange={(e) => setBillingForm({ ...billingForm, is_revenue_exempt: e.target.checked })}
+                                        style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: '#c084fc' }}
+                                    />
+                                    <label htmlFor="exempt_revenue" style={{ color: '#e2e8f0', fontSize: '0.9rem', cursor: 'pointer', userSelect: 'none' }}>
+                                        <strong>Eximir del MRR</strong> <br/>
+                                        <small style={{ color: '#94a3b8' }}>Este cliente no sumará a la métrica de Ingresos Mensuales Estimados.</small>
+                                    </label>
                                 </div>
 
                                 <Button

@@ -173,15 +173,24 @@ const AdminDashboard: React.FC = () => {
       // Recent Orgs (Top 5)
       setRecentOrgs(allOrgs.slice(0, 5));
 
-      // Expiring Orgs
-      // In a real scenario, check o.valid_until < next 30 days
-      const thirtyDaysFromNow = new Date();
-      thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
-
+      // Expiring Orgs (<= 5 days)
       const expiring = allOrgs.filter(o => {
-        if (!o.valid_until) return false;
-        const validDate = new Date(o.valid_until);
-        return validDate > new Date() && validDate < thirtyDaysFromNow;
+        let validDate: Date;
+        if (o.valid_until) {
+            validDate = new Date(o.valid_until);
+        } else if (o.created_at) {
+            validDate = new Date(o.created_at);
+            validDate.setDate(validDate.getDate() + (o.plan === 'demo' ? 15 : 30));
+        } else {
+            return false;
+        }
+
+        const today = new Date();
+        const diffTime = validDate.getTime() - today.getTime();
+        const daysRemaining = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        
+        // Show if expiring in <= 5 days, or already expired (down to -15 days to still show them)
+        return o.status === 'active' && daysRemaining <= 5 && daysRemaining > -15;
       });
       setExpiringOrgs(expiring);
 
@@ -193,8 +202,19 @@ const AdminDashboard: React.FC = () => {
     }
   };
 
-  const revenue = activeOrgs.length * 25000; // Mock ARPU $25,000
+  const PLAN_PRICES: Record<string, number> = {
+    demo: 0,
+    individual: 45000,
+    equipo: 80000,
+    ong: 160000,
+    trazapp: 250000
+  };
 
+  const revenue = activeOrgs.reduce((total, org) => {
+    if (org.is_revenue_exempt) return total;
+    const planKey = org.plan?.toLowerCase() || 'demo';
+    return total + (PLAN_PRICES[planKey] || 0);
+  }, 0);
   return (
     <Container>
       <Header>
@@ -234,16 +254,31 @@ const AdminDashboard: React.FC = () => {
           </SectionTitle>
           <List>
             {expiringOrgs.length === 0 ? (
-              <div style={{ color: '#a0aec0', fontStyle: 'italic', padding: '1rem' }}>No hay vencimientos próximos.</div>
-            ) : expiringOrgs.slice(0, 5).map(org => (
-              <ListItem key={org.id}>
-                <OrgInfo>
-                  <strong>{org.name}</strong>
-                  <span>{org.plan?.toUpperCase() || 'FREE'} • Vence: {org.valid_until ? new Date(org.valid_until).toLocaleDateString() : '30-10-2026'}</span>
-                </OrgInfo>
-                <Badge type="warning">30 Días</Badge>
-              </ListItem>
-            ))}
+              <div style={{ color: '#a0aec0', fontStyle: 'italic', padding: '1rem' }}>No hay vencimientos próximos (5 días).</div>
+            ) : expiringOrgs.slice(0, 5).map(org => {
+                let validDate = new Date();
+                if (org.valid_until) {
+                    validDate = new Date(org.valid_until);
+                } else if (org.created_at) {
+                    validDate = new Date(org.created_at);
+                    validDate.setDate(validDate.getDate() + (org.plan === 'demo' ? 15 : 30));
+                }
+                const diffTime = validDate.getTime() - new Date().getTime();
+                const daysRemaining = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                const isOverdue = daysRemaining < 0;
+
+                return (
+                  <ListItem key={org.id}>
+                    <OrgInfo>
+                      <strong>{org.name}</strong>
+                      <span>{org.plan?.toUpperCase() || 'FREE'} • {isOverdue ? 'Venció' : 'Vence'}: {validDate.toLocaleDateString()}</span>
+                    </OrgInfo>
+                    <Badge type={isOverdue ? "danger" : (daysRemaining <= 2 ? "warning" : "success")}>
+                        {isOverdue ? `Hace ${Math.abs(daysRemaining)} Días` : `${daysRemaining === 0 ? 'HOY' : `${daysRemaining} Días`}`}
+                    </Badge>
+                  </ListItem>
+                );
+            })}
           </List>
           <ActionLink to="/admin/clients">Ver todos <FaArrowRight /></ActionLink>
         </Widget>

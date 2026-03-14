@@ -13,7 +13,7 @@ import { planService } from '../services/planService';
 import { getInsumoCategories, createInsumoCategory, deleteInsumoCategory } from '../services/insumosService';
 import { Plan, TaskType, InsumoCategory } from '../types';
 import { tasksService } from '../services/tasksService';
-import { FaUserPlus, FaUserShield, FaTrash, FaTimes, FaTasks, FaPlus, FaMapMarkerAlt, FaPlay, FaBoxes } from 'react-icons/fa';
+import { FaUserPlus, FaUserShield, FaTrash, FaTimes, FaTasks, FaPlus, FaMapMarkerAlt, FaPlay, FaBoxes, FaWrench, FaPalette } from 'react-icons/fa';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import Swal from 'sweetalert2';
 import { MapSelector } from '../components/MapSelector';
@@ -271,12 +271,51 @@ const ModalContentDetail = styled.div`
   animation: ${scaleUp} 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
 `;
+
+const TabsContainer = styled.div`
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+  overflow-x: auto;
+  
+  &::-webkit-scrollbar {
+    height: 4px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+  }
+`;
+
+const Tab = styled.button<{ $active: boolean }>`
+  background: none;
+  border: none;
+  padding: 1rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: ${props => props.$active ? '#c084fc' : '#94a3b8'};
+  border-bottom: 2px solid ${props => props.$active ? '#c084fc' : 'transparent'};
+  margin-bottom: -2px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: color 0.2s;
+  white-space: nowrap;
+
+  &:hover {
+    color: #d8b4fe;
+  }
+`;
+
 const placesLibrary: "places"[] = ["places"];
 
 const Settings: React.FC = () => {
   const { user, resetTour } = useAuth();
   const { currentOrganization } = useOrganization();
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<'users' | 'customization' | 'weather' | 'system'>('users');
   const [saving, setSaving] = useState(false);
   const [genetics, setGenetics] = useState<Genetic[]>([]);
   
@@ -616,47 +655,13 @@ const Settings: React.FC = () => {
     );
   }
 
-  return (
-    <PageContainer>
-      <Header>
-        <h1><FaCog /> Configuración</h1>
-      </Header>
-
-
-
-      {/* Ocultado temporalmente según solicitud */}
-      {false && (
-        <Section>
-          <SectionHeader>
-            <FaDna /> Precios por Genética
-          </SectionHeader>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
-            {genetics.map(gen => (
-              <div key={gen.id} style={{ border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '0.5rem', padding: '1rem', background: 'rgba(30, 41, 59, 0.5)' }}>
-                <div style={{ fontWeight: 'bold', marginBottom: '0.5rem', color: '#f8fafc' }}>{gen.name}</div>
-                <input
-                  type="number"
-                  placeholder="Precio ($)"
-                  value={gen.default_price_per_gram || ''}
-                  onChange={e => updateGeneticPrice(gen.id, e.target.value)}
-                  style={{ width: '100%', padding: '0.5rem', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '0.25rem', background: 'rgba(15, 23, 42, 0.5)', color: '#f8fafc', outline: 'none' }}
-                />
-              </div>
-            ))}
-          </div>
-
-          <SaveButton onClick={handleSaveGenetics} disabled={saving}>
-            <FaSave /> {saving ? 'Guardando...' : 'Guardar Precios Genéticas'}
-          </SaveButton>
-        </Section>
-      )}
-
+  const renderUsersTab = () => (
+    <>
       {currentOrganization && (
         <Section>
           <SectionHeader>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <FaUserShield /> Roles y Usuarios
+              <FaUserShield /> Gestor de Roles y Usuarios
             </div>
 
             <div style={{ fontSize: '0.85rem', fontWeight: 'bold', color: orgPlan && members.length >= orgPlan.limits.max_users ? '#ef4444' : '#4ade80', background: 'rgba(15, 23, 42, 0.5)', padding: '0.25rem 0.75rem', borderRadius: '1rem', border: '1px solid rgba(255,255,255,0.1)' }}>
@@ -796,7 +801,11 @@ const Settings: React.FC = () => {
           </MobileView>
         </Section>
       )}
+    </>
+  );
 
+  const renderCustomizationTab = () => (
+    <>
       {canManageTasks && (
         <Section>
           <SectionHeader>
@@ -930,7 +939,11 @@ const Settings: React.FC = () => {
           </div>
         </Section>
       )}
+    </>
+  );
 
+  const renderWeatherTab = () => (
+    <>
       {/* Weather UI Components Module */}
       <Section style={{ position: 'relative', zIndex: 10 }}>
         <SectionHeader>
@@ -1023,7 +1036,11 @@ const Settings: React.FC = () => {
           )}
         </div>
       </Section>
+    </>
+  );
 
+  const renderSystemTab = () => (
+    <>
       <Section>
         <SectionHeader>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -1055,6 +1072,34 @@ const Settings: React.FC = () => {
           </SaveButton>
         </div>
       </Section>
+    </>
+  );
+
+  return (
+    <PageContainer>
+      <Header>
+        <h1><FaCog /> Configuración</h1>
+      </Header>
+
+      <TabsContainer>
+        <Tab $active={activeTab === 'users'} onClick={() => setActiveTab('users')}>
+          <FaUserShield /> Roles y Usuarios
+        </Tab>
+        <Tab $active={activeTab === 'customization'} onClick={() => setActiveTab('customization')}>
+          <FaPalette /> Personalización
+        </Tab>
+        <Tab $active={activeTab === 'weather'} onClick={() => setActiveTab('weather')}>
+          <FaMapMarkerAlt /> Clima y Ubicación
+        </Tab>
+        <Tab $active={activeTab === 'system'} onClick={() => setActiveTab('system')}>
+          <FaWrench /> Sistema
+        </Tab>
+      </TabsContainer>
+
+      {activeTab === 'users' && renderUsersTab()}
+      {activeTab === 'customization' && renderCustomizationTab()}
+      {activeTab === 'weather' && renderWeatherTab()}
+      {activeTab === 'system' && renderSystemTab()}
 
       {selectedUser && (
         <ModalOverlay onClick={() => setSelectedUser(null)}>

@@ -5,7 +5,7 @@ import { Organization } from '../../types';
 import { CreateOrgModal } from './CreateOrgModal';
 import { ManageOrgModal } from './ManageOrgModal';
 import { ConfirmModal } from '../../components/ConfirmModal';
-import { FaPlus, FaUsers, FaTrash, FaCheck, FaBan, FaClock } from 'react-icons/fa';
+import { FaPlus, FaUsers, FaTrash, FaCheck, FaBan, FaClock, FaCalendarAlt } from 'react-icons/fa';
 
 const fadeIn = keyframes`
   from { opacity: 0; transform: translateY(10px); }
@@ -91,24 +91,32 @@ const CardGrid = styled.div`
   animation: ${fadeIn} 0.3s ease-out;
 `;
 
-const OrgCard = styled.div<{ status: string }>`
+const OrgCard = styled.div<{ $status: string; $renewalWarning?: boolean }>`
   background: rgba(30, 41, 59, 0.6);
   border-radius: 8px;
   padding: 1.5rem;
   box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2);
-  border: 1px solid ${props => props.status === 'pending' ? 'rgba(234, 179, 8, 0.5)' : props.status === 'suspended' ? 'rgba(239, 68, 68, 0.5)' : 'rgba(255, 255, 255, 0.05)'};
-  transition: transform 0.2s, box-shadow 0.2s;
+  border: 1px solid ${props => 
+    props.$status === 'pending' ? 'rgba(234, 179, 8, 0.5)' : 
+    props.$status === 'suspended' ? 'rgba(239, 68, 68, 0.5)' : 
+    props.$renewalWarning ? 'rgba(249, 115, 22, 0.6)' : 'rgba(255, 255, 255, 0.05)'};
+  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
   position: relative;
   overflow: hidden;
   backdrop-filter: blur(12px);
 
-  ${props => props.status === 'pending' && `
+  ${props => props.$status === 'pending' && `
     border-left: 4px solid #facc15;
+  `}
+  
+  ${props => props.$status === 'active' && props.$renewalWarning && `
+    border-left: 4px solid #f97316;
+    box-shadow: 0 0 15px -3px rgba(249, 115, 22, 0.2);
   `}
 
   &:hover {
     transform: translateY(-4px);
-    box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3);
+    box-shadow: 0 10px 15px -3px ${props => props.$renewalWarning ? 'rgba(249, 115, 22, 0.3)' : 'rgba(0,0,0,0.3)'};
   }
 `;
 
@@ -268,13 +276,30 @@ const ClientManagement: React.FC = () => {
         // Fetch Orgs
         const { data: orgData, error } = await supabase
             .from('organizations')
-            .select('*')
+            .select(`
+                *,
+                organization_members(role)
+            `)
             .order('created_at', { ascending: false });
 
         if (error) {
             console.error('Error fetching orgs:', error);
         } else {
-            setOrgs(orgData as OrgWithStats[]);
+            const formattedOrgs = (orgData as any[]).map(org => {
+                const members = org.organization_members || [];
+                // Check if the owner is already explicitly included in the organization_members table
+                const hasOwner = members.some((m: any) => m.role === 'owner');
+                
+                // Active users = owner (1) + any other members
+                // If the owner is not in the db table, we still count them as 1 active user plus the rest
+                const member_count = hasOwner ? members.length : members.length + 1;
+
+                return {
+                    ...org,
+                    member_count
+                };
+            });
+            setOrgs(formattedOrgs);
         }
         setIsLoading(false);
     };
@@ -403,8 +428,30 @@ const ClientManagement: React.FC = () => {
                 </div>
             ) : (
                 <CardGrid key={activeTab}>
-                    {filteredOrgs.map(org => (
-                        <OrgCard key={org.id} status={org.status || 'pending'}>
+                    {filteredOrgs.map(org => {
+                        // Calculate renewal date and days remaining
+                        let renewalDate: Date | null = null;
+                        if (org.valid_until) {
+                            renewalDate = new Date(org.valid_until);
+                        } else if (org.created_at) {
+                            renewalDate = new Date(org.created_at);
+                            renewalDate.setDate(renewalDate.getDate() + (org.plan === 'demo' ? 15 : 30));
+                        }
+                        
+                        let renewalWarning = false;
+                        let daysRemaining = Infinity;
+                        
+                        if (renewalDate) {
+                            const today = new Date();
+                            const diffTime = renewalDate.getTime() - today.getTime();
+                            daysRemaining = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                            if (daysRemaining <= 5 && org.status === 'active') { 
+                                renewalWarning = true;
+                            }
+                        }
+
+                        return (
+                        <OrgCard key={org.id} $status={org.status || 'pending'} $renewalWarning={renewalWarning}>
                             <OrgHeader>
                                 <div style={{ flex: 1, overflow: 'hidden' }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -418,9 +465,23 @@ const ClientManagement: React.FC = () => {
                                 </div>
                             </OrgHeader>
 
-                            <div style={{ fontSize: '0.875rem', color: '#94a3b8', minHeight: '40px' }}>
+                            <div style={{ fontSize: '0.875rem', color: '#94a3b8', minHeight: '40px', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                    <FaUsers /> {org.member_count || 0} Usuarios activos
+                                    <FaUsers style={{ color: '#cbd5e1' }} /> {org.member_count || 0} Usuarios activos
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                    <FaCalendarAlt style={{ color: '#cbd5e1' }} /> Alta: {new Date(org.created_at).toLocaleDateString()}
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                    <FaCalendarAlt style={{ color: '#cbd5e1' }} /> Renueva: {(() => {
+                                        if (org.valid_until) return new Date(org.valid_until).toLocaleDateString();
+                                        if (org.created_at) {
+                                            const created = new Date(org.created_at);
+                                            created.setDate(created.getDate() + (org.plan === 'demo' ? 15 : 30));
+                                            return created.toLocaleDateString();
+                                        }
+                                        return 'Vitalicio';
+                                    })()}
                                 </div>
                             </div>
 
@@ -462,7 +523,8 @@ const ClientManagement: React.FC = () => {
                                 )}
                             </CardActions>
                         </OrgCard>
-                    ))}
+                    );
+                    })}
                 </CardGrid>
             )}
 

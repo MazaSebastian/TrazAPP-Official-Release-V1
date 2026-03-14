@@ -1,0 +1,27 @@
+src/types/index.ts:193:export interface Insumo {
+src/types/index.ts:228:export interface InsumoConHistorial extends Insumo {
+src/components/GrowyOrb.tsx:889:                                    titleStr = 'Añadir Insumo al Inventario';
+src/pages/Settings.tsx:336:  // Insumo Categories State
+src/pages/Insumos.tsx:18:import type { Insumo, InsumoCategory } from '../types';
+src/pages/Insumos.tsx:402:  const [insumos, setInsumos] = useState<Insumo[]>([]);
+src/pages/Insumos.tsx:403:  const [filteredInsumos, setFilteredInsumos] = useState<Insumo[]>([]);
+src/pages/Insumos.tsx:410:  const [editingInsumo, setEditingInsumo] = useState<Insumo | null>(null);
+src/pages/Insumos.tsx:504:  const handleOpenModal = (insumo?: Insumo) => {
+src/pages/Insumos.tsx:540:      const newInsumo: Omit<Insumo, 'id' | 'created_at' | 'updated_at'> = {
+src/pages/Insumos.tsx:641:        setToastMessage('Insumo eliminado exitosamente');
+src/pages/Insumos.tsx:659:  const getPriceChange = (insumo: Insumo) => {
+src/pages/Insumos.tsx:696:            <FaPlus /> Nuevo Insumo
+src/pages/Insumos.tsx:860:              <h2>{editingInsumo ? 'Editar Insumo' : 'Nuevo Insumo'}</h2>
+src/pages/Insumos.tsx:874:                  <label>Nombre del Insumo *</label>
+src/pages/Insumos.tsx:1029:                    <>{editingInsumo ? 'Actualizar' : 'Crear'} Insumo</>
+src/pages/Insumos.tsx:1040:          title="Eliminar Insumo"
+src/services/insumosService.ts:2:import type { Insumo, HistorialPrecio, InsumoCategory } from '../types';
+src/services/insumosService.ts:34:export async function getInsumos(): Promise<Insumo[]> {
+src/services/insumosService.ts:58:export async function getInsumoById(id: string): Promise<Insumo | null> {
+src/services/insumosService.ts:81:export async function createInsumo(insumo: Omit<Insumo, 'id' | 'created_at' | 'updated_at'>): Promise<Insumo | null> {
+src/services/insumosService.ts:104:export async function updateInsumo(id: string, updates: Partial<Insumo>): Promise<Insumo | null> {
+src/services/insumosService.ts:164:      throw new Error('Insumo no encontrado');
+src/services/insumosService.ts:211:      `Actualización de Insumo (${userName}) 📦`,
+src/services/insumosService.ts:278:export async function searchInsumos(searchTerm: string): Promise<Insumo[]> {
+src/services/insumosService.ts:303:export async function getInsumosByCategory(categoria: string): Promise<Insumo[]> {
+src/services/reportsService.ts:534:                    title: `Aplicación de Insumo`,

@@ -26,32 +26,60 @@ export const tasksService = {
     async createTask(task: CreateTaskInput): Promise<Task | null> {
         if (!supabase) return null;
 
-        const { data, error } = await supabase
-            .from('chakra_tasks')
-            .insert([{
-                title: task.title,
-                description: task.description,
-                type: task.type,
-                due_date: task.due_date,
-                crop_id: task.crop_id,
-                room_id: task.room_id,
-                map_id: task.map_id,
-                assigned_to: task.assigned_to,
-                status: 'pending',
-                observations: task.observations,
-                photos: task.photos,
-                recurrence: task.recurrence,
-                organization_id: getSelectedOrgId()
-            }])
-            .select()
-            .single();
+        let taskData: any = null;
+        let taskError: any = null;
 
-        if (error) {
-            console.error('Error creating task:', error);
+        // Si la tarea incluye la deducción de un insumo, llamamos al RPC
+        if (task.insumo_id && task.estimated_volume) {
+            const { data, error } = await supabase.rpc('execute_task_with_stock', {
+                p_title: task.title,
+                p_description: task.description,
+                p_type: task.type,
+                p_due_date: task.due_date,
+                p_crop_id: task.crop_id,
+                p_room_id: task.room_id,
+                p_map_id: task.map_id,
+                p_assigned_to: task.assigned_to,
+                p_observations: task.observations,
+                p_photos: task.photos,
+                p_recurrence: task.recurrence,
+                p_organization_id: getSelectedOrgId(),
+                p_insumo_id: task.insumo_id,
+                p_estimated_volume: task.estimated_volume
+            });
+            taskData = data;
+            taskError = error;
+        } else {
+            // Creación estándar de tarea
+            const { data, error } = await supabase
+                .from('chakra_tasks')
+                .insert([{
+                    title: task.title,
+                    description: task.description,
+                    type: task.type,
+                    due_date: task.due_date,
+                    crop_id: task.crop_id,
+                    room_id: task.room_id,
+                    map_id: task.map_id,
+                    assigned_to: task.assigned_to,
+                    status: 'pending',
+                    observations: task.observations,
+                    photos: task.photos,
+                    recurrence: task.recurrence,
+                    organization_id: getSelectedOrgId()
+                }])
+                .select()
+                .single();
+            taskData = data;
+            taskError = error;
+        }
+
+        if (taskError) {
+            console.error('Error creating task:', taskError);
             return null;
         }
 
-        return data as Task;
+        return taskData as Task;
     },
 
     async updateStatus(id: string, status: 'pending' | 'done' | 'dismissed'): Promise<boolean> {

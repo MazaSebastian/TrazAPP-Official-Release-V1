@@ -52,6 +52,7 @@ export interface Organization {
   // Deprecated hardcoded fields in favor of Plan limits
   max_users?: number;
   max_storage_gb?: number;
+  is_revenue_exempt?: boolean;
 }
 
 export interface Plan {
@@ -150,6 +151,8 @@ export interface Task {
   map_id?: string;
   completed_at?: string;
   recurrence?: RecurrenceConfig;
+  insumo_id?: string;
+  estimated_volume?: number;
 }
 
 export interface CreateTaskInput {
@@ -157,13 +160,15 @@ export interface CreateTaskInput {
   description?: string;
   type: string;
   due_date?: string;
-  crop_id?: string;
   room_id?: string;
-  map_id?: string;
+  crop_id?: string;
   assigned_to?: string;
+  recurrence?: RecurrenceConfig;
+  insumo_id?: string;
+  estimated_volume?: number;
+  map_id?: string;
   observations?: string;
   photos?: string[];
-  recurrence?: RecurrenceConfig;
 }
 
 export interface RecurrenceConfig {
@@ -197,10 +202,19 @@ export interface Insumo {
   precio_actual: number;
   precio_anterior?: number;
   proveedor?: string;
+  provider_id?: string; // New: Foreign key to insumo_providers
   fecha_ultima_compra?: string;
   fecha_ultimo_precio: string;
-  stock_actual: number;
+  stock_actual: number; // Used for "Discrete Units" historically
   stock_minimo: number;
+  
+  // Volumetric Data added for AI and detailed stock
+  current_volume?: number; 
+  total_volume?: number; 
+  unit_of_measurement?: string; // 'L', 'ml', 'g', etc.
+  reorder_threshold?: number;
+  auto_restock_enabled?: boolean;
+
   notas?: string;
   activo: boolean;
   created_at: string;

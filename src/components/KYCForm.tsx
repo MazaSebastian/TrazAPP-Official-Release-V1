@@ -8,6 +8,7 @@ import {
     FaFileContract, FaFileInvoice, FaUserShield, FaUsers, FaIdBadge, FaShieldAlt, FaBuilding, FaSeedling,
     FaUserCog, FaFileAlt
 } from 'react-icons/fa';
+import { CustomSelect } from './CustomSelect';
 
 const FormContainer = styled.div`
   background: rgba(15, 23, 42, 0.4);
@@ -40,11 +41,11 @@ const TabButton = styled.button<{ $active: boolean }>`
   background: transparent;
   border: none;
   padding: 1rem 1.5rem;
-  color: ${p => p.$active ? '#3b82f6' : '#94a3b8'};
+  color: ${p => p.$active ? '#4ade80' : '#94a3b8'};
   font-weight: 600;
   font-size: 1.05rem;
   cursor: pointer;
-  border-bottom: 2px solid ${p => p.$active ? '#3b82f6' : 'transparent'};
+  border-bottom: 2px solid ${p => p.$active ? '#4ade80' : 'transparent'};
   transition: all 0.2s;
   display: flex;
   align-items: center;
@@ -52,7 +53,7 @@ const TabButton = styled.button<{ $active: boolean }>`
   white-space: nowrap;
 
   &:hover {
-    color: ${p => p.$active ? '#3b82f6' : '#f8fafc'};
+    color: ${p => p.$active ? '#4ade80' : '#f8fafc'};
   }
 `;
 
@@ -114,11 +115,11 @@ const Field = styled.div`
 `;
 
 const SubmitButton = styled.button<{ $loading?: boolean }>`
-  background: #3b82f6;
-  color: white;
+  background: rgba(34, 197, 94, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #4ade80;
   padding: 0.875rem 2rem;
   border-radius: 0.5rem;
-  border: none;
   font-weight: 600;
   font-size: 1rem;
   cursor: ${p => p.$loading ? 'not-allowed' : 'pointer'};
@@ -136,9 +137,10 @@ const SubmitButton = styled.button<{ $loading?: boolean }>`
   }
 
   &:hover:not(:disabled) {
-    background: #2563eb;
+    background: rgba(34, 197, 94, 0.3);
+    border-color: rgba(34, 197, 94, 0.4);
     transform: translateY(-2px);
-    box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3);
+    box-shadow: 0 4px 6px -1px rgba(34, 197, 94, 0.2);
   }
 `;
 
@@ -193,18 +195,18 @@ const UploadAction = styled.label`
    align-items: center;
    justify-content: center;
    gap: 0.5rem;
-   background: rgba(59, 130, 246, 0.1);
-   border: 1px dashed rgba(59, 130, 246, 0.5);
+   background: rgba(34, 197, 94, 0.1);
+   border: 1px dashed rgba(34, 197, 94, 0.5);
    padding: 0.75rem;
    border-radius: 0.5rem;
-   color: #60a5fa;
+   color: #4ade80;
    cursor: pointer;
    font-size: 0.9rem;
    font-weight: 600;
    transition: all 0.2s;
 
    &:hover {
-      background: rgba(59, 130, 246, 0.2);
+      background: rgba(34, 197, 94, 0.2);
    }
 `;
 
@@ -257,8 +259,6 @@ const REQUIRED_DOCUMENTS = [
     { id: 'antecedentes', label: 'Antecedentes Penales', icon: <FaUserShield /> },
     { id: 'autoridades', label: 'Designación de Autoridades', icon: <FaUsers /> },
     { id: 'perfiles', label: 'Perfiles Comisión Directiva', icon: <FaIdBadge /> },
-    { id: 'seguro', label: 'Póliza de Seguro', icon: <FaShieldAlt /> },
-    { id: 'habilitacion', label: 'Habilitación Municipal', icon: <FaBuilding /> },
     { id: 'cultivo', label: 'Plan de Cultivo', icon: <FaSeedling /> },
 ];
 
@@ -287,9 +287,8 @@ export const KYCForm: React.FC = () => {
         company_email: '',
         address_street: '',
         address_number: '',
-        address_city: '',
-        address_state: '',
-        address_country: '',
+        address_locality: '',
+        address_province: '',
         address_zip: '',
     });
 
@@ -337,9 +336,8 @@ export const KYCForm: React.FC = () => {
                         company_email: org.company_email || '',
                         address_street: org.address_street || '',
                         address_number: org.address_number || '',
-                        address_city: org.address_city || '',
-                        address_state: org.address_state || '',
-                        address_country: org.address_country || 'Argentina',
+                        address_locality: org.address_locality || '',
+                        address_province: org.address_province || '',
                         address_zip: org.address_zip || '',
                     });
 
@@ -371,8 +369,8 @@ export const KYCForm: React.FC = () => {
         const file = e.target.files[0];
         const fileExt = file.name.split('.').pop();
         const fileName = `${docType}_${Math.random()}.${fileExt}`;
-        // Path structure: org_id/file_name
-        const filePath = `${currentOrganization.id}/${fileName}`;
+        // Path structure: user_id/file_name to match RLS policy (auth.uid())
+        const filePath = `${user.id}/${fileName}`;
 
         setLoading(true);
         try {
@@ -397,9 +395,9 @@ export const KYCForm: React.FC = () => {
                 .update({ legal_documents: newDocs })
                 .eq('id', currentOrganization.id);
 
-        } catch (e) {
+        } catch (e: any) {
             console.error('Upload failed', e);
-            alert('Error subiendo archivo');
+            alert(`Error subiendo archivo: ${e?.message || JSON.stringify(e)}`);
         } finally {
             setLoading(false);
         }
@@ -422,42 +420,81 @@ export const KYCForm: React.FC = () => {
         }
     };
 
-    const validateForm = () => {
-        // Basic validation
+    const validateGeneralData = () => {
         if (!profileData.document_number || !profileData.cuil || !profileData.phone_mobile) {
             alert('Por favor complete todos los datos personales obligatorios (*)');
-            setActiveTab('general');
             return false;
         }
-        if (!orgData.company_cuit || !orgData.company_legal_name || !orgData.address_street) {
+        if (!orgData.company_cuit || !orgData.company_legal_name || !orgData.address_street || !orgData.address_number || !orgData.address_locality || !orgData.address_province) {
             alert('Por favor complete todos los datos de la empresa obligatorios (*)');
-            setActiveTab('general');
             return false;
         }
+        return true;
+    };
 
-        // Validate all required documents are uploaded (match by type)
+    const validateLegalData = () => {
         const docsArray = Array.isArray(documents) ? documents : [];
         const uploadedTypes = docsArray.map(d => d.type);
         const missingDocs = REQUIRED_DOCUMENTS.filter(req => !uploadedTypes.includes(req.id));
 
         if (missingDocs.length > 0) {
             alert(`Falta documentación legal requerida. Asegúrese de subir: \n- ${missingDocs.map(d => d.label).join('\n- ')}`);
-            setActiveTab('legal');
             return false;
         }
-
         return true;
     };
 
-    const handleSave = async () => {
+    const handleSaveGeneral = async () => {
         if (!user || !currentOrganization) return;
-        if (!validateForm()) return;
+        if (!validateGeneralData()) return;
 
         setSaving(true);
         setSuccess(false);
 
         try {
-            // 1. Update Profile (mark as completed)
+            const { error: profError } = await supabase
+                .from('profiles')
+                .update({ ...profileData })
+                .eq('id', user.id);
+            if (profError) throw profError;
+
+            const { error: orgError } = await supabase
+                .from('organizations')
+                .update({
+                    company_cuit: orgData.company_cuit,
+                    company_legal_name: orgData.company_legal_name,
+                    company_email: orgData.company_email,
+                    address_street: orgData.address_street,
+                    address_number: orgData.address_number,
+                    address_locality: orgData.address_locality,
+                    address_province: orgData.address_province,
+                    address_zip: orgData.address_zip,
+                })
+                .eq('id', currentOrganization.id);
+            if (orgError) throw orgError;
+
+            setSuccess(true);
+            setTimeout(() => setSuccess(false), 3000);
+        } catch (e: any) {
+            console.error('Save failed', e);
+            alert(`Error al guardar los datos generales: ${e?.message || JSON.stringify(e)}`);
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const handleSaveProfileComplete = async () => {
+        if (!user || !currentOrganization) return;
+        if (!validateGeneralData()) {
+            setActiveTab('general');
+            return;
+        }
+        if (!validateLegalData()) return;
+
+        setSaving(true);
+        setSuccess(false);
+
+        try {
             const { error: profError } = await supabase
                 .from('profiles')
                 .update({
@@ -465,10 +502,8 @@ export const KYCForm: React.FC = () => {
                     kyc_completed: true
                 })
                 .eq('id', user.id);
-
             if (profError) throw profError;
 
-            // 2. Update Org
             const { error: orgError } = await supabase
                 .from('organizations')
                 .update({
@@ -476,18 +511,15 @@ export const KYCForm: React.FC = () => {
                     legal_documents: documents
                 })
                 .eq('id', currentOrganization.id);
-
             if (orgError) throw orgError;
 
             setSuccess(true);
-            // Force reload to update context and UI
             setTimeout(() => {
                 window.location.reload();
             }, 1000);
-
         } catch (e) {
             console.error('Save failed', e);
-            alert('Error al guardar los datos');
+            alert('Error al completar el perfil');
         } finally {
             setSaving(false);
         }
@@ -532,12 +564,17 @@ export const KYCForm: React.FC = () => {
                             </Field>
                             <Field>
                                 <label>Género</label>
-                                <select name="gender" value={profileData.gender} onChange={handleProfileChange}>
-                                    <option value="">Seleccione...</option>
-                                    <option value="male">Masculino</option>
-                                    <option value="female">Femenino</option>
-                                    <option value="other">Otro / Prefiero no decirlo</option>
-                                </select>
+                                <CustomSelect
+                                    value={profileData.gender}
+                                    onChange={val => handleProfileChange({ target: { name: 'gender', value: val } } as any)}
+                                    options={[
+                                        { value: '', label: 'Seleccione...' },
+                                        { value: 'male', label: 'Masculino' },
+                                        { value: 'female', label: 'Femenino' },
+                                        { value: 'other', label: 'Otro / Prefiero no decirlo' }
+                                    ]}
+                                    triggerStyle={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid rgba(255, 255, 255, 0.1)', background: 'rgba(30, 41, 59, 0.5)', fontSize: '0.95rem', color: '#f8fafc', boxSizing: 'border-box' }}
+                                />
                             </Field>
                         </InputGroup>
                         <InputGroup>
@@ -583,11 +620,11 @@ export const KYCForm: React.FC = () => {
                         <InputGroup>
                             <Field>
                                 <label>Ciudad *</label>
-                                <input name="address_city" value={orgData.address_city} onChange={handleOrgChange} />
+                                <input name="address_locality" value={orgData.address_locality} onChange={handleOrgChange} />
                             </Field>
                             <Field>
                                 <label>Provincia / Estado *</label>
-                                <input name="address_state" value={orgData.address_state} onChange={handleOrgChange} />
+                                <input name="address_province" value={orgData.address_province} onChange={handleOrgChange} />
                             </Field>
                             <Field>
                                 <label>Código Postal</label>
@@ -595,6 +632,11 @@ export const KYCForm: React.FC = () => {
                             </Field>
                         </InputGroup>
                     </FormSection>
+
+                    <SubmitButton onClick={handleSaveGeneral} disabled={saving || loading}>
+                        {saving ? <FaSpinner className="fa-spin" /> : <FaSave />}
+                        {saving ? 'Guardando...' : 'Guardar Información General'}
+                    </SubmitButton>
                 </div>
             )}
 
@@ -646,17 +688,17 @@ export const KYCForm: React.FC = () => {
                             })}
                         </ChecklistGrid>
                     </FormSection>
+
+                    <SubmitButton onClick={handleSaveProfileComplete} disabled={saving || loading}>
+                        {saving ? <FaSpinner className="fa-spin" /> : <FaCheckCircle />}
+                        {saving ? 'Verificando y Completando...' : 'Completar y Aprobar Perfil'}
+                    </SubmitButton>
                 </div>
             )}
 
-            <SubmitButton onClick={handleSave} disabled={saving || loading}>
-                {saving ? <FaSpinner className="fa-spin" /> : <FaSave />}
-                {saving ? 'Guardando y Verificando...' : 'Completar y Guardar Perfil'}
-            </SubmitButton>
-
             {success && (
-                <div style={{ marginTop: '1rem', color: '#4ade80', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <FaCheckCircle /> Perfil completado exitosamente. Recargando...
+                <div style={{ marginTop: '1.5rem', color: '#4ade80', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 600, padding: '1rem', background: 'rgba(74, 222, 128, 0.1)', borderRadius: '0.5rem', border: '1px solid rgba(74, 222, 128, 0.2)' }}>
+                    <FaCheckCircle /> ¡Datos guardados exitosamente!
                 </div>
             )}
 

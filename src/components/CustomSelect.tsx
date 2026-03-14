@@ -8,7 +8,7 @@ const SelectContainer = styled.div`
   width: 100%;
 `;
 
-const SelectTrigger = styled.div<{ $isOpen: boolean }>`
+const SelectTrigger = styled.div<{ $isOpen: boolean; $disabled?: boolean }>`
   width: 100%;
   padding: 0.75rem;
   padding-right: 2.5rem;
@@ -17,24 +17,27 @@ const SelectTrigger = styled.div<{ $isOpen: boolean }>`
   font-size: 1rem;
   color: #f8fafc;
   background-color: rgba(30, 41, 59, 0.5);
-  cursor: pointer;
+  cursor: ${p => p.$disabled ? 'not-allowed' : 'pointer'};
+  opacity: ${p => p.$disabled ? 0.5 : 1};
   display: flex;
   align-items: center;
   justify-content: space-between;
   box-shadow: ${p => p.$isOpen ? '0 0 0 3px rgba(74, 222, 128, 0.1)' : 'none'};
   transition: all 0.2s;
+  pointer-events: ${p => p.$disabled ? 'none' : 'auto'};
 
   &:hover {
-    border-color: rgba(255, 255, 255, 0.2);
+    border-color: ${p => p.$disabled ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.2)'};
   }
 `;
 
-const DropdownMenu = styled.div<{ $coords: { top: number; left: number; width: number } }>`
+const DropdownMenu = styled.div<{ $coords: { top: number; left: number; width: number; isUpwards?: boolean } }>`
   position: fixed;
   top: ${p => p.$coords.top}px;
   left: ${p => p.$coords.left}px;
   width: ${p => p.$coords.width}px;
-  margin-top: 0.5rem;
+  margin-top: ${p => p.$coords.isUpwards ? '0' : '0.5rem'};
+  transform: ${p => p.$coords.isUpwards ? 'translateY(calc(-100% - 3rem))' : 'none'};
   background: rgba(15, 23, 42, 0.95);
   backdrop-filter: blur(16px);
   visibility: ${p => p.$coords.width > 0 ? 'visible' : 'hidden'};
@@ -48,8 +51,8 @@ const DropdownMenu = styled.div<{ $coords: { top: number; left: number; width: n
   animation: fadeIn 0.1s ease-out;
 
   @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-5px); }
-    to { opacity: 1; transform: translateY(0); }
+    from { opacity: 0; transform: ${p => p.$coords.isUpwards ? 'translateY(calc(-100% - 2.5rem))' : 'translateY(-5px)'}; }
+    to { opacity: 1; transform: ${p => p.$coords.isUpwards ? 'translateY(calc(-100% - 3rem))' : 'translateY(0)'}; }
   }
 `;
 
@@ -96,11 +99,12 @@ interface CustomSelectProps {
     options: Option[];
     placeholder?: string;
     triggerStyle?: React.CSSProperties;
+    disabled?: boolean;
 }
 
-export const CustomSelect: React.FC<CustomSelectProps> = ({ value, onChange, options, placeholder = "Seleccionar...", triggerStyle }) => {
+export const CustomSelect: React.FC<CustomSelectProps> = ({ value, onChange, options, placeholder = "Seleccionar...", triggerStyle, disabled = false }) => {
     const [isOpen, setIsOpen] = useState(false);
-    const [coords, setCoords] = useState({ top: 0, left: 0, width: 0 });
+    const [coords, setCoords] = useState({ top: 0, left: 0, width: 0, isUpwards: false });
     const containerRef = useRef<HTMLDivElement>(null);
 
     const dropdownRef = useRef<HTMLDivElement>(null);
@@ -110,10 +114,17 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({ value, onChange, opt
     const updatePosition = () => {
         if (containerRef.current) {
             const rect = containerRef.current.getBoundingClientRect();
+            const spaceBelow = window.innerHeight - rect.bottom;
+            const spaceAbove = rect.top;
+            
+            // Assume dropdown needs max 250px.
+            const needsUpwards = spaceBelow < 250 && spaceAbove > spaceBelow;
+            
             setCoords({
-                top: rect.bottom,
+                top: needsUpwards ? rect.top : rect.bottom, // Wait for render to adjust translated Y if upward
                 left: rect.left,
-                width: rect.width
+                width: rect.width,
+                isUpwards: needsUpwards
             });
         }
     };
@@ -127,12 +138,14 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({ value, onChange, opt
             return () => clearTimeout(timeoutId);
         } else {
             // Reset coords to hide it immediately when closed to avoid glitch on next open
-            setCoords({ top: 0, left: 0, width: 0 });
+            setCoords({ top: 0, left: 0, width: 0, isUpwards: false });
         }
     }, [isOpen]);
 
     const toggleOpen = () => {
-        setIsOpen(!isOpen);
+        if (!disabled) {
+            setIsOpen(!isOpen);
+        }
     };
 
     // Close when clicking outside - Updated to handle Portal clicks
@@ -179,7 +192,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({ value, onChange, opt
 
     return (
         <SelectContainer ref={containerRef}>
-            <SelectTrigger $isOpen={isOpen} onClick={toggleOpen} style={triggerStyle}>
+            <SelectTrigger $isOpen={isOpen} $disabled={disabled} onClick={toggleOpen} style={triggerStyle}>
                 <span>{selectedOption ? selectedOption.label : placeholder}</span>
                 <FaChevronDown size={12} color="#94a3b8" style={{ transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }} />
             </SelectTrigger>

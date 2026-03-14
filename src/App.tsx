@@ -26,6 +26,7 @@ import Dispensary from './pages/Dispensary';
 import Settings from './pages/Settings';
 import Compras from './pages/Compras';
 import Insumos from './pages/Insumos';
+import { InsumoProviders } from './components/Providers/InsumoProviders'; // New Import
 import Expenses from './pages/Expenses';
 import Metrics from './pages/Metrics'; // New Import
 import Informes from './pages/Informes'; // Added Informes route
@@ -299,6 +300,18 @@ function App() {
                   <KYCGuard>
                     <MainContent>
                       <Insumos />
+                    </MainContent>
+                  </KYCGuard>
+                </RoleGuard>
+              </RequireAuth>
+            } />
+            
+            <Route path="/providers" element={
+              <RequireAuth>
+                <RoleGuard allowedRoles={['admin', 'grower', 'staff']}>
+                  <KYCGuard>
+                    <MainContent>
+                      <InsumoProviders />
                     </MainContent>
                   </KYCGuard>
                 </RoleGuard>

@@ -11,6 +11,7 @@ import { DndContext, useDraggable, useDroppable, DragEndEvent, useSensor, useSen
 import ToastModal from '../ToastModal';
 import { CustomSelect } from '../CustomSelect';
 import { useReactToPrint } from 'react-to-print';
+import { Insumo } from '../../types';
 
 // ... (Rest of imports and styled components unchanged) ...
 
@@ -28,7 +29,14 @@ interface TransplantModalProps {
     currentRoom: Room;
     rooms: Room[];
     cloneMaps: CloneMap[];
-    onConfirm: (destinationRoomId: string, selectedBatchIds: string[], groups?: { name: string, batchIds: string[] }[]) => Promise<void>;
+    insumos?: Insumo[];
+    onConfirm: (
+        destinationId: string, 
+        singles: string[], 
+        groupsPayload: { name: string, batchIds: string[] }[],
+        substrateId?: string,
+        estimatedVolume?: number
+    ) => Promise<void>;
     initialMapId?: string;
     initialSelectedBatchIds?: string[];
     isClosing?: boolean;
@@ -225,9 +233,11 @@ const DroppableContainer = ({ id, children, isOver }: { id: string, children: Re
 
 
 
-export const TransplantModal: React.FC<TransplantModalProps> = ({ isOpen, onClose, currentRoom, rooms, cloneMaps, onConfirm, initialMapId, initialSelectedBatchIds = [], isClosing }) => {
+export const TransplantModal: React.FC<TransplantModalProps> = ({ isOpen, onClose, currentRoom, rooms, cloneMaps, insumos = [], onConfirm, initialMapId, initialSelectedBatchIds = [], isClosing }) => {
     const [step, setStep] = useState(1); // 1: Selection, 2: Grouping
     const [destinationId, setDestinationId] = useState('');
+    const [substrateId, setSubstrateId] = useState('');
+    const [volumePerPlant, setVolumePerPlant] = useState<number>(5); // Default 5L per plant
     const [loading, setLoading] = useState(false);
     const [isTransitioning, setIsTransitioning] = useState(false);
 
@@ -389,7 +399,17 @@ export const TransplantModal: React.FC<TransplantModalProps> = ({ isOpen, onClos
         try {
             // Transform internal groups structure for parent
             const groupsPayload = groups.map(g => ({ name: g.name, batchIds: g.batchIds }));
-            await onConfirm(destinationId, singles, groupsPayload);
+            
+            const totalVolume = selectedBatchIds.size * volumePerPlant;
+            
+            await onConfirm(
+              destinationId, 
+              singles, 
+              groupsPayload, 
+              substrateId || undefined, 
+              substrateId ? totalVolume : undefined
+            );
+            
             onClose();
         } catch (error) {
             console.error(error);
@@ -627,11 +647,47 @@ export const TransplantModal: React.FC<TransplantModalProps> = ({ isOpen, onClos
                                             }))}
                                         />
                                     </Section>
+
+                                    <Section>
+                                        <Label>Sustrato (Opcional)</Label>
+                                        <div style={{ background: 'rgba(30, 41, 59, 0.4)', padding: '1rem', borderRadius: '0.5rem', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                                            <CustomSelect
+                                                value={substrateId}
+                                                onChange={setSubstrateId}
+                                                placeholder="-- Seleccionar Sustrato --"
+                                                options={insumos.map(i => ({
+                                                    value: i.id,
+                                                    label: `${i.nombre} (${i.current_volume !== undefined ? i.current_volume : i.stock_actual} ${i.unit_of_measurement || i.unidad_medida} disp.)`,
+                                                    group: i.categoria
+                                                }))}
+                                            />
+                                            {substrateId && (
+                                              <div style={{ marginTop: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                                  <label style={{ fontSize: '0.8rem', color: '#94a3b8' }}>Volumen por planta (L)</label>
+                                                  <input 
+                                                    type="number" 
+                                                    value={volumePerPlant}
+                                                    onChange={e => setVolumePerPlant(Number(e.target.value))}
+                                                    style={{ width: '60px', padding: '0.25rem', borderRadius: '0.25rem', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(15, 23, 42, 0.6)', color: 'white' }}
+                                                    min="0.1"
+                                                    step="0.1"
+                                                  />
+                                              </div>
+                                            )}
+                                        </div>
+                                    </Section>
+
                                     <Section>
                                         <Label>Resumen</Label>
                                         <div style={{ background: 'rgba(74, 222, 128, 0.1)', padding: '1rem', borderRadius: '0.5rem', border: '1px solid rgba(74, 222, 128, 0.2)', textAlign: 'center' }}>
                                             <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#4ade80' }}>{selectedBatchIds.size}</div>
                                             <div style={{ color: '#cbd5e1', fontSize: '0.9rem' }}>Plantas seleccionadas</div>
+                                            
+                                            {substrateId && selectedBatchIds.size > 0 && (
+                                                <div style={{ marginTop: '0.5rem', paddingTop: '0.5rem', borderTop: '1px solid rgba(74,222,128,0.2)', fontSize: '0.85rem', color: '#86efac' }}>
+                                                    Sustrato estimado: <strong>{(selectedBatchIds.size * volumePerPlant).toFixed(1)}L</strong>
+                                                </div>
+                                            )}
                                         </div>
                                     </Section>
                                 </ColumnLeft>

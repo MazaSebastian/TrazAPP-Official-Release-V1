@@ -5,7 +5,7 @@ VALUES (
     'demo',
     0.00,
     '["Gestión TrazAPP Completa", "Soporte Técnico Especializado", "1 Usuario Máximo", "Clínica + Cultivo"]'::jsonb,
-    '{"max_users": 1, "max_rooms": 1, "max_batches": 1000}'::jsonb,
+    '{"max_users": 1, "max_rooms": 1, "max_batches": 10}'::jsonb,
     true
 )
 ON CONFLICT (slug) DO UPDATE

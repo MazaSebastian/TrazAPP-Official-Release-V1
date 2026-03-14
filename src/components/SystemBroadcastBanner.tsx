@@ -64,29 +64,34 @@ export const SystemBroadcastBanner: React.FC = () => {
     const [announcement, setAnnouncement] = useState<Announcement | null>(null);
     const [isDismissed, setIsDismissed] = useState(false);
 
-    useEffect(() => {
-        const fetchActiveAnnouncement = async () => {
-            try {
-                const { data, error } = await supabase
-                    .from('system_announcements')
-                    .select('*')
-                    .eq('is_active', true)
-                    .order('created_at', { ascending: false })
-                    .limit(1)
-                    .single();
+    const fetchActiveAnnouncement = async () => {
+        try {
+            const { data, error } = await supabase
+                .from('system_announcements')
+                .select('*')
+                .eq('is_active', true)
+                .order('created_at', { ascending: false })
+                .limit(1)
+                .single();
 
-                if (data && !error) {
-                    // Check if this specific announcement ID was previously dismissed in this browser
-                    const dismissedIds = JSON.parse(localStorage.getItem('dismissed_announcements') || '[]');
-                    if (!dismissedIds.includes(data.id)) {
-                        setAnnouncement(data);
-                    }
+            if (data && !error) {
+                // Check if this specific announcement ID was previously dismissed in this browser
+                const dismissedIds = JSON.parse(localStorage.getItem('dismissed_announcements') || '[]');
+                if (!dismissedIds.includes(data.id)) {
+                    setAnnouncement(data);
+                    setIsDismissed(false); // Reset dismiss state if a new one arrives
+                } else {
+                     setAnnouncement(null); // It was dismissed
                 }
-            } catch (e) {
-                console.error("Failed to fetch system broadcasts", e);
+            } else {
+                setAnnouncement(null); // No active announcements
             }
-        };
+        } catch (e) {
+            console.error("Failed to fetch system broadcasts", e);
+        }
+    };
 
+    useEffect(() => {
         fetchActiveAnnouncement();
 
         // Set up realtime listener for announcements table to push live to currently active users!
@@ -94,7 +99,7 @@ export const SystemBroadcastBanner: React.FC = () => {
             .on(
                 'postgres_changes',
                 { event: '*', schema: 'public', table: 'system_announcements' },
-                (payload) => {
+                () => {
                     fetchActiveAnnouncement(); // Re-fetch logic to check active status
                 }
             )

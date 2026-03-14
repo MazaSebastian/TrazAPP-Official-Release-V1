@@ -25,6 +25,9 @@ import {
   uploadTicket,
   getInsumoCategories
 } from '../services/insumosService';
+import { getInsumoProviders, InsumoProvider } from '../services/insumoProvidersService';
+import { InsumoProvidersTab } from '../components/Insumos/InsumoProvidersTab';
+import { InsumoOrdersTab } from '../components/Insumos/InsumoOrdersTab';
 import { useAuth } from '../context/AuthContext';
 import { usersService } from '../services/usersService';
 import { expensesService, CashMovement, getAreaFromRole } from '../services/expensesService';
@@ -204,7 +207,33 @@ const SearchInput = styled.input`
   }
 `;
 
+const TabsContainer = styled.div`
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+  &::-webkit-scrollbar { height: 4px; }
+  &::-webkit-scrollbar-thumb { background: rgba(168, 85, 247, 0.5); border-radius: 4px; }
+`;
 
+const TabButton = styled.button<{ $isActive: boolean }>`
+  background: ${props => props.$isActive ? 'rgba(168, 85, 247, 0.2)' : 'rgba(30, 41, 59, 0.6)'};
+  color: ${props => props.$isActive ? '#d8b4fe' : '#94a3b8'};
+  border: 1px solid ${props => props.$isActive ? 'rgba(168, 85, 247, 0.5)' : 'rgba(255, 255, 255, 0.1)'};
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+  backdrop-filter: blur(8px);
+
+  &:hover {
+    background: ${props => props.$isActive ? 'rgba(168, 85, 247, 0.3)' : 'rgba(255, 255, 255, 0.1)'};
+    color: ${props => props.$isActive ? '#d8b4fe' : '#f8fafc'};
+  }
+`;
 
 const TableContainer = styled.div`
   width: 100%;
@@ -298,6 +327,30 @@ const PriceChange = styled.span<{ isPositive: boolean }>`
   display: flex;
   align-items: center;
   gap: 0.25rem;
+`;
+
+const ProgressBarContainer = styled.div`
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-top: 0.5rem;
+`;
+
+const ProgressBarFill = styled.div<{ $percentage: number; $isLow: boolean }>`
+  height: 100%;
+  width: ${p => p.$percentage}%;
+  background: ${p => p.$isLow ? '#ef4444' : '#4ade80'};
+  transition: width 0.3s ease, background-color 0.3s ease;
+`;
+
+const ProgressLabel = styled.div`
+  font-size: 0.7rem;
+  color: #94a3b8;
+  margin-top: 0.25rem;
+  display: flex;
+  justify-content: space-between;
 `;
 
 const Modal = styled.div<{ isOpen: boolean; $isClosing?: boolean }>`
@@ -402,6 +455,8 @@ const Insumos: React.FC = () => {
   const [insumos, setInsumos] = useState<Insumo[]>([]);
   const [filteredInsumos, setFilteredInsumos] = useState<Insumo[]>([]);
   const [categories, setCategories] = useState<InsumoCategory[]>([]);
+  const [providers, setProviders] = useState<InsumoProvider[]>([]); // New State
+  const [activeTab, setActiveTab] = useState<'inventory' | 'providers' | 'orders'>('inventory');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -413,9 +468,15 @@ const Insumos: React.FC = () => {
     categoria: '',
     unidad_medida: '',
     precio_actual: '',
-    proveedor: '',
+    proveedor: '', // Legacy text, mapped to provider_id in DB if we want, or keep logic. We will use provider_id.
+    provider_id: '',
     stock_actual: '',
     stock_minimo: '',
+    current_volume: '',
+    total_volume: '',
+    unit_of_measurement: 'ml', // default
+    reorder_threshold: '',
+    auto_restock_enabled: false,
     notas: ''
   });
   const [ticketFile, setTicketFile] = useState<File | null>(null);
@@ -437,12 +498,14 @@ const Insumos: React.FC = () => {
 
   const loadInsumos = async () => {
     try {
-      const [data, cats] = await Promise.all([
+      const [data, cats, provs] = await Promise.all([
         getInsumos(),
-        getInsumoCategories()
+        getInsumoCategories(),
+        getInsumoProviders()
       ]);
       setInsumos(data);
       setCategories(cats);
+      setProviders(provs);
     } catch (error) {
       console.error('Error al cargar datos:', error);
     }
@@ -493,6 +556,29 @@ const Insumos: React.FC = () => {
     loadStats();
   }, []);
 
+  // Recargar proveedores al volver a la pestaña de inventario
+  useEffect(() => {
+    if (activeTab === 'inventory') {
+      getInsumoProviders()
+        .then(data => setProviders(data))
+        .catch(err => console.error("Error recargando proveedores:", err));
+    }
+  }, [activeTab]);
+
+  // Auto-calcular el volumen total disponible al crear un nuevo insumo
+  useEffect(() => {
+    if (!editingInsumo && formData.total_volume && formData.stock_actual) {
+      const vol = parseFloat(formData.total_volume);
+      const stock = parseFloat(formData.stock_actual);
+      if (!isNaN(vol) && !isNaN(stock)) {
+        setFormData(prev => ({
+          ...prev,
+          current_volume: (vol * stock).toString()
+        }));
+      }
+    }
+  }, [formData.total_volume, formData.stock_actual, editingInsumo]);
+
   const closeModal = () => {
     setIsClosingModal(true);
     setTimeout(() => {
@@ -510,8 +596,14 @@ const Insumos: React.FC = () => {
         unidad_medida: insumo.unidad_medida,
         precio_actual: insumo.precio_actual.toString(),
         proveedor: insumo.proveedor || '',
+        provider_id: insumo.provider_id || '',
         stock_actual: insumo.stock_actual.toString(),
         stock_minimo: insumo.stock_minimo.toString(),
+        current_volume: insumo.current_volume?.toString() || '',
+        total_volume: insumo.total_volume?.toString() || '',
+        unit_of_measurement: insumo.unit_of_measurement || 'ml',
+        reorder_threshold: insumo.reorder_threshold?.toString() || '',
+        auto_restock_enabled: !!insumo.auto_restock_enabled,
         notas: insumo.notas || ''
       });
     } else {
@@ -519,11 +611,17 @@ const Insumos: React.FC = () => {
       setFormData({
         nombre: '',
         categoria: categories.length > 0 ? categories[0].name : '',
-        unidad_medida: '',
+        unidad_medida: 'unidades', // Default for physical discrete tracking
         precio_actual: '',
         proveedor: '',
-        stock_actual: '',
+        provider_id: '',
+        stock_actual: '1', // Default to 1 unit
         stock_minimo: '',
+        current_volume: '',
+        total_volume: '',
+        unit_of_measurement: 'ml',
+        reorder_threshold: '',
+        auto_restock_enabled: false,
         notas: ''
       });
     }
@@ -537,15 +635,25 @@ const Insumos: React.FC = () => {
 
     setIsSubmitting(true);
     try {
+      const isVolumetric = formData.current_volume && formData.total_volume;
+    
       const newInsumo: Omit<Insumo, 'id' | 'created_at' | 'updated_at'> = {
         nombre: formData.nombre,
         categoria: formData.categoria,
-        unidad_medida: formData.unidad_medida,
+        unidad_medida: formData.unidad_medida, // physical units (e.g. 5 bottles)
         precio_actual: parseFloat(formData.precio_actual),
-        proveedor: formData.proveedor || undefined,
+        proveedor: providers.find(p => p.id === formData.provider_id)?.name || undefined,
+        provider_id: formData.provider_id || undefined,
         fecha_ultimo_precio: new Date().toISOString().split('T')[0],
         stock_actual: parseFloat(formData.stock_actual),
         stock_minimo: parseFloat(formData.stock_minimo),
+        // AI Volumetrics
+        current_volume: isVolumetric ? parseFloat(formData.current_volume) : undefined,
+        total_volume: isVolumetric ? parseFloat(formData.total_volume) : undefined,
+        unit_of_measurement: isVolumetric ? formData.unit_of_measurement : undefined,
+        reorder_threshold: formData.reorder_threshold ? parseFloat(formData.reorder_threshold) : undefined,
+        auto_restock_enabled: formData.auto_restock_enabled,
+        
         notas: formData.notas || undefined,
         activo: true
       };
@@ -692,12 +800,31 @@ const Insumos: React.FC = () => {
       <div style={{ filter: planLevel < 2 ? 'blur(4px)' : 'none', pointerEvents: planLevel < 2 ? 'none' : 'auto', userSelect: planLevel < 2 ? 'none' : 'auto', opacity: planLevel < 2 ? 0.5 : 1 }}>
         <Header>
           <h1>Gestión de Insumos</h1>
-          <Button className="tour-add-product" onClick={() => handleOpenModal()}>
-            <FaPlus /> Nuevo Insumo
-          </Button>
         </Header>
 
-        <StatsGrid>
+        <TabsContainer>
+          <TabButton $isActive={activeTab === 'inventory'} onClick={() => setActiveTab('inventory')}>
+            <FaBoxes style={{ marginRight: '0.5rem' }} /> Inventario
+          </TabButton>
+          <TabButton $isActive={activeTab === 'providers'} onClick={() => setActiveTab('providers')}>
+            Proveedores
+          </TabButton>
+          <TabButton $isActive={activeTab === 'orders'} onClick={() => setActiveTab('orders')}>
+            Órdenes Automáticas (Growy AI)
+          </TabButton>
+        </TabsContainer>
+
+        {activeTab === 'providers' && <InsumoProvidersTab />}
+        {activeTab === 'orders' && <InsumoOrdersTab />}
+
+        {activeTab === 'inventory' && (
+          <>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1.5rem' }}>
+              <Button className="tour-add-product" onClick={() => handleOpenModal()}>
+                <FaPlus /> Nuevo Insumo
+              </Button>
+            </div>
+            <StatsGrid>
           <StatCard>
             <div className="stat-value">{stats.totalInsumos}</div>
             <div className="stat-label">Total Insumos</div>
@@ -788,11 +915,27 @@ const Insumos: React.FC = () => {
                   </div>
                   <div>
                     <div style={{ fontWeight: 600 }}>
-                      {insumo.stock_actual} {insumo.unidad_medida}
+                      {insumo.stock_actual} {insumo.unidad_medida} (Físico)
                     </div>
                     {isStockLow && (
                       <div style={{ fontSize: '0.75rem', color: '#ef4444' }}>
-                        Stock bajo
+                        Alerta Físico Bajo
+                      </div>
+                    )}
+                    
+                    {/* Volumetric AI Bar */}
+                    {insumo.total_volume && insumo.current_volume !== undefined && (
+                      <div style={{ marginTop: '0.5rem' }}>
+                         <ProgressBarContainer title={`Threshold: ${insumo.reorder_threshold || 0} ${insumo.unit_of_measurement}`}>
+                            <ProgressBarFill 
+                              $percentage={Math.min(100, Math.max(0, (insumo.current_volume / insumo.total_volume) * 100))} 
+                              $isLow={insumo.reorder_threshold !== undefined && insumo.current_volume <= insumo.reorder_threshold}
+                            />
+                         </ProgressBarContainer>
+                         <ProgressLabel>
+                            <span>{insumo.current_volume}/{insumo.total_volume} {insumo.unit_of_measurement}</span>
+                            {insumo.auto_restock_enabled && <span style={{ color: '#a855f7' }}>🤖 Auto</span>}
+                         </ProgressLabel>
                       </div>
                     )}
                   </div>
@@ -853,6 +996,8 @@ const Insumos: React.FC = () => {
             <p>Comienza agregando tu primer insumo para monitorear precios y stock</p>
           </div>
         )}
+        </>
+        )}
 
         <Modal isOpen={isModalOpen || isClosingModal} $isClosing={isClosingModal} onMouseDown={closeModal}>
           <ModalContent $isClosing={isClosingModal} onMouseDown={(e) => e.stopPropagation()}>
@@ -894,13 +1039,13 @@ const Insumos: React.FC = () => {
 
               <FormRow>
                 <FormGroup>
-                  <label>Unidad de Medida *</label>
+                  <label>Presentación (Ej: bolsas, pallets, unidades) *</label>
                   <input
                     type="text"
                     value={formData.unidad_medida}
                     onChange={(e) => setFormData(prev => ({ ...prev, unidad_medida: e.target.value }))}
                     required
-                    placeholder="Ej: kg, litros, unidades"
+                    placeholder="Ej: bolsas, litros, botellas"
                   />
                 </FormGroup>
                 <FormGroup>
@@ -919,7 +1064,7 @@ const Insumos: React.FC = () => {
 
               <FormRow>
                 <FormGroup>
-                  <label>Stock Actual *</label>
+                  <label>Cantidad de Envases (Bolsas/Botellas) *</label>
                   <input
                     type="number"
                     step="0.01"
@@ -927,11 +1072,12 @@ const Insumos: React.FC = () => {
                     value={formData.stock_actual}
                     onChange={(e) => setFormData(prev => ({ ...prev, stock_actual: e.target.value }))}
                     required
-                    placeholder="0.00"
+                    placeholder="Cantidad de envases/paquetes (ej: 1, 5)"
+                    title="Cantidad de unidades físicas (botellas, sacos) en inventario"
                   />
                 </FormGroup>
                 <FormGroup>
-                  <label>Stock Mínimo *</label>
+                  <label>(Opcional) Alerta Stock Mínimo (Envases) *</label>
                   <input
                     type="number"
                     step="0.01"
@@ -939,20 +1085,107 @@ const Insumos: React.FC = () => {
                     value={formData.stock_minimo}
                     onChange={(e) => setFormData(prev => ({ ...prev, stock_minimo: e.target.value }))}
                     required
-                    placeholder="0.00"
+                    placeholder="Cuándo alertar visualmente (ej: 1)"
+                    title="Alerta básica visual de stock en unidades físicas"
                   />
                 </FormGroup>
               </FormRow>
 
-              <FormGroup>
-                <label>Proveedor</label>
-                <input
-                  type="text"
-                  value={formData.proveedor}
-                  onChange={(e) => setFormData(prev => ({ ...prev, proveedor: e.target.value }))}
-                  placeholder="Nombre del proveedor"
-                />
-              </FormGroup>
+              <div style={{ padding: '1.5rem', background: 'rgba(168, 85, 247, 0.05)', borderRadius: '0.75rem', border: '1px solid rgba(168, 85, 247, 0.2)' }}>
+                <h4 style={{ color: '#d8b4fe', margin: '0 0 1rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <span role="img" aria-label="robot">🤖</span> Growy AI: Control Volumétrico (Opcional)
+                </h4>
+                <p style={{ fontSize: '0.85rem', color: '#cbd5e1', marginBottom: '1.5rem', lineHeight: '1.4' }}>
+                  Si configuras el líquido o peso que contiene el envase, Growy podrá descontarlo milimétricamente tras cada riego o aplicación.
+                </p>
+
+                <FormRow>
+                   <FormGroup>
+                      <label>Capacidad por Envase o Paquete</label>
+                      <input
+                        type="number"
+                        step="0.1"
+                        min="0"
+                        value={formData.total_volume}
+                        onChange={(e) => setFormData(prev => ({ ...prev, total_volume: e.target.value }))}
+                        placeholder="Ej: 5 (para botella de 5L) o 60 (para bolsa)"
+                      />
+                    </FormGroup>
+                    <FormGroup>
+                      <label>Volumen Total en Inventario</label>
+                      <input
+                        type="number"
+                        step="0.1"
+                        min="0"
+                        value={formData.current_volume}
+                        onChange={(e) => setFormData(prev => ({ ...prev, current_volume: e.target.value }))}
+                        placeholder="Volumen total (Auto-calculado si es nuevo)"
+                        title="Puedes ajustar este valor si uno de los envases está a medias."
+                      />
+                    </FormGroup>
+                     <FormGroup>
+                      <label>Unidad de Contenido</label>
+                      <div style={{ position: 'relative', zIndex: 999 }}>
+                        <CustomSelect
+                          value={formData.unit_of_measurement}
+                          onChange={(val: string) => setFormData(prev => ({ ...prev, unit_of_measurement: val }))}
+                          options={[
+                            { value: 'ml', label: 'Mililitros (ml)' },
+                            { value: 'L', label: 'Litros (L)' },
+                            { value: 'g', label: 'Gramos (g)' },
+                            { value: 'kg', label: 'Kilogramos (kg)' }
+                          ]}
+                        />
+                      </div>
+                    </FormGroup>
+                </FormRow>
+
+                <div style={{ marginTop: '1.5rem', borderTop: '1px dashed rgba(255,255,255,0.1)', paddingTop: '1.5rem' }}>
+                    <FormRow style={{ alignItems: 'flex-end' }}>
+                         <FormGroup>
+                          <label>Alerta IA (Límite Volumétrico Mínimo)</label>
+                          <input
+                            type="number"
+                            step="0.1"
+                            min="0"
+                            value={formData.reorder_threshold}
+                            onChange={(e) => setFormData(prev => ({ ...prev, reorder_threshold: e.target.value }))}
+                            placeholder={`Alertar a la IA al llegar a X ${formData.unit_of_measurement} en total`}
+                            disabled={!formData.total_volume}
+                            title="Límite en volumen total (Ej: 20L). Growy comprará cuando el volumen total caiga por debajo de esto."
+                          />
+                        </FormGroup>
+                        <FormGroup>
+                          <label>Proveedor Growy</label>
+                           <div style={{ position: 'relative', zIndex: 998 }}>
+                              <CustomSelect
+                                value={formData.provider_id}
+                                onChange={(val: string) => setFormData(prev => ({ ...prev, provider_id: val }))}
+                                options={[
+                                  { value: '', label: 'Seleccionar proveedor (Opcional)' },
+                                  ...providers.map(p => ({ value: p.id, label: p.name }))
+                                ]}
+                                disabled={!formData.total_volume}
+                              />
+                            </div>
+                        </FormGroup>
+                    </FormRow>
+
+                    <FormGroup style={{ marginTop: '1.5rem', flexDirection: 'row', alignItems: 'center', gap: '0.75rem' }}>
+                      <input
+                        type="checkbox"
+                        id="autoRestock"
+                        checked={formData.auto_restock_enabled}
+                        onChange={(e) => setFormData(prev => ({ ...prev, auto_restock_enabled: e.target.checked }))}
+                        disabled={!formData.provider_id || !formData.reorder_threshold}
+                        style={{ width: '1.2rem', height: '1.2rem', cursor: 'pointer' }}
+                      />
+                      <label htmlFor="autoRestock" style={{ cursor: 'pointer', margin: 0, color: formData.provider_id ? '#f8fafc' : '#64748b' }}>
+                        Permitir que Growy envíe un WhatsApp automatizado para recomprar al proveedor.
+                      </label>
+                    </FormGroup>
+                </div>
+              </div>
 
               <FormGroup>
                 <label>Notas</label>

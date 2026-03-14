@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { supabase } from '../services/supabaseClient';
+import { supabase, getSelectedOrgId } from '../services/supabaseClient';
 import { createPortal } from 'react-dom';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import Swal from 'sweetalert2';
@@ -57,8 +57,9 @@ import { roomsService } from '../services/roomsService';
 import { tasksService } from '../services/tasksService';
 import { stickiesService } from '../services/stickiesService';
 import { usersService } from '../services/usersService';
+import { getInsumos } from '../services/insumosService';
 import { Room } from '../types/rooms';
-import { Task, StickyNote, RecurrenceConfig, TaskType } from '../types';
+import { Task, StickyNote, RecurrenceConfig, TaskType, Insumo } from '../types';
 import { PrintableRoomCalendar } from '../components/Esquejera/PrintableRoomCalendar';
 
 
@@ -1600,6 +1601,7 @@ const RoomDetail: React.FC = () => {
 
     const [room, setRoom] = useState<Room | null>(null);
     const [loading, setLoading] = useState(true);
+    const [insumos, setInsumos] = useState<Insumo[]>([]);
 
     const [isMetricsModalOpen, setIsMetricsModalOpen] = useState(false);
     const [metricsData, setMetricsData] = useState<any[]>([]);
@@ -1864,7 +1866,7 @@ const RoomDetail: React.FC = () => {
     };
     const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
     const [selectedTask, setSelectedTask] = useState<Task | null>(null);
-    const [taskForm, setTaskForm] = useState({ title: '', type: 'info', due_date: '', description: '', assigned_to: '', crop_id: '' as string | null });
+    const [taskForm, setTaskForm] = useState({ title: '', type: 'info', due_date: '', description: '', assigned_to: '', crop_id: '' as string | null, insumo_id: '', estimated_volume: '' });
     const [taskTypes, setTaskTypes] = useState<TaskType[]>([]);
 
     // Real Users State
@@ -2381,7 +2383,13 @@ const RoomDetail: React.FC = () => {
         }
     };
 
-    const handleTransplant = async (destinationRoomId: string, singles: string[], groups?: { name: string, batchIds: string[] }[]) => {
+    const handleTransplant = async (
+        destinationRoomId: string, 
+        singles: string[], 
+        groupsPayload: { name: string, batchIds: string[] }[],
+        substrateId?: string,
+        estimatedVolume?: number
+    ) => {
         if (!room) return;
 
         try {
@@ -2402,10 +2410,10 @@ const RoomDetail: React.FC = () => {
             }
 
             // 2. Process Groups (Merge Logic)
-            if (groups && groups.length > 0) {
+            if (groupsPayload && groupsPayload.length > 0) {
                 const groupPromises: Promise<void>[] = [];
 
-                for (const group of groups) {
+                for (const group of groupsPayload) {
                     if (group.batchIds.length === 0) continue;
 
                     // USER REQUIREMENT: Tracking IDs must NEVER change.
@@ -2445,6 +2453,26 @@ const RoomDetail: React.FC = () => {
                 }
                 // Execute all group batch operations in parallel
                 await Promise.all(groupPromises);
+            }
+
+            // 3. Substrate Deduction (If provided)
+            if (substrateId && estimatedVolume && estimatedVolume > 0) {
+                // Determine source or target room ID for logging purposes (usually destination room context makes more sense for tracking, but could be source room).
+                // Assuming `user?.id` is available and has organization context via JWT.
+                const { error: stockError } = await supabase.rpc('execute_transplant_with_stock', {
+                    _substrate_id: substrateId,
+                    _estimated_volume: estimatedVolume,
+                    _performed_by: user?.id,
+                    _room_id: destinationRoomId,
+                    _organization_id: getSelectedOrgId()
+                });
+
+                if (stockError) {
+                    console.error("Error deducting substrate stock during transplant:", stockError);
+                    showToast(`Transplante completado, pero ocurrió un error al descontar el sustrato: ${stockError.message}`, 'error');
+                } else {
+                    console.log(`Successfully deducted ${estimatedVolume}L of substrate ${substrateId}`);
+                }
             }
 
             // Refresh
@@ -2613,6 +2641,14 @@ const RoomDetail: React.FC = () => {
             setCloneMaps(mapsData);
             setMetricsData(metricsResult);
             setTaskTypes(taskTypesData);
+
+            // Fetch insumos for substrate selection
+            try {
+                const fetchedInsumos = await getInsumos();
+                setInsumos(fetchedInsumos);
+            } catch (insumoError) {
+                console.error("Error loading insumos:", insumoError);
+            }
 
             // Conditional genetics set-reusing the fetched data if needed
             if (['clones', 'esquejes', 'esquejera', 'germinacion', 'germinación', 'germination', 'semillero', 'living_soil'].includes((roomData?.type as string)?.toLowerCase())) {
@@ -3900,7 +3936,7 @@ const RoomDetail: React.FC = () => {
     const handleAddTask = (day: Date) => {
         // Allow admin or partner (owner) to add tasks
         if (user && (user.role === 'admin' || user.role === 'partner')) {
-            setTaskForm({ title: '', type: 'info', due_date: format(day, 'yyyy-MM-dd'), description: '', assigned_to: '', crop_id: null });
+            setTaskForm({ title: '', type: 'info', due_date: format(day, 'yyyy-MM-dd'), description: '', assigned_to: '', crop_id: null, insumo_id: '', estimated_volume: '' });
             setSelectedTask(null);
             setRecurrenceEnabled(false);
             setRecurrenceConfig({ type: 'weekly', interval: 1, unit: 'week', daysOfWeek: [] });
@@ -3922,7 +3958,10 @@ const RoomDetail: React.FC = () => {
             due_date: task.due_date ? task.due_date.split('T')[0] : '',
             description: task.description || '',
             assigned_to: task.assigned_to || '',
-            crop_id: task.crop_id || null
+            crop_id: task.crop_id || null,
+            // Assuming task type might have insumo_id in the future or we fetch it
+            insumo_id: '',
+            estimated_volume: ''
         });
         if (task.recurrence) {
             setRecurrenceEnabled(true);
@@ -3946,7 +3985,9 @@ const RoomDetail: React.FC = () => {
                 room_id: room.id,
                 assigned_to: taskForm.assigned_to || null,
                 crop_id: taskForm.crop_id || null,
-                recurrence: recurrenceEnabled ? recurrenceConfig : undefined
+                recurrence: recurrenceEnabled ? recurrenceConfig : undefined,
+                insumo_id: taskForm.insumo_id ? taskForm.insumo_id : undefined,
+                estimated_volume: taskForm.estimated_volume ? parseFloat(taskForm.estimated_volume) : undefined
             };
 
             if (selectedTask) {
@@ -3954,6 +3995,9 @@ const RoomDetail: React.FC = () => {
                 await tasksService.updateTask(selectedTask.id, taskData);
             } else {
                 // Create
+                // If it has stock deduction, we might need a specific RPC depending on how the backend handles it.
+                // Assuming `createTask` or a trigger handles it, or we need a new service method.
+                // For now, passing it in the payload.
                 await tasksService.createTask(taskData);
             }
 
@@ -4073,6 +4117,24 @@ const RoomDetail: React.FC = () => {
 
         try {
             await tasksService.updateTask(task.id, { status: newStatus } as any);
+            
+            // Stock Deduction on Task Completion
+            if (newStatus === 'done' && task.insumo_id && task.estimated_volume && task.estimated_volume > 0) {
+                const { error: stockError } = await supabase.rpc('execute_task_with_stock', {
+                    _task_id: task.id,
+                    _insumo_id: task.insumo_id,
+                    _estimated_volume: task.estimated_volume,
+                    _performed_by: user?.id,
+                    _room_id: room?.id
+                });
+                
+                if (stockError) {
+                    console.error("Error deducting stock for task:", stockError);
+                    setToastState({ isOpen: true, message: `Tarea completada, pero fallo al descontar insumo: ${stockError.message}`, type: 'error' });
+                } else {
+                     setToastState({ isOpen: true, message: `Tarea completada y stock descontado`, type: 'success' });
+                }
+            }
             // No need to re-fetch if successful, state is already correct
         } catch (error) {
             console.error("Error updating task status:", error);
@@ -5815,6 +5877,39 @@ const RoomDetail: React.FC = () => {
                                                             placeholder="Seleccionar Mapa..."
                                                         />
                                                     </FormGroup>
+                                                </div>
+                                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem' }}>
+                                                    <FormGroup style={{ flex: '1 1 150px' }}>
+                                                        <label style={{ color: '#94a3b8', fontWeight: 600, fontSize: '0.9rem', marginBottom: '0.5rem', display: 'block' }}>Asignar Insumo (Opcional)</label>
+                                                        <CustomSelect
+                                                            value={taskForm.insumo_id || ""}
+                                                            onChange={(value) => setTaskForm({ ...taskForm, insumo_id: value })}
+                                                            options={[
+                                                                { value: "", label: "-- Sin Insumo --" },
+                                                                ...insumos.map((i: Insumo) => ({ value: i.id, label: i.nombre }))
+                                                            ]}
+                                                            placeholder="Seleccionar Insumo..."
+                                                        />
+                                                    </FormGroup>
+                                                    <FormGroup style={{ flex: '1 1 150px' }}>
+                                                        <label style={{ color: '#94a3b8', fontWeight: 600, fontSize: '0.9rem', marginBottom: '0.5rem', display: 'block' }}>Volumen Estimado</label>
+                                                        <input
+                                                            type="number"
+                                                            step="0.01"
+                                                            value={taskForm.estimated_volume || ""}
+                                                            onChange={(e) => setTaskForm({ ...taskForm, estimated_volume: e.target.value })}
+                                                            placeholder={`Ej: 1.5 (${insumos.find((i: Insumo) => i.id === taskForm.insumo_id)?.unit_of_measurement || 'ml'})`}
+                                                            disabled={!taskForm.insumo_id}
+                                                            style={{
+                                                                padding: '0.75rem',
+                                                                borderRadius: '0.5rem',
+                                                                border: '1px solid rgba(255, 255, 255, 0.1)',
+                                                                background: 'rgba(15, 23, 42, 0.6)',
+                                                                color: '#f8fafc',
+                                                                width: '100%'
+                                                            }}
+                                                        />
+                                                    </FormGroup>
                                                     <FormGroup style={{ flex: '1 1 150px' }}>
                                                         <label style={{ color: '#94a3b8', fontWeight: 600, fontSize: '0.9rem', marginBottom: '0.5rem', display: 'block' }}>Asignar a Usuario</label>
                                                         <CustomSelect
@@ -6543,6 +6638,7 @@ const RoomDetail: React.FC = () => {
                             onClose={closeTransplantModal}
                             currentRoom={room}
                             rooms={allRooms}
+                            insumos={insumos}
                             cloneMaps={room.clone_maps || []}
                             onConfirm={handleTransplant}
                             initialMapId={activeMapId || undefined}
