@@ -18,3 +18,33 @@ export interface Genetic {
     photo_url?: string | null; // Product/Mother photo
     created_at: string;
 }
+
+export interface PhenotypeTrait {
+    category: string; // e.g. 'growth', 'yield', 'terpene'
+    description: string;
+}
+
+export interface Phenotype {
+    id: string;
+    hunt_id: string;
+    pheno_number: number;
+    status: 'evaluating' | 'discarded' | 'keeper';
+    sex?: 'male' | 'female' | 'hermin' | null;
+    traits: PhenotypeTrait[];
+    photos: string[];
+    promoted_genetic_id?: string | null;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface PhenoHunt {
+    id: string;
+    lineage_node_id: string; // Refers to the React Flow crossNode ID
+    batch_size: number;
+    start_date: string;
+    status: 'active' | 'completed' | 'abandoned';
+    notes?: string | null;
+    created_at: string;
+    updated_at: string;
+    phenotypes?: Phenotype[]; // Populated relation
+}

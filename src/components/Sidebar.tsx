@@ -24,7 +24,8 @@ import {
   FaUserCircle,
   FaClipboardList,
   FaFileAlt, // Added for Informes
-  FaExclamationTriangle
+  FaExclamationTriangle,
+  FaProjectDiagram
 } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 import { useOrganization } from '../context/OrganizationContext';
@@ -328,8 +329,12 @@ const Sidebar: React.FC = () => {
                   <StyledNavLink to="/devices">
                     <FaPlug /> Dispositivos
                   </StyledNavLink>
-                  <StyledNavLink to="/genetics" style={{ opacity: planLevel >= 2 ? 1 : 0.6 }}>
+                  <StyledNavLink to="/genetics" end style={{ opacity: planLevel >= 2 ? 1 : 0.6 }}>
                     <FaDna /> Madres
+                    {planLevel < 2 && <FaLock className="lock-icon" title="Requiere Plan Equipo" />}
+                  </StyledNavLink>
+                  <StyledNavLink to="/genetics/rd" style={{ opacity: planLevel >= 2 ? 1 : 0.6 }}>
+                    <FaProjectDiagram /> R&D Cruces
                     {planLevel < 2 && <FaLock className="lock-icon" title="Requiere Plan Equipo" />}
                   </StyledNavLink>
 

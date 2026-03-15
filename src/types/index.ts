@@ -28,6 +28,11 @@ export interface AuthContextType {
   setTourStepIndex: (index: number) => void;
   kycStatus?: 'pending' | 'blocked' | 'completed';
   daysFromRegistration?: number;
+  
+  // Session Timeout
+  isIdleWarningOpen: boolean;
+  idleCountdown: number;
+  continueSession: () => void;
 }
 
 // ==========================

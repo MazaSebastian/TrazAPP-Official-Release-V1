@@ -12,6 +12,7 @@ import Rooms from './pages/Rooms';
 import RoomDetail from './pages/RoomDetail';
 import Genetics from './pages/Genetics';
 import { GeneticDetail } from './pages/GeneticDetail';
+import GeneticsRD from './pages/GeneticsRD';
 import Clones from './pages/Clones';
 import { BatchDetail } from './pages/BatchDetail';
 import Devices from './pages/Devices';
@@ -84,6 +85,59 @@ const RequireAuth: React.FC<{ children: React.ReactElement }> = ({ children }) =
   );
 };
 
+const SessionTimeoutWarning = () => {
+  const { isIdleWarningOpen, idleCountdown, continueSession } = useAuth();
+  
+  if (!isIdleWarningOpen) return null;
+
+  return (
+    <div style={{
+      position: 'fixed',
+      top: 0, left: 0, right: 0, bottom: 0,
+      backgroundColor: 'rgba(0,0,0,0.7)',
+      backdropFilter: 'blur(8px)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 99999,
+    }}>
+      <div style={{
+        background: 'rgba(30, 41, 59, 0.95)',
+        border: '1px solid rgba(255,255,255,0.1)',
+        borderRadius: '16px',
+        padding: '2rem',
+        maxWidth: '400px',
+        width: '90%',
+        textAlign: 'center',
+        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
+      }}>
+        <h2 style={{ color: '#ef4444', marginTop: 0, marginBottom: '1rem' }}>Sesión Inactiva</h2>
+        <p style={{ color: '#e2e8f0', marginBottom: '1.5rem', lineHeight: 1.5 }}>
+          Hemos detectado que llevas mucho tiempo sin actividad en tu sesión. Se cerrará tu sesión en <strong style={{color: '#ef4444', fontSize: '1.2rem'}}>{idleCountdown}</strong> segundos para preservar tu información.
+        </p>
+        <button 
+          onClick={continueSession}
+          style={{
+            background: '#10b981',
+            color: 'white',
+            border: 'none',
+            padding: '0.75rem 1.5rem',
+            borderRadius: '8px',
+            fontWeight: 'bold',
+            cursor: 'pointer',
+            width: '100%',
+            transition: 'background 0.2s'
+          }}
+          onMouseOver={(e) => e.currentTarget.style.background = '#059669'}
+          onMouseOut={(e) => e.currentTarget.style.background = '#10b981'}
+        >
+          Mantener sesión iniciada
+        </button>
+      </div>
+    </div>
+  );
+};
+
 function App() {
   const location = useLocation();
   const isLogin = location.pathname === '/login';
@@ -115,6 +169,9 @@ function App() {
           {!isPublicRoute && <GrowyOrb />}
 
           <SystemBroadcastBanner />
+
+          {/* Session Timeout Warning Modal */}
+          <SessionTimeoutWarning />
 
           <Routes>
             <Route path="/login" element={<Login />} />
@@ -220,6 +277,17 @@ function App() {
                   <KYCGuard>
                     <MainContent>
                       <Genetics />
+                    </MainContent>
+                  </KYCGuard>
+                </RoleGuard>
+              </RequireAuth>
+            } />
+            <Route path="/genetics/rd" element={
+              <RequireAuth>
+                <RoleGuard allowedRoles={['grower', 'staff']}>
+                  <KYCGuard>
+                    <MainContent>
+                      <GeneticsRD />
                     </MainContent>
                   </KYCGuard>
                 </RoleGuard>

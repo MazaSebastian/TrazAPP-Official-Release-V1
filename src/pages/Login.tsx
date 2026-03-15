@@ -258,11 +258,20 @@ const Login: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showTimeoutModal, setShowTimeoutModal] = useState(false);
 
   const { login, user } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
+    // Check for session timeout flag
+    const timeoutFlag = localStorage.getItem('session_timeout_flag');
+    if (timeoutFlag === 'true') {
+      setShowTimeoutModal(true);
+      // Clean up flag immediately so it doesn't show again on next manual logout
+      localStorage.removeItem('session_timeout_flag');
+    }
+
     if (user) {
       navigate('/', { replace: true });
     }
@@ -377,6 +386,57 @@ const Login: React.FC = () => {
 
         </StarBorder>
       </LoginCardWrapper>
+
+      {/* Session Expired Modal */}
+      {showTimeoutModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: 'rgba(0,0,0,0.8)',
+          backdropFilter: 'blur(8px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 99999,
+        }}>
+          <div style={{
+            background: 'rgba(30, 41, 59, 1)',
+            border: '1px solid rgba(255,255,255,0.1)',
+            borderRadius: '16px',
+            padding: '2.5rem 2rem',
+            maxWidth: '380px',
+            width: '90%',
+            textAlign: 'center',
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+            animation: 'fadeIn 0.3s ease-out forwards'
+          }}>
+            <h2 style={{ color: '#f59e0b', marginTop: 0, marginBottom: '1rem', fontSize: '1.5rem' }}>Sesión Finalizada</h2>
+            <p style={{ color: '#e2e8f0', marginBottom: '2rem', lineHeight: 1.6 }}>
+              Tu sesión se ha cerrado automáticamente por inactividad para garantizar la seguridad de tu información.
+            </p>
+            <button 
+              onClick={() => setShowTimeoutModal(false)}
+              style={{
+                background: '#4ade80',
+                color: '#020617',
+                border: 'none',
+                padding: '0.875rem 1.5rem',
+                borderRadius: '8px',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                width: '100%',
+                transition: 'background 0.2s',
+                fontSize: '1rem'
+              }}
+              onMouseOver={(e) => e.currentTarget.style.background = '#22c55e'}
+              onMouseOut={(e) => e.currentTarget.style.background = '#4ade80'}
+            >
+              Volver a iniciar sesión
+            </button>
+          </div>
+        </div>
+      )}
+
     </LoginContainer>
   );
 };

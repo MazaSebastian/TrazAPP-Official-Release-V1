@@ -31,6 +31,99 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const [isLoading, setIsLoading] = useState(true);
 
+  // --- INACTIVITY TRACKING LOGIC ---
+  const [isIdleWarningOpen, setIsIdleWarningOpen] = useState(false);
+  const [idleCountdown, setIdleCountdown] = useState(60);
+  const IDLE_TIMEOUT = 5 * 60 * 1000; // 5 minutes in ms
+  const WARNING_DURATION = 60; // 60 seconds
+
+  // Refs to hold mutable state inside event listeners without forcing re-renders
+  const isIdleWarningOpenRef = React.useRef(false); // Fix dependency cycle
+  const lastActivityRef = React.useRef<number>(Date.now());
+  const warningTimerRef = React.useRef<NodeJS.Timeout | null>(null);
+  const countdownIntervalRef = React.useRef<NodeJS.Timeout | null>(null);
+
+  // Keep ref synced with state
+  useEffect(() => {
+    isIdleWarningOpenRef.current = isIdleWarningOpen;
+  }, [isIdleWarningOpen]);
+
+  const resetActivity = React.useCallback(() => {
+    // If warning is already open, user must explicitly click "Keep Session"
+    if (isIdleWarningOpenRef.current) return;
+    
+    lastActivityRef.current = Date.now();
+    
+    // Clear existing timers
+    if (warningTimerRef.current) clearTimeout(warningTimerRef.current);
+    if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
+
+    // Set new timer to trigger warning
+    warningTimerRef.current = setTimeout(() => {
+      setIsIdleWarningOpen(true);
+      setIdleCountdown(WARNING_DURATION);
+      
+      // Start countdown
+      countdownIntervalRef.current = setInterval(() => {
+        setIdleCountdown((prev) => {
+          if (prev <= 1) {
+            // Time's up! Nuke the session
+            if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
+            
+            // Hard reset logic to guarantee they are kicked out even if React state is stale
+            localStorage.clear();
+            localStorage.setItem('session_timeout_flag', 'true');
+            
+            // Attempt to gracefully sign out in the background, but primarily force the redirect
+            // Note: window.location.href bypasses React Router so the app fully reloads
+            setTimeout(() => {
+               window.location.href = '/login'; 
+            }, 100);
+            
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }, IDLE_TIMEOUT);
+  }, []); // Empty deps because we use refs for mutable state check
+
+  const continueSession = () => {
+    setIsIdleWarningOpen(false);
+    setIdleCountdown(WARNING_DURATION);
+    resetActivity();
+  };
+
+  // Attach listeners on mount
+  useEffect(() => {
+    // Only track if user is logged in
+    if (!user) {
+      if (warningTimerRef.current) clearTimeout(warningTimerRef.current);
+      if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
+      return;
+    }
+
+    const events = ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart'];
+    
+    // Initial trigger
+    resetActivity();
+
+    const handleActivity = () => resetActivity();
+
+    events.forEach(event => {
+      window.addEventListener(event, handleActivity, { passive: true });
+    });
+
+    return () => {
+      events.forEach(event => {
+        window.removeEventListener(event, handleActivity);
+      });
+      if (warningTimerRef.current) clearTimeout(warningTimerRef.current);
+      if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
+    };
+  }, [user, resetActivity]);
+  // --- END INACTIVITY TRACKING LOGIC ---
+
   useEffect(() => {
     let mounted = true;
 
@@ -390,7 +483,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     tourStepIndex,
     setTourStepIndex,
     kycStatus,
-    daysFromRegistration
+    daysFromRegistration,
+    
+    // Session Timeout
+    isIdleWarningOpen,
+    idleCountdown,
+    continueSession
   };
 
   return (
