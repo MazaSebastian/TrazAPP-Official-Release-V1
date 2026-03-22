@@ -16,7 +16,7 @@ Deno.serve(async (req) => {
     });
   }
   try {
-    const { prompt, orgId, history = [] } = await req.json();
+    const { prompt, orgId, history = [], imageBase64 } = await req.json();
     if (!prompt) {
       throw new Error("El campo 'prompt' es requerido.");
     }
@@ -47,11 +47,24 @@ Actúa de manera extremadamente profesional, concisa, amigable e infunde confian
 
 FECHA ACTUAL: Hoy es ${todayStr}. Úsala como referencia para cualquier cálculo de fechas relativas (mañana, en 10 días, etc.) y envíalas SIEMPRE en formato YYYY-MM-DD a las herramientas.
 
-REGLAS ESTRICTAS PARA ACCIONES (FUNCTION CALLING):
-1. Si el usuario pide crear, editar, eliminar (ej: "crea un cultivo"), **DEBES INVOCAR** la herramienta apropiada. NUNCA respondas con texto diciendo que lo hiciste.
-2. Si el usuario hace una pregunta sobre sus datos (ej:"¿qué cultivos tengo activos?"), **DEBES INVOCAR** la herramienta de lectura (ej: get_active_crops). Recibirás el JSON con la data, y RECIÉN AHÍ podrás responderle en texto.
-3. NUNCA inventes UUIDs corporativos. Búscalos primero usando herramientas read-only si necesitas referencias como 'roomId' o 'cropId'. Usa 'get_rooms_for_crop' para confirmar UUIDs de salas, y 'get_active_crops' para cultivos.
-4. Si necesitas asignar una tarea a una "sala" o "mapa" pero no posees el UUID de la sala, debes PRIMERO averiguar el UUID del cultivo al que pertenece llamando a 'get_active_crops', y SEGUNDO averiguar el UUID de la sala llamando a 'get_rooms_for_crop'. Jamás adivines estos IDs.
+ERES UN AGENTE DUAL: CONVERSACIONAL Y EJECUTIVO.
+
+MODO 1: CONVERSACIONAL (PREGUNTAS)
+Si el usuario hace una pregunta sobre su cultivo (ej: "¿Cómo vienen mis plantas?", "¿Qué tareas tengo hoy?", "¿Cuándo cosecho?"):
+- ESTÁS OBLIGADO a usar las herramientas de lectura (RAG Tools como get_active_crops, get_rooms_for_crop) ANTES de responder.
+- Una vez recibas los datos, responde de forma natural, amigable y como un Master Grower.
+- Infiere fechas de cosecha sumando las semanas de floración típicas a la fecha de inicio del lote si se te pregunta.
+- ANÁLISIS DE IMÁGENES: Si recibes una imagen adjunta, utilízala como contexto principal. Analiza la salud botánica de la planta, posibles plagas, hongos, excesos/deficiencias o madurez de los tricomas.
+
+MODO 2: EJECUTIVO (ÓRDENES Y ACCIONES)
+Si el usuario te da una orden explícita para modificar datos (ej: "crea una tarea", "registra un gasto", "inicia una sala"):
+- TIENES ESTRICTAMENTE PROHIBIDO responder con texto diciendo que lo hiciste.
+- DEBES INVOCAR la herramienta de ACCIÓN correspondiente (ej: create_task, create_expense).
+- DEBES pedir confirmación verbal si los parámetros obligatorios no están en la frase del usuario antes de invocar la acción.
+
+REGLAS GENERALES PARA AMBOS MODOS:
+1. NUNCA inventes UUIDs corporativos. Búscalos primero usando herramientas read-only si necesitas referencias como 'roomId' o 'cropId'.
+2. Si necesitas un UUID de sala, usa 'get_rooms_for_crop'. Si necesitas un UUID de cultivo, usa 'get_active_crops'.
 
 REGLAS ESTRICTAS DE FORMATO Y LECTURA (TEXT-TO-SPEECH):
 1. Tu respuesta de texto será leída en voz alta por un motor TTS.
@@ -59,11 +72,6 @@ REGLAS ESTRICTAS DE FORMATO Y LECTURA (TEXT-TO-SPEECH):
 3. NUNCA devuelvas bloques de texto densos tipo "Clave: Valor".
 4. Usa comas y puntos ortográficos generosamente para el TTS.
 5. Usa saltos de línea (\\n\\n) tras listas.
-
-REGLAS ESTRICTAS DE SEMÁNTICA Y REPORTES:
-1. Agrupa lotes por genética si el parent_batch_id es el mismo, reporta "Lote Genética con X plantas".
-2. Si el usuario pide un INFORME DETALLADO de sala, usa metricas como semana actual, días restantes, etc.
-3. NO ALUCINES FUNCIONES RARAS (ej 'today'). En su lugar calcula la fecha usando el FECHA ACTUAL provisto aquí.
 `;
     const baseHistory = [
       {
@@ -102,10 +110,40 @@ REGLAS ESTRICTAS DE SEMÁNTICA Y REPORTES:
         temperature: 0.2
       }
     });
+
+    // Procesar imagen si viene adjunta
+    let promptParts: any = prompt;
+    if (imageBase64) {
+      console.log("Se detectó una imagen adjunta. Preparando inlineData para Gemini Vision.");
+      
+      // Expected JS format: "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQ..."
+      const match = imageBase64.match(/^data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+);base64,(.+)$/);
+      let mimeType = "image/jpeg";
+      let base64Data = imageBase64;
+      
+      if (match) {
+          mimeType = match[1];
+          base64Data = match[2];
+      } else if (imageBase64.includes(',')) {
+          // Fallback simple: agrupar lo que esté después de la primera coma
+          base64Data = imageBase64.split(',')[1] || imageBase64;
+      }
+      
+      promptParts = [
+          {
+            inlineData: {
+                data: base64Data,
+                mimeType: mimeType
+            }
+          },
+          { text: prompt }
+      ];
+    }
+
     // 1. Primer envío a Gemini
-    console.log("1. Preparando envío del prompt a Gemini:", prompt);
+    console.log("1. Preparando envío del prompt a Gemini (Modo Multimodal activado):", promptParts);
     console.log("1.1. Tools configuradas:", growyTools.map((t) => t.name).join(", "));
-    let result = await chat.sendMessage(prompt);
+    let result = await chat.sendMessage(promptParts);
     console.log("2. Respuesta recibida exitosamente desde Gemini.");
     let response = result.response;
     // Helper para extraer functionCalls de manera segura
@@ -128,6 +166,7 @@ REGLAS ESTRICTAS DE SEMÁNTICA Y REPORTES:
     const readOnlyTools = [
       "get_active_crops",
       "get_rooms_for_crop",
+      "get_batch_details",
       "get_pending_tasks",
       "get_organization_overview",
       "get_financial_summary",
@@ -203,7 +242,7 @@ REGLAS ESTRICTAS DE SEMÁNTICA Y REPORTES:
       let functionResponseData = {};
       try {
         if (call.name === "get_active_crops") {
-          const { data, error } = await supabaseClient.from('chakra_crops').select('id, name, location, status, start_date').eq('organization_id', orgId).eq('status', 'active');
+          const { data, error } = await supabaseClient.from('chakra_crops').select('id, name, location, status, start_date').eq('organization_id', orgId).eq('status', 'active').limit(50);
           if (error) console.error("RAG Error crops:", error);
           console.log("Supabase response active crops:", data ? data.length : 0);
           functionResponseData = {
@@ -239,10 +278,10 @@ REGLAS ESTRICTAS DE SEMÁNTICA Y REPORTES:
             let tasksData = [];
             let stickiesData = [];
             const [mapsRes, tasksRes, stickiesRes, orgUsersRes] = await Promise.all([
-              supabaseClient.from('clone_maps').select('id, name, room_id').in('room_id', roomIds),
-              supabaseClient.from('chakra_tasks').select('id, title, status, due_date, room_id').in('room_id', roomIds).eq('status', 'pending'),
-              supabaseClient.from('chakra_stickies').select('id, content, room_id').in('room_id', roomIds),
-              supabaseClient.from('profiles_organizations').select('profile_id, profiles(full_name, role)').eq('organization_id', orgId)
+              supabaseClient.from('clone_maps').select('id, name, room_id').in('room_id', roomIds).limit(50),
+              supabaseClient.from('chakra_tasks').select('id, title, status, due_date, room_id').in('room_id', roomIds).eq('status', 'pending').limit(50),
+              supabaseClient.from('chakra_stickies').select('id, content, room_id').in('room_id', roomIds).limit(20),
+              supabaseClient.from('profiles_organizations').select('profile_id, profiles(full_name, role)').eq('organization_id', orgId).limit(50)
             ]);
             mapsData = mapsRes.data;
             tasksData = tasksRes.data;
@@ -354,6 +393,59 @@ REGLAS ESTRICTAS DE SEMÁNTICA Y REPORTES:
             items: formattedData || [],
             equipo_de_trabajo: orgMembers
           };
+        } else if (call.name === "get_batch_details") {
+          let query = supabaseClient.from('batches').select(`
+            id,
+            name,
+            quantity,
+            start_date,
+            room_id,
+            rooms(name),
+            genetics(name)
+          `).eq('organization_id', orgId).is('discard_reason', null);
+
+          if (call.args?.roomId) {
+             query = query.eq('room_id', call.args.roomId);
+          }
+          if (call.args?.geneticName) {
+            // Utilizamos ilike en la relacion genetics
+            query = query.ilike('genetics.name', `%${call.args.geneticName}%`);
+          }
+
+          const { data, error } = await query.limit(50);
+          if (error) console.error("RAG Error batch details:", error);
+
+          // Filtrar resultados nulos de inner joins si se usó geneticName
+          const filteredData = (data || []).filter(b => b.genetics !== null);
+
+          const formattedBatches = filteredData.map((b: any) => {
+             // Calculando días de vida
+             let daysAlive = 0;
+             if (b.start_date) {
+               const start = new Date(b.start_date);
+               const now = new Date();
+               const diffTime = Math.abs(now.getTime() - start.getTime());
+               daysAlive = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+             }
+
+             const geneticData = Array.isArray(b.genetics) ? b.genetics[0] : b.genetics;
+             const roomData = Array.isArray(b.rooms) ? b.rooms[0] : b.rooms;
+
+             return {
+               id: b.id,
+               nombre: b.name,
+               cantidad: b.quantity,
+               fecha_inicio: b.start_date,
+               dias_de_vida: daysAlive,
+               semanas_de_vida: Math.floor(daysAlive / 7),
+               sala: roomData?.name || 'Desconocida',
+               genetica: geneticData?.name || 'Desconocida'
+             };
+          });
+
+          functionResponseData = {
+            matches: formattedBatches
+          };
         } else if (call.name === "get_pending_tasks") {
           let query = supabaseClient.from('chakra_tasks').select(`
                 id, title, due_date, status, type, description,
@@ -383,7 +475,7 @@ REGLAS ESTRICTAS DE SEMÁNTICA Y REPORTES:
           const startOfMonth = new Date();
           startOfMonth.setDate(1);
           const startStr = startOfMonth.toISOString().split('T')[0];
-          const { data, error } = await supabaseClient.from('chakra_expenses').select('amount, type, category, concept, date').eq('organization_id', orgId).gte('date', startStr);
+          const { data, error } = await supabaseClient.from('chakra_expenses').select('amount, type, category, concept, date').eq('organization_id', orgId).gte('date', startStr).limit(100);
           if (error) console.error("RAG Error expenses:", error);
           let totalIncome = 0;
           let totalExpense = 0;
@@ -441,8 +533,8 @@ REGLAS ESTRICTAS DE SEMÁNTICA Y REPORTES:
           // Recreated direct table queries from metricServices.ts (Mortality & Survival)
           const [genPerfRes, mortRes, survRes] = await Promise.all([
             supabaseClient.rpc('get_genetic_performance'),
-            supabaseClient.from('batches').select('discard_reason, quantity').not('discard_reason', 'is', null).neq('discard_reason', 'Distribuido en Mapa (Bulk)').eq('organization_id', orgId),
-            supabaseClient.from('batches').select('discarded_at, discard_reason, quantity, genetics(name)').eq('organization_id', orgId)
+            supabaseClient.from('batches').select('discard_reason, quantity').not('discard_reason', 'is', null).neq('discard_reason', 'Distribuido en Mapa (Bulk)').eq('organization_id', orgId).limit(500),
+            supabaseClient.from('batches').select('discarded_at, discard_reason, quantity, genetics(name)').eq('organization_id', orgId).limit(500)
           ]);
 
           // Recalculating Mortality Stats

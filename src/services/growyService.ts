@@ -12,14 +12,15 @@ export interface GrowyResponse {
 }
 
 export const growyService = {
-    async sendMessage(prompt: string, contextState: any = null, orgId?: string, history: any[] = []): Promise<GrowyResponse> {
+    async sendMessage(prompt: string, contextState: any = null, orgId?: string, history: any[] = [], imageBase64?: string): Promise<GrowyResponse> {
         try {
             const { data, error } = await supabase.functions.invoke('growy-gemini', {
                 body: {
                     prompt,
                     contextState,
                     orgId,
-                    history
+                    history,
+                    imageBase64
                 },
             });
 

@@ -461,6 +461,23 @@ export const growyTools = [
     }
   },
   {
+    name: "get_batch_details",
+    description: "Obtiene detalles precisos de las genéticas, fechas de inicio y días de vida de lotes. Úsalo si te preguntan puntualmente por una genética, cuánto le falta para cosechar, o detalles de una raza específica.",
+    parameters: {
+      type: SchemaType.OBJECT,
+      properties: {
+        roomId: {
+          type: SchemaType.STRING,
+          description: "El UUID de la sala (opcional si buscas en toda la granja, pero recomendado)"
+        },
+        geneticName: {
+          type: SchemaType.STRING,
+          description: "El nombre de la genética (ej: 'Amnesia', 'White Widow') si el usuario preguntó por ella."
+        }
+      }
+    }
+  },
+  {
     name: "get_pending_tasks",
     description: "Devuelve la agenda de tareas pendientes en el calendario. Úsalo cuando te pregunten 'qué tengo que hacer', 'tareas de hoy' o temas de planificación.",
     parameters: {

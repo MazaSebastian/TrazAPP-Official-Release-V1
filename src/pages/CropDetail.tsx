@@ -1987,13 +1987,16 @@ const CropDetail: React.FC = () => {
                       let alertLevel = 0; // 0: None, 1: Badge Red, 2: Border Red, 3: Heartbeat
 
                       if (room.operational_days && room.start_date) {
-                        const start = new Date(room.start_date);
+                        // Parse manually to avoid UTC conversion issues (e.g. 2026-03-20 becoming 19th in GMT-3)
+                        const [sy, sm, sd] = room.start_date.split('T')[0].split('-').map(Number);
+                        const start = new Date(sy, sm - 1, sd); // Local midnight
                         const now = new Date();
-                        const end = new Date(start);
-                        end.setDate(start.getDate() + room.operational_days);
+                        // Normalize 'now' to local midnight for consistent day-level comparison
+                        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                        const end = new Date(sy, sm - 1, sd + room.operational_days);
 
-                        const diffDays = differenceInDays(end, now);
-                        const diffFromStart = differenceInDays(now, start);
+                        const diffDays = differenceInDays(end, today);
+                        const diffFromStart = differenceInDays(today, start);
 
                         // Check if in pre-flowering adaptation phase
                         if (room.pre_flowering_days && diffFromStart < room.pre_flowering_days) {

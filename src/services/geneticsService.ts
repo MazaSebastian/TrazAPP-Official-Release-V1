@@ -68,6 +68,7 @@ export const geneticsService = {
             .from('batches')
             .select('quantity, stage, current_room_id, room:rooms(id, name, spot_id, spot:chakra_crops(id, name))')
             .eq('genetic_id', geneticId)
+            .is('discarded_at', null) // Exclude soft-deleted batches
             // exclude 'completed' and 'discarded'
             .neq('stage', 'completed')
             .neq('stage', 'discarded');
@@ -126,7 +127,7 @@ export const geneticsService = {
             // Extract dimensions directly or from internal measured state
             const width = n.width || n.measured?.width || n.style?.width;
             const height = n.height || n.measured?.height || n.style?.height;
-            
+
             return {
                 id: n.id,
                 org_id: orgId,
@@ -176,17 +177,17 @@ export const geneticsService = {
                     .eq('org_id', orgId)
                     .not('id', 'in', `(${nodeIds.join(',')})`);
             } else {
-                 await getClient().from('genetics_lineage_nodes').delete().eq('org_id', orgId);
+                await getClient().from('genetics_lineage_nodes').delete().eq('org_id', orgId);
             }
 
-             if (edgeIds.length > 0) {
+            if (edgeIds.length > 0) {
                 await getClient()
                     .from('genetics_lineage_edges')
                     .delete()
                     .eq('org_id', orgId)
                     .not('id', 'in', `(${edgeIds.join(',')})`);
             } else {
-                 await getClient().from('genetics_lineage_edges').delete().eq('org_id', orgId);
+                await getClient().from('genetics_lineage_edges').delete().eq('org_id', orgId);
             }
 
             return true;
@@ -211,33 +212,33 @@ export const geneticsService = {
             .from('genetics_lineage_edges')
             .select('*')
             .eq('org_id', orgId);
-            
-         if (edgesError) console.error("Error loading edges:", edgesError);
 
-         const formattedNodes = (nodesData || []).map(n => {
-             // Rehydrate dimensions back into node style to persist Resizer visuals
-             const style = (n.data.width && n.data.height) 
-                ? { width: n.data.width, height: n.data.height } 
+        if (edgesError) console.error("Error loading edges:", edgesError);
+
+        const formattedNodes = (nodesData || []).map(n => {
+            // Rehydrate dimensions back into node style to persist Resizer visuals
+            const style = (n.data.width && n.data.height)
+                ? { width: n.data.width, height: n.data.height }
                 : undefined;
 
-             return {
-                 id: n.id,
-                 type: n.type,
-                 position: { x: Number(n.position_x), y: Number(n.position_y) },
-                 data: n.data,
-                 style
-             };
-         });
+            return {
+                id: n.id,
+                type: n.type,
+                position: { x: Number(n.position_x), y: Number(n.position_y) },
+                data: n.data,
+                style
+            };
+        });
 
-         const formattedEdges = (edgesData || []).map(e => ({
-             id: e.id,
-             source: e.source,
-             target: e.target,
-             type: e.type,
-             animated: e.animated
-         }));
+        const formattedEdges = (edgesData || []).map(e => ({
+            id: e.id,
+            source: e.source,
+            target: e.target,
+            type: e.type,
+            animated: e.animated
+        }));
 
-         return { nodes: formattedNodes, edges: formattedEdges };
+        return { nodes: formattedNodes, edges: formattedEdges };
     },
 
     // --- Phase 4: Pheno Hunting ---
@@ -266,7 +267,7 @@ export const geneticsService = {
                 data.phenotypes.sort((a: any, b: any) => a.pheno_number - b.pheno_number);
             }
         }
-        
+
         return data as PhenoHunt | null;
     },
 
@@ -303,8 +304,8 @@ export const geneticsService = {
             .insert(phenotypesToCreate);
 
         if (phenosError) {
-             console.error('Error generating phenotype batch:', phenosError);
-             return null;
+            console.error('Error generating phenotype batch:', phenosError);
+            return null;
         }
 
         // 3. Return full hunt
@@ -317,7 +318,7 @@ export const geneticsService = {
 
         const { error } = await getClient()
             .from('phenotypes')
-            .update({...updates, updated_at: new Date().toISOString()})
+            .update({ ...updates, updated_at: new Date().toISOString() })
             .eq('id', id)
             .eq('org_id', orgId);
 

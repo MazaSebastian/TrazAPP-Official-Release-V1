@@ -2384,8 +2384,8 @@ const RoomDetail: React.FC = () => {
     };
 
     const handleTransplant = async (
-        destinationRoomId: string, 
-        singles: string[], 
+        destinationRoomId: string,
+        singles: string[],
         groupsPayload: { name: string, batchIds: string[] }[],
         substrateId?: string,
         estimatedVolume?: number
@@ -3173,12 +3173,12 @@ const RoomDetail: React.FC = () => {
         const targetPositions: string[] = [];
         let assignedCount = 0;
 
-        // Iterate grid to find empty spots
-        for (let r = 0; r < map.grid_rows; r++) {
-            for (let c = 0; c < map.grid_columns; c++) {
+        // Iterate grid to find empty spots (1-based: getRowLabel(1)='A', getRowLabel(2)='B', ...)
+        for (let r = 1; r <= map.grid_rows; r++) {
+            for (let c = 1; c <= map.grid_columns; c++) {
                 if (assignedCount >= qty) break;
                 const rowLabel = getRowLabel(r);
-                const pos = `${rowLabel}${c + 1}`; // Fixed: Removed trailing space
+                const pos = `${rowLabel}${c}`;
 
                 if (!occupiedPositions.has(pos)) {
                     targetPositions.push(pos);
@@ -4117,7 +4117,7 @@ const RoomDetail: React.FC = () => {
 
         try {
             await tasksService.updateTask(task.id, { status: newStatus } as any);
-            
+
             // Stock Deduction on Task Completion
             if (newStatus === 'done' && task.insumo_id && task.estimated_volume && task.estimated_volume > 0) {
                 const { error: stockError } = await supabase.rpc('execute_task_with_stock', {
@@ -4127,12 +4127,12 @@ const RoomDetail: React.FC = () => {
                     _performed_by: user?.id,
                     _room_id: room?.id
                 });
-                
+
                 if (stockError) {
                     console.error("Error deducting stock for task:", stockError);
                     setToastState({ isOpen: true, message: `Tarea completada, pero fallo al descontar insumo: ${stockError.message}`, type: 'error' });
                 } else {
-                     setToastState({ isOpen: true, message: `Tarea completada y stock descontado`, type: 'success' });
+                    setToastState({ isOpen: true, message: `Tarea completada y stock descontado`, type: 'success' });
                 }
             }
             // No need to re-fetch if successful, state is already correct

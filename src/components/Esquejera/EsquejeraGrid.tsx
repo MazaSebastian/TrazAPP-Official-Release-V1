@@ -540,6 +540,13 @@ export const EsquejeraGrid: React.FC<EsquejeraGridProps> = ({ rows, cols, batche
             const shouldCommit = selectionMode || isAdditive || !isSingleCell;
 
             if (shouldCommit) {
+                // Skip single-cell additive clicks — onBatchClick already handles the toggle.
+                // Only commit multi-cell drag selections in additive mode.
+                if (isSingleCell && isAdditive) {
+                    reset();
+                    return;
+                }
+
                 const selectionInRect = new Set<string>();
 
                 for (let r = startRow; r <= endRow; r++) {

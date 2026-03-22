@@ -31,8 +31,8 @@ interface TransplantModalProps {
     cloneMaps: CloneMap[];
     insumos?: Insumo[];
     onConfirm: (
-        destinationId: string, 
-        singles: string[], 
+        destinationId: string,
+        singles: string[],
         groupsPayload: { name: string, batchIds: string[] }[],
         substrateId?: string,
         estimatedVolume?: number
@@ -399,17 +399,17 @@ export const TransplantModal: React.FC<TransplantModalProps> = ({ isOpen, onClos
         try {
             // Transform internal groups structure for parent
             const groupsPayload = groups.map(g => ({ name: g.name, batchIds: g.batchIds }));
-            
+
             const totalVolume = selectedBatchIds.size * volumePerPlant;
-            
+
             await onConfirm(
-              destinationId, 
-              singles, 
-              groupsPayload, 
-              substrateId || undefined, 
-              substrateId ? totalVolume : undefined
+                destinationId,
+                singles,
+                groupsPayload,
+                substrateId || undefined,
+                substrateId ? totalVolume : undefined
             );
-            
+
             onClose();
         } catch (error) {
             console.error(error);
@@ -662,17 +662,17 @@ export const TransplantModal: React.FC<TransplantModalProps> = ({ isOpen, onClos
                                                 }))}
                                             />
                                             {substrateId && (
-                                              <div style={{ marginTop: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                                  <label style={{ fontSize: '0.8rem', color: '#94a3b8' }}>Volumen por planta (L)</label>
-                                                  <input 
-                                                    type="number" 
-                                                    value={volumePerPlant}
-                                                    onChange={e => setVolumePerPlant(Number(e.target.value))}
-                                                    style={{ width: '60px', padding: '0.25rem', borderRadius: '0.25rem', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(15, 23, 42, 0.6)', color: 'white' }}
-                                                    min="0.1"
-                                                    step="0.1"
-                                                  />
-                                              </div>
+                                                <div style={{ marginTop: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                                    <label style={{ fontSize: '0.8rem', color: '#94a3b8' }}>Volumen por planta (L)</label>
+                                                    <input
+                                                        type="number"
+                                                        value={volumePerPlant}
+                                                        onChange={e => setVolumePerPlant(Number(e.target.value))}
+                                                        style={{ width: '60px', padding: '0.25rem', borderRadius: '0.25rem', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(15, 23, 42, 0.6)', color: 'white' }}
+                                                        min="0.1"
+                                                        step="0.1"
+                                                    />
+                                                </div>
                                             )}
                                         </div>
                                     </Section>
@@ -682,7 +682,7 @@ export const TransplantModal: React.FC<TransplantModalProps> = ({ isOpen, onClos
                                         <div style={{ background: 'rgba(74, 222, 128, 0.1)', padding: '1rem', borderRadius: '0.5rem', border: '1px solid rgba(74, 222, 128, 0.2)', textAlign: 'center' }}>
                                             <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#4ade80' }}>{selectedBatchIds.size}</div>
                                             <div style={{ color: '#cbd5e1', fontSize: '0.9rem' }}>Plantas seleccionadas</div>
-                                            
+
                                             {substrateId && selectedBatchIds.size > 0 && (
                                                 <div style={{ marginTop: '0.5rem', paddingTop: '0.5rem', borderTop: '1px solid rgba(74,222,128,0.2)', fontSize: '0.85rem', color: '#86efac' }}>
                                                     Sustrato estimado: <strong>{(selectedBatchIds.size * volumePerPlant).toFixed(1)}L</strong>
@@ -725,6 +725,9 @@ export const TransplantModal: React.FC<TransplantModalProps> = ({ isOpen, onClos
                                                         onBatchClick={handleBatchClick} selectedBatchIds={selectedBatchIds} selectionMode={true}
                                                         onSelectionChange={handleSelectionChange}
                                                     />
+                                                </div>
+                                                <div style={{ marginTop: '0.5rem', fontSize: '0.75rem', color: '#64748b', textAlign: 'center', fontStyle: 'italic' }}>
+                                                    💡 Presiona <strong style={{ color: '#94a3b8' }}>Ctrl</strong> (Windows) o <strong style={{ color: '#94a3b8' }}>Cmd</strong> (Mac) + Click para seleccionar/deseleccionar unidades de forma individual
                                                 </div>
                                             </div>
                                         );

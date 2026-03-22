@@ -311,12 +311,14 @@ export const GrowyOrb: React.FC = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [errorToast, setErrorToast] = useState<string | null>(null);
     const [chatHistory, setChatHistory] = useState<{ role: string, content: string }[]>([]);
+    const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
     const synthRef = useRef<SpeechSynthesis>(window.speechSynthesis);
     const deepgramRef = useRef<any>(null);
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
     const streamRef = useRef<MediaStream | null>(null);
     const silenceTimerRef = useRef<NodeJS.Timeout | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const clearSilenceTimer = () => {
         if (silenceTimerRef.current) {
@@ -524,6 +526,11 @@ export const GrowyOrb: React.FC = () => {
         setGrowyState('processing');
         setTranscript(text);
 
+        const currentImage = selectedImage;
+        setSelectedImage(null); // Limpiar preview mientras procesa
+
+        if (fileInputRef.current) fileInputRef.current.value = '';
+
         try {
             // La información ya no se extrae proactivamente desde el frontend.
             // Si la IA necesita contexto, lo solicitará en el backend a través del RAG.
@@ -531,7 +538,7 @@ export const GrowyOrb: React.FC = () => {
             if (!currentOrganization?.id) {
                 throw new Error("No hay una organización activa seleccionada.");
             }
-            const reply = await growyService.sendMessage(text, null, currentOrganization.id, chatHistory);
+            const reply = await growyService.sendMessage(text, null, currentOrganization.id, chatHistory, currentImage || undefined);
 
             if (reply.type === 'actions' && reply.actionProposals) {
                 setActionProposals(reply.actionProposals);
@@ -764,6 +771,17 @@ export const GrowyOrb: React.FC = () => {
         }
     };
 
+    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            const file = e.target.files[0];
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setSelectedImage(reader.result as string);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
     const getIcon = () => {
         switch (growyState) {
             case 'idle': return <FaRobot />;
@@ -791,13 +809,34 @@ export const GrowyOrb: React.FC = () => {
                 {response && (
                     <ResponseArea>{response}</ResponseArea>
                 )}
+                {selectedImage && (
+                    <div style={{ position: 'relative', marginTop: 8, display: 'inline-block' }}>
+                        <img src={selectedImage} alt="Preview" style={{ maxHeight: 100, borderRadius: 8, border: '1px solid rgba(255,255,255,0.2)' }} />
+                        <button 
+                            onClick={() => setSelectedImage(null)} 
+                            style={{ position: 'absolute', top: -8, right: -8, background: '#ef4444', color: 'white', border: 'none', borderRadius: '50%', width: 20, height: 20, cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
+                        >
+                            <FaTimes size={10} />
+                        </button>
+                    </div>
+                )}
                 <TextInputForm onSubmit={(e) => {
                     e.preventDefault();
-                    if (textInput.trim() && growyState !== 'processing') {
-                        handleFinalTranscript(textInput);
+                    if ((textInput.trim() || selectedImage) && growyState !== 'processing') {
+                        handleFinalTranscript(textInput || "Analiza esta imagen."); // Fallback prompt if ONLY image
                         setTextInput('');
                     }
                 }}>
+                    <input 
+                        type="file" 
+                        accept="image/*" 
+                        hidden 
+                        ref={fileInputRef} 
+                        onChange={handleFileSelect} 
+                    />
+                    <button type="button" onClick={() => fileInputRef.current?.click()} style={{ marginRight: 8, color: '#aaa' }}>
+                         <svg stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 448 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M43.246 466.142c-58.43-60.289-57.341-157.511 1.386-217.581L254.392 34c44.316-45.332 116.351-45.336 160.671 0 43.89 44.894 43.943 117.329 0 162.276L232.214 382.514c-29.855 30.537-78.633 30.111-107.982-.998-28.275-29.97-27.368-77.473 1.452-106.953l143.743-146.835c6.182-6.314 16.312-6.422 22.626-.241l22.861 22.379c6.315 6.182 6.422 16.312.241 22.626L171.427 319.927c-4.932 5.045-5.236 13.428-.648 18.292 4.372 4.634 11.245 4.711 15.688.165l182.849-186.236c19.718-20.161 19.699-52.797-.046-72.993-19.424-19.866-50.694-19.885-70.12-.046L89.336 286.262c-34.992 35.76-35.494 93.303-1.282 128.47 34.128 35.147 89.151 35.604 124.144.241L386.892 236.41c6.182-6.314 16.312-6.422 22.626-.241l22.861 22.379c6.315 6.182 6.422 16.312.241 22.626L257.925 466.9c-59.39 60.713-156.248 59.53-214.679-.758z"></path></svg>
+                    </button>
                     <button
                         type="button"
                         onClick={startListening}
