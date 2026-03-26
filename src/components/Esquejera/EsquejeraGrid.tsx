@@ -394,7 +394,10 @@ const BatchItem = ({ batch, onClick, cellSize }: { batch: Batch; onClick?: (e: R
 
                     {batch.start_date && (
                         <div style={{ fontSize: '0.7rem', color: '#64748b', marginTop: '0.25rem', borderTop: '1px solid rgba(255, 255, 255, 0.1)', paddingTop: '0.25rem' }}>
-                            {new Date(batch.start_date).toLocaleDateString()}
+                            {(() => {
+                                const d = batch.start_date.substring(0, 10).split('-');
+                                return `${d[2]}/${d[1]}/${d[0]}`;
+                            })()}
                         </div>
                     )}
                 </TooltipContainer>,

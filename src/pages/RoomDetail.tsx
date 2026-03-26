@@ -4959,6 +4959,10 @@ const RoomDetail: React.FC = () => {
                                                                                         <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Variedades</div>
                                                                                     </div>
                                                                                 </div>
+                                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.75rem', color: '#64748b', fontSize: '0.75rem' }}>
+                                                                                    <FaCalendarAlt size={10} />
+                                                                                    <span>Creada: {map.created_at ? format(new Date(map.created_at), "d 'de' MMM yyyy", { locale: es }) : '-'}</span>
+                                                                                </div>
                                                                             </div>
 
                                                                             <div className={`mobile-view-map-${map.id}`} style={{ alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: '0.5rem' }}>
@@ -4966,6 +4970,10 @@ const RoomDetail: React.FC = () => {
                                                                                     <div style={{ fontSize: '1rem', fontWeight: 700, color: '#f8fafc', overflow: 'hidden', textOverflow: 'ellipsis' }}>{map.name}</div>
                                                                                     <div style={{ fontSize: '0.8rem', color: '#94a3b8', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
                                                                                         <span style={{ color: '#38bdf8', fontWeight: 600 }}>{totalPlants} Plantas</span> | <span style={{ color: '#4ade80', fontWeight: 600 }}>{uniqueGenetics} Var.</span>
+                                                                                    </div>
+                                                                                    <div style={{ fontSize: '0.7rem', color: '#64748b', display: 'flex', alignItems: 'center', gap: '0.3rem', marginTop: '0.15rem' }}>
+                                                                                        <FaCalendarAlt size={9} />
+                                                                                        <span>{map.created_at ? format(new Date(map.created_at), "d/MM/yyyy", { locale: es }) : '-'}</span>
                                                                                     </div>
                                                                                 </div>
 
