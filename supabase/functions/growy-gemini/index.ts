@@ -71,7 +71,7 @@ Deno.serve(async (req) => {
     const systemInstruction = `
 Eres Growy, el Asistente Inteligente de TrazAPP (SaaS de Gestión de Cultivos Cannábicos).
 Tu objetivo es ayudar al usuario respondiendo preguntas sobre sus datos, brindando asistencia técnica y proponiendo acciones operativas.
-Actúa de manera extremadamente profesional, concisa, amigable e infunde confianza como Master Grower.
+Actúa de manera extremadamente profesional, concisa, amigable e infunde confianza como Master Grower, Secretario Médico y Encargado de Dispensario.
 
 FECHA ACTUAL: Hoy es ${todayStr}. Úsala como referencia para cualquier cálculo de fechas relativas (mañana, en 10 días, etc.) y envíalas SIEMPRE en formato YYYY-MM-DD a las herramientas.
 
@@ -204,7 +204,10 @@ REGLA CRÍTICA DE FRESCURA DE DATOS:
       "get_organization_overview",
       "get_financial_summary",
       "read_financial_report",
-      "read_agricultural_report"
+      "read_agricultural_report",
+      "get_patients",
+      "get_patient_details",
+      "get_dispensary_stock"
     ];
     let currentResponse = response;
     let loopCount = 0;
@@ -618,6 +621,62 @@ REGLA CRÍTICA DE FRESCURA DE DATOS:
               genetic_performance: genPerfRes.data || [],
               mortality_reasons: parsedMortality,
               genetic_survival_rates: parsedSurvival
+            };
+          } else if (call.name === "get_patients") {
+            let query = supabaseClient.from('aurora_patients').select('id, reprocann_number, reprocann_status, expiration_date, profiles(full_name)').eq('organization_id', orgId);
+
+            if (call.args?.searchName) {
+              query = query.ilike('profiles.full_name', `%${call.args.searchName}%`);
+            }
+
+            const { data, error } = await query.limit(50);
+            if (error) console.error("RAG Error get_patients:", error);
+
+            // Clean up the joined profile data
+            const formattedPatients = (data || []).map((p: any) => ({
+              id: p.id,
+              full_name: Array.isArray(p.profiles) ? p.profiles[0]?.full_name : p.profiles?.full_name,
+              reprocann_number: p.reprocann_number || "No registrado",
+              reprocann_status: p.reprocann_status,
+              expiration_date: p.expiration_date || "N/A"
+            })).filter((p: any) => p.full_name); // Filter out if outer join failed
+
+            functionResponseData = { patients: formattedPatients };
+          } else if (call.name === "get_patient_details") {
+            const patientId = call.args?.patientId;
+            if (!patientId) throw new Error("patientId fue omitido.");
+
+            const { data: adm, error: admErr } = await supabaseClient.from('clinical_admissions')
+              .select('*').eq('patient_id', patientId).eq('organization_id', orgId).single();
+
+            if (admErr && admErr.code !== 'PGRST116') console.error("RAG Error admission:", admErr);
+
+            let evolutions = [];
+            if (adm) {
+              const { data: evos } = await supabaseClient.from('clinical_evolutions')
+                .select('id, date, title, eva_score, notes, improvement_percent')
+                .eq('admission_id', adm.id)
+                .order('date', { ascending: false })
+                .limit(10);
+              evolutions = evos || [];
+            }
+
+            functionResponseData = {
+              has_admission: !!adm,
+              admission_date: adm?.created_at,
+              baseline_pain_avg: adm?.baseline_pain_avg,
+              evolutions: evolutions
+            };
+          } else if (call.name === "get_dispensary_stock") {
+            const { data, error } = await supabaseClient.from('chakra_dispensary_batches')
+              .select('id, batch_code, strain_name, product_type, current_weight, unit, price_per_gram, quality_grade, location')
+              .eq('organization_id', orgId)
+              .eq('status', 'available');
+
+            if (error) console.error("RAG Error get_dispensary_stock:", error);
+
+            functionResponseData = {
+              available_inventory: data || []
             };
           }
         } catch (e) {

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import styled, { keyframes, css } from 'styled-components';
-import { FaMicrophone, FaRobot, FaTimes, FaSeedling, FaMapMarkedAlt, FaTasks, FaStickyNote, FaTh, FaBox, FaMoneyBillWave } from 'react-icons/fa';
+import { FaMicrophone, FaRobot, FaTimes, FaSeedling, FaMapMarkedAlt, FaTasks, FaStickyNote, FaTh, FaBox, FaMoneyBillWave, FaStethoscope, FaPrescriptionBottleAlt } from 'react-icons/fa';
 import { growyService } from '../services/growyService';
 import { createClient, LiveTranscriptionEvents } from '@deepgram/sdk';
 import { supabase } from '../services/supabaseClient';
@@ -1350,6 +1350,14 @@ export const GrowyOrb: React.FC = () => {
                                     icon = <FaBox style={{ marginRight: '8px', color: '#f472b6' }} />;
                                     titleStr = 'Añadir Insumo al Inventario';
                                     descStr = `Producto: "${proposal.args.nombre}" (${proposal.args.categoria}) | Stock Inicial: ${proposal.args.stock_actual} ${proposal.args.unidad_medida} | Precio unitario: $${proposal.args.precio_actual}`;
+                                } else if (proposal.name === 'create_medical_evolution') {
+                                    icon = <FaStethoscope style={{ marginRight: '8px', color: '#60a5fa' }} />;
+                                    titleStr = 'Evolución Clínica';
+                                    descStr = `Título: "${proposal.args.title}" | EVA: ${proposal.args.eva_score}/10 | Notas: "${proposal.args.notes}"`;
+                                } else if (proposal.name === 'dispense_stock') {
+                                    icon = <FaPrescriptionBottleAlt style={{ marginRight: '8px', color: '#fcd34d' }} />;
+                                    titleStr = 'Dispensar Producto';
+                                    descStr = `Cantidad: ${proposal.args.amount} | Motivo: "${proposal.args.reason}" | Aporte: $${proposal.args.transaction_value || 0}`;
                                 }
 
                                 return (

@@ -410,7 +410,7 @@ export const growyTools = [
       ]
     }
   },
-  // --- PACIENTES ---
+  // --- PACIENTES E HISTORIAL CLÍNICO ---
   {
     name: "create_patient",
     description: "Da de alta a un paciente o socio nuevo en el sistema (requiere rol médico o admin).",
@@ -435,7 +435,113 @@ export const growyTools = [
       ]
     }
   },
+  {
+    name: "create_medical_evolution",
+    description: "Crea un nuevo registro de visita, control médico o evolución clínica para un paciente.",
+    parameters: {
+      type: SchemaType.OBJECT,
+      properties: {
+        patientId: {
+          type: SchemaType.STRING,
+          description: "UUID del paciente. SIEMPRE búscalo antes usando get_patients."
+        },
+        title: {
+          type: SchemaType.STRING,
+          description: "Título de la consulta (ej. Control Mensual, Renovación, Primera Consulta)"
+        },
+        eva_score: {
+          type: SchemaType.INTEGER,
+          description: "Puntaje de dolor en la Escala Visual Analógica (EVA) del 0 al 10."
+        },
+        notes: {
+          type: SchemaType.STRING,
+          description: "Notas clínicas detalladas, diagnóstico y observaciones del médico."
+        },
+        next_follow_up_months: {
+          type: SchemaType.INTEGER,
+          description: "Meses para el próximo control médico sugerido (ej. 3, 6, 12). Default: 6"
+        }
+      },
+      required: [
+        "patientId",
+        "title",
+        "eva_score",
+        "notes"
+      ]
+    }
+  },
+  // --- DISPENSARIO (ACCIÓN) ---
+  {
+    name: "dispense_stock",
+    description: "Registra una entrega, venta o retiro de productos de la asociación hacia un paciente.",
+    parameters: {
+      type: SchemaType.OBJECT,
+      properties: {
+        batchId: {
+          type: SchemaType.STRING,
+          description: "UUID del lote o frasco a descontar. OBLIGATORIO buscarlo con get_dispensary_stock."
+        },
+        patientId: {
+          type: SchemaType.STRING,
+          description: "UUID del paciente que retira. OBLIGATORIO buscarlo con get_patients."
+        },
+        amount: {
+          type: SchemaType.NUMBER,
+          description: "Cantidad retirada en gramos o unidades."
+        },
+        reason: {
+          type: SchemaType.STRING,
+          description: "Motivo, método de pago o nota breve para el ticket de entrega."
+        },
+        transaction_value: {
+          type: SchemaType.NUMBER,
+          description: "Monto monetario de la transacción si requiere aporte (opcional)."
+        }
+      },
+      required: [
+        "batchId",
+        "patientId",
+        "amount",
+        "reason"
+      ]
+    }
+  },
   // --- LECTURAS (READ-ONLY RAG TOOLS) ---
+  {
+    name: "get_patients",
+    description: "Busca y devuelve la lista de pacientes registrados. Úsalo para obtener UUIDs de pacientes, estado del REPROCANN o buscar el nombre de un socio particular.",
+    parameters: {
+      type: SchemaType.OBJECT,
+      properties: {
+        searchName: {
+          type: SchemaType.STRING,
+          description: "Nombre a buscar (opcional)."
+        }
+      }
+    }
+  },
+  {
+    name: "get_patient_details",
+    description: "Obtiene el historial clínico profundo de un paciente: su admisión, evoluciones, seguimientos médicos. Requiere el patientId.",
+    parameters: {
+      type: SchemaType.OBJECT,
+      properties: {
+        patientId: {
+          type: SchemaType.STRING,
+          description: "UUID del paciente a consultar. Búscalo con get_patients si no lo tienes."
+        }
+      },
+      required: ["patientId"]
+    }
+  },
+  {
+    name: "get_dispensary_stock",
+    description: "Obtiene la carta o inventario actual del dispensario (Flores, Aceites, Extractos). Muestra el stock disponible y el batchId para despachar.",
+    parameters: {
+      type: SchemaType.OBJECT,
+      properties: {}
+    }
+  },
   {
     name: "get_active_crops",
     description: "Busca y devuelve la lista de cultivos (spots) que están activos actualmente. Úsalo cuando necesites saber qué cultivos existen.",
