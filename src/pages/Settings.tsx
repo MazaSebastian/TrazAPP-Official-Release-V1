@@ -13,11 +13,13 @@ import { planService } from '../services/planService';
 import { getInsumoCategories, createInsumoCategory, deleteInsumoCategory } from '../services/insumosService';
 import { Plan, TaskType, InsumoCategory } from '../types';
 import { tasksService } from '../services/tasksService';
+import { supabase } from '../services/supabaseClient';
 import { FaUserPlus, FaUserShield, FaTrash, FaTimes, FaTasks, FaPlus, FaMapMarkerAlt, FaPlay, FaBoxes, FaWrench, FaPalette } from 'react-icons/fa';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import Swal from 'sweetalert2';
 import { MapSelector } from '../components/MapSelector';
 import { useJsApiLoader } from '@react-google-maps/api';
+import { StockLabel } from '../components/StockLabel';
 import usePlacesAutocomplete, {
   getGeocode,
   getLatLng,
@@ -318,7 +320,7 @@ const Settings: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'users' | 'customization' | 'weather' | 'system'>('users');
   const [saving, setSaving] = useState(false);
   const [genetics, setGenetics] = useState<Genetic[]>([]);
-  
+
   // Google Maps Loader for Places Autocomplete
   const { isLoaded: isGoogleMapsLoaded } = useJsApiLoader({
     id: 'google-map-script',
@@ -342,6 +344,30 @@ const Settings: React.FC = () => {
   const [newUserRole, setNewUserRole] = useState('grower');
   const [newUserName, setNewUserName] = useState('');
   const [newUserPassword, setNewUserPassword] = useState('');
+
+  // Label Settings State
+  const [labelSettings, setLabelSettings] = useState<{
+    themeMode: 'color' | 'bw';
+    primaryColor: string;
+    secondaryColor: string;
+    fontFamily: string;
+    backgroundPattern: string;
+    sidebarDesign: 'solid' | 'gradient';
+    showAddress: boolean;
+    addressText: string;
+    phoneText: string;
+  }>({
+    themeMode: 'color',
+    primaryColor: '#0f172a',
+    secondaryColor: '#38bdf8',
+    fontFamily: 'Inter',
+    backgroundPattern: 'none',
+    sidebarDesign: 'solid',
+    showAddress: false,
+    addressText: '',
+    phoneText: ''
+  });
+  const [savingLabelSettings, setSavingLabelSettings] = useState(false);
 
   // Weather Location State
   const {
@@ -377,16 +403,44 @@ const Settings: React.FC = () => {
   });
 
   useEffect(() => {
-    loadData();
-    const savedLocation = localStorage.getItem('trazapp_weather_location');
-    if (savedLocation) {
-      try {
-        const parsed = JSON.parse(savedLocation);
-        if (parsed.name) setCurrentLocationName(parsed.name);
-        if (parsed.lat !== undefined && parsed.lat !== null) setCurrentLat(parsed.lat);
-        if (parsed.lon !== undefined && parsed.lon !== null) setCurrentLng(parsed.lon);
-      } catch (e) { }
+    if (currentOrganization?.label_settings) {
+      setLabelSettings({
+        ...labelSettings,
+        ...(currentOrganization.label_settings as any)
+      });
     }
+
+    loadData();
+    const loadLocation = async () => {
+      // 1. Try Supabase first (authoritative source per org)
+      if (currentOrganization?.id) {
+        const { data } = await supabase
+          .from('organizations')
+          .select('weather_location')
+          .eq('id', currentOrganization.id)
+          .single();
+        if (data?.weather_location) {
+          const loc = data.weather_location;
+          if (loc.name) setCurrentLocationName(loc.name);
+          if (loc.lat !== undefined) setCurrentLat(loc.lat);
+          if (loc.lon !== undefined) setCurrentLng(loc.lon);
+          // Sync to localStorage so WeatherWidget gets it without extra fetches
+          localStorage.setItem('trazapp_weather_location', JSON.stringify(loc));
+          return;
+        }
+      }
+      // 2. Fallback to localStorage (legacy / first load)
+      const savedLocation = localStorage.getItem('trazapp_weather_location');
+      if (savedLocation) {
+        try {
+          const parsed = JSON.parse(savedLocation);
+          if (parsed.name) setCurrentLocationName(parsed.name);
+          if (parsed.lat !== undefined && parsed.lat !== null) setCurrentLat(parsed.lat);
+          if (parsed.lon !== undefined && parsed.lon !== null) setCurrentLng(parsed.lon);
+        } catch (e) { }
+      }
+    };
+    loadLocation();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentOrganization]);
 
@@ -628,18 +682,22 @@ const Settings: React.FC = () => {
     try {
       const results = await getGeocode({ address });
       const { lat, lng } = await getLatLng(results[0]);
-      
+
       setCurrentLocationName(address);
       setCurrentLat(lat);
       setCurrentLng(lng);
-      
-      localStorage.setItem('trazapp_weather_location', JSON.stringify({
-        name: address,
-        lat: lat,
-        lon: lng
-      }));
-      setToast({ isOpen: true, message: 'Ubicación para el clima actualizada', type: 'success' });
-      // Dispatch custom event to trigger update in WeatherWidget immediately
+
+      const locationData = { name: address, lat, lon: lng };
+
+      // Save to Supabase (primary) + localStorage (for instant WeatherWidget sync)
+      if (currentOrganization?.id) {
+        await supabase
+          .from('organizations')
+          .update({ weather_location: locationData })
+          .eq('id', currentOrganization.id);
+      }
+      localStorage.setItem('trazapp_weather_location', JSON.stringify(locationData));
+      setToast({ isOpen: true, message: 'Ubicación guardada correctamente', type: 'success' });
       window.dispatchEvent(new Event('weatherLocationChanged'));
     } catch (error) {
       console.error("Error: ", error);
@@ -939,6 +997,200 @@ const Settings: React.FC = () => {
           </div>
         </Section>
       )}
+
+      {canManageTasks && (
+        <Section>
+          <SectionHeader>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <FaPalette /> Diseño de Etiquetas (Impresión)
+            </div>
+            <div style={{ fontSize: '0.85rem', fontWeight: 'normal', color: '#94a3b8' }}>
+              Personaliza el formato de las etiquetas de tus frascos y despachos
+            </div>
+          </SectionHeader>
+
+          <div style={{ display: 'flex', flexDirection: window.innerWidth > 768 ? 'row' : 'column', gap: '2rem', background: 'rgba(15, 23, 42, 0.5)', padding: '1.5rem', borderRadius: '0.5rem', border: '1px solid rgba(255,255,255,0.05)' }}>
+
+            {/* Left Panel: Controls */}
+            <div style={{ flex: '1', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+
+              <FormGroup>
+                <Label>Modo de Impresión</Label>
+                <CustomSelect
+                  value={labelSettings.themeMode}
+                  onChange={(val) => setLabelSettings({ ...labelSettings, themeMode: val as 'color' | 'bw' })}
+                  options={[
+                    { value: 'color', label: 'A Color (Estilo Premium)' },
+                    { value: 'bw', label: 'Blanco y Negro (Impresora Térmica)' }
+                  ]}
+                  triggerStyle={{ padding: '0.75rem', borderRadius: '0.5rem', background: 'rgba(15, 23, 42, 0.8)', border: '1px solid rgba(255,255,255,0.1)' }}
+                />
+                <p style={{ color: '#94a3b8', fontSize: '0.8rem', marginTop: '0.5rem' }}>
+                  Seleccioná "Blanco y Negro" si vas a usar una ticketera o impresora térmica (rollo blanco continuo).
+                </p>
+              </FormGroup>
+
+              {labelSettings.themeMode === 'color' && (
+                <div style={{ background: 'rgba(255, 255, 255, 0.02)', padding: '1.25rem', borderRadius: '0.75rem', display: 'flex', flexDirection: 'column', gap: '1.5rem', border: '1px solid rgba(255,255,255,0.05)' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1.5rem' }}>
+                    <FormGroup style={{ flex: 1 }}>
+                      <Label>Color Primario</Label>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <input
+                          type="color"
+                          value={labelSettings.primaryColor}
+                          onChange={(e) => setLabelSettings({ ...labelSettings, primaryColor: e.target.value })}
+                          style={{ width: '48px', height: '48px', padding: 0, border: 'none', borderRadius: '0.5rem', cursor: 'pointer', boxShadow: '0 0 0 1px rgba(255,255,255,0.1)' }}
+                        />
+                        <Input
+                          type="text"
+                          value={labelSettings.primaryColor}
+                          onChange={(e) => setLabelSettings({ ...labelSettings, primaryColor: e.target.value })}
+                          style={{ flex: 1, textTransform: 'uppercase', letterSpacing: '1px', fontFamily: 'monospace' }}
+                        />
+                      </div>
+                    </FormGroup>
+
+                    <FormGroup style={{ flex: 1 }}>
+                      <Label>Color de Acento</Label>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <input
+                          type="color"
+                          value={labelSettings.secondaryColor}
+                          onChange={(e) => setLabelSettings({ ...labelSettings, secondaryColor: e.target.value })}
+                          style={{ width: '48px', height: '48px', padding: 0, border: 'none', borderRadius: '0.5rem', cursor: 'pointer', boxShadow: '0 0 0 1px rgba(255,255,255,0.1)' }}
+                        />
+                        <Input
+                          type="text"
+                          value={labelSettings.secondaryColor}
+                          onChange={(e) => setLabelSettings({ ...labelSettings, secondaryColor: e.target.value })}
+                          style={{ flex: 1, textTransform: 'uppercase', letterSpacing: '1px', fontFamily: 'monospace' }}
+                        />
+                      </div>
+                    </FormGroup>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1.5rem' }}>
+                    <FormGroup>
+                      <Label>Estilo de Barra Lateral</Label>
+                      <CustomSelect
+                        value={labelSettings.sidebarDesign || 'solid'}
+                        onChange={(val) => setLabelSettings({ ...labelSettings, sidebarDesign: val as 'solid' | 'gradient' })}
+                        options={[
+                          { value: 'solid', label: 'Color Sólido' },
+                          { value: 'gradient', label: 'Degradado Lineal' }
+                        ]}
+                        triggerStyle={{ padding: '0.75rem', borderRadius: '0.5rem', background: 'rgba(15, 23, 42, 0.8)', border: '1px solid rgba(255,255,255,0.1)' }}
+                      />
+                    </FormGroup>
+
+                    <FormGroup>
+                      <Label>Diseño de Fondo de Etiqueta</Label>
+                      <CustomSelect
+                        value={labelSettings.backgroundPattern}
+                        onChange={(val) => setLabelSettings({ ...labelSettings, backgroundPattern: val })}
+                        options={[
+                          { value: 'none', label: 'Liso (Blanco)' },
+                          { value: 'dots', label: 'Puntos (Dots)' },
+                          { value: 'waves', label: 'Líneas Diagonales' }
+                        ]}
+                        triggerStyle={{ padding: '0.75rem', borderRadius: '0.5rem', background: 'rgba(15, 23, 42, 0.8)', border: '1px solid rgba(255,255,255,0.1)' }}
+                      />
+                    </FormGroup>
+                  </div>
+                </div>
+              )}
+
+              <FormGroup>
+                <Label>Tipografía</Label>
+                <CustomSelect
+                  value={labelSettings.fontFamily}
+                  onChange={(val) => setLabelSettings({ ...labelSettings, fontFamily: val })}
+                  options={[
+                    { value: 'Inter', label: 'Inter (Moderna)' },
+                    { value: 'Roboto', label: 'Roboto' },
+                    { value: 'serif', label: 'Clásica (Serif)' },
+                    { value: 'monospace', label: 'Monospace (Técnica)' }
+                  ]}
+                  triggerStyle={{ padding: '0.75rem', borderRadius: '0.5rem', background: 'rgba(15, 23, 42, 0.8)', border: '1px solid rgba(255,255,255,0.1)' }}
+                />
+              </FormGroup>
+
+              <div style={{ padding: '1.25rem', background: 'rgba(255,255,255,0.02)', borderRadius: '0.75rem', border: '1px solid rgba(255,255,255,0.05)' }}>
+                <Label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', marginBottom: '1rem' }}>
+                  <input
+                    type="checkbox"
+                    checked={labelSettings.showAddress}
+                    onChange={(e) => setLabelSettings({ ...labelSettings, showAddress: e.target.checked })}
+                  />
+                  Incluir info de la organización (Dirección/Teléfono)
+                </Label>
+
+                {labelSettings.showAddress && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    <Input
+                      type="text"
+                      placeholder="Ej: Av. Siempreviva 123"
+                      value={labelSettings.addressText}
+                      onChange={(e) => setLabelSettings({ ...labelSettings, addressText: e.target.value })}
+                    />
+                    <Input
+                      type="text"
+                      placeholder="Ej: +54 9 11 1234-5678"
+                      value={labelSettings.phoneText}
+                      onChange={(e) => setLabelSettings({ ...labelSettings, phoneText: e.target.value })}
+                    />
+                  </div>
+                )}
+              </div>
+
+              <SaveButton
+                onClick={async () => {
+                  if (!currentOrganization) return;
+                  setSavingLabelSettings(true);
+                  try {
+                    await supabase
+                      .from('organizations')
+                      .update({ label_settings: labelSettings })
+                      .eq('id', currentOrganization.id);
+                    setToast({ isOpen: true, message: 'Diseño de etiquetas guardado', type: 'success' });
+                  } catch (e) {
+                    console.error("Error saving label settings", e);
+                  } finally {
+                    setSavingLabelSettings(false);
+                  }
+                }}
+                disabled={savingLabelSettings}
+                style={{ marginTop: 'auto' }}
+              >
+                {savingLabelSettings ? 'Guardando...' : <><FaSave /> Guardar Diseño</>}
+              </SaveButton>
+            </div>
+
+            {/* Right Panel: Preview */}
+            <div style={{ flex: '1', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '300px', background: '#000', borderRadius: '0.5rem', padding: '1rem', border: '1px solid rgba(255,255,255,0.05)' }}>
+              <div style={{ marginBottom: '1rem', color: '#94a3b8', fontSize: '0.85rem' }}>
+                Vista Previa (No imprimible desde esta pantalla)
+              </div>
+              <div style={{ background: '#fff', padding: '2mm', boxShadow: '0 0 15px rgba(0,0,0,0.5)', overflow: 'hidden' }}>
+                <StockLabel
+                  patientName="Paciente de Prueba"
+                  legajo="TRZ-001"
+                  geneticName="Devil Line"
+                  weight="175g"
+                  organizationName={currentOrganization?.name || 'TrazAPP'}
+                  logoUrl={currentOrganization?.logo_url || ''}
+                  settings={labelSettings}
+                />
+              </div>
+              <p style={{ color: '#64748b', fontSize: '0.75rem', marginTop: '1.5rem', textAlign: 'center' }}>
+                El diseño aplicará exactamente sobre etiquetas de 10x5 cm al imprimirlas desde el módulo de Dispensario/Lotes.
+              </p>
+            </div>
+
+          </div>
+        </Section>
+      )}
     </>
   );
 
@@ -976,19 +1228,19 @@ const Settings: React.FC = () => {
                 }}
                 disabled={!ready || !isGoogleMapsLoaded}
                 style={{
-                    width: '100%',
-                    padding: '0.75rem',
-                    background: 'rgba(15, 23, 42, 0.5)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    borderRadius: '0.5rem',
-                    color: '#f8fafc',
-                    outline: 'none',
-                    transition: 'border-color 0.2s',
-                    boxSizing: 'border-box'
+                  width: '100%',
+                  padding: '0.75rem',
+                  background: 'rgba(15, 23, 42, 0.5)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  borderRadius: '0.5rem',
+                  color: '#f8fafc',
+                  outline: 'none',
+                  transition: 'border-color 0.2s',
+                  boxSizing: 'border-box'
                 }}
               />
             </div>
-            
+
             {status === "OK" && (
               <div style={{
                 position: 'absolute', top: '100%', left: 0, right: 0, background: '#1e293b',
@@ -1017,20 +1269,28 @@ const Settings: React.FC = () => {
           {currentLat !== null && currentLng !== null && (
             <div style={{ marginTop: '2rem', zIndex: 5, position: 'relative' }}>
               <Label style={{ display: 'block', marginBottom: '0.5rem', color: '#f8fafc' }}>Ajustar Ubicación Exacta (Pin Arrastrable)</Label>
-              <MapSelector 
-                lat={currentLat} 
-                lng={currentLng} 
+              <MapSelector
+                lat={currentLat}
+                lng={currentLng}
                 onChange={(lat, lng) => {
+                  const manualName = `Ajuste Manual (${lat.toFixed(4)}, ${lng.toFixed(4)})`;
                   setCurrentLat(lat);
                   setCurrentLng(lng);
-                  setCurrentLocationName(`Ajuste Manual (${lat.toFixed(4)}, ${lng.toFixed(4)})`);
-                  localStorage.setItem('trazapp_weather_location', JSON.stringify({
-                    name: `Ajuste Manual (${lat.toFixed(4)}, ${lng.toFixed(4)})`,
-                    lat: lat,
-                    lon: lng
-                  }));
+                  setCurrentLocationName(manualName);
+
+                  const locationData = { name: manualName, lat, lon: lng };
+
+                  // Save to Supabase + localStorage
+                  if (currentOrganization?.id) {
+                    supabase
+                      .from('organizations')
+                      .update({ weather_location: locationData })
+                      .eq('id', currentOrganization.id)
+                      .then(() => { });
+                  }
+                  localStorage.setItem('trazapp_weather_location', JSON.stringify(locationData));
                   window.dispatchEvent(new Event('weatherLocationChanged'));
-                }} 
+                }}
               />
             </div>
           )}

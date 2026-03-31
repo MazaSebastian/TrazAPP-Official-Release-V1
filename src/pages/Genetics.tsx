@@ -13,6 +13,8 @@ import { useOrganization } from '../context/OrganizationContext';
 import UpgradeOverlay from '../components/common/UpgradeOverlay';
 import { useReactToPrint } from 'react-to-print';
 import { PrintableGeneticsCatalog } from '../components/Genetics/PrintableGeneticsCatalog';
+import { StockLabel } from '../components/StockLabel';
+
 const fadeIn = keyframes`
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
@@ -609,6 +611,18 @@ const Genetics: React.FC = () => {
         `
     });
 
+    // Single Label Print State
+    const printLabelRef = React.useRef<HTMLDivElement>(null);
+    const [printingGenetic, setPrintingGenetic] = useState<Genetic | null>(null);
+    const handlePrintLabel = useReactToPrint({ contentRef: printLabelRef });
+
+    const triggerPrint = (genetic: Genetic) => {
+        setPrintingGenetic(genetic);
+        setTimeout(() => {
+            handlePrintLabel();
+        }, 100);
+    };
+
     // Mobile Detail State
     const [mobileDetailGenetic, setMobileDetailGenetic] = useState<Genetic | null>(null);
 
@@ -896,6 +910,15 @@ const Genetics: React.FC = () => {
                                         {gen.name}
                                     </h3>
                                     <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); triggerPrint(gen); }}
+                                            style={{ background: 'rgba(168, 85, 247, 0.1)', border: '1px solid rgba(168, 85, 247, 0.2)', cursor: 'pointer', color: '#c084fc', padding: '0.4rem', borderRadius: '0.25rem', transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                            title="Imprimir Etiqueta"
+                                            onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(168, 85, 247, 0.2)'; }}
+                                            onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(168, 85, 247, 0.1)'; }}
+                                        >
+                                            <FaPrint />
+                                        </button>
                                         <button
                                             onClick={(e) => { e.stopPropagation(); handleEdit(gen); }}
                                             style={{ background: 'rgba(56, 189, 248, 0.1)', border: '1px solid rgba(56, 189, 248, 0.2)', cursor: 'pointer', color: '#38bdf8', padding: '0.4rem', borderRadius: '0.25rem', transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
@@ -1290,6 +1313,12 @@ const Genetics: React.FC = () => {
 
                             <div style={{ background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: '0.75rem', display: 'flex', justifyContent: 'center', gap: '1.5rem', flexWrap: 'wrap' }}>
                                 <button
+                                    onClick={(e) => { e.stopPropagation(); triggerPrint(mobileDetailGenetic); setMobileDetailGenetic(null); }}
+                                    style={{ background: 'rgba(168, 85, 247, 0.1)', border: '1px solid rgba(168, 85, 247, 0.2)', cursor: 'pointer', color: '#c084fc', padding: '0.6rem 1rem', borderRadius: '0.5rem', transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', fontWeight: 600 }}
+                                >
+                                    <FaPrint /> Imprimir Etiqueta
+                                </button>
+                                <button
                                     onClick={(e) => { e.stopPropagation(); handleEdit(mobileDetailGenetic); setMobileDetailGenetic(null); }}
                                     style={{ background: 'rgba(56, 189, 248, 0.1)', border: '1px solid rgba(56, 189, 248, 0.2)', cursor: 'pointer', color: '#38bdf8', padding: '0.6rem 1rem', borderRadius: '0.5rem', transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', fontWeight: 600 }}
                                 >
@@ -1309,6 +1338,24 @@ const Genetics: React.FC = () => {
                 <div style={{ display: 'none' }}>
                     <div ref={printRef}>
                         <PrintableGeneticsCatalog genetics={genetics} />
+                    </div>
+                </div>
+
+                {/* Printable Single Label Portal */}
+                <div style={{ display: 'none' }}>
+                    <div ref={printLabelRef}>
+                        {printingGenetic && (
+                            <StockLabel
+                                patientName=""
+                                legajo=""
+                                geneticName=""
+                                weight=""
+                                date={new Date().toLocaleDateString('es-AR')}
+                                organizationName={currentOrganization?.name || 'TrazAPP'}
+                                logoUrl={currentOrganization?.logo_url || ''}
+                                settings={currentOrganization?.label_settings as any}
+                            />
+                        )}
                     </div>
                 </div>
 

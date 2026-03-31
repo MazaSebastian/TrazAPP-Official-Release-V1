@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import { FaBoxes, FaPlus, FaChevronDown, FaEdit, FaTrash, FaTimes, FaHistory, FaHandHoldingMedical, FaFlask, FaCheckSquare } from 'react-icons/fa';
+import { FaBoxes, FaPlus, FaChevronDown, FaEdit, FaTrash, FaTimes, FaHistory, FaHandHoldingMedical, FaFlask, FaCheckSquare, FaPrint } from 'react-icons/fa';
 import { dispensaryService, DispensaryBatch, DispensaryMovement } from '../services/dispensaryService';
 import { geneticsService } from '../services/geneticsService';
 import { Genetic } from '../types/genetics';
@@ -10,6 +10,9 @@ import { ConfirmModal } from '../components/ConfirmModal';
 import { ToastModal } from '../components/ToastModal';
 import { AnimatedModal, CloseIcon } from '../components/AnimatedModal';
 import { CustomSelect } from '../components/CustomSelect';
+import { StockLabel } from '../components/StockLabel';
+import { useOrganization } from '../context/OrganizationContext';
+import { useReactToPrint } from 'react-to-print';
 
 const CollapsibleWrapper = ({ isOpen, children }: { isOpen: boolean; children: React.ReactNode }) => {
   const contentRef = React.useRef<HTMLDivElement>(null);
@@ -431,7 +434,20 @@ interface AggregatedStock {
 }
 
 const Stock: React.FC = () => {
+  const { currentOrganization } = useOrganization();
   const [isLoading, setIsLoading] = useState(true);
+
+  // Print Setup
+  const printLabelRef = React.useRef<HTMLDivElement>(null);
+  const [printingBatch, setPrintingBatch] = useState<DispensaryBatch | null>(null);
+  const handlePrintLabel = useReactToPrint({ contentRef: printLabelRef });
+
+  const triggerPrint = (batch: DispensaryBatch) => {
+    setPrintingBatch(batch);
+    setTimeout(() => {
+      handlePrintLabel();
+    }, 100);
+  };
 
   // Data State
   const [genetics, setGenetics] = useState<Genetic[]>([]);
@@ -1517,7 +1533,7 @@ const Stock: React.FC = () => {
       </AnimatedModal>
 
       {/* UNITS MODAL (Level 3 - Lote Origen Details) */}
-      <AnimatedModal isOpen={modalUnitsData.isOpen} onClose={() => setModalUnitsData(prev => ({ ...prev, isOpen: false }))}>
+      <AnimatedModal isOpen={modalUnitsData.isOpen} onClose={() => setModalUnitsData(prev => ({ ...prev, isOpen: false }))} wide>
         <CloseIcon onClick={() => setModalUnitsData(prev => ({ ...prev, isOpen: false }))}><FaTimes /></CloseIcon>
         <h2 style={{ marginBottom: '1.5rem', color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <FaBoxes /> Unidades del lote: {modalUnitsData.originName}
@@ -1536,15 +1552,18 @@ const Stock: React.FC = () => {
             <tbody>
               {modalUnitsData.batches.map(batch => (
                 <tr key={batch.id}>
-                  <td style={{ fontFamily: 'monospace', color: '#38bdf8', fontSize: '0.9rem' }}>{batch.batch_code}</td>
-                  <td style={{ textAlign: 'right', fontWeight: 600, fontSize: '0.9rem' }}>
-                    {batch.current_weight}g <span style={{ color: '#64748b', fontWeight: 'normal' }}>/ {batch.initial_weight}g</span>
+                  <td style={{ fontFamily: 'monospace', color: '#38bdf8', fontSize: '0.9rem', whiteSpace: 'nowrap' }}>{batch.batch_code}</td>
+                  <td style={{ textAlign: 'right', fontWeight: 600, fontSize: '0.9rem', whiteSpace: 'nowrap' }}>
+                    {Number(batch.current_weight).toFixed(2)}g <span style={{ color: '#64748b', fontWeight: 'normal' }}>/ {Number(batch.initial_weight).toFixed(2)}g</span>
                   </td>
-                  <td style={{ fontStyle: 'italic', color: '#cbd5e1', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '0.85rem' }} title={batch.notes || ''}>
+                  <td style={{ fontStyle: 'italic', color: '#cbd5e1', maxWidth: '300px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '0.85rem' }} title={batch.notes || ''}>
                     {batch.notes || '-'}
                   </td>
-                  <td style={{ textAlign: 'right' }}>
+                  <td style={{ textAlign: 'right', minWidth: '120px' }}>
                     <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
+                      <IconButton color="#38bdf8" title="Imprimir Etiqueta" onClick={(e) => { e.stopPropagation(); setModalUnitsData(prev => ({ ...prev, isOpen: false })); triggerPrint(batch); }}>
+                        <FaPrint size={12} />
+                      </IconButton>
                       <IconButton color="#3182ce" title="Editar Lote" onClick={(e) => { e.stopPropagation(); setModalUnitsData(prev => ({ ...prev, isOpen: false })); openEdit(batch); }}>
                         <FaEdit size={12} />
                       </IconButton>
@@ -1562,6 +1581,24 @@ const Stock: React.FC = () => {
           </DetailTable>
         </div>
       </AnimatedModal>
+
+      {/* Hidden Printable Label */}
+      <div style={{ display: 'none' }}>
+        <div ref={printLabelRef}>
+          {printingBatch && (
+            <StockLabel
+              patientName=""
+              legajo={printingBatch.batch_code || ''}
+              geneticName={printingBatch.strain_name || ''}
+              weight={printingBatch.current_weight ? `${Number(printingBatch.current_weight).toFixed(2)}g` : '0.00g'}
+              date={new Date().toLocaleDateString('es-AR')}
+              organizationName={currentOrganization?.name || 'TrazAPP'}
+              logoUrl={currentOrganization?.logo_url || ''}
+              settings={currentOrganization?.label_settings as any}
+            />
+          )}
+        </div>
+      </div>
 
     </PageContainer >
   );

@@ -13,6 +13,8 @@ import { CustomSelect } from '../components/CustomSelect';
 import { ConfirmModal } from '../components/ConfirmModal';
 import { EditDispensaryModal } from '../components/EditDispensaryModal';
 import { CreateDispensaryProductModal } from '../components/CreateDispensaryProductModal';
+import { useOrganization } from '../context/OrganizationContext';
+import { StockLabel } from '../components/StockLabel';
 import { useReactToPrint } from 'react-to-print';
 import { useAuth } from '../context/AuthContext';
 
@@ -320,59 +322,9 @@ margin-top: 1.5rem;
 }
 `;
 
-const PrintableLabel = styled.div`
-display: flex;
-flex-direction: column;
-align-items: center;
-justify-content: center;
-width: 100mm;
-height: 150mm; // Adjust as needed for specific label size
-padding: 1rem;
-background: white;
-text-align: center;
-
-/* Force simple styling for thermal printers */
-font-family: sans-serif;
-color: black;
-  
-  h1 {
-    font-size: 24pt;
-    margin: 10px 0;
-    font-weight: 800;
-}
-  
-  h2 {
-    font-size: 16pt;
-    margin: 5px 0;
-    font-weight: normal;
-}
-  
-  .batch-code {
-    font-size: 14pt;
-    font-family: monospace;
-    margin: 10px 0;
-    padding: 5px 10px;
-    border: 2px solid black;
-    border-radius: 5px;
-}
-  
-  .qr-container {
-    margin: 20px 0;
-    border: 4px solid black;
-    padding: 10px;
-    background: white;
-}
-  
-  .logo {
-    font-size: 12pt;
-    margin-top: auto;
-    font-weight: bold;
-}
-`;
-
-
 const Dispensary: React.FC = () => {
     const { user } = useAuth();
+    const { currentOrganization } = useOrganization();
     const [activeTab, setActiveTab] = useState<'flower' | 'oil' | 'cream' | 'edible' | 'extract' | 'other'>('flower');
     const [createModalOpen, setCreateModalOpen] = useState(false);
 
@@ -837,15 +789,16 @@ const Dispensary: React.FC = () => {
                     {/* Printable Content (Hidden until print) */}
                     <div style={{ display: 'none' }}>
                         <div ref={labelPrintRef}>
-                            <PrintableLabel>
-                                <h1>{qrBatch?.strain_name}</h1>
-                                <div className="qr-container">
-                                    <QRCode value={`${window.location.origin} /passport/${qrBatch?.id} `} size={250} />
-                                </div>
-                                <div className="batch-code">{qrBatch?.batch_code}</div>
-                                <h2>{qrBatch?.initial_weight}g / {qrBatch?.status}</h2>
-                                <div className="logo">AURORA DEL PLATA</div>
-                            </PrintableLabel>
+                            <StockLabel
+                                patientName=""
+                                legajo={qrBatch?.batch_code || ''}
+                                geneticName={qrBatch?.strain_name || ''}
+                                weight={qrBatch?.initial_weight ? `${Number(qrBatch.initial_weight).toFixed(2)}g` : '0.00g'}
+                                date={new Date().toLocaleDateString('es-AR')}
+                                organizationName={currentOrganization?.name || 'TrazAPP'}
+                                logoUrl={currentOrganization?.logo_url || ''}
+                                settings={currentOrganization?.label_settings as any}
+                            />
                         </div>
                     </div>
                 </ModalContent>

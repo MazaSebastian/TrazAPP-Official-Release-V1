@@ -25,10 +25,20 @@ const pulseProcessing = keyframes`
   100% { transform: rotate(360deg); border-top-color: #ff4081; }
 `;
 
+const slideUp = keyframes`
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+`;
+
+const typingPulse = keyframes`
+  0%, 80%, 100% { transform: scale(0.4); opacity: 0.4; }
+  40% { transform: scale(1); opacity: 1; }
+`;
+
 const OrbContainer = styled.div`
   position: fixed;
-  bottom: 30px;
-  right: 30px;
+  bottom: 24px;
+  right: 24px;
   z-index: 9999;
   display: flex;
   flex-direction: column;
@@ -36,20 +46,20 @@ const OrbContainer = styled.div`
 `;
 
 const OrbButton = styled.button<{ $gState: GrowyState }>`
-  width: 60px;
-  height: 60px;
+  width: 56px;
+  height: 56px;
   border-radius: 50%;
-  border: none;
-  background: var(--surface-color, #1e1e1e);
+  border: 2px solid rgba(0, 255, 136, 0.3);
+  background: rgba(15, 23, 30, 0.9);
   color: white;
   cursor: pointer;
   display: flex;
   justify-content: center;
   align-items: center;
-  font-size: 24px;
+  font-size: 22px;
   transition: all 0.3s ease;
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   outline: none;
   will-change: transform, box-shadow;
   
@@ -64,7 +74,8 @@ const OrbButton = styled.button<{ $gState: GrowyState }>`
                 return css`
           animation: ${pulseListening} 1.5s infinite ease-in-out;
           color: #ff4081;
-          background: rgba(255, 64, 129, 0.1);
+          border-color: rgba(255, 64, 129, 0.5);
+          background: rgba(255, 64, 129, 0.08);
         `;
             case 'processing':
                 return css`
@@ -77,7 +88,8 @@ const OrbButton = styled.button<{ $gState: GrowyState }>`
                 return css`
           animation: ${pulseIdle} 1s infinite ease-in-out;
           color: #00bcd4;
-          box-shadow: 0 0 20px rgba(0, 188, 212, 0.6);
+          border-color: rgba(0, 188, 212, 0.5);
+          box-shadow: 0 0 20px rgba(0, 188, 212, 0.4);
         `;
             default:
                 return '';
@@ -85,69 +97,192 @@ const OrbButton = styled.button<{ $gState: GrowyState }>`
     }}
 
   &:hover {
-    transform: scale(1.1);
+    transform: scale(1.08);
+    border-color: rgba(0, 255, 136, 0.6);
   }
 `;
 
-const CommandModal = styled.div<{ $visible: boolean }>`
+const ChatPanel = styled.div<{ $visible: boolean }>`
   position: absolute;
-  bottom: 80px;
+  bottom: 72px;
   right: 0;
-  width: 320px;
-  max-height: 400px;
-  background: var(--surface-color, #1e1e1e);
-  border-radius: 12px;
-  padding: 16px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-  border: 1px solid rgba(255,255,255,0.1);
+  width: 400px;
+  height: 540px;
+  background: rgba(12, 17, 23, 0.92);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-radius: 20px;
+  border: 1px solid rgba(0, 255, 136, 0.12);
+  box-shadow:
+    0 24px 80px rgba(0, 0, 0, 0.6),
+    0 0 1px rgba(0, 255, 136, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
   display: ${({ $visible }) => ($visible ? 'flex' : 'none')};
   flex-direction: column;
-  gap: 12px;
-  overflow-y: auto;
-  opacity: ${({ $visible }) => ($visible ? 1 : 0)};
-  transform: translateY(${({ $visible }) => ($visible ? '0' : '20px')});
-  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  overflow: hidden;
+  animation: ${slideUp} 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+  @media (max-width: 480px) {
+    width: calc(100vw - 24px);
+    height: 70vh;
+    right: -12px;
+  }
 `;
 
-const Header = styled.div`
+const ChatHeader = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid rgba(255,255,255,0.1);
-  padding-bottom: 8px;
-  
-  h3 {
-    margin: 0;
-    font-size: 16px;
-    color: var(--text-color, #fff);
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(0, 255, 136, 0.03);
+  flex-shrink: 0;
+
+  .header-left {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
+
+    .avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, rgba(0, 255, 136, 0.15), rgba(0, 255, 136, 0.05));
+      border: 1px solid rgba(0, 255, 136, 0.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      color: #00ff88;
+    }
+
+    .info {
+      .name {
+        font-size: 15px;
+        font-weight: 600;
+        color: #fff;
+        letter-spacing: 0.3px;
+      }
+      .status {
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.4);
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        .dot {
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          background: #00ff88;
+          box-shadow: 0 0 6px rgba(0, 255, 136, 0.6);
+        }
+      }
+    }
   }
-  
-  button {
-    background: none;
+
+  .close-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
     border: none;
-    color: var(--text-color-secondary, #aaa);
+    background: rgba(255, 255, 255, 0.05);
+    color: rgba(255, 255, 255, 0.4);
     cursor: pointer;
-    &:hover { color: #fff; }
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    &:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+    }
   }
 `;
 
-const TranscriptArea = styled.div`
-  font-size: 14px;
-  color: var(--text-color, #fff);
-  padding: 8px;
-  background: rgba(0,0,0,0.2);
-  border-radius: 8px;
-  min-height: 50px;
-  font-style: italic;
+const MessageThread = styled.div`
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 16px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  &::-webkit-scrollbar { width: 4px; }
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+  }
 `;
 
-const ResponseArea = styled.div`
-  font-size: 14px;
-  color: #00ff88;
-  line-height: 1.4;
+const MessageBubble = styled.div<{ $isUser: boolean }>`
+  display: flex;
+  gap: 8px;
+  flex-direction: ${({ $isUser }) => ($isUser ? 'row-reverse' : 'row')};
+  align-items: flex-start;
+  animation: ${slideUp} 0.3s ease;
+
+  .bubble-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    margin-top: 2px;
+    background: ${({ $isUser }) =>
+        $isUser
+            ? 'rgba(255, 255, 255, 0.08)'
+            : 'linear-gradient(135deg, rgba(0, 255, 136, 0.12), rgba(0, 255, 136, 0.04))'
+    };
+    border: 1px solid ${({ $isUser }) =>
+        $isUser ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 255, 136, 0.2)'
+    };
+    color: ${({ $isUser }) => ($isUser ? 'rgba(255,255,255,0.6)' : '#00ff88')};
+  }
+
+  .bubble-content {
+    max-width: 75%;
+    padding: 10px 14px;
+    border-radius: ${({ $isUser }) =>
+        $isUser ? '16px 16px 4px 16px' : '16px 16px 16px 4px'
+    };
+    font-size: 13.5px;
+    line-height: 1.5;
+    background: ${({ $isUser }) =>
+        $isUser
+            ? 'rgba(255, 255, 255, 0.07)'
+            : 'rgba(0, 255, 136, 0.06)'
+    };
+    border: 1px solid ${({ $isUser }) =>
+        $isUser ? 'rgba(255, 255, 255, 0.06)' : 'rgba(0, 255, 136, 0.08)'
+    };
+    color: ${({ $isUser }) => ($isUser ? 'rgba(255,255,255,0.85)' : '#c8ffe0')};
+    word-break: break-word;
+    white-space: pre-wrap;
+  }
+`;
+
+const TypingIndicator = styled.div`
+  display: flex;
+  gap: 4px;
+  padding: 10px 14px;
+  background: rgba(0, 255, 136, 0.06);
+  border: 1px solid rgba(0, 255, 136, 0.08);
+  border-radius: 16px 16px 16px 4px;
+  width: fit-content;
+  margin-left: 36px;
+
+  span {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #00ff88;
+    animation: ${typingPulse} 1.4s infinite ease-in-out;
+    &:nth-child(2) { animation-delay: 0.2s; }
+    &:nth-child(3) { animation-delay: 0.4s; }
+  }
 `;
 
 
@@ -245,59 +380,112 @@ const ToastModal = styled.div`
   }
 `;
 
-const TextInputForm = styled.form`
+const InputBar = styled.form`
   display: flex;
-  margin-top: 8px;
-  background: rgba(0, 0, 0, 0.4);
-  border-radius: 20px;
-  padding: 4px 12px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
   align-items: center;
+  padding: 12px 16px;
+  gap: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(0, 0, 0, 0.15);
+  flex-shrink: 0;
 
-  textarea {
-    flex: 1;
-    background: transparent;
-    border: none;
-    color: #fff;
-    font-size: 14px;
-    outline: none;
-    padding: 8px 0;
-    resize: none;
-    font-family: inherit;
-    line-height: 1.4;
+  .input-actions {
+    display: flex;
+    gap: 4px;
 
-    &::placeholder {
+    button {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      border: none;
+      background: rgba(255, 255, 255, 0.05);
       color: rgba(255, 255, 255, 0.4);
-    }
-    
-    &::-webkit-scrollbar {
-        width: 4px;
-    }
-    &::-webkit-scrollbar-thumb {
-        background: rgba(255, 255, 255, 0.2);
-        border-radius: 4px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      transition: all 0.2s;
+      &:hover:not(:disabled) {
+        background: rgba(255, 255, 255, 0.1);
+        color: #00ff88;
+      }
+      &:disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+      }
     }
   }
 
-  button {
-    background: none;
-    border: none;
-    color: #00ff88;
-    cursor: pointer;
-    font-size: 16px;
-    padding: 4px 8px;
-    transition: transform 0.2s;
+  textarea {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    color: #fff;
+    font-size: 13.5px;
+    outline: none;
+    padding: 10px 14px;
+    resize: none;
+    font-family: inherit;
+    line-height: 1.4;
+    transition: border-color 0.2s;
+    max-height: 100px;
 
-    &:hover:not(:disabled) {
-      transform: scale(1.2);
+    &:focus {
+      border-color: rgba(0, 255, 136, 0.3);
     }
+    &::placeholder {
+      color: rgba(255, 255, 255, 0.25);
+    }
+    &::-webkit-scrollbar { width: 3px; }
+    &::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 3px;
+    }
+  }
 
+  .send-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    border: none;
+    background: #00ff88;
+    color: #0a0f14;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: bold;
+    transition: all 0.2s;
+    flex-shrink: 0;
+    &:hover:not(:disabled) {
+      background: #00e67a;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 255, 136, 0.3);
+    }
     &:disabled {
-      color: rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.06);
+      color: rgba(255, 255, 255, 0.15);
       cursor: not-allowed;
     }
   }
 `;
+
+// Acciones de bajo riesgo que se auto-ejecutan sin confirmación (Tier 3: #13)
+const LOW_RISK_ACTIONS = ['create_task', 'create_sticky', 'create_room_sticky', 'toggle_task_completion'];
+
+// Lightweight Markdown → HTML for chat bubbles
+const renderMarkdown = (text: string): string => {
+    return text
+        // Bold: **text** → <strong>
+        .replace(/\*\*(.+?)\*\*/g, '<strong style="color:#00ff88;font-weight:600">$1</strong>')
+        // Bullet lists: lines starting with * or -
+        .replace(/^[\*\-]\s+(.+)$/gm, '<div style="display:flex;gap:6px;margin:3px 0"><span style="color:#00ff88;flex-shrink:0">•</span><span>$1</span></div>')
+        // Line breaks
+        .replace(/\n/g, '<br/>');
+};
 
 export const GrowyOrb: React.FC = () => {
     const { currentOrganization } = useOrganization();
@@ -311,7 +499,22 @@ export const GrowyOrb: React.FC = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [errorToast, setErrorToast] = useState<string | null>(null);
     const [chatHistory, setChatHistory] = useState<{ role: string, content: string }[]>([]);
+    const [visibleMessages, setVisibleMessages] = useState<{ role: 'user' | 'growy', content: string }[]>([]);
+    const messagesEndRef = useRef<HTMLDivElement>(null);
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
+
+    // Tier 3 #14: Exponer trigger global para @Growy en stickies
+    useEffect(() => {
+        (window as any).__growyTrigger = (prompt: string) => {
+            setIsModalOpen(true);
+            setTextInput(prompt);
+            // Small delay to allow modal to open before processing
+            setTimeout(() => {
+                handleFinalTranscript(prompt);
+            }, 300);
+        };
+        return () => { delete (window as any).__growyTrigger; };
+    }, [currentOrganization]);
 
     const synthRef = useRef<SpeechSynthesis>(window.speechSynthesis);
     const deepgramRef = useRef<any>(null);
@@ -319,6 +522,12 @@ export const GrowyOrb: React.FC = () => {
     const streamRef = useRef<MediaStream | null>(null);
     const silenceTimerRef = useRef<NodeJS.Timeout | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    // Audio Visualizer refs
+    const audioContextRef = useRef<AudioContext | null>(null);
+    const analyserRef = useRef<AnalyserNode | null>(null);
+    const canvasRef = useRef<HTMLCanvasElement | null>(null);
+    const animFrameRef = useRef<number>(0);
 
     const clearSilenceTimer = () => {
         if (silenceTimerRef.current) {
@@ -353,6 +562,14 @@ export const GrowyOrb: React.FC = () => {
             streamRef.current.getTracks().forEach(track => track.stop());
             streamRef.current = null;
         }
+
+        // Cleanup audio visualizer
+        if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
+        if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
+            audioContextRef.current.close().catch(() => { });
+        }
+        audioContextRef.current = null;
+        analyserRef.current = null;
 
         // Limpiar WebSockets Deepgram
         if (deepgramRef.current) {
@@ -430,6 +647,74 @@ export const GrowyOrb: React.FC = () => {
                 // Iniciar contador de silencio apenas abre
                 startSilenceTimer('');
 
+                // Setup Web Audio API visualizer
+                try {
+                    const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+                    const analyser = audioCtx.createAnalyser();
+                    analyser.fftSize = 128;
+                    analyser.smoothingTimeConstant = 0.8;
+                    const source = audioCtx.createMediaStreamSource(stream);
+                    source.connect(analyser);
+                    audioContextRef.current = audioCtx;
+                    analyserRef.current = analyser;
+
+                    // Start canvas animation
+                    const drawSpectrum = () => {
+                        if (!analyserRef.current || !canvasRef.current) return;
+                        const canvas = canvasRef.current;
+                        const ctx = canvas.getContext('2d');
+                        if (!ctx) return;
+
+                        const data = new Uint8Array(analyserRef.current.frequencyBinCount);
+                        analyserRef.current.getByteFrequencyData(data);
+
+                        const w = canvas.width;
+                        const h = canvas.height;
+                        ctx.clearRect(0, 0, w, h);
+
+                        const barCount = data.length;
+                        const barWidth = w / barCount;
+                        const centerY = h / 2;
+
+                        for (let i = 0; i < barCount; i++) {
+                            const value = data[i] / 255;
+                            const barH = value * centerY * 0.9;
+
+                            // Gradient from green to cyan based on frequency
+                            const hue = 140 + (i / barCount) * 40;
+                            const alpha = 0.4 + value * 0.6;
+                            ctx.fillStyle = `hsla(${hue}, 100%, 60%, ${alpha})`;
+
+                            // Mirror bars (top and bottom from center)
+                            const x = i * barWidth;
+                            ctx.fillRect(x, centerY - barH, barWidth - 1, barH);
+                            ctx.fillRect(x, centerY, barWidth - 1, barH);
+
+                            // Glow effect on peaks
+                            if (value > 0.5) {
+                                ctx.shadowColor = `hsla(${hue}, 100%, 60%, 0.5)`;
+                                ctx.shadowBlur = 8;
+                                ctx.fillRect(x, centerY - barH, barWidth - 1, 2);
+                                ctx.fillRect(x, centerY + barH - 2, barWidth - 1, 2);
+                                ctx.shadowBlur = 0;
+                            }
+                        }
+
+                        // Center line glow
+                        ctx.strokeStyle = 'rgba(0, 255, 136, 0.15)';
+                        ctx.lineWidth = 1;
+                        ctx.beginPath();
+                        ctx.moveTo(0, centerY);
+                        ctx.lineTo(w, centerY);
+                        ctx.stroke();
+
+                        animFrameRef.current = requestAnimationFrame(drawSpectrum);
+                    };
+                    drawSpectrum();
+                } catch (vizErr) {
+                    console.warn('Audio visualizer init failed:', vizErr);
+                }
+
                 const mediaRecorder = new MediaRecorder(stream);
                 mediaRecorderRef.current = mediaRecorder;
 
@@ -439,7 +724,7 @@ export const GrowyOrb: React.FC = () => {
                     }
                 });
 
-                mediaRecorder.start(250); // Enviar fragmentos de audio de 250ms
+                mediaRecorder.start(100); // Enviar fragmentos de audio cada 100ms para capturar inicio rápido
             });
 
             let fullTranscript = '';
@@ -447,25 +732,30 @@ export const GrowyOrb: React.FC = () => {
             connection.on(LiveTranscriptionEvents.Transcript, (data) => {
                 const sentence = data.channel.alternatives[0].transcript;
 
-                // Si detectó un silencio largo interno de Deepgram y el audio es válido
+                // Ignorar empty returns primero
+                if (sentence && sentence.trim() !== '') {
+                    if (data.is_final) {
+                        fullTranscript += sentence + ' ';
+                        setTranscript(fullTranscript);
+                    } else {
+                        setTranscript(fullTranscript + sentence);
+                    }
+                    // Reiniciar el contador de silencio porque el usuario sigue hablando
+                    startSilenceTimer(fullTranscript);
+                }
+
+                // Enviar transcripción completa cuando Deepgram detecta fin de habla
                 if (data.speech_final && growyState === 'listening') {
+                    // Incluir la frase actual antes de enviar
+                    if (sentence && sentence.trim() !== '' && data.is_final) {
+                        // Ya se agregó arriba
+                    } else if (sentence && sentence.trim() !== '') {
+                        fullTranscript += sentence + ' ';
+                    }
                     stopListening(fullTranscript.trim());
-                    fullTranscript = ''; // Reset after submit
+                    fullTranscript = '';
                     return;
                 }
-
-                // Ignorar empty returns
-                if (!sentence || sentence.trim() === '') return;
-
-                if (data.is_final) {
-                    fullTranscript += sentence + ' ';
-                    setTranscript(fullTranscript);
-                } else {
-                    setTranscript(fullTranscript + sentence);
-                }
-
-                // Reiniciar el contador de 3 segundos porque el usuario sigue hablando
-                startSilenceTimer(fullTranscript);
             });
 
             connection.on(LiveTranscriptionEvents.Error, (err) => {
@@ -525,6 +815,9 @@ export const GrowyOrb: React.FC = () => {
 
         setGrowyState('processing');
         setTranscript(text);
+        // Add user message to visible thread
+        setVisibleMessages(prev => [...prev, { role: 'user', content: text }]);
+        setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
 
         const currentImage = selectedImage;
         setSelectedImage(null); // Limpiar preview mientras procesa
@@ -541,12 +834,27 @@ export const GrowyOrb: React.FC = () => {
             const reply = await growyService.sendMessage(text, null, currentOrganization.id, chatHistory, currentImage || undefined);
 
             if (reply.type === 'actions' && reply.actionProposals) {
-                setActionProposals(reply.actionProposals);
-                setGrowyState('idle');
-                speakResponse("Por favor, confirma si deseas que ejecute este lote de acciones.");
+                // Tier 3 #13: Si TODAS las acciones son de bajo riesgo, ejecutar directamente
+                const allLowRisk = reply.actionProposals.every((p: any) => LOW_RISK_ACTIONS.includes(p.name));
+                if (allLowRisk) {
+                    setActionProposals(reply.actionProposals);
+                    setGrowyState('idle');
+                    speakResponse(`Ejecutando ${reply.actionProposals.length} acciones automáticamente...`);
+                    // Auto-execute without confirmation
+                    setTimeout(() => handleConfirmAction(), 100);
+                } else {
+                    setActionProposals(reply.actionProposals);
+                    setGrowyState('idle');
+                    speakResponse("Por favor, confirma si deseas que ejecute este lote de acciones.");
+                }
             } else {
                 setResponse(reply.content || '');
                 speakResponse(reply.content || '');
+                // Add Growy response to visible thread
+                if (reply.content) {
+                    setVisibleMessages(prev => [...prev, { role: 'growy' as const, content: reply.content! }]);
+                    setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+                }
 
                 // Guardar memoria conversacional corta (3 interacciones máx para no desbordar tokens)
                 setChatHistory(prev => {
@@ -639,8 +947,13 @@ export const GrowyOrb: React.FC = () => {
 
             // Éxito Total
             console.log("Growy Batch Success:", data);
-            setResponse(`¡Listo! El lote de ${processedActions.length} acciones se ejecutó exitosamente de forma segura. Refresca la página si es necesario.`);
+            setResponse(`¡Listo! El lote de ${processedActions.length} acciones se ejecutó exitosamente.`);
             speakResponse(`Lote de ${processedActions.length} tareas completado exitosamente.`);
+
+            // Auto-refresh: dispatch event para que los componentes escuchando refresquen sus datos
+            window.dispatchEvent(new CustomEvent('growy-batch-success', {
+                detail: { actions: processedActions.map(a => a.name), count: processedActions.length }
+            }));
 
         } catch (error: any) {
             console.error('Error executing batch action:', error);
@@ -729,17 +1042,17 @@ export const GrowyOrb: React.FC = () => {
             }
 
             utterance.lang = selectedVoice ? selectedVoice.lang : 'es-AR';
-            // Ligera modificación de pitch y rate para sonar menos robótico
-            utterance.rate = 1.05;
+            // Rate elevado para fluidez rápida
+            utterance.rate = 1.15;
             utterance.pitch = 1.0;
 
             if (currentIndex === 0) setGrowyState('speaking');
 
             utterance.onend = () => {
                 currentIndex++;
-                // Pequeño timeout para dar un respiro natural (reducido al 50% según feedback)
+                // Pausas reducidas para mayor velocidad
                 const isEndOfSentence = /[.?!]$/.test(chunkText);
-                setTimeout(speakNextChunk, isEndOfSentence ? 200 : 75);
+                setTimeout(speakNextChunk, isEndOfSentence ? 80 : 30);
             };
 
             utterance.onerror = (e) => {
@@ -798,63 +1111,173 @@ export const GrowyOrb: React.FC = () => {
 
     return (
         <OrbContainer>
-            <CommandModal $visible={isModalOpen}>
-                <Header>
-                    <h3><FaRobot color="#00ff88" /> Growy UI</h3>
-                    <button onClick={() => setIsModalOpen(false)}><FaTimes /></button>
-                </Header>
-                <TranscriptArea>
-                    {transcript || "Presiona el orbe y dime en qué te ayudo..."}
-                </TranscriptArea>
-                {response && (
-                    <ResponseArea>{response}</ResponseArea>
-                )}
+            {/* FULLSCREEN AUDIO VISUALIZER OVERLAY */}
+            {growyState === 'listening' && (
+                <div style={{
+                    position: 'fixed',
+                    top: 0, left: 0, right: 0, bottom: 0,
+                    zIndex: 10001,
+                    background: 'rgba(0, 0, 0, 0.75)',
+                    backdropFilter: 'blur(16px)',
+                    WebkitBackdropFilter: 'blur(16px)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '24px',
+                    animation: 'fadeIn 0.3s ease',
+                }}>
+                    {/* Pulsing mic icon */}
+                    <div style={{
+                        width: 72, height: 72,
+                        borderRadius: '50%',
+                        background: 'rgba(0, 255, 136, 0.1)',
+                        border: '2px solid rgba(0, 255, 136, 0.3)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: 28,
+                        color: '#00ff88',
+                        animation: 'pulseViz 2s infinite ease-in-out',
+                        boxShadow: '0 0 30px rgba(0, 255, 136, 0.2)',
+                    }}>
+                        <FaMicrophone />
+                    </div>
+
+                    {/* Audio Spectrum Canvas */}
+                    <canvas
+                        ref={canvasRef}
+                        width={360}
+                        height={120}
+                        style={{
+                            borderRadius: 12,
+                            background: 'rgba(0, 0, 0, 0.3)',
+                            border: '1px solid rgba(0, 255, 136, 0.1)',
+                        }}
+                    />
+
+                    {/* Live transcript */}
+                    <div style={{
+                        color: 'rgba(255,255,255,0.7)',
+                        fontSize: 15,
+                        maxWidth: 340,
+                        textAlign: 'center',
+                        lineHeight: 1.5,
+                        minHeight: 24,
+                    }}>
+                        {transcript || 'Escuchando...'}
+                    </div>
+
+                    {/* Cancel button */}
+                    <button
+                        onClick={() => stopListening()}
+                        style={{
+                            background: 'rgba(255, 255, 255, 0.06)',
+                            border: '1px solid rgba(255, 255, 255, 0.15)',
+                            borderRadius: 12,
+                            color: 'rgba(255,255,255,0.5)',
+                            padding: '10px 24px',
+                            cursor: 'pointer',
+                            fontSize: 13,
+                            transition: 'all 0.2s',
+                        }}
+                    >
+                        Cancelar
+                    </button>
+
+                    <style>{`
+                        @keyframes fadeIn {
+                            from { opacity: 0; }
+                            to { opacity: 1; }
+                        }
+                        @keyframes pulseViz {
+                            0%, 100% { transform: scale(1); box-shadow: 0 0 30px rgba(0, 255, 136, 0.2); }
+                            50% { transform: scale(1.08); box-shadow: 0 0 50px rgba(0, 255, 136, 0.4); }
+                        }
+                    `}</style>
+                </div>
+            )}
+
+            <ChatPanel $visible={isModalOpen}>
+                <ChatHeader>
+                    <div className="header-left">
+                        <div className="avatar"><FaRobot /></div>
+                        <div className="info">
+                            <div className="name">Growy</div>
+                            <div className="status"><span className="dot" /> Asistente de Cultivo</div>
+                        </div>
+                    </div>
+                    <button className="close-btn" onClick={() => setIsModalOpen(false)}><FaTimes size={14} /></button>
+                </ChatHeader>
+
+                <MessageThread>
+                    {visibleMessages.length === 0 && (
+                        <div style={{ textAlign: 'center', padding: '40px 20px', color: 'rgba(255,255,255,0.25)' }}>
+                            <FaRobot size={32} style={{ marginBottom: 12, opacity: 0.3 }} />
+                            <div style={{ fontSize: 13 }}>Preguntame sobre tus cultivos, tareas o finanzas</div>
+                        </div>
+                    )}
+                    {visibleMessages.map((msg, i) => (
+                        <MessageBubble key={i} $isUser={msg.role === 'user'}>
+                            <div className="bubble-avatar">
+                                {msg.role === 'user' ? '👤' : <FaRobot size={12} />}
+                            </div>
+                            <div
+                                className="bubble-content"
+                                dangerouslySetInnerHTML={{
+                                    __html: msg.role === 'user' ? msg.content : renderMarkdown(msg.content)
+                                }}
+                            />
+                        </MessageBubble>
+                    ))}
+                    {growyState === 'processing' && (
+                        <TypingIndicator>
+                            <span /><span /><span />
+                        </TypingIndicator>
+                    )}
+                    <div ref={messagesEndRef} />
+                </MessageThread>
+
                 {selectedImage && (
-                    <div style={{ position: 'relative', marginTop: 8, display: 'inline-block' }}>
-                        <img src={selectedImage} alt="Preview" style={{ maxHeight: 100, borderRadius: 8, border: '1px solid rgba(255,255,255,0.2)' }} />
-                        <button 
-                            onClick={() => setSelectedImage(null)} 
-                            style={{ position: 'absolute', top: -8, right: -8, background: '#ef4444', color: 'white', border: 'none', borderRadius: '50%', width: 20, height: 20, cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
-                        >
-                            <FaTimes size={10} />
-                        </button>
+                    <div style={{ padding: '0 16px 8px', position: 'relative', display: 'inline-block' }}>
+                        <img src={selectedImage} alt="Preview" style={{ maxHeight: 80, borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)' }} />
+                        <button
+                            onClick={() => setSelectedImage(null)}
+                            style={{ position: 'absolute', top: -6, right: 10, background: '#ef4444', color: 'white', border: 'none', borderRadius: '50%', width: 18, height: 18, cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: 10 }}
+                        >✕</button>
                     </div>
                 )}
-                <TextInputForm onSubmit={(e) => {
+
+                <InputBar onSubmit={(e) => {
                     e.preventDefault();
                     if ((textInput.trim() || selectedImage) && growyState !== 'processing') {
-                        handleFinalTranscript(textInput || "Analiza esta imagen."); // Fallback prompt if ONLY image
+                        handleFinalTranscript(textInput || "Analiza esta imagen.");
                         setTextInput('');
                     }
                 }}>
-                    <input 
-                        type="file" 
-                        accept="image/*" 
-                        hidden 
-                        ref={fileInputRef} 
-                        onChange={handleFileSelect} 
-                    />
-                    <button type="button" onClick={() => fileInputRef.current?.click()} style={{ marginRight: 8, color: '#aaa' }}>
-                         <svg stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 448 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M43.246 466.142c-58.43-60.289-57.341-157.511 1.386-217.581L254.392 34c44.316-45.332 116.351-45.336 160.671 0 43.89 44.894 43.943 117.329 0 162.276L232.214 382.514c-29.855 30.537-78.633 30.111-107.982-.998-28.275-29.97-27.368-77.473 1.452-106.953l143.743-146.835c6.182-6.314 16.312-6.422 22.626-.241l22.861 22.379c6.315 6.182 6.422 16.312.241 22.626L171.427 319.927c-4.932 5.045-5.236 13.428-.648 18.292 4.372 4.634 11.245 4.711 15.688.165l182.849-186.236c19.718-20.161 19.699-52.797-.046-72.993-19.424-19.866-50.694-19.885-70.12-.046L89.336 286.262c-34.992 35.76-35.494 93.303-1.282 128.47 34.128 35.147 89.151 35.604 124.144.241L386.892 236.41c6.182-6.314 16.312-6.422 22.626-.241l22.861 22.379c6.315 6.182 6.422 16.312.241 22.626L257.925 466.9c-59.39 60.713-156.248 59.53-214.679-.758z"></path></svg>
-                    </button>
-                    <button
-                        type="button"
-                        onClick={startListening}
-                        disabled={growyState === 'listening' || growyState === 'processing'}
-                        title="Hablar con Growy"
-                        style={{ color: growyState === 'listening' ? '#ef4444' : '#00ff88' }}
-                    >
-                        {growyState === 'listening' ? '🔴' : '🎙️'}
-                    </button>
+                    <div className="input-actions">
+                        <input type="file" accept="image/*" hidden ref={fileInputRef} onChange={handleFileSelect} />
+                        <button type="button" onClick={() => fileInputRef.current?.click()} title="Adjuntar imagen">
+                            📎
+                        </button>
+                        <button
+                            type="button"
+                            onClick={startListening}
+                            disabled={growyState === 'listening' || growyState === 'processing'}
+                            title="Hablar con Growy"
+                            style={{ color: growyState === 'listening' ? '#ef4444' : undefined }}
+                        >
+                            {growyState === 'listening' ? '🔴' : '🎙️'}
+                        </button>
+                    </div>
                     <textarea
                         rows={1}
-                        placeholder="O escribe tu comando aquí..."
+                        placeholder="Preguntale algo a Growy..."
                         value={textInput}
                         onChange={(e) => {
                             setTextInput(e.target.value);
-                            // Auto-resize logic
                             e.target.style.height = 'auto';
-                            e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
+                            e.target.style.height = Math.min(e.target.scrollHeight, 100) + 'px';
                         }}
                         onKeyDown={(e) => {
                             if (e.key === 'Enter' && !e.shiftKey) {
@@ -868,11 +1291,11 @@ export const GrowyOrb: React.FC = () => {
                         }}
                         disabled={growyState === 'processing' || growyState === 'listening'}
                     />
-                    <button type="submit" disabled={!textInput.trim() || growyState === 'processing' || growyState === 'listening'}>
+                    <button className="send-btn" type="submit" disabled={!textInput.trim() || growyState === 'processing' || growyState === 'listening'}>
                         ➤
                     </button>
-                </TextInputForm>
-            </CommandModal>
+                </InputBar>
+            </ChatPanel>
 
             <OrbButton
                 $gState={growyState}

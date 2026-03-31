@@ -28,7 +28,7 @@ export interface AuthContextType {
   setTourStepIndex: (index: number) => void;
   kycStatus?: 'pending' | 'blocked' | 'completed';
   daysFromRegistration?: number;
-  
+
   // Session Timeout
   isIdleWarningOpen: boolean;
   idleCountdown: number;
@@ -44,6 +44,7 @@ export interface Organization {
   name: string;
   slug: string;
   plan: string; // references plans.slug
+  logo_url?: string;
   status?: 'pending' | 'active' | 'suspended';
   owner_email?: string;
   stripe_customer_id?: string;
@@ -58,6 +59,17 @@ export interface Organization {
   max_users?: number;
   max_storage_gb?: number;
   is_revenue_exempt?: boolean;
+  label_settings?: {
+    themeMode: 'color' | 'bw';
+    primaryColor: string;
+    secondaryColor: string;
+    fontFamily: string;
+    backgroundPattern: string;
+    sidebarDesign?: 'solid' | 'gradient';
+    showAddress: boolean;
+    addressText: string;
+    phoneText: string;
+  };
 }
 
 export interface Plan {
@@ -212,10 +224,10 @@ export interface Insumo {
   fecha_ultimo_precio: string;
   stock_actual: number; // Used for "Discrete Units" historically
   stock_minimo: number;
-  
+
   // Volumetric Data added for AI and detailed stock
-  current_volume?: number; 
-  total_volume?: number; 
+  current_volume?: number;
+  total_volume?: number;
   unit_of_measurement?: string; // 'L', 'ml', 'g', etc.
   reorder_threshold?: number;
   auto_restock_enabled?: boolean;

@@ -34,6 +34,7 @@ import Informes from './pages/Informes'; // Added Informes route
 import Patients from './pages/Patients';
 import PatientDetail from './pages/PatientDetail';
 import Templates from './pages/Templates';
+import GrowyDashboard from './pages/GrowyDashboard';
 import AccountInfo from './pages/AccountInfo';
 import { notificationService } from './services/notificationService';
 import Login from './pages/Login';
@@ -87,7 +88,7 @@ const RequireAuth: React.FC<{ children: React.ReactElement }> = ({ children }) =
 
 const SessionTimeoutWarning = () => {
   const { isIdleWarningOpen, idleCountdown, continueSession } = useAuth();
-  
+
   if (!isIdleWarningOpen) return null;
 
   return (
@@ -113,9 +114,9 @@ const SessionTimeoutWarning = () => {
       }}>
         <h2 style={{ color: '#ef4444', marginTop: 0, marginBottom: '1rem' }}>Sesión Inactiva</h2>
         <p style={{ color: '#e2e8f0', marginBottom: '1.5rem', lineHeight: 1.5 }}>
-          Hemos detectado que llevas mucho tiempo sin actividad en tu sesión. Se cerrará tu sesión en <strong style={{color: '#ef4444', fontSize: '1.2rem'}}>{idleCountdown}</strong> segundos para preservar tu información.
+          Hemos detectado que llevas mucho tiempo sin actividad en tu sesión. Se cerrará tu sesión en <strong style={{ color: '#ef4444', fontSize: '1.2rem' }}>{idleCountdown}</strong> segundos para preservar tu información.
         </p>
-        <button 
+        <button
           onClick={continueSession}
           style={{
             background: '#10b981',
@@ -373,7 +374,7 @@ function App() {
                 </RoleGuard>
               </RequireAuth>
             } />
-            
+
             <Route path="/providers" element={
               <RequireAuth>
                 <RoleGuard allowedRoles={['admin', 'grower', 'staff']}>
@@ -506,6 +507,16 @@ function App() {
                     </MainContent>
                   </KYCGuard>
                 </RoleGuard>
+              </RequireAuth>
+            } />
+
+            <Route path="/growy-dashboard" element={
+              <RequireAuth>
+                <KYCGuard>
+                  <MainContent>
+                    <GrowyDashboard />
+                  </MainContent>
+                </KYCGuard>
               </RequireAuth>
             } />
 

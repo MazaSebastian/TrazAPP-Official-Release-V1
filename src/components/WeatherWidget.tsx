@@ -4,6 +4,8 @@ import styled from 'styled-components';
 import { weatherService, DailyWeather } from '../services/weatherService';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { supabase } from '../services/supabaseClient';
+import { useOrganization } from '../context/OrganizationContext';
 import {
   WiDaySunny,
   WiDayCloudy,
@@ -314,9 +316,10 @@ const getMoonPhase = (date: Date) => {
 };
 
 export const WeatherWidget: React.FC<{ className?: string }> = ({ className }) => {
+  const { currentOrganization } = useOrganization();
   const [weather, setWeather] = useState<{ current: { temp: number; humidity: number; code: number; sunrise: string; sunset: string; uvIndex: number; }; daily: DailyWeather[] } | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isOpen, setIsOpen] = useState(false); // Default closed on mobile, open on desktop? Let's just default to open on desktop, but closed entirely on mobile.
+  const [isOpen, setIsOpen] = useState(false);
   const [locationName, setLocationName] = useState('Munro/Olivos');
 
   // Use a media query in JS to set initial state to closed if mobile
@@ -326,14 +329,36 @@ export const WeatherWidget: React.FC<{ className?: string }> = ({ className }) =
     }
   }, []);
 
-  const fetchWeather = async () => {
-    // Only set loading to true internally if no data exists to prevent blinking empty states
+  const fetchWeather = async (orgId?: string) => {
     if (!weather) setLoading(true);
 
-    const savedLocation = localStorage.getItem('trazapp_weather_location');
     let lat = -34.5175;
     let lon = -58.5331;
 
+    // 1. Read from Supabase (authoritative) if org is known
+    const idToUse = orgId || currentOrganization?.id;
+    if (idToUse) {
+      const { data } = await supabase
+        .from('organizations')
+        .select('weather_location')
+        .eq('id', idToUse)
+        .single();
+      if (data?.weather_location) {
+        const loc = data.weather_location;
+        if (loc.lat !== undefined) lat = loc.lat;
+        if (loc.lon !== undefined) lon = loc.lon;
+        if (loc.name) setLocationName(loc.name);
+        // Keep localStorage in sync
+        localStorage.setItem('trazapp_weather_location', JSON.stringify(loc));
+        const weatherData = await weatherService.getForecast(lat, lon);
+        setWeather(weatherData);
+        setLoading(false);
+        return;
+      }
+    }
+
+    // 2. Fallback to localStorage
+    const savedLocation = localStorage.getItem('trazapp_weather_location');
     if (savedLocation) {
       try {
         const parsed = JSON.parse(savedLocation);
@@ -357,7 +382,7 @@ export const WeatherWidget: React.FC<{ className?: string }> = ({ className }) =
     return () => {
       window.removeEventListener('weatherLocationChanged', handleLocationChange);
     };
-  }, []);
+  }, [currentOrganization?.id]);
 
   if (!weather) return null;
 
