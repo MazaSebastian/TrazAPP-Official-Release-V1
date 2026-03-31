@@ -990,6 +990,7 @@ export const GrowyOrb: React.FC = () => {
             .replace(/\n\*\s/g, '. ') // Listas con asterisco
             .replace(/\n/g, ' ') // Quita saltos sueltos restantes
             .replace(/\.\./g, '.') // Limpia puntos dobles accidentales
+            .replace(/\breprocann\b/gi, 'Reprocann') // Forzar a que lo lea como palabra y no deletree
             .trim();
 
         if (!cleanText) return;
