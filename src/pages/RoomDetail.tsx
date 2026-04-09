@@ -2214,9 +2214,14 @@ const RoomDetail: React.FC = () => {
     const activeMap = cloneMaps.find(m => m.id === activeMapId);
 
     const handleOpenEditBatch = (batch: Batch) => {
+        // Strip the date/time suffix from the name so users don't confuse it
+        // Batch names follow the pattern: "PREFIX - DD/MM/YY HH:mm" or "SEM - PREFIX - DD/MM/YY HH:mm"
+        // We remove the last " - DD/MM/YY HH:mm" segment
+        const nameWithoutDate = batch.name.replace(/\s*-\s*\d{2}\/\d{2}\/\d{2}\s+\d{2}:\d{2}$/, '');
+
         setEditBatchForm({
             id: batch.id,
-            name: batch.name,
+            name: nameWithoutDate,
             quantity: batch.quantity.toString(),
             notes: batch.notes || '',
             start_date: batch.start_date ? batch.start_date.split('T')[0] : (batch.created_at ? batch.created_at.split('T')[0] : '')
@@ -2488,8 +2493,13 @@ const RoomDetail: React.FC = () => {
         if (!editBatchForm.id) return;
         setIsUpdatingBatch(true);
         try {
+            // Reconstruct the full batch name by appending the formatted date
+            const dateObj = editBatchForm.start_date ? new Date(editBatchForm.start_date + 'T12:00:00') : new Date();
+            const formattedDate = format(dateObj, 'dd/MM/yy HH:mm');
+            const fullName = `${editBatchForm.name} - ${formattedDate}`;
+
             await roomsService.updateBatch(editBatchForm.id, {
-                name: editBatchForm.name,
+                name: fullName,
                 quantity: Number(editBatchForm.quantity),
                 notes: editBatchForm.notes,
                 start_date: editBatchForm.start_date ? `${editBatchForm.start_date}T12:00:00.000Z` : undefined,
