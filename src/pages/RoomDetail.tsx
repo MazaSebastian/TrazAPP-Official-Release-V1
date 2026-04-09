@@ -2109,8 +2109,8 @@ const RoomDetail: React.FC = () => {
 
     // Edit Batch Modal State
     const [isEditBatchModalOpen, setIsEditBatchModalOpen] = useState(false);
-    const [editBatchForm, setEditBatchForm] = useState<{ id: string, name: string, quantity: number | string, notes: string }>({
-        id: '', name: '', quantity: '', notes: ''
+    const [editBatchForm, setEditBatchForm] = useState<{ id: string, name: string, quantity: number | string, notes: string, start_date?: string }>({
+        id: '', name: '', quantity: '', notes: '', start_date: ''
     });
     const [isUpdatingBatch, setIsUpdatingBatch] = useState(false);
 
@@ -2217,8 +2217,9 @@ const RoomDetail: React.FC = () => {
         setEditBatchForm({
             id: batch.id,
             name: batch.name,
-            quantity: '', // Start empty per user request
-            notes: batch.notes || ''
+            quantity: batch.quantity.toString(),
+            notes: batch.notes || '',
+            start_date: batch.start_date ? batch.start_date.split('T')[0] : (batch.created_at ? batch.created_at.split('T')[0] : '')
         });
         setIsEditBatchModalOpen(true);
         // Close other modals if open
@@ -2491,6 +2492,7 @@ const RoomDetail: React.FC = () => {
                 name: editBatchForm.name,
                 quantity: Number(editBatchForm.quantity),
                 notes: editBatchForm.notes,
+                start_date: editBatchForm.start_date ? `${editBatchForm.start_date}T12:00:00.000Z` : undefined,
                 current_room_id: room?.id
             }, user?.id, 'Edición Manual de Lote');
 
@@ -6991,15 +6993,26 @@ const RoomDetail: React.FC = () => {
                                         onChange={e => setEditBatchForm({ ...editBatchForm, name: e.target.value })}
                                     />
                                 </FormGroup>
-                                <FormGroup>
-                                    <label>Cantidad</label>
-                                    <input
-                                        type="number"
-                                        min="1"
-                                        value={editBatchForm.quantity}
-                                        onChange={e => setEditBatchForm({ ...editBatchForm, quantity: e.target.value })}
-                                    />
-                                </FormGroup>
+                                <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
+                                    <FormGroup style={{ flex: 1, marginBottom: 0 }}>
+                                        <label>Cantidad</label>
+                                        <input
+                                            type="number"
+                                            min="1"
+                                            value={editBatchForm.quantity}
+                                            onChange={e => setEditBatchForm({ ...editBatchForm, quantity: e.target.value })}
+                                        />
+                                    </FormGroup>
+                                    <FormGroup style={{ flex: 1, marginBottom: 0 }}>
+                                        <label>Fecha de Inicio</label>
+                                        <input
+                                            type="date"
+                                            value={editBatchForm.start_date}
+                                            onChange={e => setEditBatchForm({ ...editBatchForm, start_date: e.target.value })}
+                                            style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}
+                                        />
+                                    </FormGroup>
+                                </div>
                                 <FormGroup>
                                     <label>Notas</label>
                                     <textarea
@@ -7012,7 +7025,7 @@ const RoomDetail: React.FC = () => {
                                     <ActionButton
                                         $variant="success"
                                         onClick={handleUpdateBatch}
-                                        disabled={isUpdatingBatch}
+                                        disabled={isUpdatingBatch || !editBatchForm.quantity || Number(editBatchForm.quantity) <= 0}
                                         style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
                                     >
                                         {isUpdatingBatch && <FaCircleNotch className="spin" />}
