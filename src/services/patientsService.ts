@@ -22,6 +22,7 @@ export interface Patient {
     file_reprocann_url?: string;
     file_affidavit_url?: string; // Declaracion Jurada
     file_consent_url?: string;   // Consentimiento Bilateral
+    is_approved_by_org?: boolean;
 
     created_at?: string;
 }

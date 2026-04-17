@@ -87,6 +87,20 @@ export interface Plan {
   created_at: string;
 }
 
+// ==========================
+// Tipos para Simulador de Auto-Alta (Self-Onboarding)
+// ==========================
+export interface PatientInvitation {
+  id: string;
+  organization_id: string;
+  email: string;
+  status: 'pending' | 'used' | 'expired';
+  expires_at: string;
+  created_by?: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface OrganizationMember {
   id: string;
   organization_id: string;

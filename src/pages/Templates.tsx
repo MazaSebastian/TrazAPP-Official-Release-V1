@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import styled, { keyframes } from 'styled-components';
-import { FaFileMedical, FaPlus, FaPen, FaTrash, FaSave, FaTimes } from 'react-icons/fa';
+import { FaFileMedical, FaPlus, FaPen, FaTrash, FaSave, FaTimes, FaFilePdf, FaFileExport, FaFileImport } from 'react-icons/fa';
 import { templatesService, ClinicalTemplate, FormField, FieldType } from '../services/templatesService';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ToastModal } from '../components/ToastModal';
 import { CustomSelect } from '../components/CustomSelect';
 import { PrintableTemplate } from '../components/Templates/PrintableTemplate';
 import { useReactToPrint } from 'react-to-print';
-import { useRef } from 'react';
+import { exportAsPDF, exportAsTemplate, importTemplate } from '../services/templateExportService';
 
 const fadeIn = keyframes`
   from { opacity: 0; }
@@ -398,6 +398,48 @@ const Templates: React.FC = () => {
     }
   }, [templateToPrint, handlePrint]);
 
+  // ─── PDF Export ───────────────────────────────────
+  const handlePdfExport = async (template: ClinicalTemplate, e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      await exportAsPDF(template);
+      showToast('PDF descargado correctamente', 'success');
+    } catch (err) {
+      console.error('PDF error:', err);
+      showToast('Error al generar el PDF', 'error');
+    }
+  };
+
+  // ─── Template Export (.trazapp.json) ──────────────
+  const handleExportTemplate = (template: ClinicalTemplate, e: React.MouseEvent) => {
+    e.stopPropagation();
+    exportAsTemplate(template);
+    showToast(`Plantilla "${template.name}" exportada`, 'success');
+  };
+
+  // ─── Template Import ─────────────────────────────
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImportClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      await importTemplate(file);
+      showToast('Plantilla importada correctamente', 'success');
+      loadData();
+    } catch (err: any) {
+      showToast(err.message || 'Error al importar la plantilla', 'error');
+    } finally {
+      // Reset input so the same file can be selected again
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
   const loadData = async () => {
     setIsLoading(true);
     const data = await templatesService.getTemplates();
@@ -498,6 +540,16 @@ const Templates: React.FC = () => {
     <PageContainer>
       <Header>
         <Title><FaFileMedical /> Mis Plantillas Médicas</Title>
+        <ActionButton onClick={handleImportClick} title="Importar plantilla desde archivo .trazapp.json">
+          <FaFileImport /> Importar Plantilla
+        </ActionButton>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".json"
+          style={{ display: 'none' }}
+          onChange={handleFileSelected}
+        />
       </Header>
 
       {isLoading ? (
@@ -523,6 +575,20 @@ const Templates: React.FC = () => {
                       title="Imprimir plantilla en blanco"
                     >
                       <svg stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 512 512" height="14" width="14" xmlns="http://www.w3.org/2000/svg"><path d="M400 32H112C85.5 32 64 53.5 64 80v352c0 26.5 21.5 48 48 48h288c26.5 0 48-21.5 48-48V80c0-26.5-21.5-48-48-48zm-16 398c0 3.3-2.7 6-6 6H134c-3.3 0-6-2.7-6-6V86c0-3.3 2.7-6 6-6h244c3.3 0 6 2.7 6 6v344zM160 160h192v32H160zm0 80h192v32H160zm0 80h192v32H160z"></path></svg>
+                    </ActionButton>
+                    <ActionButton
+                      style={{ background: 'transparent', border: 'none', padding: '0.2rem', color: '#4ade80' }}
+                      onClick={(e) => handlePdfExport(template, e)}
+                      title="Descargar PDF"
+                    >
+                      <FaFilePdf size={14} />
+                    </ActionButton>
+                    <ActionButton
+                      style={{ background: 'transparent', border: 'none', padding: '0.2rem', color: '#fb923c' }}
+                      onClick={(e) => handleExportTemplate(template, e)}
+                      title="Exportar plantilla (.trazapp.json)"
+                    >
+                      <FaFileExport size={14} />
                     </ActionButton>
                     <ActionButton
                       style={{ background: 'transparent', border: 'none', padding: '0.2rem', color: '#f87171' }}
@@ -554,6 +620,20 @@ const Templates: React.FC = () => {
                     title="Imprimir"
                   >
                     <svg stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 512 512" height="14" width="14" xmlns="http://www.w3.org/2000/svg"><path d="M400 32H112C85.5 32 64 53.5 64 80v352c0 26.5 21.5 48 48 48h288c26.5 0 48-21.5 48-48V80c0-26.5-21.5-48-48-48zm-16 398c0 3.3-2.7 6-6 6H134c-3.3 0-6-2.7-6-6V86c0-3.3 2.7-6 6-6h244c3.3 0 6 2.7 6 6v344zM160 160h192v32H160zm0 80h192v32H160zm0 80h192v32H160z"></path></svg>
+                  </ActionButton>
+                  <ActionButton
+                    style={{ background: 'transparent', border: 'none', padding: '0.2rem', color: '#4ade80' }}
+                    onClick={(e) => handlePdfExport(template, e)}
+                    title="PDF"
+                  >
+                    <FaFilePdf size={14} />
+                  </ActionButton>
+                  <ActionButton
+                    style={{ background: 'transparent', border: 'none', padding: '0.2rem', color: '#fb923c' }}
+                    onClick={(e) => handleExportTemplate(template, e)}
+                    title="Exportar"
+                  >
+                    <FaFileExport size={14} />
                   </ActionButton>
                   <ActionButton
                     style={{ background: 'transparent', border: 'none', padding: '0.2rem', color: '#f87171' }}
@@ -687,6 +767,7 @@ const Templates: React.FC = () => {
           template={templateToPrint || ({ id: 'dummy', name: '', is_active: false, fields: [] } as unknown as ClinicalTemplate)}
         />
       </div>
+
 
       {toastOpen && <ToastModal isOpen={toastOpen} message={toastMessage} type={toastType} onClose={() => setToastOpen(false)} />}
     </PageContainer >

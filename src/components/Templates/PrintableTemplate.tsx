@@ -202,12 +202,26 @@ const FooterBox = styled.div`
 
 interface PrintableTemplateProps {
   template: ClinicalTemplate;
+  forPdf?: boolean;
 }
 
 export const PrintableTemplate = React.forwardRef<HTMLDivElement, PrintableTemplateProps>(
-  ({ template }, ref) => {
+  ({ template, forPdf }, ref) => {
     return (
-      <PrintContainer ref={ref} className="printable-template">
+      <PrintContainer
+        ref={ref}
+        className="printable-template"
+        style={forPdf ? {
+          display: 'block',
+          background: 'white',
+          color: 'black',
+          width: '210mm',
+          minHeight: '297mm',
+          padding: '10mm',
+          fontFamily: "'Inter', sans-serif",
+          boxSizing: 'border-box' as const,
+        } : undefined}
+      >
         <GlobalPrintStyle />
         <Header>
           <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start' }}>

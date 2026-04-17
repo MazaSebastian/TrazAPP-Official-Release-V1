@@ -6,11 +6,14 @@ import { useNavigate } from 'react-router-dom';
 import { ConfirmModal } from '../components/ConfirmModal';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ToastModal } from '../components/ToastModal';
-import { FaUserPlus, FaIdCard, FaFileUpload, FaCheckCircle, FaFileAlt, FaNotesMedical, FaWhatsapp } from 'react-icons/fa';
+import { FaUserPlus, FaIdCard, FaCheckCircle, FaFileAlt, FaNotesMedical, FaWhatsapp, FaFileImport } from 'react-icons/fa';
 import { CustomSelect } from '../components/CustomSelect';
 import { CustomDatePicker } from '../components/CustomDatePicker';
 import { useOrganization } from '../context/OrganizationContext';
 import UpgradeOverlay from '../components/common/UpgradeOverlay';
+import { ImportPatientsModal, ParsedPatient } from '../components/ImportPatientsModal';
+import { InvitePatientModal } from '../components/Patients/InvitePatientModal';
+import { supabase } from '../services/supabaseClient';
 
 const fadeIn = keyframes`
   from { opacity: 0; }
@@ -96,6 +99,41 @@ const ActionButton = styled.button`
       cursor: not-allowed;
       transform: none;
       box-shadow: none;
+  }
+`;
+
+const TabContainer = styled.div`
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 0.5rem;
+`;
+
+const TabButton = styled.button<{ $active?: boolean }>`
+  background: transparent;
+  border: none;
+  color: ${props => props.$active ? '#f8fafc' : '#64748b'};
+  font-weight: 600;
+  font-size: 1rem;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s;
+
+  &:hover {
+    color: #e2e8f0;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -0.6rem;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: ${props => props.$active ? '#3b82f6' : 'transparent'};
+    transition: all 0.2s;
   }
 `;
 
@@ -338,6 +376,10 @@ const Patients: React.FC = () => {
     // Edit Patient State
     const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
 
+    // Tab and Invite States
+    const [activeTab, setActiveTab] = useState<'active' | 'waiting'>('active');
+    const [isInviteOpen, setIsInviteOpen] = useState(false);
+
     // Confirm Modal State
     const [confirmModal, setConfirmModal] = useState({
         isOpen: false,
@@ -351,6 +393,9 @@ const Patients: React.FC = () => {
     const [toastOpen, setToastOpen] = useState(false);
     const [toastMessage, setToastMessage] = useState('');
     const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('info');
+
+    // Import Modal State
+    const [isImportOpen, setIsImportOpen] = useState(false);
 
     const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
         setToastMessage(message);
@@ -557,6 +602,68 @@ const Patients: React.FC = () => {
         p.reprocann_number?.includes(searchTerm)
     );
 
+    const activePatients = filteredPatients.filter(p => p.is_approved_by_org !== false);
+    const waitingPatients = filteredPatients.filter(p => p.is_approved_by_org === false);
+
+    const handleProcessImportBatch = async (
+        validPatients: ParsedPatient[],
+        onConflict: (p: ParsedPatient, existing: Patient) => Promise<'update' | 'skip' | 'duplicate' | 'abort'>
+    ) => {
+        const finalBatchToImport: ParsedPatient[] = [];
+
+        // 1. Resolver Conflictos uno por uno
+        for (const p of validPatients) {
+            if (p.validationStatus === 'duplicate' && p.duplicateTargetId) {
+                const existing = patients.find(pat => pat.id === p.duplicateTargetId);
+                if (existing) {
+                    const action = await onConflict(p, existing);
+                    if (action === 'abort') {
+                        showToast("Importación cancelada.", 'info');
+                        throw new Error("Aborted");
+                    } else if (action === 'skip') {
+                        continue;
+                    } else if (action === 'update' || action === 'duplicate') {
+                        finalBatchToImport.push({ ...p, validationStatus: action === 'update' ? 'ok' : 'duplicate' });
+                        continue;
+                    }
+                }
+            }
+            // Si es 'ok' entra directo
+            if (p.validationStatus === 'ok') finalBatchToImport.push(p);
+        }
+
+        if (finalBatchToImport.length === 0) {
+            showToast("No hay registros válidos para importar.", "info");
+            return;
+        }
+
+        // 2. Enviar a la Edge Function
+        showToast("Procesando importación en bloque...", "info");
+        try {
+            // Invocamos a Edge Function 
+            const { data, error } = await supabase.functions.invoke('patient-bulk-import', {
+                body: {
+                    patients: finalBatchToImport,
+                    organization_id: currentOrganization?.id
+                }
+            });
+
+            if (error) throw error;
+
+            if (data?.errors && data.errors.length > 0) {
+                console.error("Errores específicos de filas:", data.errors);
+                showToast(`Se importaron ${data.importedCount}. Errores en ${data.errors.length} filas: ${data.errors[0].error}`, 'error');
+            } else {
+                showToast(`¡Se importaron ${data?.importedCount || 0} pacientes con éxito!`, 'success');
+            }
+
+            loadData(); // Recargar la tabla
+        } catch (e: any) {
+            console.error("Bulk Import Error:", e);
+            showToast(`Error al importar: ${e.message}`, 'error');
+        }
+    };
+
     return (
         <PageContainer style={{ position: 'relative', overflow: 'hidden' }}>
             {planLevel < 3 && <UpgradeOverlay requiredPlanName="ONG" />}
@@ -564,10 +671,27 @@ const Patients: React.FC = () => {
             <div style={{ filter: planLevel < 3 ? 'blur(4px)' : 'none', pointerEvents: planLevel < 3 ? 'none' : 'auto', userSelect: planLevel < 3 ? 'none' : 'auto', opacity: planLevel < 3 ? 0.5 : 1 }}>
                 <Header>
                     <Title><FaIdCard /> Gestión de Socios</Title>
-                    <ActionButton onClick={() => setIsAddOpen(true)}>
-                        <FaUserPlus /> Nuevo Socio
-                    </ActionButton>
+                    <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                        <ActionButton onClick={() => setIsInviteOpen(true)} style={{ background: 'rgba(16, 185, 129, 0.2)', color: '#4ade80', borderColor: 'rgba(16, 185, 129, 0.5)' }}>
+                            📨 Invitar Socio
+                        </ActionButton>
+                        <ActionButton onClick={() => setIsImportOpen(true)} style={{ background: 'rgba(59, 130, 246, 0.2)', color: '#60a5fa', borderColor: 'rgba(59, 130, 246, 0.5)' }}>
+                            <FaFileImport /> Importar
+                        </ActionButton>
+                        <ActionButton onClick={() => setIsAddOpen(true)}>
+                            <FaUserPlus /> Nuevo Socio
+                        </ActionButton>
+                    </div>
                 </Header>
+
+                <TabContainer>
+                    <TabButton $active={activeTab === 'active'} onClick={() => setActiveTab('active')}>
+                        Socios Activos ({activePatients.length})
+                    </TabButton>
+                    <TabButton $active={activeTab === 'waiting'} onClick={() => setActiveTab('waiting')}>
+                        Sala de Espera <span style={{ background: waitingPatients.length > 0 ? '#ef4444' : '#64748b', color: 'white', padding: '0.1rem 0.5rem', borderRadius: '12px', fontSize: '0.75rem', marginLeft: '0.5rem' }}>{waitingPatients.length}</span>
+                    </TabButton>
+                </TabContainer>
 
                 <SearchInput
                     placeholder="Buscar por nombre o reprocann..."
@@ -579,14 +703,15 @@ const Patients: React.FC = () => {
                     <LoadingSpinner />
                 ) : (
                     <CardGrid>
-                        {filteredPatients.map(patient => (
+                        {(activeTab === 'active' ? activePatients : waitingPatients).map(patient => (
                             <PatientCard key={patient.id} onClick={() => openEdit(patient)}>
                                 {/* Desktop View */}
                                 <div className="desktop-content">
                                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                                        <StatusBadge status={patient.reprocann_status}>
-                                            {patient.reprocann_status === 'active' ? 'Activo' :
-                                                patient.reprocann_status === 'expired' ? 'Vencido' : 'Pendiente'}
+                                        <StatusBadge status={patient.is_approved_by_org === false ? 'pending' : patient.reprocann_status}>
+                                            {patient.is_approved_by_org === false ? 'EN ESPERA' :
+                                                patient.reprocann_status === 'active' ? 'Activo' :
+                                                    patient.reprocann_status === 'expired' ? 'Vencido' : 'Pendiente'}
                                         </StatusBadge>
                                         <span style={{ fontSize: '0.8rem', color: '#718096' }}>Límite Mensual: {patient.monthly_limit}g</span>
                                     </div>
@@ -633,9 +758,10 @@ const Patients: React.FC = () => {
                                         <span style={{ color: '#475569' }}>-</span>
                                         <span className="m-dni">{patient.document_number || 'Sin DNI'}</span>
                                     </div>
-                                    <StatusBadge status={patient.reprocann_status} style={{ fontSize: '0.65rem', padding: '0.15rem 0.4rem' }}>
-                                        {patient.reprocann_status === 'active' ? 'Activo' :
-                                            patient.reprocann_status === 'expired' ? 'Vencido' : 'Pendiente'}
+                                    <StatusBadge status={patient.is_approved_by_org === false ? 'pending' : patient.reprocann_status} style={{ fontSize: '0.65rem', padding: '0.15rem 0.4rem' }}>
+                                        {patient.is_approved_by_org === false ? 'EN ESPERA' :
+                                            patient.reprocann_status === 'active' ? 'Activo' :
+                                                patient.reprocann_status === 'expired' ? 'Vencido' : 'Pendiente'}
                                     </StatusBadge>
                                 </div>
                             </PatientCard>
@@ -798,59 +924,16 @@ const Patients: React.FC = () => {
                                             </FormGroup>
                                         </FormRow>
 
-                                        <SectionHeader>Documentación (Adjuntos)</SectionHeader>
-
-                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
-                                            <FormGroup>
-                                                <label>Credencial REPROCANN</label>
-                                                <FileUploadBox onClick={() => document.getElementById('file-reprocann')?.click()}>
-                                                    {files.reprocann ? <FaCheckCircle color="green" size={24} /> : <FaFileUpload size={24} color="#a0aec0" />}
-                                                    <p style={{ fontSize: '0.8rem', marginTop: '0.5rem' }}>
-                                                        {files.reprocann ? files.reprocann.name : 'Subir Credencial'}
-                                                    </p>
-                                                    <input id="file-reprocann" type="file" onChange={e => handleFileChange('reprocann', e)} accept="image/*,.pdf" />
-                                                </FileUploadBox>
-                                            </FormGroup>
-
-                                            <FormGroup>
-                                                <label>Declaración Jurada</label>
-                                                <FileUploadBox onClick={() => document.getElementById('file-affidavit')?.click()}>
-                                                    {files.affidavit ? <FaCheckCircle color="green" size={24} /> : <FaFileUpload size={24} color="#a0aec0" />}
-                                                    <p style={{ fontSize: '0.8rem', marginTop: '0.5rem' }}>
-                                                        {files.affidavit ? files.affidavit.name : 'Subir DDJJ'}
-                                                    </p>
-                                                    <input id="file-affidavit" type="file" onChange={e => handleFileChange('affidavit', e)} accept=".pdf,image/*" />
-                                                </FileUploadBox>
-                                            </FormGroup>
-
-                                            <FormGroup>
-                                                <label>Consentimiento Bilateral</label>
-                                                <FileUploadBox onClick={() => document.getElementById('file-consent')?.click()}>
-                                                    {files.consent ? <FaCheckCircle color="green" size={24} /> : <FaFileUpload size={24} color="#a0aec0" />}
-                                                    <p style={{ fontSize: '0.8rem', marginTop: '0.5rem' }}>
-                                                        {files.consent ? files.consent.name : 'Subir Consentimiento'}
-                                                    </p>
-                                                    <input id="file-consent" type="file" onChange={e => handleFileChange('consent', e)} accept=".pdf,image/*" />
-                                                </FileUploadBox>
-                                            </FormGroup>
-                                        </div>
+                                        {/* TODO: Add File uploads back here if needed */}
                                     </>
                                 )}
 
-                                <FormGroup style={{ marginTop: '1rem' }}>
-                                    <label>Notas Adicionales</label>
-                                    <textarea
-                                        value={regForm.notes}
-                                        onChange={e => setRegForm({ ...regForm, notes: e.target.value })}
-                                        placeholder="Observaciones sobre documentación o paciente..."
-                                    />
-                                </FormGroup>
-
-                                <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem', justifyContent: 'flex-end', borderTop: '1px solid rgba(255, 255, 255, 0.1)', paddingTop: '1.5rem' }}>
-                                    <ActionButton type="button" style={{ background: 'rgba(100, 116, 139, 0.2)', color: '#cbd5e1', borderColor: 'transparent' }} onClick={() => { closeAddModal(); resetForm(); }}>Cancelar</ActionButton>
-                                    <ActionButton type="button" style={{ background: 'rgba(56, 189, 248, 0.1)', color: '#38bdf8', borderColor: 'transparent' }} onClick={() => setHasReprocann(null)}>Atrás</ActionButton>
-                                    <ActionButton type="submit" disabled={isSubmitting}>
-                                        {isSubmitting ? 'Guardando...' : 'Registrar Socio'}
+                                <div style={{ marginTop: '2rem', display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+                                    <ActionButton type="button" onClick={() => { closeAddModal(); resetForm(); }} style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: '#cbd5e1' }}>
+                                        Cancelar
+                                    </ActionButton>
+                                    <ActionButton type="submit" style={{ background: 'linear-gradient(135deg, #a855f7 0%, #7c3aed 100%)', color: '#fff' }} disabled={isSubmitting}>
+                                        {isSubmitting ? 'Registrando...' : 'Finalizar Registro'}
                                     </ActionButton>
                                 </div>
                             </form>
@@ -887,9 +970,10 @@ const Patients: React.FC = () => {
                                         </div>
                                         <span style={{ fontSize: '0.9rem', color: '#94a3b8' }}>{selectedPatient.profile?.email}</span>
                                     </div>
-                                    <StatusBadge status={selectedPatient.reprocann_status} style={{ fontSize: '1rem', padding: '0.5rem 1rem' }}>
-                                        {selectedPatient.reprocann_status === 'active' ? 'ACTIVO' :
-                                            selectedPatient.reprocann_status === 'expired' ? 'VENCIDO' : 'PENDIENTE'}
+                                    <StatusBadge status={selectedPatient.is_approved_by_org === false ? 'pending' : selectedPatient.reprocann_status} style={{ fontSize: '1rem', padding: '0.5rem 1rem' }}>
+                                        {selectedPatient.is_approved_by_org === false ? 'EN ESPERA' :
+                                            selectedPatient.reprocann_status === 'active' ? 'ACTIVO' :
+                                                selectedPatient.reprocann_status === 'expired' ? 'VENCIDO' : 'PENDIENTE'}
                                     </StatusBadge>
                                 </div>
 
@@ -909,8 +993,8 @@ const Patients: React.FC = () => {
                                     </div>
                                 </ModalGrid>
 
-                                <SectionHeader>Documentación</SectionHeader>
-                                <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                                <SectionHeader>Documentación y Afiliación</SectionHeader>
+                                <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginBottom: '1.5rem' }}>
                                     {selectedPatient.file_reprocann_url ? (
                                         <ActionButton as="a" href={selectedPatient.file_reprocann_url} target="_blank" style={{ fontSize: '0.9rem' }}>
                                             <FaFileAlt /> Ver Credencial
@@ -930,13 +1014,53 @@ const Patients: React.FC = () => {
                                     ) : <span style={{ color: '#64748b', fontSize: '0.9rem' }}>Sin Consentimiento</span>}
                                 </div>
 
+                                {selectedPatient.profile?.professional_signature_url && (
+                                    <div style={{ background: 'rgba(255,255,255,0.05)', padding: '1rem', borderRadius: '8px', marginBottom: '1.5rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                        <h4 style={{ margin: '0 0 1rem 0', color: '#94a3b8', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Firma del Paciente (Auto-Alta)</h4>
+                                        <img src={selectedPatient.profile.professional_signature_url} alt="Firma" style={{ background: 'white', maxWidth: '100%', maxHeight: '120px', borderRadius: '4px', padding: '0.5rem' }} />
+                                    </div>
+                                )}
+
                                 <SectionHeader>Gestión de Estado</SectionHeader>
 
-                                {selectedPatient.reprocann_status === 'pending' && (
+                                {selectedPatient.is_approved_by_org === false ? (
+                                    <div style={{ background: 'rgba(234, 179, 8, 0.1)', border: '1px solid rgba(234, 179, 8, 0.3)', borderRadius: '0.5rem', padding: '1rem', marginBottom: '1.5rem' }}>
+                                        <h4 style={{ margin: '0 0 0.5rem 0', color: '#eab308' }}>⚠️ Ingreso en Sala de Espera</h4>
+                                        <p style={{ margin: '0 0 1rem 0', fontSize: '0.9rem', color: '#fef08a' }}>
+                                            Este socio ha completado el formulario de afiliación. Revisa sus datos y su firma manuscrita arriba.
+                                        </p>
+                                        <ActionButton
+                                            type="button"
+                                            style={{ width: '100%', justifyContent: 'center', background: '#eab308', color: '#000', borderColor: '#ca8a04', fontWeight: 'bold' }}
+                                            onClick={() => {
+                                                setConfirmModal({
+                                                    isOpen: true,
+                                                    title: 'Admitir Nuevo Socio',
+                                                    message: `¿Confirmas la admisión de ${selectedPatient.profile?.full_name} al consultorio? Su cuenta pasará a estar activa.`,
+                                                    onConfirm: async () => {
+                                                        try {
+                                                            await patientsService.upsertPatient({ ...selectedPatient, is_approved_by_org: true });
+                                                            showToast("Socio admitido exitosamente.", 'success');
+                                                            setConfirmModal(prev => ({ ...prev, isOpen: false }));
+                                                            setIsEditOpen(false);
+                                                            loadData();
+                                                        } catch (error) {
+                                                            console.error(error);
+                                                            showToast("Error al admitir socio.", 'error');
+                                                        }
+                                                    },
+                                                    isDanger: false
+                                                });
+                                            }}
+                                        >
+                                            <FaCheckCircle /> ADMITIR SOCIO (APROBAR ALTA)
+                                        </ActionButton>
+                                    </div>
+                                ) : selectedPatient.reprocann_status === 'pending' && (
                                     <div style={{ background: 'rgba(56, 189, 248, 0.1)', border: '1px solid rgba(56, 189, 248, 0.3)', borderRadius: '0.5rem', padding: '1rem', marginBottom: '1.5rem' }}>
                                         <h4 style={{ margin: '0 0 0.5rem 0', color: '#38bdf8' }}>ℹ️ Acción Requerida</h4>
                                         <p style={{ margin: '0 0 1rem 0', fontSize: '0.9rem', color: '#bae6fd' }}>
-                                            Este socio está pendiente. Si la documentación es correcta, apruébalo para habilitar su cuenta.
+                                            Renovación pendiente. Si la nueva documentación es correcta, apruébalo.
                                         </p>
                                         <ActionButton
                                             type="button"
@@ -944,12 +1068,12 @@ const Patients: React.FC = () => {
                                             onClick={() => {
                                                 setConfirmModal({
                                                     isOpen: true,
-                                                    title: 'Aprobar Socio',
-                                                    message: `¿Estás seguro de que deseas aprobar y habilitar a ${selectedPatient.profile?.full_name}? Esto activará su cuenta inmediatamente.`,
+                                                    title: 'Aprobar Renovación',
+                                                    message: `¿Estás seguro de que deseas aprobar el trámite de ${selectedPatient.profile?.full_name}?`,
                                                     onConfirm: async () => {
                                                         try {
                                                             await patientsService.upsertPatient({ ...selectedPatient, reprocann_status: 'active' });
-                                                            showToast("Socio aprobado correctamente.", 'success');
+                                                            showToast("Estado actualizado correctamente.", 'success');
                                                             setConfirmModal(prev => ({ ...prev, isOpen: false }));
                                                             setIsEditOpen(false);
                                                             loadData();
@@ -962,7 +1086,7 @@ const Patients: React.FC = () => {
                                                 });
                                             }}
                                         >
-                                            <FaCheckCircle /> APROBAR Y HABILITAR SOCIO
+                                            <FaCheckCircle /> APROBAR TRAMITE REPROCANN
                                         </ActionButton>
                                     </div>
                                 )}
@@ -1049,14 +1173,28 @@ const Patients: React.FC = () => {
                     isDanger={confirmModal.isDanger}
                 />
 
+                <ImportPatientsModal
+                    isOpen={isImportOpen}
+                    onClose={() => setIsImportOpen(false)}
+                    existingPatients={patients}
+                    onProcessBatch={handleProcessImportBatch}
+                />
+
+                {isInviteOpen && (
+                    <InvitePatientModal
+                        onClose={() => setIsInviteOpen(false)}
+                        onSuccess={() => { }}
+                    />
+                )}
+
                 <ToastModal
                     isOpen={toastOpen}
                     message={toastMessage}
                     type={toastType}
                     onClose={() => setToastOpen(false)}
                 />
-            </div >
-        </PageContainer >
+            </div>
+        </PageContainer>
     );
 };
 
