@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import styled, { keyframes } from 'styled-components';
-import { FaFileMedical, FaPlus, FaPen, FaTrash, FaSave, FaTimes, FaFilePdf, FaFileExport, FaFileImport } from 'react-icons/fa';
+import { FaFileMedical, FaPlus, FaPen, FaTrash, FaSave, FaTimes, FaFilePdf, FaFileExport, FaFileImport, FaChevronUp, FaChevronDown } from 'react-icons/fa';
 import { templatesService, ClinicalTemplate, FormField, FieldType } from '../services/templatesService';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ToastModal } from '../components/ToastModal';
@@ -276,7 +276,7 @@ const FormGroup = styled.div`
 
 const FieldBuilderRow = styled.div`
   display: grid;
-  grid-template-columns: 2fr 1fr auto;
+  grid-template-columns: auto 2fr 1fr auto;
   gap: 1rem;
   align-items: center;
   background: rgba(255,255,255,0.02);
@@ -493,6 +493,22 @@ const Templates: React.FC = () => {
     setFields(fields.filter(f => f.id !== id));
   };
 
+  const handleMoveField = (index: number, direction: 'up' | 'down') => {
+    if (direction === 'up' && index > 0) {
+      const newFields = [...fields];
+      const temp = newFields[index];
+      newFields[index] = newFields[index - 1];
+      newFields[index - 1] = temp;
+      setFields(newFields);
+    } else if (direction === 'down' && index < fields.length - 1) {
+      const newFields = [...fields];
+      const temp = newFields[index];
+      newFields[index] = newFields[index + 1];
+      newFields[index + 1] = temp;
+      setFields(newFields);
+    }
+  };
+
   const handleSaveTemplate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formName.trim()) {
@@ -693,6 +709,41 @@ const Templates: React.FC = () => {
               ) : (
                 fields.map((field, index) => (
                   <FieldBuilderRow key={field.id}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem', alignItems: 'center', justifyContent: 'center' }}>
+                      <button
+                        type="button"
+                        onClick={() => handleMoveField(index, 'up')}
+                        disabled={index === 0}
+                        style={{
+                          background: 'transparent',
+                          border: 'none',
+                          color: index === 0 ? 'rgba(255,255,255,0.1)' : '#94a3b8',
+                          cursor: index === 0 ? 'not-allowed' : 'pointer',
+                          padding: '0.2rem',
+                          display: 'flex'
+                        }}
+                        title="Mover arriba"
+                      >
+                        <FaChevronUp />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleMoveField(index, 'down')}
+                        disabled={index === fields.length - 1}
+                        style={{
+                          background: 'transparent',
+                          border: 'none',
+                          color: index === fields.length - 1 ? 'rgba(255,255,255,0.1)' : '#94a3b8',
+                          cursor: index === fields.length - 1 ? 'not-allowed' : 'pointer',
+                          padding: '0.2rem',
+                          display: 'flex'
+                        }}
+                        title="Mover abajo"
+                      >
+                        <FaChevronDown />
+                      </button>
+                    </div>
+
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                       <input
                         placeholder="Pregunta / Etiqueta del campo..."
