@@ -253,6 +253,121 @@ const SummaryRow = styled.div`
   }
 `;
 
+const TermsModalOverlay = styled(motion.div)`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(8px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1050;
+  padding: 1rem;
+`;
+
+const TermsModalContent = styled(motion.div)`
+  background: rgba(15, 23, 42, 0.95);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  border-radius: 1rem;
+  width: 100%;
+  max-width: 700px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+`;
+
+const TermsBody = styled.div`
+  padding: 1.5rem;
+  overflow-y: auto;
+  flex: 1;
+  color: #cbd5e1;
+  font-size: 0.95rem;
+  line-height: 1.6;
+
+  h3 {
+    color: #f8fafc;
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
+    font-size: 1.1rem;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    padding-bottom: 0.5rem;
+  }
+  h3:first-child { margin-top: 0; }
+  p { margin-bottom: 0.75rem; }
+  ul { padding-left: 1.5rem; margin-bottom: 1rem; }
+  li { margin-bottom: 0.25rem; }
+`;
+
+const TermsFooter = styled.div`
+  padding: 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(15, 23, 42, 0.95);
+  border-bottom-left-radius: 1rem;
+  border-bottom-right-radius: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+`;
+
+const CheckboxLabel = styled.label`
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  color: #f8fafc;
+  font-size: 0.95rem;
+
+  input[type="checkbox"] {
+    width: 1.25rem;
+    height: 1.25rem;
+    accent-color: #22c55e;
+    cursor: pointer;
+  }
+`;
+
+const ActionRow = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 0.5rem;
+`;
+
+const ActionButton = styled.button<{ $variant?: 'primary' | 'secondary' | 'danger' }>`
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: ${props => {
+    if (props.$variant === 'primary') return 'linear-gradient(135deg, #16a34a 0%, #15803d 100%)';
+    if (props.$variant === 'danger') return 'transparent';
+    return 'transparent';
+  }};
+  color: ${props => {
+    if (props.$variant === 'secondary') return '#cbd5e1';
+    if (props.$variant === 'danger') return '#ef4444';
+    return '#ffffff';
+  }};
+  border: ${props => props.$variant === 'danger' ? '1px solid #ef4444' : (props.$variant === 'secondary' ? '1px solid rgba(255,255,255,0.2)' : 'none')};
+  transition: all 0.2s;
+
+  &:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+  }
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+    background: #334155;
+    border: none;
+    color: #94a3b8;
+  }
+`;
+
 const Register: React.FC = () => {
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token');
@@ -285,6 +400,20 @@ const Register: React.FC = () => {
     phone: '',
     password: ''
   });
+
+  const [showTermsModal, setShowTermsModal] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [acceptedPrivacy, setAcceptedPrivacy] = useState(false);
+
+  const handleDeclineTerms = () => {
+    setShowTermsModal(false);
+    navigate('/login');
+  };
+
+  const handleAcceptTerms = () => {
+    setShowTermsModal(false);
+    setStep(8);
+  };
 
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -752,7 +881,7 @@ const Register: React.FC = () => {
                     <span className="value">{new Date().toLocaleDateString('es-ES')}</span>
                   </SummaryRow>
 
-                  <ValidationButton style={{ marginTop: '1rem', width: '100%' }} onClick={() => setStep(8)}>
+                  <ValidationButton style={{ marginTop: '1rem', width: '100%' }} onClick={() => setShowTermsModal(true)}>
                     Confirmar Acceso
                   </ValidationButton>
                 </SummaryCard>
@@ -802,6 +931,65 @@ const Register: React.FC = () => {
 
         </AnimatePresence>
       </ContentWrapper>
+
+      <AnimatePresence>
+        {showTermsModal && (
+          <TermsModalOverlay
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <TermsModalContent
+              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 20 }}
+              transition={{ duration: 0.3, ease: 'easeOut' }}
+            >
+              <div style={{ padding: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                <h2 style={{ margin: 0, fontSize: '1.25rem', color: '#f8fafc' }}>Términos y Condiciones & Privacidad</h2>
+              </div>
+              <TermsBody>
+                <h3>Términos y Condiciones de Uso</h3>
+                <p><strong>1. Naturaleza del Servicio:</strong> TrazAPP es una plataforma de software como servicio (SaaS) destinada a la gestión de trazabilidad operativa. El servicio se proporciona "tal cual" y según disponibilidad.</p>
+                <p><strong>2. Propiedad Intelectual:</strong> El diseño, código fuente, logotipos y arquitectura de TrazAPP son propiedad exclusiva de Creapp. El usuario no adquiere ningún derecho sobre el software, más allá de la licencia de uso temporal otorgada.</p>
+                <p><strong>3. Propiedad de los Datos:</strong> El Usuario (o la entidad que representa) retiene la propiedad total y absoluta de los datos cargados en la plataforma. TrazAPP no comercializará ni utilizará esta información para fines ajenos a la prestación del servicio.</p>
+                <p><strong>4. Responsabilidad del Usuario:</strong> El usuario es responsable de la veracidad de los datos ingresados y de mantener la confidencialidad de sus credenciales. Queda prohibido el uso de la plataforma para fines ilícitos o que intenten vulnerar la seguridad del sistema (hacking, scraping no autorizado).</p>
+                <p><strong>5. Limitación de Responsabilidad:</strong> TrazAPP no será responsable por daños indirectos, pérdida de beneficios o interrupciones de negocio resultantes del uso o la imposibilidad de uso de la herramienta, incluyendo fallos en servicios de terceros (nube, internet).</p>
+                <p><strong>6. Jurisdicción:</strong> Cualquier controversia se resolverá bajo las leyes de la República Argentina, con jurisdicción en los Tribunales Ordinarios de la Ciudad Autónoma de Buenos Aires.</p>
+
+                <h3>Políticas de Privacidad</h3>
+                <p>Este documento cumple con la Ley 25.326 y le otorga confianza al usuario sobre cómo se trata su información personal.</p>
+                <p><strong>1. Responsable del Tratamiento:</strong> La Asociación Civil contratante es la Responsable de la Base de Datos. TrazAPP (Creapp) actúa como Encargado del Tratamiento bajo estrictas normas de seguridad.</p>
+                <p><strong>2. Datos Recolectados:</strong> Se procesan datos identificatorios y operativos necesarios para la trazabilidad (nombre, contacto, ubicación si fuera necesario). No se recolectan datos sensibles sin consentimiento explícito adicional.</p>
+                <p><strong>3. Seguridad y Almacenamiento:</strong> Los datos se alojan en infraestructuras de nube de estándar internacional (como AWS/Vercel) con cifrado de grado empresarial y medidas de seguridad para prevenir accesos no autorizados.</p>
+                <p><strong>4. Derechos ARCO:</strong> En cumplimiento de la Ley 25.326, el usuario tiene derecho a:</p>
+                <ul>
+                  <li>Acceder a sus datos personales.</li>
+                  <li>Rectificar información inexacta.</li>
+                  <li>Actualizar sus registros.</li>
+                  <li>Suprimir sus datos de la base de forma definitiva.</li>
+                </ul>
+                <p><strong>5. Conservación:</strong> Los datos se conservarán mientras dure la relación contractual o hasta que el usuario ejerza su derecho de supresión.</p>
+              </TermsBody>
+              <TermsFooter>
+                <CheckboxLabel>
+                  <input type="checkbox" checked={acceptedTerms} onChange={(e) => setAcceptedTerms(e.target.checked)} />
+                  He leído y acepto los Términos y Condiciones de uso de la plataforma.
+                </CheckboxLabel>
+                <CheckboxLabel>
+                  <input type="checkbox" checked={acceptedPrivacy} onChange={(e) => setAcceptedPrivacy(e.target.checked)} />
+                  He leído y acepto el Acuerdo de Privacidad y el tratamiento de mis datos.
+                </CheckboxLabel>
+                <ActionRow>
+                  <ActionButton $variant="danger" onClick={handleDeclineTerms}>No, Cancelar Registro</ActionButton>
+                  <ActionButton $variant="primary" disabled={!acceptedTerms || !acceptedPrivacy} onClick={handleAcceptTerms}>Sí, Acepto y Confirmar</ActionButton>
+                </ActionRow>
+              </TermsFooter>
+            </TermsModalContent>
+          </TermsModalOverlay>
+        )}
+      </AnimatePresence>
     </Container>
   );
 };
