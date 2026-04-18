@@ -176,6 +176,7 @@ const PatientDetail: React.FC = () => {
   const [isUploadingEvolution, setIsUploadingEvolution] = useState(false);
   const [newEvolution, setNewEvolution] = useState({
     title: "",
+    date: new Date().toISOString().split("T")[0],
     eva_score: 0,
     notes: "",
     sparing_effect: [] as any[],
@@ -370,7 +371,7 @@ const PatientDetail: React.FC = () => {
       await patientsService.addEvolution({
         admission_id: admission.id,
         title: newEvolution.title,
-        date: new Date().toISOString().split("T")[0], // Today
+        date: newEvolution.date,
         eva_score: actualEvaScore,
         improvement_percent: parseFloat(improvement.toFixed(2)),
         notes: newEvolution.notes,
@@ -387,6 +388,7 @@ const PatientDetail: React.FC = () => {
       setIsEvolutionModalOpen(false);
       setNewEvolution({
         title: "",
+        date: new Date().toISOString().split("T")[0],
         eva_score: 0,
         notes: "",
         sparing_effect: [],
@@ -1629,6 +1631,41 @@ const PatientDetail: React.FC = () => {
                   onChange={(e) =>
                     setNewEvolution({ ...newEvolution, title: e.target.value })
                   }
+                />
+              </div>
+
+              {/* Date Section */}
+              <div style={{ marginBottom: "1.5rem" }}>
+                <label
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.5rem",
+                    marginBottom: "0.5rem",
+                    fontWeight: "bold",
+                    color: "#f8fafc",
+                  }}
+                >
+                  <FaClock /> Fecha del Registro / Estudio Previos
+                </label>
+                <input
+                  type="date"
+                  max={new Date().toISOString().split("T")[0]}
+                  style={{
+                    width: "100%",
+                    padding: "0.75rem",
+                    borderRadius: "0.5rem",
+                    border: "1px solid rgba(255,255,255,0.2)",
+                    fontFamily: "inherit",
+                    background: "rgba(15, 23, 42, 0.5)",
+                    color: "white",
+                    colorScheme: "dark"
+                  }}
+                  value={newEvolution.date}
+                  onChange={(e) =>
+                    setNewEvolution({ ...newEvolution, date: e.target.value })
+                  }
+                  required
                 />
               </div>
 
