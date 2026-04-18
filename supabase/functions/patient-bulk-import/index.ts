@@ -127,10 +127,11 @@ serve(async (req) => {
                         .eq('id', p.duplicateTargetId);
                     patientError = error;
                 } else {
-                    // Insert new
+                    // Insert new or update if existing to bypass aurora_patients_profile_id_key constraint
+                    // (e.g. if the Excel contains duplicates of the same person, or frontend cache missed it)
                     const { error } = await supabaseClient
                         .from('aurora_patients')
-                        .insert([{
+                        .upsert({
                             profile_id: profileId,
                             organization_id: organization_id,
                             reprocann_number: p.reprocannNumber,
@@ -143,8 +144,9 @@ serve(async (req) => {
                             phone: p.phone,
                             address: p.address,
                             notes: p.notes,
-                            monthly_limit: p.monthlyLimit || 40
-                        }]);
+                            monthly_limit: p.monthlyLimit || 40,
+                            updated_at: new Date().toISOString()
+                        }, { onConflict: 'profile_id' });
                     patientError = error;
                 }
 

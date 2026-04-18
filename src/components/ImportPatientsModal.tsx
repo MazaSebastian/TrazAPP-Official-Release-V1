@@ -216,6 +216,54 @@ const ConflictDataComparison = styled.div`
   }
 `;
 
+export const parseDateSafe = (val: any): string => {
+    if (!val) return "";
+
+    if (val instanceof Date) {
+        if (isNaN(val.getTime())) return "";
+        // Avoid timezone shift by getting local date parts
+        const year = val.getFullYear();
+        const month = (val.getMonth() + 1).toString().padStart(2, '0');
+        const day = val.getDate().toString().padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
+    if (typeof val === 'number') {
+        const jsDate = new Date(Math.round((val - 25569) * 86400 * 1000));
+        if (isNaN(jsDate.getTime())) return "";
+        return jsDate.toISOString().split('T')[0];
+    }
+
+    const str = val.toString().trim();
+    if (!str) return "";
+
+    const dmyRegex = /^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/;
+    const dmyMatch = str.match(dmyRegex);
+    if (dmyMatch) {
+        let day = parseInt(dmyMatch[1], 10);
+        let month = parseInt(dmyMatch[2], 10);
+        let year = parseInt(dmyMatch[3], 10);
+        if (year < 100) year += year < 50 ? 2000 : 1900;
+        return `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+    }
+
+    const ymdRegex = /^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})$/;
+    const ymdMatch = str.match(ymdRegex);
+    if (ymdMatch) {
+        let year = parseInt(ymdMatch[1], 10);
+        let month = parseInt(ymdMatch[2], 10);
+        let day = parseInt(ymdMatch[3], 10);
+        return `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+    }
+
+    const d = new Date(str);
+    if (!isNaN(d.getTime())) {
+        return d.toISOString().split('T')[0];
+    }
+
+    return str;
+};
+
 export interface ParsedPatient {
     index: number;
     fullName: string;
@@ -411,7 +459,7 @@ export const ImportPatientsModal: React.FC<Props> = ({ isOpen, onClose, existing
         reader.onload = (e) => {
             try {
                 const data = new Uint8Array(e.target?.result as ArrayBuffer);
-                const workbook = XLSX.read(data, { type: 'array' });
+                const workbook = XLSX.read(data, { type: 'array', cellDates: true, dateNF: 'yyyy-mm-dd' });
                 const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
                 // El encabezado real está en la fila 5 (índice 4). Rango 4 le indica a xlsx que omita el título y logo.
                 const jsonData = XLSX.utils.sheet_to_json(firstSheet, { range: 4 });
@@ -428,7 +476,11 @@ export const ImportPatientsModal: React.FC<Props> = ({ isOpen, onClose, existing
                     // Valida básicos
                     if (!email || !fullName) {
                         status = 'error';
-                        message = !email ? "Falta Email" : "Falta Nombre";
+                        if (!email && !fullName) {
+                            message = "Falta Nombre y Email. Ambos son requeridos.";
+                        } else {
+                            message = !email ? "Falta Email. Debe ingresar un correo electrónico." : "Falta Nombre. Debe ingresar el nombre completo.";
+                        }
                     } else {
                         // Chequea duplicados locales
                         const dup = existingPatients.find(p => p.profile?.email === email || (dni && p.document_number === dni));
@@ -458,15 +510,15 @@ export const ImportPatientsModal: React.FC<Props> = ({ isOpen, onClose, existing
                         email,
                         documentNumber: dni,
                         phone: (row["Teléfono"] || "").toString(),
-                        dateOfBirth: (row["Fecha de Nacimiento"] || "").toString(),
+                        dateOfBirth: parseDateSafe(row["Fecha de Nacimiento"]),
                         address: (row["Dirección"] || "").toString(),
                         reprocannNumber: (row["Número REPROCANN"] || "").toString(),
-                        issueDate: (row["Fecha Emisión REPROCANN"] || "").toString(),
-                        expirationDate: (row["Fecha Vencimiento REPROCANN"] || "").toString(),
+                        issueDate: parseDateSafe(row["Fecha Emisión"] || row["Fecha Emisión REPROCANN"]),
+                        expirationDate: parseDateSafe(row["Fecha Vencimiento"] || row["Fecha Vencimiento REPROCANN"]),
                         status: statusEnum,
                         pathology: (row["Patología"] || "").toString(),
                         monthlyLimit: limitNumber,
-                        notes: (row["Notas"] || "").toString(),
+                        notes: (row["Notas (Opcional)"] || row["Notas"] || "").toString(),
                         validationStatus: status,
                         validationMessage: message,
                         duplicateTargetId: targetId,
@@ -612,17 +664,30 @@ export const ImportPatientsModal: React.FC<Props> = ({ isOpen, onClose, existing
                         )}
                     </Body>
 
-                    {parsedData.length > 0 && (
-                        <ActionRow>
-                            <div style={{ color: '#94a3b8', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                <FaInfoCircle />
-                                {parsedData.filter(p => p.validationStatus === 'error').length} errores detectados que serán omitidos.
-                            </div>
-                            <Button $variant="primary" onClick={handleImport} disabled={isProcessing}>
-                                {isProcessing ? "Importando..." : `Procesar e Importar (${parsedData.filter(p => p.validationStatus !== 'error').length} válidos)`}
-                            </Button>
-                        </ActionRow>
-                    )}
+                    {parsedData.length > 0 && (() => {
+                        const errorCount = parsedData.filter(p => p.validationStatus === 'error').length;
+                        const validCount = parsedData.filter(p => p.validationStatus !== 'error').length;
+                        const hasOnlyErrors = validCount === 0;
+
+                        return (
+                            <ActionRow>
+                                <div style={{ color: hasOnlyErrors ? '#ef4444' : '#94a3b8', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                    {hasOnlyErrors ? <FaExclamationTriangle /> : <FaInfoCircle />}
+                                    {hasOnlyErrors
+                                        ? "No hay registros válidos para importar. Por favor, corrija los errores en la plantilla."
+                                        : `${errorCount > 0 ? `${errorCount} errores detectados que serán omitidos.` : 'Todos los registros son válidos.'}`
+                                    }
+                                </div>
+                                <Button
+                                    $variant="primary"
+                                    onClick={handleImport}
+                                    disabled={isProcessing || hasOnlyErrors}
+                                >
+                                    {isProcessing ? "Importando..." : `Procesar e Importar (${validCount} válidos)`}
+                                </Button>
+                            </ActionRow>
+                        );
+                    })()}
                 </ModalContent>
             </ModalOverlay>
 

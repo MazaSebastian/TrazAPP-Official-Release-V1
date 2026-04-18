@@ -253,7 +253,12 @@ export const PrintableTemplate = React.forwardRef<HTMLDivElement, PrintableTempl
           {template.fields.map((field) => (
             <FormField key={field.id}>
               <div className="label">
-                <span>{field.label} {field.required && '*'}</span>
+                <span>
+                  {field.label} {field.required && '*'}
+                  {field.type === 'date' && (
+                    <span style={{ fontWeight: 'normal', marginLeft: '8px' }}>(DD / MM / AAAA)</span>
+                  )}
+                </span>
                 {field.required && <span className="req">(Requerido)</span>}
               </div>
 
@@ -286,8 +291,7 @@ export const PrintableTemplate = React.forwardRef<HTMLDivElement, PrintableTempl
                   <span>10 (Máximo)</span>
                 </div>
               ) : field.type === 'date' ? (
-                <div style={{ width: '150px', borderBottom: '1px solid black', paddingBottom: '5px' }}>
-                  DD / MM / AAAA
+                <div style={{ width: '150px', borderBottom: '1px solid black', paddingBottom: '5px', height: '20px' }}>
                 </div>
               ) : (
                 <div className="content"></div>
