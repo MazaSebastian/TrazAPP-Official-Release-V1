@@ -62,5 +62,21 @@ export const usersService = {
         }
 
         return data as Profile;
+    },
+
+    async updateProfile(id: string, updates: Partial<Profile>): Promise<boolean> {
+        if (!supabase) return false;
+
+        const { error } = await supabase
+            .from('profiles')
+            .update(updates)
+            .eq('id', id);
+
+        if (error) {
+            console.error('Error updating profile:', error);
+            return false;
+        }
+
+        return true;
     }
 };

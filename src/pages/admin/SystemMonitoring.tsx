@@ -29,9 +29,9 @@ const Title = styled.h1`
 `;
 
 const Button = styled.button<{ $variant?: 'primary' | 'danger' }>`
-  background: ${props => props.$variant === 'danger' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(168, 85, 247, 0.2)'};
+  background: ${props => props.$variant === 'danger' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(var(--primary-color-rgb, 168, 85, 247), 0.2)'};
   color: ${props => props.$variant === 'danger' ? '#fca5a5' : '#d8b4fe'};
-  border: 1px solid ${props => props.$variant === 'danger' ? 'rgba(239, 68, 68, 0.5)' : 'rgba(168, 85, 247, 0.5)'};
+  border: 1px solid ${props => props.$variant === 'danger' ? 'rgba(239, 68, 68, 0.5)' : 'rgba(var(--primary-color-rgb, 168, 85, 247), 0.5)'};
   padding: 0.75rem 1.5rem;
   border-radius: 8px;
   font-weight: 600;
@@ -42,7 +42,7 @@ const Button = styled.button<{ $variant?: 'primary' | 'danger' }>`
   transition: all 0.2s;
   
   &:hover:not(:disabled) {
-    background: ${props => props.$variant === 'danger' ? 'rgba(239, 68, 68, 0.4)' : 'rgba(168, 85, 247, 0.4)'};
+    background: ${props => props.$variant === 'danger' ? 'rgba(239, 68, 68, 0.4)' : 'rgba(var(--primary-color-rgb, 168, 85, 247), 0.4)'};
   }
   
   &:disabled {

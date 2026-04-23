@@ -2255,7 +2255,6 @@ const PatientDetail: React.FC = () => {
                 onChange={(e) =>
                   setNewEvolution({ ...newEvolution, notes: e.target.value })
                 }
-                required={!newEvolution.template_id}
               />
 
               <div

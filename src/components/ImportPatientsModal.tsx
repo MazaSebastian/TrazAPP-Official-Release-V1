@@ -34,7 +34,7 @@ const ModalOverlay = styled.div`
 
 const ModalContent = styled.div`
   background: rgba(15, 23, 42, 0.95);
-  border: 1px solid rgba(168, 85, 247, 0.3);
+  border: 1px solid rgba(var(--primary-color-rgb, 168, 85, 247), 0.3);
   border-radius: 1rem;
   width: 100%;
   max-width: 900px;
@@ -81,18 +81,18 @@ const Body = styled.div`
 `;
 
 const DropZone = styled.div<{ $isDragActive: boolean }>`
-  border: 2px dashed ${props => props.$isDragActive ? '#a855f7' : 'rgba(255, 255, 255, 0.2)'};
+  border: 2px dashed ${props => props.$isDragActive ? 'var(--primary-color, #a855f7)' : 'rgba(255, 255, 255, 0.2)'};
   border-radius: 0.5rem;
   padding: 3rem 2rem;
   text-align: center;
-  background: ${props => props.$isDragActive ? 'rgba(168, 85, 247, 0.1)' : 'rgba(30, 41, 59, 0.5)'};
+  background: ${props => props.$isDragActive ? 'rgba(var(--primary-color-rgb, 168, 85, 247), 0.1)' : 'rgba(30, 41, 59, 0.5)'};
   cursor: pointer;
   transition: all 0.2s;
   margin-bottom: 1.5rem;
 
   &:hover {
-    border-color: rgba(168, 85, 247, 0.5);
-    background: rgba(168, 85, 247, 0.05);
+    border-color: rgba(var(--primary-color-rgb, 168, 85, 247), 0.5);
+    background: rgba(var(--primary-color-rgb, 168, 85, 247), 0.05);
   }
 `;
 
@@ -143,7 +143,7 @@ const Button = styled.button<{ $variant?: 'primary' | 'secondary' | 'danger' | '
   cursor: pointer;
   border: ${props => props.$variant === 'secondary' ? '1px solid rgba(255, 255, 255, 0.2)' : 'none'};
   background: ${props => {
-        if (props.$variant === 'primary') return 'linear-gradient(135deg, #a855f7 0%, #7c3aed 100%)';
+        if (props.$variant === 'primary') return 'linear-gradient(135deg, var(--primary-color, #a855f7) 0%, var(--secondary-color, #7c3aed) 100%)';
         if (props.$variant === 'danger') return '#ef4444';
         if (props.$variant === 'warning') return '#eab308';
         return 'transparent';
@@ -610,7 +610,7 @@ export const ImportPatientsModal: React.FC<Props> = ({ isOpen, onClose, existing
                                     onDrop={handleDrop}
                                     onClick={() => fileInputRef.current?.click()}
                                 >
-                                    <FaCloudUploadAlt size={48} color={isDragActive ? "#a855f7" : "#64748b"} style={{ marginBottom: '1rem' }} />
+                                    <FaCloudUploadAlt size={48} color={isDragActive ? "var(--primary-color, #a855f7)" : "#64748b"} style={{ marginBottom: '1rem' }} />
                                     <h3 style={{ color: '#f8fafc', margin: '0 0 0.5rem 0' }}>Arrastra el archivo aquí o haz clic</h3>
                                     <p style={{ color: '#64748b', margin: 0 }}>Archivos soportados: .xlsx, .csv (Máximo 200 filas recomendadas)</p>
                                     <input
@@ -709,7 +709,7 @@ export const ImportPatientsModal: React.FC<Props> = ({ isOpen, onClose, existing
                                 <p>DNI: {conflictState.existingPatient.document_number || 'N/A'}</p>
                                 <p>Reprocann: {conflictState.existingPatient.reprocann_number || 'N/A'}</p>
                             </div>
-                            <div className="box" style={{ borderColor: 'rgba(168, 85, 247, 0.5)', background: 'rgba(168, 85, 247, 0.05)' }}>
+                            <div className="box" style={{ borderColor: 'rgba(var(--primary-color-rgb, 168, 85, 247), 0.5)', background: 'rgba(var(--primary-color-rgb, 168, 85, 247), 0.05)' }}>
                                 <div className="title" style={{ color: '#d8b4fe' }}>Datos a Importar (Excel)</div>
                                 <p><strong>{conflictState.pendingPatient.fullName}</strong></p>
                                 <p>{conflictState.pendingPatient.email}</p>

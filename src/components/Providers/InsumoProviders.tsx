@@ -52,7 +52,7 @@ const Button = styled.button<{ variant?: 'primary' | 'secondary' | 'danger' | 's
       case 'secondary': return `background: rgba(30, 41, 59, 0.6); color: #cbd5e1; border: 1px solid rgba(255, 255, 255, 0.1); &:hover { background: rgba(255, 255, 255, 0.1); color: #f8fafc; }`;
       case 'danger': return `background: rgba(239, 68, 68, 0.1); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.2); &:hover { background: rgba(239, 68, 68, 0.2); }`;
       case 'success': return `background: rgba(74, 222, 128, 0.2); color: #4ade80; border: 1px solid rgba(74, 222, 128, 0.5); &:hover { background: rgba(74, 222, 128, 0.3); }`;
-      default: return `background: rgba(168, 85, 247, 0.2); color: #d8b4fe; border: 1px solid rgba(168, 85, 247, 0.5); &:hover { background: rgba(168, 85, 247, 0.3); box-shadow: 0 4px 6px rgba(0,0,0,0.2); }`;
+      default: return `background: rgba(var(--primary-color-rgb, 168, 85, 247), 0.2); color: #d8b4fe; border: 1px solid rgba(var(--primary-color-rgb, 168, 85, 247), 0.5); &:hover { background: rgba(var(--primary-color-rgb, 168, 85, 247), 0.3); box-shadow: 0 4px 6px rgba(0,0,0,0.2); }`;
     }
   }}
 `;
@@ -83,7 +83,7 @@ const Tab = styled.button<{ active: boolean }>`
     left: 0;
     width: 100%;
     height: 2px;
-    background: #a855f7;
+    background: var(--primary-color, #a855f7);
     transform: scaleX(${props => props.active ? 1 : 0});
     transition: transform 0.2s;
   }
@@ -133,7 +133,7 @@ const StatusBadge = styled.span<{ status: string; aiGenerated?: boolean }>`
   gap: 0.35rem;
 
   ${props => {
-    switch(props.status) {
+    switch (props.status) {
       case 'PENDING': return 'background: rgba(250, 204, 21, 0.2); color: #facc15; border: 1px solid rgba(250, 204, 21, 0.5);';
       case 'SENT': return 'background: rgba(56, 189, 248, 0.2); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.5);';
       case 'DELIVERED': return 'background: rgba(74, 222, 128, 0.2); color: #4ade80; border: 1px solid rgba(74, 222, 128, 0.5);';
@@ -166,14 +166,14 @@ const Form = styled.form`
     background: rgba(15, 23, 42, 0.5);
     border: 1px solid rgba(255, 255, 255, 0.1);
     color: white;
-    &:focus { outline: none; border-color: #a855f7; }
+    &:focus { outline: none; border-color: var(--primary-color, #a855f7); }
   }
 `;
 
 export const InsumoProviders: React.FC = () => {
   const { currentOrganization } = useOrganization();
   const [activeTab, setActiveTab] = useState<'providers' | 'orders'>('providers');
-  
+
   // Data State
   const [providers, setProviders] = useState<InsumoProvider[]>([]);
   const [orders, setOrders] = useState<InsumoPurchaseOrder[]>([]);
@@ -187,7 +187,7 @@ export const InsumoProviders: React.FC = () => {
   // Modal State
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [providerToDelete, setProviderToDelete] = useState<string | null>(null);
-  
+
   const [toast, setToast] = useState({ open: false, message: '', type: 'success' as 'success' | 'error' });
 
   const loadData = async () => {
@@ -371,7 +371,7 @@ export const InsumoProviders: React.FC = () => {
                   <td>{o.quantity_requested} unidad(es)</td>
                   <td>
                     <StatusBadge status={o.status} aiGenerated={o.ai_generated}>
-                      {o.ai_generated && <FaRobot />} 
+                      {o.ai_generated && <FaRobot />}
                       {o.status === 'PENDING' ? 'Pendiente' : o.status === 'SENT' ? 'Enviado' : o.status === 'DELIVERED' ? 'Recibido' : 'Cancelado'}
                     </StatusBadge>
                   </td>
@@ -411,7 +411,7 @@ export const InsumoProviders: React.FC = () => {
         confirmText={isEditing ? "Eliminando..." : "Eliminar"}
         isDanger
       />
-      
+
       <ToastModal
         isOpen={toast.open}
         message={toast.message}

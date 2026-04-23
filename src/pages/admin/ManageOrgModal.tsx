@@ -122,7 +122,7 @@ const ActionCard = styled.div`
 
 const Button = styled.button<{ $variant?: 'primary' | 'danger' | 'warning' }>`
   background: ${props =>
-        props.$variant === 'primary' ? 'rgba(168, 85, 247, 0.2)' :
+        props.$variant === 'primary' ? 'rgba(var(--primary-color-rgb, 168, 85, 247), 0.2)' :
             props.$variant === 'danger' ? 'rgba(239, 68, 68, 0.2)' :
                 props.$variant === 'warning' ? 'rgba(245, 158, 11, 0.2)' :
                     'rgba(255, 255, 255, 0.05)'};
@@ -132,7 +132,7 @@ const Button = styled.button<{ $variant?: 'primary' | 'danger' | 'warning' }>`
                 props.$variant === 'warning' ? '#fcd34d' :
                     '#f8fafc'};
   border: 1px solid ${props =>
-        props.$variant === 'primary' ? 'rgba(168, 85, 247, 0.5)' :
+        props.$variant === 'primary' ? 'rgba(var(--primary-color-rgb, 168, 85, 247), 0.5)' :
             props.$variant === 'danger' ? 'rgba(239, 68, 68, 0.5)' :
                 props.$variant === 'warning' ? 'rgba(245, 158, 11, 0.5)' :
                     'rgba(255, 255, 255, 0.1)'};
@@ -148,7 +148,7 @@ const Button = styled.button<{ $variant?: 'primary' | 'danger' | 'warning' }>`
   
   &:hover:not(:disabled) {
     background: ${props =>
-        props.$variant === 'primary' ? 'rgba(168, 85, 247, 0.4)' :
+        props.$variant === 'primary' ? 'rgba(var(--primary-color-rgb, 168, 85, 247), 0.4)' :
             props.$variant === 'danger' ? 'rgba(239, 68, 68, 0.4)' :
                 props.$variant === 'warning' ? 'rgba(245, 158, 11, 0.4)' :
                     'rgba(255, 255, 255, 0.1)'};

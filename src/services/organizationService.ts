@@ -72,6 +72,52 @@ export const organizationService = {
     },
 
     /**
+     * Update an organization's branding (logo, colors, slug)
+     */
+    async updateOrganizationBranding(
+        orgId: string,
+        branding: { slug?: string; primary_color?: string; secondary_color?: string },
+        logoFile?: File
+    ): Promise<Organization> {
+        let logo_url = undefined;
+
+        if (logoFile) {
+            const fileExt = logoFile.name.split('.').pop();
+            const fileName = `${orgId}-logo-${Date.now()}.${fileExt}`;
+            const filePath = `logos/${fileName}`;
+
+            const { error: uploadError } = await supabase.storage
+                .from('organizations')
+                .upload(filePath, logoFile, { upsert: true });
+
+            if (uploadError) {
+                console.error('Error uploading logo:', uploadError);
+                throw uploadError;
+            }
+
+            const { data } = supabase.storage.from('organizations').getPublicUrl(filePath);
+            logo_url = data.publicUrl;
+        }
+
+        const updateData: any = { ...branding };
+        if (logo_url) updateData.logo_url = logo_url;
+
+        const { data, error } = await supabase
+            .from('organizations')
+            .update(updateData)
+            .eq('id', orgId)
+            .select()
+            .single();
+
+        if (error) {
+            console.error('Error updating organization branding:', error);
+            throw error;
+        }
+
+        return data as Organization;
+    },
+
+    /**
      * Get organization details including plan info/limits.
      * This logic might be better placed in a hook or context that merges org data with plan data.
      */
@@ -94,6 +140,26 @@ export const organizationService = {
             ...org,
             planDetails: plan
         };
+    },
+
+    /**
+     * Get organization by slug for the white-label portal
+     */
+    async getOrganizationBySlug(slug: string): Promise<Organization | null> {
+        const { data, error } = await supabase
+            .from('organizations')
+            .select('*')
+            .eq('slug', slug)
+            .single();
+
+        if (error) {
+            if (error.code !== 'PGRST116') {
+                console.error('Error fetching organization by slug:', error);
+            }
+            return null;
+        }
+
+        return data as Organization;
     },
 
     /**

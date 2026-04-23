@@ -66,8 +66,8 @@ const Input = styled.input`
   
   &:focus {
     outline: none;
-    border-color: rgba(168, 85, 247, 0.5);
-    box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.1);
+    border-color: rgba(var(--primary-color-rgb, 168, 85, 247), 0.5);
+    box-shadow: 0 0 0 3px rgba(var(--primary-color-rgb, 168, 85, 247), 0.1);
   }
   
   &::placeholder {
@@ -89,14 +89,14 @@ const Button = styled.button<{ variant?: 'primary' | 'secondary' }>`
   border-radius: 0.5rem;
   font-weight: 600;
   cursor: pointer;
-  border: ${props => props.variant === 'primary' ? '1px solid rgba(168, 85, 247, 0.5)' : '1px solid rgba(255, 255, 255, 0.2)'};
-  background: ${props => props.variant === 'primary' ? 'rgba(168, 85, 247, 0.2)' : 'transparent'};
+  border: ${props => props.variant === 'primary' ? '1px solid rgba(var(--primary-color-rgb, 168, 85, 247), 0.5)' : '1px solid rgba(255, 255, 255, 0.2)'};
+  background: ${props => props.variant === 'primary' ? 'rgba(var(--primary-color-rgb, 168, 85, 247), 0.2)' : 'transparent'};
   color: ${props => props.variant === 'primary' ? '#d8b4fe' : '#cbd5e1'};
   backdrop-filter: blur(8px);
   transition: all 0.2s;
 
   &:hover:not(:disabled) {
-    background: ${props => props.variant === 'primary' ? 'rgba(168, 85, 247, 0.3)' : 'rgba(255, 255, 255, 0.05)'};
+    background: ${props => props.variant === 'primary' ? 'rgba(var(--primary-color-rgb, 168, 85, 247), 0.3)' : 'rgba(255, 255, 255, 0.05)'};
     transform: translateY(-1px);
     box-shadow: 0 4px 6px rgba(0,0,0,0.2);
   }

@@ -90,6 +90,56 @@ export const OrganizationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         }
     }, [memberData, user?.id]);
 
+    // Inject CSS variables for deep White-Label customization
+    useEffect(() => {
+        if (currentOrganization) {
+            const root = document.documentElement;
+
+            const hexToRgb = (hex: string) => {
+                const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+                return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : null;
+            };
+
+            const primary = currentOrganization.primary_color || 'var(--primary-color, #a855f7)';
+            const secondary = currentOrganization.secondary_color || 'var(--secondary-color, #7c3aed)';
+
+            // Provide a graceful fallback to original TrazAPP styling
+            root.style.setProperty('--primary-color', primary);
+            root.style.setProperty('--secondary-color', secondary);
+            root.style.setProperty('--primary-color-rgb', hexToRgb(primary) || 'var(--primary-color-rgb, 168, 85, 247)');
+            root.style.setProperty('--secondary-color-rgb', hexToRgb(secondary) || 'var(--secondary-color-rgb, 124, 58, 237)');
+
+            // ---- DYNAMIC PWA MANIFEST HOMEPAGE ----
+            let manifestLink = document.querySelector('link[rel="manifest"]');
+            if (manifestLink) {
+                const manifestParams = {
+                    short_name: currentOrganization.name,
+                    name: `Portal - ${currentOrganization.name}`,
+                    icons: [
+                        {
+                            src: currentOrganization.logo_url || "/apple-touch-icon.png",
+                            sizes: "192x192 512x512",
+                            type: "image/png"
+                        }
+                    ],
+                    start_url: `/${currentOrganization.slug}/portal`,
+                    display: "standalone",
+                    theme_color: primary,
+                    background_color: "#020617"
+                };
+
+                const blob = new Blob([JSON.stringify(manifestParams)], { type: 'application/json' });
+                manifestLink.setAttribute('href', URL.createObjectURL(blob));
+            }
+
+            let themeMeta = document.querySelector('meta[name="theme-color"]');
+            if (themeMeta) {
+                themeMeta.setAttribute('content', primary);
+            }
+            // ---------------------------------------
+        }
+    }, [currentOrganization]);
+
     const selectOrganization = (orgId: string) => {
         const org = organizations.find(o => o.id === orgId);
         if (org) {

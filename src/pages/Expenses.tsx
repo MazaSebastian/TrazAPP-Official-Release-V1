@@ -35,8 +35,8 @@ const ToastContainer = styled.div<{ $isClosing: boolean }>`
   left: 50%;
   transform: translateX(-50%);
   background: rgba(15, 23, 42, 0.95);
-  border: 1px solid rgba(168, 85, 247, 0.5);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5), 0 0 15px rgba(168, 85, 247, 0.2);
+  border: 1px solid rgba(var(--primary-color-rgb, 168, 85, 247), 0.5);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5), 0 0 15px rgba(var(--primary-color-rgb, 168, 85, 247), 0.2);
   border-radius: 0.75rem;
   padding: 1rem 1.5rem;
   display: flex;
@@ -142,8 +142,8 @@ const Form = styled.div`
 
     &:focus {
       outline: none;
-      border-color: rgba(168, 85, 247, 0.5);
-      box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.1);
+      border-color: rgba(var(--primary-color-rgb, 168, 85, 247), 0.5);
+      box-shadow: 0 0 0 3px rgba(var(--primary-color-rgb, 168, 85, 247), 0.1);
     }
     
     &::placeholder {
@@ -152,9 +152,9 @@ const Form = styled.div`
   }
 
   button {
-    background: rgba(168, 85, 247, 0.2);
+    background: rgba(var(--primary-color-rgb, 168, 85, 247), 0.2);
     color: #d8b4fe;
-    border: 1px solid rgba(168, 85, 247, 0.5);
+    border: 1px solid rgba(var(--primary-color-rgb, 168, 85, 247), 0.5);
     padding: 0.75rem;
     border-radius: 0.5rem;
     font-weight: 600;
@@ -163,7 +163,7 @@ const Form = styled.div`
     backdrop-filter: blur(8px);
 
     &:hover { 
-      background: rgba(168, 85, 247, 0.3); 
+      background: rgba(var(--primary-color-rgb, 168, 85, 247), 0.3); 
       box-shadow: 0 4px 6px rgba(0,0,0,0.2); 
     }
   }
@@ -328,7 +328,7 @@ const FilterContainer = styled.div`
     font-size: 0.85rem;
     color-scheme: dark;
     height: 38px;
-    &:focus { outline: none; border-color: rgba(168, 85, 247, 0.5); }
+    &:focus { outline: none; border-color: rgba(var(--primary-color-rgb, 168, 85, 247), 0.5); }
   }
 
   .date-mode-toggle {
@@ -344,9 +344,9 @@ const FilterContainer = styled.div`
       font-size: 0.75rem;
       cursor: pointer;
       &.active {
-        background: rgba(168, 85, 247, 0.2);
+        background: rgba(var(--primary-color-rgb, 168, 85, 247), 0.2);
         color: #d8b4fe;
-        border-color: rgba(168, 85, 247, 0.5);
+        border-color: rgba(var(--primary-color-rgb, 168, 85, 247), 0.5);
       }
     }
   }
@@ -520,13 +520,13 @@ const Expenses: React.FC = () => {
                 backgroundColor: [
                     'rgba(74, 222, 128, 0.8)', // Verde (Cultivo)
                     'rgba(56, 189, 248, 0.8)', // Azul (Medicina)
-                    'rgba(168, 85, 247, 0.8)', // Morado (Administrativa)
+                    'rgba(var(--primary-color-rgb, 168, 85, 247), 0.8)', // Morado (Administrativa)
                     'rgba(148, 163, 184, 0.8)', // Gris (Otros)
                 ],
                 borderColor: [
                     'rgba(74, 222, 128, 1)',
                     'rgba(56, 189, 248, 1)',
-                    'rgba(168, 85, 247, 1)',
+                    'rgba(var(--primary-color-rgb, 168, 85, 247), 1)',
                     'rgba(148, 163, 184, 1)',
                 ],
                 borderWidth: 1,

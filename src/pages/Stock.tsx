@@ -129,7 +129,7 @@ const IconButton = styled.button<{ color: string }>`
     switch (props.color) {
       case '#38a169': return '#4ade80'; // Neon Green
       case '#3182ce': return '#38bdf8'; // Light Blue
-      case '#805ad5': return '#a855f7'; // Purple
+      case '#805ad5': return 'var(--primary-color, #a855f7)'; // Purple
       case '#e53e3e': return '#f87171'; // Red
       default: return props.color;
     }
@@ -1086,7 +1086,7 @@ const Stock: React.FC = () => {
                             }}>
                               <FaEdit /> Editar Genética
                             </ActionMenuItem>
-                            <ActionMenuItem $color="#a855f7" onClick={() => {
+                            <ActionMenuItem $color="var(--primary-color, #a855f7)" onClick={() => {
                               setOpenActionMenuId(null);
                               openGroupLabTransfer(item.strain);
                             }}>
@@ -1456,13 +1456,13 @@ const Stock: React.FC = () => {
           return (
             <>
               <CloseIcon onClick={() => setIsGroupLabOpen(false)}><FaTimes /></CloseIcon>
-              <h2 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#a855f7' }}>
+              <h2 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--primary-color, #a855f7)' }}>
                 <FaFlask /> Enviar a Laboratorio: {groupLabStrain}
               </h2>
 
               <div style={{ marginBottom: '1.5rem', background: 'rgba(30, 41, 59, 0.6)', padding: '1rem', borderRadius: '0.5rem', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
                 <p style={{ margin: 0, fontSize: '0.9rem', color: '#cbd5e1' }}>Stock Total Disponible en todas las plantas:</p>
-                <p style={{ margin: '0.25rem 0 0 0', fontWeight: 'bold', color: '#a855f7', fontSize: '1.25rem' }}>{maxAvailable.toFixed(2)}g</p>
+                <p style={{ margin: '0.25rem 0 0 0', fontWeight: 'bold', color: 'var(--primary-color, #a855f7)', fontSize: '1.25rem' }}>{maxAvailable.toFixed(2)}g</p>
                 <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.8rem', color: '#94a3b8' }}>Se enviará al laboratorio descontando automáticamente desde los lotes más antiguos hasta alcanzar la cantidad total.</p>
               </div>
 
@@ -1480,7 +1480,7 @@ const Stock: React.FC = () => {
 
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '2rem' }}>
                 <ActionButton variant="secondary" onClick={() => setIsGroupLabOpen(false)}>Cancelar</ActionButton>
-                <ActionButton variant="primary" style={{ background: '#a855f7', borderColor: '#a855f7' }} onClick={confirmGroupLabTransfer}>Confirmar Envío</ActionButton>
+                <ActionButton variant="primary" style={{ background: 'var(--primary-color, #a855f7)', borderColor: 'var(--primary-color, #a855f7)' }} onClick={confirmGroupLabTransfer}>Confirmar Envío</ActionButton>
               </div>
             </>
           );

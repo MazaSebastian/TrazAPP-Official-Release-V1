@@ -367,7 +367,7 @@ export const PublicTracking: React.FC = () => {
                         <StatsGrid>
                             <StatCard>
                                 <StatLabel>THC Estimado</StatLabel>
-                                <StatValue style={{ color: genetic.thc_percent ? '#a855f7' : '#64748b' }}>
+                                <StatValue style={{ color: genetic.thc_percent ? 'var(--primary-color, #a855f7)' : '#64748b' }}>
                                     {genetic.thc_percent ? `${genetic.thc_percent}%` : '--'}
                                 </StatValue>
                             </StatCard>

@@ -211,7 +211,7 @@ export const patientsService = {
     },
 
     // Register a NEW patient (creates Auth User + Patient Record)
-    async registerNewPatient(patientData: Partial<Patient>, userData: { email: string, fullName: string }): Promise<Patient | null> {
+    async registerNewPatient(patientData: Partial<Patient>, userData: { email: string, fullName: string, password?: string, documentNumber?: string }): Promise<Patient | null> {
         if (!supabase) return null;
 
         const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
@@ -233,8 +233,8 @@ export const patientsService = {
         });
 
         // 2. Sign Up the new user
-        // We use a temporary password since the user isn't using the app yet
-        const tempPassword = "TempPassword123!";
+        // We use the provided password, or fallback to their document number, or finally a static temp password
+        const tempPassword = userData.password || userData.documentNumber || "TempPassword123!";
 
         const { data: authData, error: authError } = await tempClient.auth.signUp({
             email: userData.email,
@@ -256,6 +256,23 @@ export const patientsService = {
 
         // 3. Create Patient Record linked to the new Auth User
         // Note: The 'profiles' record is created automatically by the DB trigger 'handle_new_user'
+
+        // Explicily sync the email and name to the profiles table
+        await supabase.from('profiles').update({
+            email: userData.email,
+            full_name: userData.fullName
+        }).eq('id', newUserId);
+
+        const currentOrgId = getSelectedOrgId();
+
+        // 4. Enroll the user into the organization with the 'partner' role
+        if (currentOrgId) {
+            await supabase.from('organization_members').insert([{
+                organization_id: currentOrgId,
+                user_id: newUserId,
+                role: 'partner'
+            }]);
+        }
 
         const payload: any = {
             ...patientData,

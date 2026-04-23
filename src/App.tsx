@@ -44,6 +44,8 @@ import UpdatePassword from './pages/UpdatePassword';
 import EmailConfirmed from './pages/EmailConfirmed'; // New Import
 import { PublicTracking } from './pages/PublicTracking'; // QR Scan Public Route
 import PatientOnboarding from './pages/PatientOnboarding'; // Self-Onboarding
+import TenantLogin from './pages/public/TenantLogin';
+import PatientPortal from './pages/public/PatientPortal';
 import { useAuth } from './context/AuthContext';
 import { DataProvider } from './context/DataContext';
 import { OrganizationProvider } from './context/OrganizationContext';
@@ -148,12 +150,21 @@ function App() {
   const isUpdatePassword = location.pathname === '/update-password';
   const isEmailConfirmed = location.pathname === '/email-confirmed';
   const isPublicTracking = location.pathname.startsWith('/track/');
-  const isPublicRoute = isLogin || isRegister || isForgotPassword || isUpdatePassword || isEmailConfirmed || isPublicTracking;
+
+  // Custom White-Label Routes
+  const isTenantLogin = /^\/[^/]+\/login$/.test(location.pathname);
+  const isPatientPortal = /^\/[^/]+\/portal$/.test(location.pathname);
+
+  // Consider Tenant Login as public route for styling
+  const isPublicRoute = isLogin || isRegister || isForgotPassword || isUpdatePassword || isEmailConfirmed || isPublicTracking || isTenantLogin;
+
+  // We DO want the admin sidebar for the patient portal based on the user's request.
+  const hideAdminChrome = isPublicRoute;
 
   return (
     <DataProvider>
       <OrganizationProvider>
-        <div className={`App ${isPublicRoute ? 'public-theme' : ''}`}>
+        <div className={`App ${isPublicRoute || isPatientPortal ? 'public-theme' : ''}`}>
           <ClickSpark
             sparkColor="#03fc41"
             sparkSize={5}
@@ -163,12 +174,12 @@ function App() {
             easing="ease-in-out"
             extraScale={0.9}
           />
-          {!isPublicRoute && <GuidedTour />}
-          {!isPublicRoute && <Sidebar />}
+          {!hideAdminChrome && <GuidedTour />}
+          {!hideAdminChrome && <Sidebar />}
           {/* Temporarily hidden per user request */}
-          {/* {!isPublicRoute && <ChatWidget />} */}
+          {/* {!hideAdminChrome && <ChatWidget />} */}
           {/* New Growy Assistant */}
-          {!isPublicRoute && <GrowyOrb />}
+          {!hideAdminChrome && <GrowyOrb />}
 
           <SystemBroadcastBanner />
 
@@ -182,7 +193,17 @@ function App() {
             <Route path="/update-password" element={<UpdatePassword />} />
             <Route path="/email-confirmed" element={<EmailConfirmed />} />
             <Route path="/track/:id" element={<PublicTracking />} />
-            <Route path="/invite/:token" element={<PatientOnboarding />} />            {/* Protected Routes Wrapped in Main Content */}
+            <Route path="/invite/:token" element={<PatientOnboarding />} />
+
+            {/* White-Label Public & Portal Routes */}
+            <Route path="/:slug/login" element={<TenantLogin />} />
+            <Route path="/:slug/portal" element={
+              <RequireAuth>
+                <MainContent>
+                  <PatientPortal />
+                </MainContent>
+              </RequireAuth>
+            } />            {/* Protected Routes Wrapped in Main Content */}
             <Route path="/" element={
               <RequireAuth>
                 <KYCGuard>
@@ -190,6 +211,14 @@ function App() {
                     <Dashboard />
                   </MainContent>
                 </KYCGuard>
+              </RequireAuth>
+            } />
+
+            <Route path="/shipping" element={
+              <RequireAuth>
+                <MainContent>
+                  <div style={{ padding: '2rem', color: '#fff' }}><h2>Envíos</h2><p>Módulo de envíos en construcción...</p></div>
+                </MainContent>
               </RequireAuth>
             } />
 

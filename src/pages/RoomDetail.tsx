@@ -515,7 +515,7 @@ const getTaskStyles = (type: string) => {
         case 'defoliacion': return { bg: 'rgba(249, 115, 22, 0.1)', color: '#f97316', border: 'rgba(249, 115, 22, 0.2)' }; // Orange
         case 'hst':
         case 'lst':
-        case 'entrenamiento': return { bg: 'rgba(168, 85, 247, 0.1)', color: '#a855f7', border: 'rgba(168, 85, 247, 0.2)' };
+        case 'entrenamiento': return { bg: 'rgba(var(--primary-color-rgb, 168, 85, 247), 0.1)', color: 'var(--primary-color, #a855f7)', border: 'rgba(var(--primary-color-rgb, 168, 85, 247), 0.2)' };
         case 'esquejes': return { bg: 'rgba(217, 119, 6, 0.1)', color: '#d97706', border: 'rgba(217, 119, 6, 0.2)' };
         case 'info':
         default: return { bg: 'rgba(148, 163, 184, 0.1)', color: '#cbd5e1', border: 'rgba(148, 163, 184, 0.2)' };
@@ -5684,7 +5684,7 @@ const RoomDetail: React.FC = () => {
                                                     if (lowerType.includes('fertiliz') || lowerType.includes('enmienda') || lowerType.includes('compost')) return 'rgba(74, 222, 128, 0.2)'; // Green
                                                     if (lowerType.includes('poda') || lowerType.includes('danger') || lowerType.includes('alerta') || lowerType.includes('warning')) return 'rgba(239, 68, 68, 0.2)'; // Red
                                                     if (lowerType.includes('defoliacion') || lowerType.includes('esqueje')) return 'rgba(249, 115, 22, 0.2)'; // Orange
-                                                    if (lowerType.includes('hst') || lowerType.includes('lst') || lowerType.includes('entrenamiento')) return 'rgba(168, 85, 247, 0.2)'; // Purple
+                                                    if (lowerType.includes('hst') || lowerType.includes('lst') || lowerType.includes('entrenamiento')) return 'rgba(var(--primary-color-rgb, 168, 85, 247), 0.2)'; // Purple
 
                                                     return 'rgba(148, 163, 184, 0.2)'; // Gray (Info)
                                                 };
@@ -6805,7 +6805,7 @@ const RoomDetail: React.FC = () => {
                                                         (plantDetailModal.batch.stage === 'clones' || plantDetailModal.batch.stage === 'seedling') ? 'rgba(167, 139, 250, 0.15)' :
                                                             'rgba(56, 189, 248, 0.15)',
                                                     color: plantDetailModal.batch.stage === 'vegetation' ? '#4ade80' :
-                                                        (plantDetailModal.batch.stage === 'clones' || plantDetailModal.batch.stage === 'seedling') ? '#a855f7' :
+                                                        (plantDetailModal.batch.stage === 'clones' || plantDetailModal.batch.stage === 'seedling') ? 'var(--primary-color, #a855f7)' :
                                                             '#38bdf8',
                                                     border: `1px solid ${plantDetailModal.batch.stage === 'vegetation' ? 'rgba(74, 222, 128, 0.3)' :
                                                         (plantDetailModal.batch.stage === 'clones' || plantDetailModal.batch.stage === 'seedling') ? 'rgba(167, 139, 250, 0.3)' :

@@ -45,6 +45,8 @@ export interface Organization {
   slug: string;
   plan: string; // references plans.slug
   logo_url?: string;
+  primary_color?: string;
+  secondary_color?: string;
   status?: 'pending' | 'active' | 'suspended';
   owner_email?: string;
   stripe_customer_id?: string;

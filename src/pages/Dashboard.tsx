@@ -871,7 +871,7 @@ const Dashboard: React.FC = () => {
     `
   });
 
-  const { currentOrganization } = useOrganization();
+  const { currentOrganization, currentRole } = useOrganization();
   const { tasks, crops, rooms, stickies, isLoading, refreshData, updateStickies, updateTasks } = useData();
   const [alerts, setAlerts] = useState<any[]>([]);
 
@@ -1063,7 +1063,7 @@ const Dashboard: React.FC = () => {
       <WeatherWidget className="tour-weather" />
 
       {/* Stage Countdowns */}
-      {rooms.some(r => (r.type === 'vegetation' || r.type === 'flowering') && r.start_date) && (
+      {rooms.some(r => (r.type === 'vegetation' || r.type === 'flowering') && r.start_date) && currentRole !== 'admin' && (
         <StickyBoard className="tour-countdowns">
           <SectionTitle><FaClock style={{ color: '#805ad5' }} /> Próximos Cambios de Etapa</SectionTitle>
           <CountdownGrid>
@@ -1155,51 +1155,55 @@ const Dashboard: React.FC = () => {
       )}
 
       <KPISection>
-        <Link to="/crops" style={{ textDecoration: 'none', color: 'inherit' }}>
-          <KPICard active>
-            <div className="desktop-view">
-              <div className="icon-wrapper"><FaSeedling /></div>
-              <div className="label">Cultivos Activos</div>
-              <div className="value">{activeCrops.length} <span className="unit">variedades</span></div>
-              <div className="subtext"><FaChartLine /> En curso</div>
-            </div>
-            <div className="mobile-view">
-              <div className="m-left">
-                <div className="m-icon"><FaSeedling /></div>
-                <div className="m-text-group">
-                  <span className="m-label">Cultivos Activos</span>
-                  <span className="m-subtext">En curso</span>
+        {currentRole !== 'admin' && (
+          <Link to="/crops" style={{ textDecoration: 'none', color: 'inherit' }}>
+            <KPICard active>
+              <div className="desktop-view">
+                <div className="icon-wrapper"><FaSeedling /></div>
+                <div className="label">Cultivos Activos</div>
+                <div className="value">{activeCrops.length} <span className="unit">variedades</span></div>
+                <div className="subtext"><FaChartLine /> En curso</div>
+              </div>
+              <div className="mobile-view">
+                <div className="m-left">
+                  <div className="m-icon"><FaSeedling /></div>
+                  <div className="m-text-group">
+                    <span className="m-label">Cultivos Activos</span>
+                    <span className="m-subtext">En curso</span>
+                  </div>
+                </div>
+                <div className="m-value">
+                  {activeCrops.length} <span className="m-unit">var.</span>
                 </div>
               </div>
-              <div className="m-value">
-                {activeCrops.length} <span className="m-unit">var.</span>
-              </div>
-            </div>
-          </KPICard>
-        </Link>
+            </KPICard>
+          </Link>
+        )}
 
         {/* Removed Temperature and Humidity cards as requested */}
 
-        <KPICard alert={alerts.length > 0}>
-          <div className="desktop-view">
-            <div className="icon-wrapper"><FaExclamationTriangle /></div>
-            <div className="label">Alertas</div>
-            <div className="value">{alerts.length} <span className="unit">pendientes</span></div>
-          </div>
-          <div className="mobile-view">
-            <div className="m-left">
-              <div className="m-icon"><FaExclamationTriangle /></div>
-              <div className="m-text-group">
-                <span className="m-label">Alertas</span>
-                <span className="m-subtext">{alerts.length > 0 ? 'Requieren atención' : 'Todo al día'}</span>
+        {currentRole !== 'admin' && (
+          <KPICard alert={alerts.length > 0}>
+            <div className="desktop-view">
+              <div className="icon-wrapper"><FaExclamationTriangle /></div>
+              <div className="label">Alertas</div>
+              <div className="value">{alerts.length} <span className="unit">pendientes</span></div>
+            </div>
+            <div className="mobile-view">
+              <div className="m-left">
+                <div className="m-icon"><FaExclamationTriangle /></div>
+                <div className="m-text-group">
+                  <span className="m-label">Alertas</span>
+                  <span className="m-subtext">{alerts.length > 0 ? 'Requieren atención' : 'Todo al día'}</span>
+                </div>
+              </div>
+              <div className="m-value">
+                {alerts.length} <span className="m-unit">pend.</span>
               </div>
             </div>
-            <div className="m-value">
-              {alerts.length} <span className="m-unit">pend.</span>
-            </div>
-          </div>
 
-        </KPICard>
+          </KPICard>
+        )}
       </KPISection>
 
 
@@ -1208,70 +1212,70 @@ const Dashboard: React.FC = () => {
 
 
       <ContentGrid>
+        {currentRole !== 'admin' && (
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <SectionTitle style={{ marginBottom: 0 }}><FaExclamationTriangle /> Alertas & Tareas</SectionTitle>
+              <button
+                onClick={() => handlePrintChecklist()}
+                className="no-print"
+                title="Descargar Planilla de Operarios"
+                style={{
+                  background: 'rgba(15, 23, 42, 0.4)',
+                  backdropFilter: 'blur(8px)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  borderRadius: '0.5rem',
+                  padding: '0.4rem 0.75rem',
+                  fontSize: '0.8rem',
+                  color: '#cbd5e1',
+                  fontWeight: 600,
+                  display: 'flex', alignItems: 'center', gap: '0.5rem',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                  e.currentTarget.style.color = '#f8fafc';
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.background = 'rgba(15, 23, 42, 0.4)';
+                  e.currentTarget.style.color = '#cbd5e1';
+                }}
+              >
+                <FaPrint /> Imprimir Checklist
+              </button>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+              {alerts.map(alert => (
+                <AlertItem key={alert.id} style={alert.type === 'info' ? { background: '#ebf8ff', borderLeftColor: '#4299e1' } : {}}>
+                  <div className="icon" style={alert.type === 'info' ? { color: '#4299e1' } : {}}>{alert.icon}</div>
+                  <div className="content">
+                    <h5 style={alert.type === 'info' ? { color: '#2b6cb0' } : {}}>{alert.title}</h5>
+                    <p style={alert.type === 'info' ? { color: '#2c5282' } : {}}>{alert.message}</p>
+                  </div>
+                  <AlertActions>
+                    <ActionButtonSmall type="success" onClick={() => handleAction(alert.id, 'done')} title="Marcar como realizado">
+                      <FaCheck />
+                    </ActionButtonSmall>
+                    <ActionButtonSmall type="danger" onClick={() => handleAction(alert.id, 'dismissed')} title="Descartar">
+                      <FaTrash />
+                    </ActionButtonSmall>
+                  </AlertActions>
+
+                </AlertItem>
+              ))}
+
+              {alerts.length === 0 && (
+                <EmptyStateCard>
+                  <FaCheckCircle className="icon" />
+                  <p>¡Todo al día!</p>
+                </EmptyStateCard>
+              )}
 
 
-        <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-            <SectionTitle style={{ marginBottom: 0 }}><FaExclamationTriangle /> Alertas & Tareas</SectionTitle>
-            <button
-              onClick={() => handlePrintChecklist()}
-              className="no-print"
-              title="Descargar Planilla de Operarios"
-              style={{
-                background: 'rgba(15, 23, 42, 0.4)',
-                backdropFilter: 'blur(8px)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                borderRadius: '0.5rem',
-                padding: '0.4rem 0.75rem',
-                fontSize: '0.8rem',
-                color: '#cbd5e1',
-                fontWeight: 600,
-                display: 'flex', alignItems: 'center', gap: '0.5rem',
-                cursor: 'pointer',
-                transition: 'all 0.2s'
-              }}
-              onMouseEnter={e => {
-                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
-                e.currentTarget.style.color = '#f8fafc';
-              }}
-              onMouseLeave={e => {
-                e.currentTarget.style.background = 'rgba(15, 23, 42, 0.4)';
-                e.currentTarget.style.color = '#cbd5e1';
-              }}
-            >
-              <FaPrint /> Imprimir Checklist
-            </button>
+            </div>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
-            {alerts.map(alert => (
-              <AlertItem key={alert.id} style={alert.type === 'info' ? { background: '#ebf8ff', borderLeftColor: '#4299e1' } : {}}>
-                <div className="icon" style={alert.type === 'info' ? { color: '#4299e1' } : {}}>{alert.icon}</div>
-                <div className="content">
-                  <h5 style={alert.type === 'info' ? { color: '#2b6cb0' } : {}}>{alert.title}</h5>
-                  <p style={alert.type === 'info' ? { color: '#2c5282' } : {}}>{alert.message}</p>
-                </div>
-                <AlertActions>
-                  <ActionButtonSmall type="success" onClick={() => handleAction(alert.id, 'done')} title="Marcar como realizado">
-                    <FaCheck />
-                  </ActionButtonSmall>
-                  <ActionButtonSmall type="danger" onClick={() => handleAction(alert.id, 'dismissed')} title="Descartar">
-                    <FaTrash />
-                  </ActionButtonSmall>
-                </AlertActions>
-
-              </AlertItem>
-            ))}
-
-            {alerts.length === 0 && (
-              <EmptyStateCard>
-                <FaCheckCircle className="icon" />
-                <p>¡Todo al día!</p>
-              </EmptyStateCard>
-            )}
-
-
-          </div>
-        </div>
+        )}
       </ContentGrid>
       {/* Printable Checklist Portal */}
       <div style={{ display: 'none' }}>

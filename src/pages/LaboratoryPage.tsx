@@ -342,9 +342,9 @@ const Title = styled.h1`
 `;
 
 const TabButton = styled.button<{ $active: boolean }>`
-    background: ${props => props.$active ? 'rgba(168, 85, 247, 0.2)' : 'rgba(30, 41, 59, 0.6)'};
+    background: ${props => props.$active ? 'rgba(var(--primary-color-rgb, 168, 85, 247), 0.2)' : 'rgba(30, 41, 59, 0.6)'};
     color: ${props => props.$active ? '#c084fc' : '#cbd5e1'};
-    border: 1px solid ${props => props.$active ? 'rgba(168, 85, 247, 0.5)' : 'rgba(255, 255, 255, 0.1)'};
+    border: 1px solid ${props => props.$active ? 'rgba(var(--primary-color-rgb, 168, 85, 247), 0.5)' : 'rgba(255, 255, 255, 0.1)'};
     padding: 0.5rem 1rem;
     border-radius: 0.5rem;
     font-weight: 600;
@@ -357,7 +357,7 @@ const TabButton = styled.button<{ $active: boolean }>`
     
     &:hover {
         transform: translateY(-1px);
-        background: ${props => props.$active ? 'rgba(168, 85, 247, 0.3)' : 'rgba(255, 255, 255, 0.1)'};
+        background: ${props => props.$active ? 'rgba(var(--primary-color-rgb, 168, 85, 247), 0.3)' : 'rgba(255, 255, 255, 0.1)'};
         color: ${props => props.$active ? '#d8b4fe' : '#f8fafc'};
     }
 `;
@@ -425,7 +425,7 @@ const Card = styled.div`
     &:hover { 
         transform: translateY(-4px); 
         box-shadow: 0 10px 15px rgba(0, 0, 0, 0.3);
-        border-color: rgba(168, 85, 247, 0.5);
+        border-color: rgba(var(--primary-color-rgb, 168, 85, 247), 0.5);
     }
 `;
 
@@ -547,9 +547,9 @@ const ActionButton = styled.button`
     }
 
     &.process {
-        background: rgba(168, 85, 247, 0.2);
+        background: rgba(var(--primary-color-rgb, 168, 85, 247), 0.2);
         color: #d8b4fe;
-        border-color: rgba(168, 85, 247, 0.5);
-        &:hover { background: rgba(168, 85, 247, 0.3); box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
+        border-color: rgba(var(--primary-color-rgb, 168, 85, 247), 0.5);
+        &:hover { background: rgba(var(--primary-color-rgb, 168, 85, 247), 0.3); box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
     }
 `;

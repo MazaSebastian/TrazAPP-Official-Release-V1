@@ -110,13 +110,13 @@ export const InsumoOrdersTab: React.FC = () => {
       await updateOrderStatus(id, newStatus);
       setToast({ message: `Estado actualizado a ${newStatus}`, type: 'success' });
       loadOrders();
-      
+
       // Optionally, if delivered, we might want to prompt the user to update their physical stock?
       // Just showing a toast is enough for now. The user can go to Inventory to receive it.
       if (newStatus === 'DELIVERED') {
-         setTimeout(() => {
-           setToast({ message: 'Recuerda sumar este ingreso de stock al inventario.', type: 'info' });
-         }, 2500);
+        setTimeout(() => {
+          setToast({ message: 'Recuerda sumar este ingreso de stock al inventario.', type: 'info' });
+        }, 2500);
       }
     } catch (error) {
       console.error('Error updating status:', error);
@@ -139,7 +139,7 @@ export const InsumoOrdersTab: React.FC = () => {
     <Container>
       <div style={{ marginBottom: '2rem' }}>
         <h2 style={{ margin: 0, fontSize: '1.2rem', color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <FaRobot style={{ color: '#a855f7' }} /> Órdenes de Compra Automáticas
+          <FaRobot style={{ color: 'var(--primary-color, #a855f7)' }} /> Órdenes de Compra Automáticas
         </h2>
         <p style={{ margin: 0, color: '#94a3b8', fontSize: '0.9rem' }}>
           Registro de las compras solicitadas automáticamente por Growy AI a los proveedores cuando el stock físico es crítico.
@@ -170,7 +170,7 @@ export const InsumoOrdersTab: React.FC = () => {
               <div>Estado Global</div>
               <div>Cambiar Estado</div>
             </TableHeader>
-            
+
             {orders.map(order => (
               <TableRow key={order.id}>
                 <div>
@@ -181,27 +181,27 @@ export const InsumoOrdersTab: React.FC = () => {
                 </div>
                 <div>
                   <div style={{ fontWeight: 600 }}>{order.providers?.name || 'Proveedor Eliminado'}</div>
-                  {order.ai_generated && <div style={{ fontSize: '0.75rem', color: '#a855f7' }}>🤖 Solicitado por IA</div>}
+                  {order.ai_generated && <div style={{ fontSize: '0.75rem', color: 'var(--primary-color, #a855f7)' }}>🤖 Solicitado por IA</div>}
                 </div>
                 <div>
                   <div style={{ fontWeight: 600 }}>{new Date(order.ordered_at).toLocaleDateString()}</div>
                   <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>{new Date(order.ordered_at).toLocaleTimeString()}</div>
                 </div>
                 <div>
-                   <StatusBadge status={order.status}>
-                     {order.status === 'DELIVERED' && <FaCheckCircle />}
-                     {order.status === 'SENT' && <FaBoxOpen />}
-                     {order.status === 'CANCELLED' && <FaTimesCircle />}
-                     {order.status === 'PENDING' && <FaClock />}
-                     {statusOptions.find(o => o.value === order.status)?.label || order.status}
-                   </StatusBadge>
+                  <StatusBadge status={order.status}>
+                    {order.status === 'DELIVERED' && <FaCheckCircle />}
+                    {order.status === 'SENT' && <FaBoxOpen />}
+                    {order.status === 'CANCELLED' && <FaTimesCircle />}
+                    {order.status === 'PENDING' && <FaClock />}
+                    {statusOptions.find(o => o.value === order.status)?.label || order.status}
+                  </StatusBadge>
                 </div>
                 <div style={{ position: 'relative', zIndex: 10 }}>
-                   <CustomSelect
-                     value={order.status}
-                     onChange={(val) => handleStatusChange(order.id, val as any)}
-                     options={statusOptions}
-                   />
+                  <CustomSelect
+                    value={order.status}
+                    onChange={(val) => handleStatusChange(order.id, val as any)}
+                    options={statusOptions}
+                  />
                 </div>
               </TableRow>
             ))}

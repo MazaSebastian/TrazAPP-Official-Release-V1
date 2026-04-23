@@ -24,6 +24,7 @@ import usePlacesAutocomplete, {
   getGeocode,
   getLatLng,
 } from "use-places-autocomplete";
+import { ImageCropperModal } from '../components/ImageCropperModal';
 
 // Animación de aparición para modales
 import { keyframes } from 'styled-components';
@@ -116,9 +117,9 @@ const FormGrid = styled.div`
 `;
 
 const SaveButton = styled.button`
-  background: rgba(168, 85, 247, 0.2);
+  background: rgba(var(--primary-color-rgb, 168, 85, 247), 0.2);
   color: #d8b4fe;
-  border: 1px solid rgba(168, 85, 247, 0.5);
+  border: 1px solid rgba(var(--primary-color-rgb, 168, 85, 247), 0.5);
   padding: 0.75rem 1.5rem;
   border-radius: 0.5rem;
   font-weight: 600;
@@ -130,7 +131,7 @@ const SaveButton = styled.button`
   backdrop-filter: blur(8px);
   
   &:hover:not(:disabled) {
-    background: rgba(168, 85, 247, 0.3);
+    background: rgba(var(--primary-color-rgb, 168, 85, 247), 0.3);
     transform: translateY(-1px);
     box-shadow: 0 4px 6px rgba(0,0,0,0.2);
   }
@@ -227,7 +228,7 @@ const UserCardWrapper = styled.div`
     font-size: 0.75rem;
     padding: 0.2rem 0.5rem;
     border-radius: 1rem;
-    background: rgba(168, 85, 247, 0.2);
+    background: rgba(var(--primary-color-rgb, 168, 85, 247), 0.2);
     color: #d8b4fe;
     white-space: nowrap;
   }
@@ -369,6 +370,16 @@ const Settings: React.FC = () => {
   });
   const [savingLabelSettings, setSavingLabelSettings] = useState(false);
 
+  // Branding State
+  const [brandingSlug, setBrandingSlug] = useState('');
+  const [brandingPrimaryColor, setBrandingPrimaryColor] = useState('var(--primary-color, #a855f7)');
+  const [brandingSecondaryColor, setBrandingSecondaryColor] = useState('var(--secondary-color, #7c3aed)');
+  const [brandingLogoUrl, setBrandingLogoUrl] = useState('');
+  const [brandingLogoFile, setBrandingLogoFile] = useState<File | null>(null);
+  const [savingBranding, setSavingBranding] = useState(false);
+  const [showCropper, setShowCropper] = useState(false);
+  const [cropImageSrc, setCropImageSrc] = useState<string | null>(null);
+
   // Weather Location State
   const {
     ready,
@@ -408,6 +419,13 @@ const Settings: React.FC = () => {
         ...labelSettings,
         ...(currentOrganization.label_settings as any)
       });
+    }
+
+    if (currentOrganization) {
+      setBrandingSlug(currentOrganization.slug || '');
+      setBrandingPrimaryColor(currentOrganization.primary_color || 'var(--primary-color, #a855f7)');
+      setBrandingSecondaryColor(currentOrganization.secondary_color || 'var(--secondary-color, #7c3aed)');
+      setBrandingLogoUrl(currentOrganization.logo_url || '');
     }
 
     loadData();
@@ -675,6 +693,53 @@ const Settings: React.FC = () => {
     }
   };
 
+  const handleSaveBranding = async () => {
+    if (!currentOrganization) return;
+    setSavingBranding(true);
+    try {
+      const updatedOrg = await organizationService.updateOrganizationBranding(
+        currentOrganization.id,
+        {
+          slug: brandingSlug,
+          primary_color: brandingPrimaryColor,
+          secondary_color: brandingSecondaryColor
+        },
+        brandingLogoFile || undefined
+      );
+
+      setBrandingLogoUrl(updatedOrg.logo_url || '');
+      setBrandingLogoFile(null);
+      setToast({ isOpen: true, message: 'Branding actualizado exitosamente', type: 'success' });
+
+      document.documentElement.style.setProperty('--primary-color', updatedOrg.primary_color || 'var(--primary-color, #a855f7)');
+      document.documentElement.style.setProperty('--secondary-color', updatedOrg.secondary_color || 'var(--secondary-color, #7c3aed)');
+    } catch (e: any) {
+      setToast({ isOpen: true, message: e.message || 'Error al guardar branding', type: 'error' });
+    } finally {
+      setSavingBranding(false);
+    }
+  };
+
+  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const file = e.target.files[0];
+      const reader = new FileReader();
+      reader.addEventListener('load', () => {
+        setCropImageSrc(reader.result?.toString() || null);
+        setShowCropper(true);
+      });
+      reader.readAsDataURL(file);
+    }
+    // Permite seleccionar el mismo archivo si el usuario cancela el recorte
+    e.target.value = '';
+  };
+
+  const handleCropComplete = (croppedFile: File) => {
+    setBrandingLogoFile(croppedFile);
+    setShowCropper(false);
+    setCropImageSrc(null);
+  };
+
   const handleSelectPlace = async (address: string) => {
     setValue(address, false);
     clearSuggestions();
@@ -864,6 +929,74 @@ const Settings: React.FC = () => {
 
   const renderCustomizationTab = () => (
     <>
+      <Section>
+        <SectionHeader>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <FaPalette /> Branding del Club (Marca Blanca)
+          </div>
+          <div style={{ fontSize: '0.85rem', fontWeight: 'normal', color: '#94a3b8' }}>
+            Personaliza el portal de socios y e-commerce
+          </div>
+        </SectionHeader>
+
+        <FormGrid style={{ marginBottom: '1.5rem', alignItems: 'start' }}>
+          <FormGroup>
+            <Label>Logotipo del Club (PNG, JPG, WebP)</Label>
+            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginTop: '0.5rem' }}>
+              {(brandingLogoFile || brandingLogoUrl) ? (
+                <img
+                  src={brandingLogoFile ? URL.createObjectURL(brandingLogoFile) : brandingLogoUrl}
+                  alt="Logo del Club"
+                  style={{ width: '60px', height: '60px', objectFit: 'contain', borderRadius: '0.5rem', background: '#fff', padding: '0.2rem' }}
+                />
+              ) : (
+                <div style={{ width: '60px', height: '60px', borderRadius: '0.5rem', background: 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <FaDna size={24} color="#94a3b8" />
+                </div>
+              )}
+              <input type="file" accept="image/*" onChange={handleLogoChange} style={{ color: '#94a3b8', width: '100%' }} />
+            </div>
+          </FormGroup>
+
+          <FormGroup>
+            <Label>Enlace Público (Slug)</Label>
+            <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(15, 23, 42, 0.5)', borderRadius: '0.5rem', border: '1px solid rgba(255, 255, 255, 0.1)', overflow: 'hidden' }}>
+              <span style={{ padding: '0.75rem', color: '#64748b', background: 'rgba(0,0,0,0.2)' }}>/portal/</span>
+              <input
+                type="text"
+                value={brandingSlug}
+                onChange={e => setBrandingSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+                placeholder="mi-club"
+                style={{ width: '100%', padding: '0.75rem', background: 'transparent', border: 'none', color: '#f8fafc', outline: 'none', margin: 0 }}
+              />
+            </div>
+            <small style={{ color: '#64748b', marginTop: '0.25rem' }}>Ej: trazapp.ar/portal/mi-club</small>
+          </FormGroup>
+
+          <FormGroup>
+            <Label>Color Primario (Botones y destacados)</Label>
+            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginTop: '0.5rem' }}>
+              <input type="color" value={brandingPrimaryColor} onChange={e => setBrandingPrimaryColor(e.target.value)} style={{ width: '40px', height: '40px', padding: 0, border: 'none', borderRadius: '0.25rem', cursor: 'pointer' }} />
+              <Input type="text" value={brandingPrimaryColor} onChange={e => setBrandingPrimaryColor(e.target.value)} style={{ width: '100px' }} />
+            </div>
+          </FormGroup>
+
+          <FormGroup>
+            <Label>Color Secundario (Degradados)</Label>
+            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginTop: '0.5rem' }}>
+              <input type="color" value={brandingSecondaryColor} onChange={e => setBrandingSecondaryColor(e.target.value)} style={{ width: '40px', height: '40px', padding: 0, border: 'none', borderRadius: '0.25rem', cursor: 'pointer' }} />
+              <Input type="text" value={brandingSecondaryColor} onChange={e => setBrandingSecondaryColor(e.target.value)} style={{ width: '100px' }} />
+            </div>
+          </FormGroup>
+        </FormGrid>
+
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1.5rem', paddingTop: '1.5rem', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+          <SaveButton onClick={handleSaveBranding} disabled={savingBranding}>
+            <FaSave /> {savingBranding ? 'Guardando...' : 'Guardar Branding'}
+          </SaveButton>
+        </div>
+      </Section>
+
       {canManageTasks && (
         <Section>
           <SectionHeader>
@@ -1427,6 +1560,19 @@ const Settings: React.FC = () => {
         cancelText="Cancelar"
         isDanger={true}
       />
+
+      {showCropper && cropImageSrc && (
+        <ImageCropperModal
+          imageSrc={cropImageSrc}
+          aspectRatio={1}
+          shape="rect"
+          onCropComplete={handleCropComplete}
+          onClose={() => {
+            setShowCropper(false);
+            setCropImageSrc(null);
+          }}
+        />
+      )}
     </PageContainer>
   );
 };

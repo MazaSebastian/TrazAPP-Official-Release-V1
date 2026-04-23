@@ -134,7 +134,7 @@ const StatCard = styled.div`
     align-items: center;
     gap: 0.5rem;
     margin-bottom: 0.25rem;
-    color: #a855f7;
+    color: var(--primary-color, #a855f7);
   }
 
   @media (max-width: 768px) {
@@ -912,10 +912,10 @@ const Genetics: React.FC = () => {
                                     <div style={{ display: 'flex', gap: '0.5rem' }}>
                                         <button
                                             onClick={(e) => { e.stopPropagation(); triggerPrint(gen); }}
-                                            style={{ background: 'rgba(168, 85, 247, 0.1)', border: '1px solid rgba(168, 85, 247, 0.2)', cursor: 'pointer', color: '#c084fc', padding: '0.4rem', borderRadius: '0.25rem', transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                            style={{ background: 'rgba(var(--primary-color-rgb, 168, 85, 247), 0.1)', border: '1px solid rgba(var(--primary-color-rgb, 168, 85, 247), 0.2)', cursor: 'pointer', color: '#c084fc', padding: '0.4rem', borderRadius: '0.25rem', transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                                             title="Imprimir Etiqueta"
-                                            onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(168, 85, 247, 0.2)'; }}
-                                            onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(168, 85, 247, 0.1)'; }}
+                                            onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(var(--primary-color-rgb, 168, 85, 247), 0.2)'; }}
+                                            onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(var(--primary-color-rgb, 168, 85, 247), 0.1)'; }}
                                         >
                                             <FaPrint />
                                         </button>
@@ -941,10 +941,10 @@ const Genetics: React.FC = () => {
                                 </CardHeader>
                                 <CardBody>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: '#cbd5e1', fontSize: '0.95rem' }}>
-                                        <FaLeaf color="#a855f7" /> <strong>Vege:</strong> {gen.vegetative_weeks} semanas
+                                        <FaLeaf color="var(--primary-color, #a855f7)" /> <strong>Vege:</strong> {gen.vegetative_weeks} semanas
                                     </div>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: '#cbd5e1', fontSize: '0.95rem' }}>
-                                        <FaClock color="#a855f7" /> <strong>Flora:</strong> {gen.flowering_weeks} semanas
+                                        <FaClock color="var(--primary-color, #a855f7)" /> <strong>Flora:</strong> {gen.flowering_weeks} semanas
                                     </div>
                                     <div style={{ marginTop: '0.5rem', paddingTop: '0.5rem', borderTop: '1px solid rgba(255, 255, 255, 0.1)', fontSize: '0.85rem', color: '#94a3b8' }}>
                                         <FaCalendarAlt style={{ marginRight: '0.5rem', color: '#64748b' }} />
@@ -1207,17 +1207,17 @@ const Genetics: React.FC = () => {
                                         onClick={handleSave}
                                         style={{
                                             padding: '0.75rem 1.5rem',
-                                            background: 'rgba(168, 85, 247, 0.2)',
+                                            background: 'rgba(var(--primary-color-rgb, 168, 85, 247), 0.2)',
                                             color: '#c084fc',
-                                            border: '1px solid rgba(168, 85, 247, 0.5)',
+                                            border: '1px solid rgba(var(--primary-color-rgb, 168, 85, 247), 0.5)',
                                             borderRadius: '0.5rem',
                                             cursor: 'pointer',
                                             fontWeight: 'bold',
                                             transition: 'all 0.2s',
                                             backdropFilter: 'blur(8px)'
                                         }}
-                                        onMouseOver={(e) => e.currentTarget.style.background = 'rgba(168, 85, 247, 0.3)'}
-                                        onMouseOut={(e) => e.currentTarget.style.background = 'rgba(168, 85, 247, 0.2)'}
+                                        onMouseOver={(e) => e.currentTarget.style.background = 'rgba(var(--primary-color-rgb, 168, 85, 247), 0.3)'}
+                                        onMouseOut={(e) => e.currentTarget.style.background = 'rgba(var(--primary-color-rgb, 168, 85, 247), 0.2)'}
                                     >
                                         {editingId ? 'Actualizar' : 'Guardar Madre'}
                                     </button>
@@ -1314,7 +1314,7 @@ const Genetics: React.FC = () => {
                             <div style={{ background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: '0.75rem', display: 'flex', justifyContent: 'center', gap: '1.5rem', flexWrap: 'wrap' }}>
                                 <button
                                     onClick={(e) => { e.stopPropagation(); triggerPrint(mobileDetailGenetic); setMobileDetailGenetic(null); }}
-                                    style={{ background: 'rgba(168, 85, 247, 0.1)', border: '1px solid rgba(168, 85, 247, 0.2)', cursor: 'pointer', color: '#c084fc', padding: '0.6rem 1rem', borderRadius: '0.5rem', transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', fontWeight: 600 }}
+                                    style={{ background: 'rgba(var(--primary-color-rgb, 168, 85, 247), 0.1)', border: '1px solid rgba(var(--primary-color-rgb, 168, 85, 247), 0.2)', cursor: 'pointer', color: '#c084fc', padding: '0.6rem 1rem', borderRadius: '0.5rem', transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', fontWeight: 600 }}
                                 >
                                     <FaPrint /> Imprimir Etiqueta
                                 </button>

@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { useAuth } from '../context/AuthContext';
 import { useOrganization } from '../context/OrganizationContext';
-import { FaUserCircle, FaEnvelope, FaBuilding, FaUserShield, FaExclamationTriangle } from 'react-icons/fa';
+import { FaUserCircle, FaEnvelope, FaBuilding, FaUserShield, FaExclamationTriangle, FaIdCard } from 'react-icons/fa';
 import { KYCForm } from '../components/KYCForm';
 import { ProfessionalSignature } from '../components/ProfessionalSignature';
+import { supabase } from '../services/supabaseClient';
 
 const PageContainer = styled.div`
   padding: 1rem;
@@ -145,11 +146,12 @@ const RoleBadge = styled.span<{ role: string }>`
 
   background: ${props => {
     switch (props.role?.toLowerCase()) {
-      case 'owner': return 'rgba(168, 85, 247, 0.15)'; // Purple
+      case 'owner': return 'rgba(var(--primary-color-rgb, 168, 85, 247), 0.15)'; // Purple
       case 'super_admin': return 'rgba(239, 68, 68, 0.15)'; // Red
       case 'admin': return 'rgba(59, 130, 246, 0.15)'; // Blue
       case 'grower': return 'rgba(34, 197, 94, 0.15)'; // Green
       case 'medico': return 'rgba(234, 179, 8, 0.15)'; // Yellow
+      case 'partner': return 'rgba(34, 197, 94, 0.15)'; // Green
       default: return 'rgba(100, 116, 139, 0.15)'; // Slate
     }
   }};
@@ -161,17 +163,19 @@ const RoleBadge = styled.span<{ role: string }>`
       case 'admin': return '#60a5fa';
       case 'grower': return '#4ade80';
       case 'medico': return '#facc15';
+      case 'partner': return '#4ade80';
       default: return '#94a3b8';
     }
   }};
   
   border: 1px solid ${props => {
     switch (props.role?.toLowerCase()) {
-      case 'owner': return 'rgba(168, 85, 247, 0.3)';
+      case 'owner': return 'rgba(var(--primary-color-rgb, 168, 85, 247), 0.3)';
       case 'super_admin': return 'rgba(239, 68, 68, 0.3)';
       case 'admin': return 'rgba(59, 130, 246, 0.3)';
       case 'grower': return 'rgba(34, 197, 94, 0.3)';
       case 'medico': return 'rgba(234, 179, 8, 0.3)';
+      case 'partner': return 'rgba(34, 197, 94, 0.3)';
       default: return 'rgba(100, 116, 139, 0.3)';
     }
   }};
@@ -180,6 +184,23 @@ const RoleBadge = styled.span<{ role: string }>`
 const AccountInfo: React.FC = () => {
   const { user } = useAuth();
   const { currentOrganization, currentRole } = useOrganization();
+  const [patientData, setPatientData] = useState<any>(null);
+
+  useEffect(() => {
+    async function loadPatient() {
+      if (currentRole === 'partner' && user?.id) {
+        const { data, error } = await supabase
+          .from('aurora_patients')
+          .select('*')
+          .eq('profile_id', user.id)
+          .single();
+        if (data && !error) {
+          setPatientData(data);
+        }
+      }
+    }
+    loadPatient();
+  }, [currentRole, user?.id]);
 
   // Get initials for Avatar
   const getInitials = (name: string) => {
@@ -193,7 +214,8 @@ const AccountInfo: React.FC = () => {
     'grower': 'Director de Cultivo',
     'medico': 'Director Médico',
     'staff': 'Operario',
-    'super_admin': 'Super Administrador'
+    'super_admin': 'Super Administrador',
+    'partner': 'Socio'
   };
 
   const displayRoleName = currentRole ? (roleDisplayNames[currentRole] || currentRole) : 'Usuario';
@@ -300,6 +322,57 @@ const AccountInfo: React.FC = () => {
       {/* Show KYC Form only for Owners */}
       {currentRole === 'owner' && (
         <KYCForm />
+      )}
+
+      {/* Show Patient Data only for Partners */}
+      {currentRole === 'partner' && patientData && (
+        <ProfileCard style={{ marginTop: '2rem' }}>
+          <h2 style={{ color: '#f8fafc', margin: '0 0 1.5rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.25rem' }}>
+            <FaIdCard style={{ color: '#4ade80' }} /> Datos del Paciente / Reprocann
+          </h2>
+          <InfoGrid>
+            <InfoCard>
+              <h3>Información Personal</h3>
+              <InfoRow>
+                <span className="label">DNI / Documento</span>
+                <span className="value">{patientData.document_number || '-'}</span>
+              </InfoRow>
+              <InfoRow>
+                <span className="label">Teléfono</span>
+                <span className="value">{patientData.phone || '-'}</span>
+              </InfoRow>
+              <InfoRow>
+                <span className="label">Dirección</span>
+                <span className="value">
+                  {[patientData.address, patientData.city, patientData.state].filter(Boolean).join(', ') || '-'}
+                </span>
+              </InfoRow>
+            </InfoCard>
+
+            <InfoCard>
+              <h3>Estado Legal / Médico</h3>
+              <InfoRow>
+                <span className="label">Límite Mensual Asignado</span>
+                <span className="value" style={{ color: '#4ade80', fontWeight: 'bold' }}>{patientData.monthly_limit_grams}g</span>
+              </InfoRow>
+              <InfoRow>
+                <span className="label">Vencimiento Reprocann</span>
+                <span className="value" style={{ color: patientData.reprocann_expiration ? '#f8fafc' : '#facc15' }}>
+                  {patientData.reprocann_expiration ? new Date(patientData.reprocann_expiration).toLocaleDateString('es-ES') : 'Sin Reprocann'}
+                </span>
+              </InfoRow>
+              <InfoRow>
+                <span className="label">Documentación Subida</span>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', marginTop: '0.25rem' }}>
+                  {patientData.reprocann_url && <a href={patientData.reprocann_url} target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6', fontSize: '0.9rem', textDecoration: 'none' }}>Ver Reprocann</a>}
+                  {patientData.front_id_url && <a href={patientData.front_id_url} target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6', fontSize: '0.9rem', textDecoration: 'none' }}>Frente DNI</a>}
+                  {patientData.back_id_url && <a href={patientData.back_id_url} target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6', fontSize: '0.9rem', textDecoration: 'none' }}>Dorso DNI</a>}
+                  {!patientData.reprocann_url && !patientData.front_id_url && !patientData.back_id_url && <span style={{ color: '#94a3b8', fontSize: '0.9rem' }}>Sin documentos</span>}
+                </div>
+              </InfoRow>
+            </InfoCard>
+          </InfoGrid>
+        </ProfileCard>
       )}
 
     </PageContainer>

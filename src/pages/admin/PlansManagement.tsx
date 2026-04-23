@@ -26,9 +26,9 @@ const Title = styled.h1`
 `;
 
 const Button = styled.button`
-  background: rgba(168, 85, 247, 0.2);
+  background: rgba(var(--primary-color-rgb, 168, 85, 247), 0.2);
   color: #d8b4fe;
-  border: 1px solid rgba(168, 85, 247, 0.5);
+  border: 1px solid rgba(var(--primary-color-rgb, 168, 85, 247), 0.5);
   padding: 0.75rem 1.5rem;
   border-radius: 6px;
   cursor: pointer;
@@ -40,7 +40,7 @@ const Button = styled.button`
   transition: all 0.2s;
 
   &:hover { 
-      background: rgba(168, 85, 247, 0.3);
+      background: rgba(var(--primary-color-rgb, 168, 85, 247), 0.3);
       box-shadow: 0 4px 6px rgba(0,0,0,0.2); 
   }
 `;

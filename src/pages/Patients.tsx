@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { patientsService, Patient } from '../services/patientsService';
+import { usersService } from '../services/usersService';
 import { useNavigate } from 'react-router-dom';
 
 import { ConfirmModal } from '../components/ConfirmModal';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ToastModal } from '../components/ToastModal';
-import { FaUserPlus, FaIdCard, FaCheckCircle, FaFileAlt, FaNotesMedical, FaWhatsapp, FaFileImport } from 'react-icons/fa';
+import { FaUserPlus, FaIdCard, FaCheckCircle, FaFileAlt, FaNotesMedical, FaWhatsapp, FaFileImport, FaPen } from 'react-icons/fa';
 import { CustomSelect } from '../components/CustomSelect';
 import { CustomDatePicker } from '../components/CustomDatePicker';
 import { useOrganization } from '../context/OrganizationContext';
@@ -72,9 +73,9 @@ const Title = styled.h1`
 `;
 
 const ActionButton = styled.button`
-  background: rgba(168, 85, 247, 0.2);
+  background: rgba(var(--primary-color-rgb, 168, 85, 247), 0.2);
   color: #d8b4fe;
-  border: 1px solid rgba(168, 85, 247, 0.5);
+  border: 1px solid rgba(var(--primary-color-rgb, 168, 85, 247), 0.5);
   padding: 0.75rem 1.5rem;
   border-radius: 0.5rem;
   cursor: pointer;
@@ -87,7 +88,7 @@ const ActionButton = styled.button`
   justify-content: center;
 
   &:hover {
-    background: rgba(168, 85, 247, 0.3);
+    background: rgba(var(--primary-color-rgb, 168, 85, 247), 0.3);
     transform: translateY(-1px);
     box-shadow: 0 4px 6px rgba(0,0,0,0.2);
   }
@@ -156,7 +157,7 @@ const PatientCard = styled.div`
   &:hover {
     transform: translateY(-4px);
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
-    border-color: rgba(168, 85, 247, 0.3);
+    border-color: rgba(var(--primary-color-rgb, 168, 85, 247), 0.3);
   }
 
   .desktop-content {
@@ -232,8 +233,8 @@ const SearchInput = styled.input`
 
   &:focus {
     outline: none;
-    border-color: rgba(168, 85, 247, 0.5);
-    box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.1);
+    border-color: rgba(var(--primary-color-rgb, 168, 85, 247), 0.5);
+    box-shadow: 0 0 0 3px rgba(var(--primary-color-rgb, 168, 85, 247), 0.1);
   }
 
   &::placeholder {
@@ -296,8 +297,8 @@ const FormGroup = styled.div`
 
     &:focus {
       outline: none;
-      border-color: rgba(168, 85, 247, 0.5);
-      box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.1);
+      border-color: rgba(var(--primary-color-rgb, 168, 85, 247), 0.5);
+      box-shadow: 0 0 0 3px rgba(var(--primary-color-rgb, 168, 85, 247), 0.1);
     }
     
     &::placeholder {
@@ -346,8 +347,8 @@ const FileUploadBox = styled.div`
     background: rgba(30, 41, 59, 0.5);
 
     &:hover {
-        border-color: rgba(168, 85, 247, 0.5);
-        background: rgba(168, 85, 247, 0.1);
+        border-color: rgba(var(--primary-color-rgb, 168, 85, 247), 0.5);
+        background: rgba(var(--primary-color-rgb, 168, 85, 247), 0.1);
     }
 
     input {
@@ -375,6 +376,7 @@ const Patients: React.FC = () => {
 
     // Edit Patient State
     const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
+    const [editingPatientId, setEditingPatientId] = useState<string | null>(null);
 
     // Tab and Invite States
     const [activeTab, setActiveTab] = useState<'active' | 'waiting'>('active');
@@ -409,6 +411,7 @@ const Patients: React.FC = () => {
     const [regForm, setRegForm] = useState({
         fullName: '',
         email: '',
+        password: '',
         reprocannNumber: '',
         reprocannStatus: 'pending',
         expirationDate: '',
@@ -457,86 +460,112 @@ const Patients: React.FC = () => {
 
         setIsSubmitting(true);
         try {
-            // New Flow: Register User + Patient
-            // 1. Files will be uploaded after we get the ID? 
-            // OR we upload to a temp folder?
-            // Wait, patientsService.registerNewPatient does NOT return the ID immediately in a clean way unless we modify it to handle uploads internally OR we upload after creation.
-            // But to upload we need the userId for the folder path...
-            // "reprocann/${regForm.userId}" <- We don't have userId yet!
+            if (editingPatientId) {
+                const patientToEdit = patients.find(p => p.id === editingPatientId);
 
-            // Strategy: Register User First (get ID), Then Upload, Then Update/Create Patient?
-            // Actually `registerNewPatient` returns the Patient object (which has ID).
-            // But we need to pass the file URLs to it.
+                let urlReprocann = patientToEdit?.file_reprocann_url || null;
+                let urlAffidavit = patientToEdit?.file_affidavit_url || null;
+                let urlConsent = patientToEdit?.file_consent_url || null;
 
-            // Let's modify registerNewPatient to accept files? Or just do it here:
-            // We can't upload files BEFORE we have the user ID if we want organized folders.
-            // But we can upload to "temp" and move? No.
+                if (files.reprocann && patientToEdit?.profile_id) {
+                    urlReprocann = await patientsService.uploadDocument(files.reprocann, `reprocann/${patientToEdit.profile_id}`);
+                }
+                if (files.affidavit && patientToEdit?.profile_id) {
+                    urlAffidavit = await patientsService.uploadDocument(files.affidavit, `affidavit/${patientToEdit.profile_id}`);
+                }
+                if (files.consent && patientToEdit?.profile_id) {
+                    urlConsent = await patientsService.uploadDocument(files.consent, `consent/${patientToEdit.profile_id}`);
+                }
 
-            // BETTER: 
-            // 1. Call separate method to create User only? No, we encapsulated it.
-            // 2. Let's create the User/Patient with NO files first.
-            // 3. Then upload files using the returned ID.
-            // 4. Then update the patient record with file URLs.
-
-            // Let's go with step 2-4.
-
-            const userData = { email: regForm.email, fullName: regForm.fullName };
-            const initialPatientData: Partial<Patient> = {
-                reprocann_number: regForm.reprocannNumber,
-                reprocann_status: 'pending',
-                expiration_date: regForm.expirationDate || undefined,
-                reprocann_issue_date: regForm.issueDate || undefined,
-                document_number: regForm.documentNumber,
-                date_of_birth: regForm.dateOfBirth || undefined,
-                pathology: regForm.pathology || undefined,
-                phone: regForm.phone,
-                address: regForm.address,
-                notes: regForm.notes,
-                monthly_limit: 40
-            };
-
-            const createdPatient = await patientsService.registerNewPatient(initialPatientData, userData);
-
-            if (!createdPatient || !createdPatient.profile_id) {
-                throw new Error("Failed to create patient");
-            }
-
-            const newUserId = createdPatient.profile_id;
-            const patientId = createdPatient.id;
-
-            // 2. Upload Files using the new User ID
-            let urlReprocann = null;
-            let urlAffidavit = null;
-            let urlConsent = null;
-
-            if (files.reprocann) {
-                urlReprocann = await patientsService.uploadDocument(files.reprocann, `reprocann/${newUserId}`);
-            }
-            if (files.affidavit) {
-                urlAffidavit = await patientsService.uploadDocument(files.affidavit, `affidavit/${newUserId}`);
-            }
-            if (files.consent) {
-                urlConsent = await patientsService.uploadDocument(files.consent, `consent/${newUserId}`);
-            }
-
-            // 3. Update Patient with URLs if any file was uploaded
-            if (urlReprocann || urlAffidavit || urlConsent) {
-                await patientsService.upsertPatient({
-                    id: patientId,
+                const updatedData: Partial<Patient> = {
+                    id: editingPatientId,
+                    reprocann_number: regForm.reprocannNumber,
+                    reprocann_status: regForm.reprocannStatus as any,
+                    expiration_date: regForm.expirationDate || undefined,
+                    reprocann_issue_date: regForm.issueDate || undefined,
+                    document_number: regForm.documentNumber,
+                    date_of_birth: regForm.dateOfBirth || undefined,
+                    pathology: regForm.pathology || undefined,
+                    phone: regForm.phone,
+                    address: regForm.address,
+                    notes: regForm.notes,
                     file_reprocann_url: urlReprocann || undefined,
                     file_affidavit_url: urlAffidavit || undefined,
                     file_consent_url: urlConsent || undefined,
-                });
+                };
+
+                await patientsService.upsertPatient(updatedData);
+
+                if (patientToEdit?.profile_id) {
+                    await usersService.updateProfile(patientToEdit.profile_id, { full_name: regForm.fullName });
+                }
+
+                closeAddModal();
+                resetForm();
+                loadData();
+                showToast("Datos del socio actualizados exitosamente.", 'success');
+            } else {
+                let finalEmail = regForm.email.trim();
+                if (!finalEmail) {
+                    const uniqueSuffix = regForm.documentNumber ? regForm.documentNumber.replace(/\D/g, '') : Date.now().toString();
+                    finalEmail = `socio_${uniqueSuffix}@sin-email.trazapp.ar`;
+                }
+
+                const userData = { email: finalEmail, fullName: regForm.fullName, password: regForm.password, documentNumber: regForm.documentNumber };
+                const initialPatientData: Partial<Patient> = {
+                    reprocann_number: regForm.reprocannNumber,
+                    reprocann_status: 'pending',
+                    expiration_date: regForm.expirationDate || undefined,
+                    reprocann_issue_date: regForm.issueDate || undefined,
+                    document_number: regForm.documentNumber,
+                    date_of_birth: regForm.dateOfBirth || undefined,
+                    pathology: regForm.pathology || undefined,
+                    phone: regForm.phone,
+                    address: regForm.address,
+                    notes: regForm.notes,
+                    monthly_limit: 40
+                };
+
+                const createdPatient = await patientsService.registerNewPatient(initialPatientData, userData);
+
+                if (!createdPatient || !createdPatient.profile_id) {
+                    throw new Error("Failed to create patient");
+                }
+
+                const newUserId = createdPatient.profile_id;
+                const patientId = createdPatient.id;
+
+                let urlReprocann = null;
+                let urlAffidavit = null;
+                let urlConsent = null;
+
+                if (files.reprocann) {
+                    urlReprocann = await patientsService.uploadDocument(files.reprocann, `reprocann/${newUserId}`);
+                }
+                if (files.affidavit) {
+                    urlAffidavit = await patientsService.uploadDocument(files.affidavit, `affidavit/${newUserId}`);
+                }
+                if (files.consent) {
+                    urlConsent = await patientsService.uploadDocument(files.consent, `consent/${newUserId}`);
+                }
+
+                if (urlReprocann || urlAffidavit || urlConsent) {
+                    await patientsService.upsertPatient({
+                        id: patientId,
+                        file_reprocann_url: urlReprocann || undefined,
+                        file_affidavit_url: urlAffidavit || undefined,
+                        file_consent_url: urlConsent || undefined,
+                    });
+                }
+
+                closeAddModal();
+                resetForm();
+                loadData();
+                showToast("Socio registrado exitosamente.", 'success');
             }
-
-            closeAddModal();
-            resetForm();
-            loadData();
-            showToast("Socio registrado exitosamente.", 'success');
-
         } catch (error: any) {
-            console.error("Error registering patient:", error);
-            showToast("Error al registrar socio: " + (error.message || 'Check console'), 'error');
+            console.error("Error saving patient:", error);
+            showToast("Error al procesar: " + (error.message || 'Check console'), 'error');
         } finally {
             setIsSubmitting(false);
         }
@@ -546,6 +575,7 @@ const Patients: React.FC = () => {
         setRegForm({
             fullName: '',
             email: '',
+            password: '',
             reprocannNumber: '',
             reprocannStatus: 'pending',
             expirationDate: '',
@@ -559,6 +589,31 @@ const Patients: React.FC = () => {
         });
         setFiles({});
         setHasReprocann(null);
+        setEditingPatientId(null);
+    };
+
+    const openFullEdit = (patient: Patient) => {
+        setHasReprocann(!!patient.reprocann_number);
+        setEditingPatientId(patient.id);
+
+        setRegForm({
+            fullName: patient.profile?.full_name || '',
+            email: patient.profile?.email || '',
+            password: '',
+            reprocannNumber: patient.reprocann_number || '',
+            reprocannStatus: patient.reprocann_status || 'pending',
+            expirationDate: (patient as any).expiration_date || patient.expiration_date || '',
+            issueDate: patient.reprocann_issue_date || '',
+            documentNumber: patient.document_number || '',
+            dateOfBirth: patient.date_of_birth || '',
+            pathology: patient.pathology || '',
+            phone: patient.phone || '',
+            address: patient.address || '',
+            notes: patient.notes || ''
+        });
+
+        setIsAddOpen(true);
+        setIsEditOpen(false);
     };
 
     const openEdit = (patient: Patient) => {
@@ -571,6 +626,7 @@ const Patients: React.FC = () => {
         setTimeout(() => {
             setIsAddOpen(false);
             setIsClosingAdd(false);
+            resetForm();
         }, 300);
     };
 
@@ -678,7 +734,7 @@ const Patients: React.FC = () => {
                         <ActionButton onClick={() => setIsImportOpen(true)} style={{ background: 'rgba(59, 130, 246, 0.2)', color: '#60a5fa', borderColor: 'rgba(59, 130, 246, 0.5)' }}>
                             <FaFileImport /> Importar
                         </ActionButton>
-                        <ActionButton onClick={() => setIsAddOpen(true)}>
+                        <ActionButton onClick={() => { resetForm(); setIsAddOpen(true); }}>
                             <FaUserPlus /> Nuevo Socio
                         </ActionButton>
                     </div>
@@ -772,7 +828,7 @@ const Patients: React.FC = () => {
                 {/* Modal: Add Patient (Registration) */}
                 <Modal isOpen={isAddOpen || isClosingAdd} $isClosing={isClosingAdd} onMouseDown={closeAddModal}>
                     <ModalContent $isClosing={isClosingAdd} onMouseDown={(e) => e.stopPropagation()}>
-                        <h2 style={{ marginBottom: '1.5rem', color: '#f8fafc' }}>📄 Vinculación de Nuevo Socio</h2>
+                        <h2 style={{ marginBottom: '1.5rem', color: '#f8fafc' }}>📄 {editingPatientId ? 'Editar Datos del Socio' : 'Vinculación de Nuevo Socio'}</h2>
 
                         {hasReprocann === null ? (
                             <div style={{ textAlign: 'center', padding: '2rem 1rem' }}>
@@ -833,16 +889,32 @@ const Patients: React.FC = () => {
                                     />
                                 </FormGroup>
 
-                                <FormGroup>
-                                    <label>Email</label>
-                                    <input
-                                        type="email"
-                                        value={regForm.email}
-                                        onChange={e => setRegForm({ ...regForm, email: e.target.value })}
-                                        placeholder="email@ejemplo.com"
-                                        required
-                                    />
-                                </FormGroup>
+                                <FormRow>
+                                    <FormGroup>
+                                        <label>Email (Opcional)</label>
+                                        <input
+                                            type="email"
+                                            value={regForm.email}
+                                            onChange={e => setRegForm({ ...regForm, email: e.target.value })}
+                                            placeholder="email@ejemplo.com (Opcional)"
+                                            disabled={!!editingPatientId}
+                                            style={{ opacity: editingPatientId ? 0.5 : 1, cursor: editingPatientId ? 'not-allowed' : 'text' }}
+                                        />
+                                        {!!editingPatientId && <small style={{ color: '#94a3b8', display: 'block', marginTop: '0.2rem' }}>El email no puede ser modificado aquí por seguridad de la cuenta.</small>}
+                                    </FormGroup>
+
+                                    {!editingPatientId && (
+                                        <FormGroup>
+                                            <label>Contraseña (Opcional)</label>
+                                            <input
+                                                type="text"
+                                                value={regForm.password}
+                                                onChange={e => setRegForm({ ...regForm, password: e.target.value })}
+                                                placeholder="Por defecto usará Nro de Documento"
+                                            />
+                                        </FormGroup>
+                                    )}
+                                </FormRow>
 
                                 <FormRow>
                                     <FormGroup>
@@ -932,8 +1004,8 @@ const Patients: React.FC = () => {
                                     <ActionButton type="button" onClick={() => { closeAddModal(); resetForm(); }} style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: '#cbd5e1' }}>
                                         Cancelar
                                     </ActionButton>
-                                    <ActionButton type="submit" style={{ background: 'linear-gradient(135deg, #a855f7 0%, #7c3aed 100%)', color: '#fff' }} disabled={isSubmitting}>
-                                        {isSubmitting ? 'Registrando...' : 'Finalizar Registro'}
+                                    <ActionButton type="submit" style={{ background: 'linear-gradient(135deg, var(--primary-color, #a855f7) 0%, var(--secondary-color, #7c3aed) 100%)', color: '#fff' }} disabled={isSubmitting}>
+                                        {isSubmitting ? (editingPatientId ? 'Guardando...' : 'Registrando...') : (editingPatientId ? 'Guardar Cambios' : 'Finalizar Registro')}
                                     </ActionButton>
                                 </div>
                             </form>
@@ -970,11 +1042,21 @@ const Patients: React.FC = () => {
                                         </div>
                                         <span style={{ fontSize: '0.9rem', color: '#94a3b8' }}>{selectedPatient.profile?.email}</span>
                                     </div>
-                                    <StatusBadge status={selectedPatient.is_approved_by_org === false ? 'pending' : selectedPatient.reprocann_status} style={{ fontSize: '1rem', padding: '0.5rem 1rem' }}>
-                                        {selectedPatient.is_approved_by_org === false ? 'EN ESPERA' :
-                                            selectedPatient.reprocann_status === 'active' ? 'ACTIVO' :
-                                                selectedPatient.reprocann_status === 'expired' ? 'VENCIDO' : 'PENDIENTE'}
-                                    </StatusBadge>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'flex-end' }}>
+                                        <StatusBadge status={selectedPatient.is_approved_by_org === false ? 'pending' : selectedPatient.reprocann_status} style={{ fontSize: '1rem', padding: '0.5rem 1rem' }}>
+                                            {selectedPatient.is_approved_by_org === false ? 'EN ESPERA' :
+                                                selectedPatient.reprocann_status === 'active' ? 'ACTIVO' :
+                                                    selectedPatient.reprocann_status === 'expired' ? 'VENCIDO' : 'PENDIENTE'}
+                                        </StatusBadge>
+                                        <ActionButton
+                                            type="button"
+                                            onClick={() => openFullEdit(selectedPatient)}
+                                            title="Editar información completa del paciente"
+                                            style={{ padding: '0.35rem 0.6rem', fontSize: '0.75rem', width: '100%', display: 'flex', justifyContent: 'center' }}
+                                        >
+                                            <FaPen /> Editar Perfil
+                                        </ActionButton>
+                                    </div>
                                 </div>
 
                                 <ModalGrid>

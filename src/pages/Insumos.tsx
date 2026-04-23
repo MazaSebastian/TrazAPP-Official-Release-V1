@@ -175,10 +175,10 @@ const Button = styled.button<{ variant?: 'primary' | 'secondary' | 'danger' | 's
         `;
       default:
         return `
-          background: rgba(168, 85, 247, 0.2);
+          background: rgba(var(--primary-color-rgb, 168, 85, 247), 0.2);
           color: #d8b4fe;
-          border: 1px solid rgba(168, 85, 247, 0.5);
-          &:hover { background: rgba(168, 85, 247, 0.3); box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
+          border: 1px solid rgba(var(--primary-color-rgb, 168, 85, 247), 0.5);
+          &:hover { background: rgba(var(--primary-color-rgb, 168, 85, 247), 0.3); box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
         `;
     }
   }}
@@ -202,8 +202,8 @@ const SearchInput = styled.input`
 
   &:focus {
     outline: none;
-    border-color: rgba(168, 85, 247, 0.5);
-    box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.1);
+    border-color: rgba(var(--primary-color-rgb, 168, 85, 247), 0.5);
+    box-shadow: 0 0 0 3px rgba(var(--primary-color-rgb, 168, 85, 247), 0.1);
   }
 `;
 
@@ -214,13 +214,13 @@ const TabsContainer = styled.div`
   overflow-x: auto;
   padding-bottom: 0.5rem;
   &::-webkit-scrollbar { height: 4px; }
-  &::-webkit-scrollbar-thumb { background: rgba(168, 85, 247, 0.5); border-radius: 4px; }
+  &::-webkit-scrollbar-thumb { background: rgba(var(--primary-color-rgb, 168, 85, 247), 0.5); border-radius: 4px; }
 `;
 
 const TabButton = styled.button<{ $isActive: boolean }>`
-  background: ${props => props.$isActive ? 'rgba(168, 85, 247, 0.2)' : 'rgba(30, 41, 59, 0.6)'};
+  background: ${props => props.$isActive ? 'rgba(var(--primary-color-rgb, 168, 85, 247), 0.2)' : 'rgba(30, 41, 59, 0.6)'};
   color: ${props => props.$isActive ? '#d8b4fe' : '#94a3b8'};
-  border: 1px solid ${props => props.$isActive ? 'rgba(168, 85, 247, 0.5)' : 'rgba(255, 255, 255, 0.1)'};
+  border: 1px solid ${props => props.$isActive ? 'rgba(var(--primary-color-rgb, 168, 85, 247), 0.5)' : 'rgba(255, 255, 255, 0.1)'};
   padding: 0.75rem 1.5rem;
   border-radius: 0.5rem;
   font-weight: 600;
@@ -230,7 +230,7 @@ const TabButton = styled.button<{ $isActive: boolean }>`
   backdrop-filter: blur(8px);
 
   &:hover {
-    background: ${props => props.$isActive ? 'rgba(168, 85, 247, 0.3)' : 'rgba(255, 255, 255, 0.1)'};
+    background: ${props => props.$isActive ? 'rgba(var(--primary-color-rgb, 168, 85, 247), 0.3)' : 'rgba(255, 255, 255, 0.1)'};
     color: ${props => props.$isActive ? '#d8b4fe' : '#f8fafc'};
   }
 `;
@@ -423,8 +423,8 @@ const FormGroup = styled.div`
 
     &:focus {
       outline: none;
-      border-color: rgba(168, 85, 247, 0.5);
-      box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.1);
+      border-color: rgba(var(--primary-color-rgb, 168, 85, 247), 0.5);
+      box-shadow: 0 0 0 3px rgba(var(--primary-color-rgb, 168, 85, 247), 0.1);
     }
     
     &::placeholder {
@@ -934,7 +934,7 @@ const Insumos: React.FC = () => {
                          </ProgressBarContainer>
                          <ProgressLabel>
                             <span>{insumo.current_volume}/{insumo.total_volume} {insumo.unit_of_measurement}</span>
-                            {insumo.auto_restock_enabled && <span style={{ color: '#a855f7' }}>🤖 Auto</span>}
+                            {insumo.auto_restock_enabled && <span style={{ color: 'var(--primary-color, #a855f7)' }}>🤖 Auto</span>}
                          </ProgressLabel>
                       </div>
                     )}
@@ -1091,7 +1091,7 @@ const Insumos: React.FC = () => {
                 </FormGroup>
               </FormRow>
 
-              <div style={{ padding: '1.5rem', background: 'rgba(168, 85, 247, 0.05)', borderRadius: '0.75rem', border: '1px solid rgba(168, 85, 247, 0.2)' }}>
+              <div style={{ padding: '1.5rem', background: 'rgba(var(--primary-color-rgb, 168, 85, 247), 0.05)', borderRadius: '0.75rem', border: '1px solid rgba(var(--primary-color-rgb, 168, 85, 247), 0.2)' }}>
                 <h4 style={{ color: '#d8b4fe', margin: '0 0 1rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <span role="img" aria-label="robot">🤖</span> Growy AI: Control Volumétrico (Opcional)
                 </h4>
@@ -1201,7 +1201,7 @@ const Insumos: React.FC = () => {
                   <FaPaperclip /> Comprobante (Ticket/Factura)
                 </label>
                 <div style={{
-                  border: '1px dashed rgba(168, 85, 247, 0.5)',
+                  border: '1px dashed rgba(var(--primary-color-rgb, 168, 85, 247), 0.5)',
                   background: 'rgba(30, 41, 59, 0.4)',
                   padding: '1rem',
                   borderRadius: '0.5rem',

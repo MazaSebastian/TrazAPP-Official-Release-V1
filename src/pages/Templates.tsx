@@ -53,9 +53,9 @@ const Title = styled.h1`
 `;
 
 const ActionButton = styled.button`
-  background: rgba(168, 85, 247, 0.2);
+  background: rgba(var(--primary-color-rgb, 168, 85, 247), 0.2);
   color: #d8b4fe;
-  border: 1px solid rgba(168, 85, 247, 0.5);
+  border: 1px solid rgba(var(--primary-color-rgb, 168, 85, 247), 0.5);
   padding: 0.75rem 1.5rem;
   border-radius: 0.5rem;
   cursor: pointer;
@@ -67,7 +67,7 @@ const ActionButton = styled.button`
   backdrop-filter: blur(8px);
 
   &:hover {
-    background: rgba(168, 85, 247, 0.3);
+    background: rgba(var(--primary-color-rgb, 168, 85, 247), 0.3);
     transform: translateY(-1px);
     box-shadow: 0 4px 6px rgba(0,0,0,0.2);
   }
@@ -133,7 +133,7 @@ const TemplateCard = styled.div<{ $isNew?: boolean }>`
   &:hover {
     transform: translateY(-4px);
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
-    border-color: ${props => props.$isNew ? 'rgba(56, 189, 248, 0.8)' : 'rgba(168, 85, 247, 0.3)'};
+    border-color: ${props => props.$isNew ? 'rgba(56, 189, 248, 0.8)' : 'rgba(var(--primary-color-rgb, 168, 85, 247), 0.3)'};
   }
 
   h3 {
@@ -268,8 +268,8 @@ const FormGroup = styled.div`
 
     &:focus {
       outline: none;
-      border-color: rgba(168, 85, 247, 0.5);
-      box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.1);
+      border-color: rgba(var(--primary-color-rgb, 168, 85, 247), 0.5);
+      box-shadow: 0 0 0 3px rgba(var(--primary-color-rgb, 168, 85, 247), 0.1);
     }
   }
 `;
@@ -303,8 +303,8 @@ const FieldBuilderRow = styled.div`
 
     &:focus {
       outline: none;
-      border-color: rgba(168, 85, 247, 0.5);
-      box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.1);
+      border-color: rgba(var(--primary-color-rgb, 168, 85, 247), 0.5);
+      box-shadow: 0 0 0 3px rgba(var(--primary-color-rgb, 168, 85, 247), 0.1);
     }
     
     option {
@@ -344,7 +344,7 @@ const FieldBuilderRow = styled.div`
     }
 
     &:focus {
-      outline: max(2px, 0.15em) solid rgba(168, 85, 247, 0.5);
+      outline: max(2px, 0.15em) solid rgba(var(--primary-color-rgb, 168, 85, 247), 0.5);
       outline-offset: max(2px, 0.15em);
     }
   }
