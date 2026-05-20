@@ -20,6 +20,9 @@ export interface Patient {
     document_number?: string;
     reprocann_issue_date?: string;
     file_reprocann_url?: string;
+    file_reprocann_back_url?: string;
+    file_dni_front_url?: string;
+    file_dni_back_url?: string;
     file_affidavit_url?: string; // Declaracion Jurada
     file_consent_url?: string;   // Consentimiento Bilateral
     is_approved_by_org?: boolean;

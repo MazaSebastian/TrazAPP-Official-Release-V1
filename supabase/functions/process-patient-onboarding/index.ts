@@ -18,60 +18,72 @@ serve(async (req: any) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    const { action, token, password, patientData, signatureBase64 } = await req.json()
+    const { action, token, organizationId, email, password, patientData, signatureBase64 } = await req.json()
 
-    if (!token) {
-      throw new Error('Token de invitación no proporcionado')
+    let targetEmail = email;
+    let targetOrgId = organizationId;
+
+    if (action === 'validate' || action === 'submit') {
+      if (!token) {
+        throw new Error('Token de invitación no proporcionado')
+      }
+
+      // 1. Validar Token de Invitación
+      const { data: inv, error: invError } = await supabaseClient
+        .from('patient_invitations')
+        .select(`
+                  *,
+                  organizations ( name )
+              `)
+        .eq('id', token)
+        .single()
+
+      if (invError || !inv) {
+        throw new Error('La invitación no existe o es inválida.')
+      }
+
+      if (inv.status !== 'pending') {
+        throw new Error('Esta invitación ya ha sido utilizada o cancelada.')
+      }
+
+      if (new Date(inv.expires_at) < new Date()) {
+        await supabaseClient.from('patient_invitations').update({ status: 'expired' }).eq('id', token)
+        throw new Error('El enlace de invitación ha expirado.')
+      }
+
+      targetEmail = inv.email;
+      targetOrgId = inv.organization_id;
+
+      // Si la acción es solo validar, retornamos la info
+      if (action === 'validate') {
+        return new Response(
+          JSON.stringify({
+            valid: true,
+            invitation: {
+              email: inv.email,
+              organization_name: inv.organizations.name,
+              organization_id: inv.organization_id
+            }
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
     }
 
-    // 1. Validar Token de Invitación
-    const { data: inv, error: invError } = await supabaseClient
-      .from('patient_invitations')
-      .select(`
-                *,
-                organizations ( name )
-            `)
-      .eq('id', token)
-      .single()
-
-    if (invError || !inv) {
-      throw new Error('La invitación no existe o es inválida.')
-    }
-
-    if (inv.status !== 'pending') {
-      throw new Error('Esta invitación ya ha sido utilizada o cancelada.')
-    }
-
-    if (new Date(inv.expires_at) < new Date()) {
-      await supabaseClient.from('patient_invitations').update({ status: 'expired' }).eq('id', token)
-      throw new Error('El enlace de invitación ha expirado.')
-    }
-
-    // Si la acción es solo validar, retornamos la info
-    if (action === 'validate') {
-      return new Response(
-        JSON.stringify({
-          valid: true,
-          invitation: {
-            email: inv.email,
-            organization_name: inv.organizations.name,
-            organization_id: inv.organization_id
-          }
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
-    }
-
-    // Si la acción es Enviar (Submit), procesamos alta completa
-    if (action === 'submit') {
+    // Si la acción es Enviar (Submit) o Aplicar (Apply), procesamos alta completa
+    if (action === 'submit' || action === 'apply') {
       // Validaciones
+      if (!targetEmail) throw new Error('Email es requerido.')
+      if (!targetOrgId) throw new Error('ID de organización es requerido.')
       if (!password || password.length < 6) throw new Error('Contraseña demasiado corta.')
       if (!patientData?.fullName || !patientData?.documentNumber) throw new Error('Faltan datos personales requeridos.')
+
+
 
       // 2. Crear cuenta Auth (o recuperarla)
       // Asumimos que el email no está registrado (porque lo invitó la app). Si está registrado, unimos.
       const { data: authData, error: authError } = await supabaseClient.auth.admin.createUser({
-        email: inv.email,
+        email: targetEmail,
         password: password,
         email_confirm: true,
         user_metadata: {
@@ -91,7 +103,7 @@ serve(async (req: any) => {
             const { data: usersData } = await supabaseClient.auth.admin.listUsers({ page, perPage: 1000 });
             if (!usersData || !usersData.users || usersData.users.length === 0) break;
 
-            const match = usersData.users.find((u: any) => u.email?.toLowerCase() === inv.email.toLowerCase());
+            const match = usersData.users.find((u: any) => u.email?.toLowerCase() === targetEmail.toLowerCase());
             if (match) {
               finalUserId = match.id;
               found = true;
@@ -140,18 +152,18 @@ serve(async (req: any) => {
         full_name: patientData.fullName,
         document_number: patientData.documentNumber,
         phone_mobile: patientData.phone,
-        email: inv.email, // Forzamos esto por el bug detectado antes
+        email: targetEmail, // Forzamos esto por el bug detectado antes
         professional_signature_url: signatureUrl
       }).eq('id', finalUserId)
 
       // 5. Insertar en aurora_patients (Como "Pendiente de Aprobacion")
       const { error: patientError } = await supabaseClient.from('aurora_patients').insert({
         profile_id: finalUserId,
-        organization_id: inv.organization_id, // Usamos la de la invitación
+        organization_id: targetOrgId, // Usamos la de la invitación o la proveída
         document_number: patientData.documentNumber,
         reprocann_number: patientData.reprocannNumber || null,
         reprocann_status: patientData.reprocannStatus || 'pending',
-        notes: `Patología: ${patientData.pathology || 'No especificada'}. Alta por invitación.`,
+        notes: `Patología: ${patientData.pathology || 'No especificada'}. Alta por ${action === 'apply' ? 'solicitud web' : 'invitación'}.`,
         is_approved_by_org: false // El Admin debe aprobarlo luego
       })
 
@@ -162,8 +174,25 @@ serve(async (req: any) => {
         }
       }
 
-      // 6. Marcar invitación como usada
-      await supabaseClient.from('patient_invitations').update({ status: 'used' }).eq('id', token)
+      // 5b. Insertar en organization_members (requerido para que el OrganizationContext lo reconozca)
+      const { error: memberError } = await supabaseClient.from('organization_members').insert({
+        user_id: finalUserId,
+        organization_id: targetOrgId,
+        role: 'member'
+      })
+
+      if (memberError) {
+        if (!memberError.message.includes('duplicate key')) {
+          console.error("Error inserting organization_members:", memberError);
+        }
+      }
+
+      // 5c. (organization binding is handled entirely by organization_members)
+
+      // 6. Marcar invitación como usada si corresponde
+      if (action === 'submit' && token) {
+        await supabaseClient.from('patient_invitations').update({ status: 'used' }).eq('id', token)
+      }
 
       return new Response(
         JSON.stringify({ success: true, message: 'Onboarding completado exitosamente.' }),

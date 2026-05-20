@@ -11,7 +11,7 @@ import { useAuth } from '../context/AuthContext';
 import { organizationService } from '../services/organizationService';
 import { planService } from '../services/planService';
 import { getInsumoCategories, createInsumoCategory, deleteInsumoCategory } from '../services/insumosService';
-import { Plan, TaskType, InsumoCategory } from '../types';
+import { Plan, TaskType, InsumoCategory, LandingArticle } from '../types';
 import { tasksService } from '../services/tasksService';
 import { supabase } from '../services/supabaseClient';
 import { FaUserPlus, FaUserShield, FaTrash, FaTimes, FaTasks, FaPlus, FaMapMarkerAlt, FaPlay, FaBoxes, FaWrench, FaPalette } from 'react-icons/fa';
@@ -142,6 +142,26 @@ const SaveButton = styled.button`
     border-color: rgba(100, 116, 139, 0.5);
     cursor: not-allowed;
     box-shadow: none;
+  }
+`;
+
+export const CancelButton = styled.button`
+  background: rgba(100, 116, 139, 0.2);
+  color: #cbd5e1;
+  border: 1px solid rgba(100, 116, 139, 0.5);
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s;
+  backdrop-filter: blur(8px);
+  
+  &:hover:not(:disabled) {
+    background: rgba(100, 116, 139, 0.3);
+    color: #f8fafc;
   }
 `;
 
@@ -318,7 +338,7 @@ const Settings: React.FC = () => {
   const { user, resetTour } = useAuth();
   const { currentOrganization } = useOrganization();
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'users' | 'customization' | 'weather' | 'system'>('users');
+  const [activeTab, setActiveTab] = useState<'users' | 'customization' | 'weather' | 'system' | 'web'>('users');
   const [saving, setSaving] = useState(false);
   const [genetics, setGenetics] = useState<Genetic[]>([]);
 
@@ -380,6 +400,57 @@ const Settings: React.FC = () => {
   const [showCropper, setShowCropper] = useState(false);
   const [cropImageSrc, setCropImageSrc] = useState<string | null>(null);
 
+  // Mi Web (Landing) State
+  const [customDomain, setCustomDomain] = useState('');
+  const [landingSettings, setLandingSettings] = useState<{
+    heroTitle: string;
+    heroSubtitle: string;
+    portalSubtitle: string;
+    aboutText: string;
+    backgroundUrl: string;
+    gamePlanTitle: string;
+    step1Title: string;
+    step1Text: string;
+    step2Title: string;
+    step2Text: string;
+    step3Title: string;
+    step3Text: string;
+    catalogTitle: string;
+    catalogSubtitle: string;
+    contactTitle: string;
+    contactText: string;
+    contactEmail: string;
+    contactPhone: string;
+  }>({
+    heroTitle: '',
+    heroSubtitle: '',
+    portalSubtitle: '',
+    aboutText: '',
+    backgroundUrl: '',
+    gamePlanTitle: '',
+    step1Title: '',
+    step1Text: '',
+    step2Title: '',
+    step2Text: '',
+    step3Title: '',
+    step3Text: '',
+    catalogTitle: '',
+    catalogSubtitle: '',
+    contactTitle: '',
+    contactText: '',
+    contactEmail: '',
+    contactPhone: ''
+  });
+  const [landingBgFile, setLandingBgFile] = useState<File | null>(null);
+  const [savingLanding, setSavingLanding] = useState(false);
+
+  // Landing Articles State
+  const [landingArticles, setLandingArticles] = useState<LandingArticle[]>([]);
+  const [showArticleModal, setShowArticleModal] = useState(false);
+  const [currentArticle, setCurrentArticle] = useState<Partial<LandingArticle>>({});
+  const [articleImageFile, setArticleImageFile] = useState<File | null>(null);
+  const [savingArticle, setSavingArticle] = useState(false);
+
   // Weather Location State
   const {
     ready,
@@ -426,6 +497,30 @@ const Settings: React.FC = () => {
       setBrandingPrimaryColor(currentOrganization.primary_color || 'var(--primary-color, #a855f7)');
       setBrandingSecondaryColor(currentOrganization.secondary_color || 'var(--secondary-color, #7c3aed)');
       setBrandingLogoUrl(currentOrganization.logo_url || '');
+
+      setCustomDomain(currentOrganization.custom_domain || '');
+      if (currentOrganization.landing_settings) {
+        setLandingSettings({
+          heroTitle: currentOrganization.landing_settings.heroTitle || '',
+          heroSubtitle: currentOrganization.landing_settings.heroSubtitle || '',
+          portalSubtitle: currentOrganization.landing_settings.portalSubtitle || '',
+          aboutText: currentOrganization.landing_settings.aboutText || '',
+          backgroundUrl: currentOrganization.landing_settings.backgroundUrl || '',
+          gamePlanTitle: currentOrganization.landing_settings.gamePlanTitle || '',
+          step1Title: currentOrganization.landing_settings.step1Title || '',
+          step1Text: currentOrganization.landing_settings.step1Text || '',
+          step2Title: currentOrganization.landing_settings.step2Title || '',
+          step2Text: currentOrganization.landing_settings.step2Text || '',
+          step3Title: currentOrganization.landing_settings.step3Title || '',
+          step3Text: currentOrganization.landing_settings.step3Text || '',
+          catalogTitle: currentOrganization.landing_settings.catalogTitle || '',
+          catalogSubtitle: currentOrganization.landing_settings.catalogSubtitle || '',
+          contactTitle: currentOrganization.landing_settings.contactTitle || '',
+          contactText: currentOrganization.landing_settings.contactText || '',
+          contactEmail: currentOrganization.landing_settings.contactEmail || '',
+          contactPhone: currentOrganization.landing_settings.contactPhone || ''
+        });
+      }
     }
 
     loadData();
@@ -480,6 +575,9 @@ const Settings: React.FC = () => {
 
         const icData = await getInsumoCategories();
         setInsumoCategories(icData);
+
+        const laData = await organizationService.getLandingArticles(currentOrganization.id);
+        setLandingArticles(laData);
       }
     } catch (e) {
       console.error("Error loading settings data:", e);
@@ -770,6 +868,87 @@ const Settings: React.FC = () => {
     }
   };
 
+  const handleSaveMiWeb = async () => {
+    if (!currentOrganization) return;
+    setSavingLanding(true);
+    try {
+      let finalBgUrl = landingSettings.backgroundUrl;
+      if (landingBgFile) {
+        finalBgUrl = await organizationService.uploadLandingBackground(currentOrganization.id, landingBgFile);
+      }
+
+      const updatedLandingSettings = {
+        ...landingSettings,
+        backgroundUrl: finalBgUrl
+      };
+
+      await organizationService.updateOrganizationBranding(
+        currentOrganization.id,
+        {
+          custom_domain: customDomain || undefined, // Allow clearing custom domain
+          landing_settings: updatedLandingSettings,
+          // Guardamos también la identidad visual acá por si la movimos a esta pestaña
+          slug: brandingSlug,
+          primary_color: brandingPrimaryColor,
+          secondary_color: brandingSecondaryColor
+        },
+        brandingLogoFile || undefined
+      );
+
+      setLandingSettings(updatedLandingSettings);
+      setLandingBgFile(null); // Reset file input state
+      setBrandingLogoFile(null);
+
+      setToast({ isOpen: true, message: 'Configuración de Mi Web guardada correctamente', type: 'success' });
+      // In a real app we might update the context directly or trigger a reload
+    } catch (err: any) {
+      setToast({ isOpen: true, message: err.message || 'Error al guardar la configuración web', type: 'error' });
+    } finally {
+      setSavingLanding(false);
+    }
+  };
+
+  const handleSaveArticle = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!currentOrganization) return;
+    if (!currentArticle.title) {
+      setToast({ isOpen: true, message: 'El título es obligatorio', type: 'error' });
+      return;
+    }
+
+    setSavingArticle(true);
+    try {
+      const savedArticle = await organizationService.createLandingArticle(
+        currentOrganization.id,
+        currentArticle,
+        articleImageFile || undefined
+      );
+
+      // Refresh list
+      const laData = await organizationService.getLandingArticles(currentOrganization.id);
+      setLandingArticles(laData);
+
+      setToast({ isOpen: true, message: 'Artículo guardado correctamente', type: 'success' });
+      setShowArticleModal(false);
+      setCurrentArticle({});
+      setArticleImageFile(null);
+    } catch (err: any) {
+      setToast({ isOpen: true, message: err.message || 'Error al guardar el artículo', type: 'error' });
+    } finally {
+      setSavingArticle(false);
+    }
+  };
+
+  const handleDeleteArticle = async (articleId: string, imageUrl?: string) => {
+    try {
+      await organizationService.deleteLandingArticle(articleId, imageUrl);
+      setLandingArticles(prev => prev.filter(a => a.id !== articleId));
+      setToast({ isOpen: true, message: 'Artículo eliminado', type: 'success' });
+    } catch (err: any) {
+      setToast({ isOpen: true, message: err.message || 'Error al eliminar el artículo', type: 'error' });
+    }
+  };
+
   if (loading) {
     return (
       <PageContainer style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', marginTop: '-10vh' }}>
@@ -865,7 +1044,7 @@ const Settings: React.FC = () => {
                       <td style={{ padding: '0.75rem', color: '#cbd5e1', wordBreak: 'break-all' }}>{member.profile?.email || 'N/A'}</td>
                       <td style={{ padding: '0.75rem', color: '#94a3b8' }}>{new Date(member.created_at).toLocaleDateString()}</td>
                       <td style={{ padding: '0.75rem', textAlign: 'center' }}>
-                        {canManageUsers ? (
+                        {canManageUsers && member.role !== 'owner' ? (
                           <CustomSelect
                             value={member.role}
                             onChange={val => handleRoleChange(member.user_id, val)}
@@ -927,17 +1106,45 @@ const Settings: React.FC = () => {
     </>
   );
 
-  const renderCustomizationTab = () => (
+  const renderWebTab = () => (
     <>
       <Section>
         <SectionHeader>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <FaPalette /> Branding del Club (Marca Blanca)
+            <FaPalette /> Configuración "Mi Web" (Landing Page)
           </div>
           <div style={{ fontSize: '0.85rem', fontWeight: 'normal', color: '#94a3b8' }}>
-            Personaliza el portal de socios y e-commerce
+            Personaliza el portal de socios público
           </div>
         </SectionHeader>
+
+        <FormGrid style={{ marginBottom: '1.5rem', alignItems: 'start' }}>
+          <FormGroup>
+            <Label>Dominio Personalizado (Opcional)</Label>
+            <Input 
+              type="text" 
+              placeholder="Ej: miclub.com"
+              value={customDomain}
+              onChange={e => setCustomDomain(e.target.value)}
+            />
+            <small style={{ color: '#64748b' }}>Apunta tu dominio a nuestros servidores antes de guardar.</small>
+          </FormGroup>
+
+          <FormGroup>
+            <Label>Enlace Público TrazAPP (Slug de respaldo)</Label>
+            <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(15, 23, 42, 0.5)', borderRadius: '0.5rem', border: '1px solid rgba(255, 255, 255, 0.1)', overflow: 'hidden' }}>
+              <span style={{ padding: '0.75rem', color: '#64748b', background: 'rgba(0,0,0,0.2)' }}>/</span>
+              <input
+                type="text"
+                value={brandingSlug}
+                onChange={e => setBrandingSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+                placeholder="mi-club"
+                style={{ width: '100%', padding: '0.75rem', background: 'transparent', border: 'none', color: '#f8fafc', outline: 'none', margin: 0 }}
+              />
+            </div>
+            <small style={{ color: '#64748b', marginTop: '0.25rem' }}>Ej: trazapp.ar/mi-club</small>
+          </FormGroup>
+        </FormGrid>
 
         <FormGrid style={{ marginBottom: '1.5rem', alignItems: 'start' }}>
           <FormGroup>
@@ -957,22 +1164,27 @@ const Settings: React.FC = () => {
               <input type="file" accept="image/*" onChange={handleLogoChange} style={{ color: '#94a3b8', width: '100%' }} />
             </div>
           </FormGroup>
-
+          
           <FormGroup>
-            <Label>Enlace Público (Slug)</Label>
-            <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(15, 23, 42, 0.5)', borderRadius: '0.5rem', border: '1px solid rgba(255, 255, 255, 0.1)', overflow: 'hidden' }}>
-              <span style={{ padding: '0.75rem', color: '#64748b', background: 'rgba(0,0,0,0.2)' }}>/portal/</span>
-              <input
-                type="text"
-                value={brandingSlug}
-                onChange={e => setBrandingSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
-                placeholder="mi-club"
-                style={{ width: '100%', padding: '0.75rem', background: 'transparent', border: 'none', color: '#f8fafc', outline: 'none', margin: 0 }}
-              />
+            <Label>Fondo de Pantalla de la Landing</Label>
+            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginTop: '0.5rem' }}>
+              {(landingBgFile || landingSettings.backgroundUrl) ? (
+                <img
+                  src={landingBgFile ? URL.createObjectURL(landingBgFile) : landingSettings.backgroundUrl}
+                  alt="Fondo Landing"
+                  style={{ width: '100px', height: '60px', objectFit: 'cover', borderRadius: '0.5rem', background: '#000' }}
+                />
+              ) : (
+                <div style={{ width: '100px', height: '60px', borderRadius: '0.5rem', background: 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Sin Fondo</span>
+                </div>
+              )}
+              <input type="file" accept="image/*" onChange={(e) => setLandingBgFile(e.target.files ? e.target.files[0] : null)} style={{ color: '#94a3b8', width: '100%' }} />
             </div>
-            <small style={{ color: '#64748b', marginTop: '0.25rem' }}>Ej: trazapp.ar/portal/mi-club</small>
           </FormGroup>
+        </FormGrid>
 
+        <FormGrid style={{ marginBottom: '1.5rem', alignItems: 'start' }}>
           <FormGroup>
             <Label>Color Primario (Botones y destacados)</Label>
             <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginTop: '0.5rem' }}>
@@ -990,13 +1202,174 @@ const Settings: React.FC = () => {
           </FormGroup>
         </FormGrid>
 
+        {/* GROUP 2: TEXTOS INICIO */}
+        <div style={{ marginTop: '2rem', padding: '1rem', background: 'rgba(15, 23, 42, 0.3)', borderRadius: '0.5rem', border: '1px dashed rgba(255,255,255,0.1)' }}>
+          <h4 style={{ margin: '0 0 1rem 0', color: '#cbd5e1' }}>1. Textos del Inicio (Hero)</h4>
+          <FormGrid style={{ marginBottom: '1.5rem', alignItems: 'start' }}>
+            <FormGroup>
+              <Label>Título Principal</Label>
+              <Input 
+                type="text" 
+                placeholder="Ej: WELCOME TO"
+                value={landingSettings.heroTitle}
+                onChange={e => setLandingSettings({...landingSettings, heroTitle: e.target.value})}
+              />
+            </FormGroup>
+            <FormGroup>
+              <Label>Subtítulo</Label>
+              <Input 
+                type="text" 
+                placeholder="Ej: Exclusive botanical tracking..."
+                value={landingSettings.heroSubtitle}
+                onChange={e => setLandingSettings({...landingSettings, heroSubtitle: e.target.value})}
+              />
+            </FormGroup>
+            <FormGroup>
+              <Label>Subtítulo Logo (Ej: Official Portal)</Label>
+              <Input 
+                type="text" 
+                placeholder="Ej: Official Portal"
+                value={landingSettings.portalSubtitle || ''}
+                onChange={e => setLandingSettings({...landingSettings, portalSubtitle: e.target.value})}
+              />
+            </FormGroup>
+          </FormGrid>
+          <FormGroup>
+            <Label>Texto Principal "Sobre Nosotros" (Manuscrito)</Label>
+            <textarea
+              placeholder="Let's take good care of your botanical journey..."
+              value={landingSettings.aboutText}
+              onChange={e => setLandingSettings({...landingSettings, aboutText: e.target.value})}
+              style={{ width: '100%', padding: '0.75rem', background: 'rgba(15, 23, 42, 0.5)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '0.5rem', color: '#f8fafc', outline: 'none', minHeight: '60px', resize: 'vertical' }}
+            />
+          </FormGroup>
+        </div>
+
+        {/* GROUP 3: GAME PLAN */}
+        <div style={{ marginTop: '2rem', padding: '1rem', background: 'rgba(15, 23, 42, 0.3)', borderRadius: '0.5rem', border: '1px dashed rgba(255,255,255,0.1)' }}>
+          <h4 style={{ margin: '0 0 1rem 0', color: '#cbd5e1' }}>2. Nuestro Plan (Game Plan)</h4>
+          <FormGroup style={{ marginBottom: '1rem' }}>
+            <Label>Título de Sección</Label>
+            <Input type="text" placeholder="LET'S KEEP YOUR GEAR ALIVE..." value={landingSettings.gamePlanTitle} onChange={e => setLandingSettings({...landingSettings, gamePlanTitle: e.target.value})} />
+          </FormGroup>
+          <FormGrid style={{ marginBottom: '1rem' }}>
+            <FormGroup>
+              <Label>Paso 1: Título</Label>
+              <Input type="text" placeholder="BECOME A MEMBER" value={landingSettings.step1Title} onChange={e => setLandingSettings({...landingSettings, step1Title: e.target.value})} />
+            </FormGroup>
+            <FormGroup>
+              <Label>Paso 1: Detalle</Label>
+              <Input type="text" placeholder="Get your exclusive credentials." value={landingSettings.step1Text} onChange={e => setLandingSettings({...landingSettings, step1Text: e.target.value})} />
+            </FormGroup>
+          </FormGrid>
+          <FormGrid style={{ marginBottom: '1rem' }}>
+            <FormGroup>
+              <Label>Paso 2: Título</Label>
+              <Input type="text" placeholder="TRACK YOUR STOCK" value={landingSettings.step2Title} onChange={e => setLandingSettings({...landingSettings, step2Title: e.target.value})} />
+            </FormGroup>
+            <FormGroup>
+              <Label>Paso 2: Detalle</Label>
+              <Input type="text" placeholder="Use TrazAPP securely." value={landingSettings.step2Text} onChange={e => setLandingSettings({...landingSettings, step2Text: e.target.value})} />
+            </FormGroup>
+          </FormGrid>
+          <FormGrid>
+            <FormGroup>
+              <Label>Paso 3: Título</Label>
+              <Input type="text" placeholder="ACCESS THE SHOP" value={landingSettings.step3Title} onChange={e => setLandingSettings({...landingSettings, step3Title: e.target.value})} />
+            </FormGroup>
+            <FormGroup>
+              <Label>Paso 3: Detalle</Label>
+              <Input type="text" placeholder="Exclusive dispensary." value={landingSettings.step3Text} onChange={e => setLandingSettings({...landingSettings, step3Text: e.target.value})} />
+            </FormGroup>
+          </FormGrid>
+        </div>
+
+        {/* GROUP 4: PORTFOLIO / NUESTRO TRABAJO */}
+        <div style={{ marginTop: '2rem', padding: '1rem', background: 'rgba(15, 23, 42, 0.3)', borderRadius: '0.5rem', border: '1px dashed rgba(255,255,255,0.1)' }}>
+          <h4 style={{ margin: '0 0 1rem 0', color: '#cbd5e1', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span>3. Nuestro Trabajo (Portfolio)</span>
+            <SaveButton type="button" onClick={() => setShowArticleModal(true)} style={{ fontSize: '0.8rem', padding: '0.5rem 1rem' }}>
+              <FaPlus /> Añadir Artículo
+            </SaveButton>
+          </h4>
+          <FormGrid>
+            <FormGroup>
+              <Label>Título de Sección</Label>
+              <Input type="text" placeholder="NUESTRO TRABAJO" value={landingSettings.catalogTitle} onChange={e => setLandingSettings({...landingSettings, catalogTitle: e.target.value})} />
+            </FormGroup>
+            <FormGroup>
+              <Label>Subtítulo / Texto extra</Label>
+              <Input type="text" placeholder="Hitos y acontecimientos." value={landingSettings.catalogSubtitle} onChange={e => setLandingSettings({...landingSettings, catalogSubtitle: e.target.value})} />
+            </FormGroup>
+          </FormGrid>
+
+          {/* Lista de Artículos */}
+          {landingArticles.length > 0 ? (
+            <div style={{ marginTop: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              {landingArticles.map(article => (
+                <div key={article.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(255,255,255,0.05)', padding: '0.75rem', borderRadius: '0.5rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                    {article.image_url ? (
+                      <img src={article.image_url} alt={article.title} style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '0.25rem' }} />
+                    ) : (
+                      <div style={{ width: '40px', height: '40px', background: 'rgba(0,0,0,0.5)', borderRadius: '0.25rem' }} />
+                    )}
+                    <div>
+                      <h5 style={{ margin: 0, color: '#fff', fontSize: '0.9rem' }}>{article.title}</h5>
+                      <p style={{ margin: 0, color: '#94a3b8', fontSize: '0.8rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '300px' }}>
+                        {article.description}
+                      </p>
+                    </div>
+                  </div>
+                  <ActionButton $danger type="button" onClick={() => handleDeleteArticle(article.id, article.image_url)} style={{ padding: '0.5rem' }}>
+                    <FaTrash />
+                  </ActionButton>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div style={{ marginTop: '1rem', padding: '1rem', textAlign: 'center', background: 'rgba(255,255,255,0.02)', borderRadius: '0.5rem', color: '#94a3b8', fontSize: '0.9rem' }}>
+              No hay artículos en tu portfolio. Añade uno para mostrarlo en tu web.
+            </div>
+          )}
+        </div>
+
+        {/* GROUP 5: CONTACT */}
+        <div style={{ marginTop: '2rem', padding: '1rem', background: 'rgba(15, 23, 42, 0.3)', borderRadius: '0.5rem', border: '1px dashed rgba(255,255,255,0.1)' }}>
+          <h4 style={{ margin: '0 0 1rem 0', color: '#cbd5e1' }}>4. Contacto</h4>
+          <FormGrid style={{ marginBottom: '1rem' }}>
+            <FormGroup>
+              <Label>Título de Sección</Label>
+              <Input type="text" placeholder="Contact" value={landingSettings.contactTitle} onChange={e => setLandingSettings({...landingSettings, contactTitle: e.target.value})} />
+            </FormGroup>
+            <FormGroup>
+              <Label>Texto introductorio</Label>
+              <Input type="text" placeholder="Need help? Reach out to us." value={landingSettings.contactText} onChange={e => setLandingSettings({...landingSettings, contactText: e.target.value})} />
+            </FormGroup>
+          </FormGrid>
+          <FormGrid>
+            <FormGroup>
+              <Label>Email</Label>
+              <Input type="email" placeholder="hello@trazapp.com" value={landingSettings.contactEmail} onChange={e => setLandingSettings({...landingSettings, contactEmail: e.target.value})} />
+            </FormGroup>
+            <FormGroup>
+              <Label>Teléfono</Label>
+              <Input type="text" placeholder="+54 9 11..." value={landingSettings.contactPhone} onChange={e => setLandingSettings({...landingSettings, contactPhone: e.target.value})} />
+            </FormGroup>
+          </FormGrid>
+        </div>
+
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1.5rem', paddingTop: '1.5rem', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-          <SaveButton onClick={handleSaveBranding} disabled={savingBranding}>
-            <FaSave /> {savingBranding ? 'Guardando...' : 'Guardar Branding'}
+          <SaveButton onClick={handleSaveMiWeb} disabled={savingLanding}>
+            <FaSave /> {savingLanding ? 'Guardando...' : 'Guardar Configuración Web'}
           </SaveButton>
         </div>
       </Section>
+    </>
+  );
 
+  const renderCustomizationTab = () => (
+    <>
       {canManageTasks && (
         <Section>
           <SectionHeader>
@@ -1478,6 +1851,9 @@ const Settings: React.FC = () => {
         <Tab $active={activeTab === 'users'} onClick={() => setActiveTab('users')}>
           <FaUserShield /> Roles y Usuarios
         </Tab>
+        <Tab $active={activeTab === 'web'} onClick={() => setActiveTab('web')}>
+          <FaPalette /> Mi Web
+        </Tab>
         <Tab $active={activeTab === 'customization'} onClick={() => setActiveTab('customization')}>
           <FaPalette /> Personalización
         </Tab>
@@ -1490,6 +1866,7 @@ const Settings: React.FC = () => {
       </TabsContainer>
 
       {activeTab === 'users' && renderUsersTab()}
+      {activeTab === 'web' && renderWebTab()}
       {activeTab === 'customization' && renderCustomizationTab()}
       {activeTab === 'weather' && renderWeatherTab()}
       {activeTab === 'system' && renderSystemTab()}
@@ -1508,7 +1885,7 @@ const Settings: React.FC = () => {
 
             <div style={{ marginBottom: '1.5rem' }}>
               <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.85rem', color: '#cbd5e1' }}>Rol del usuario</label>
-              {canManageUsers ? (
+              {canManageUsers && selectedUser.role !== 'owner' ? (
                 <CustomSelect
                   value={selectedUser.role}
                   onChange={val => {
@@ -1572,6 +1949,93 @@ const Settings: React.FC = () => {
             setCropImageSrc(null);
           }}
         />
+      )}
+
+      {showArticleModal && (
+        <ModalOverlay onClick={() => setShowArticleModal(false)}>
+          <ModalContentDetail onClick={e => e.stopPropagation()}>
+            <button
+              onClick={() => setShowArticleModal(false)}
+              style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer' }}
+            >
+              <FaTimes size={20} />
+            </button>
+            <h3 style={{ margin: '0 0 1.5rem 0', color: '#f8fafc', fontSize: '1.25rem' }}>Nuevo Artículo</h3>
+            <form onSubmit={handleSaveArticle}>
+              <FormGroup>
+                <Label>Título *</Label>
+                <Input
+                  type="text"
+                  required
+                  placeholder="Ej: Cosecha Premium 2026"
+                  value={currentArticle.title || ''}
+                  onChange={e => setCurrentArticle({ ...currentArticle, title: e.target.value })}
+                />
+              </FormGroup>
+              <FormGroup>
+                <Label>Descripción</Label>
+                <textarea
+                  placeholder="Breve descripción del hito o acontecimiento..."
+                  value={currentArticle.description || ''}
+                  onChange={e => setCurrentArticle({ ...currentArticle, description: e.target.value })}
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    background: 'rgba(15, 23, 42, 0.5)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    borderRadius: '0.5rem',
+                    color: '#f8fafc',
+                    fontFamily: 'inherit',
+                    fontSize: '0.875rem',
+                    resize: 'vertical',
+                    minHeight: '80px',
+                    boxSizing: 'border-box'
+                  }}
+                />
+              </FormGroup>
+              <FormGroup>
+                <Label>Imagen</Label>
+                <div style={{
+                  border: '1px dashed rgba(255,255,255,0.2)',
+                  borderRadius: '0.5rem',
+                  padding: '1rem',
+                  textAlign: 'center',
+                  background: 'rgba(0,0,0,0.2)'
+                }}>
+                  {articleImageFile ? (
+                    <div style={{ color: 'var(--primary-color)' }}>
+                      <p style={{ margin: '0 0 0.5rem 0' }}>{articleImageFile.name}</p>
+                      <button type="button" onClick={() => setArticleImageFile(null)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '0.8rem' }}>Quitar</button>
+                    </div>
+                  ) : (
+                    <>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        id="articleImageUpload"
+                        style={{ display: 'none' }}
+                        onChange={e => {
+                          if (e.target.files && e.target.files[0]) {
+                            setArticleImageFile(e.target.files[0]);
+                          }
+                        }}
+                      />
+                      <label htmlFor="articleImageUpload" style={{ cursor: 'pointer', color: '#94a3b8', fontSize: '0.9rem', display: 'block' }}>
+                        Haz clic aquí para seleccionar una imagen
+                      </label>
+                    </>
+                  )}
+                </div>
+              </FormGroup>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '2rem' }}>
+                <CancelButton type="button" onClick={() => setShowArticleModal(false)}>Cancelar</CancelButton>
+                <SaveButton type="submit" disabled={savingArticle || !currentArticle.title}>
+                  {savingArticle ? 'Guardando...' : 'Guardar Artículo'}
+                </SaveButton>
+              </div>
+            </form>
+          </ModalContentDetail>
+        </ModalOverlay>
       )}
     </PageContainer>
   );

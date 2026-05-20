@@ -1,57 +1,74 @@
-import React from 'react';
-import styled from 'styled-components';
-import { useParams, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
+import React, { useState } from 'react';
 import { DispensaryCatalog } from '../../components/Portal/DispensaryCatalog';
-
-const PortalContainer = styled.div`
-  min-height: 100vh;
-  background: var(--bg-color, #020617);
-  color: #f8fafc;
-  padding: 2rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  font-family: var(--font-family, 'Inter', sans-serif);
-`;
-
-const Header = styled.header`
-  width: 100%;
-  max-width: 1200px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding-bottom: 2rem;
-  border-bottom: 1px solid rgba(255,255,255,0.1);
-  margin-bottom: 2rem;
-`;
-
-const Brand = styled.h1`
-  font-size: 1.5rem;
-  font-weight: 800;
-  color: var(--primary-color, #4ade80);
-  margin: 0;
-`;
+import { PortalLayout } from '../../components/Portal/PortalLayout';
+import { PatientKYCGuard } from '../../components/Portal/PatientKYCGuard';
+import { MyDataSection } from '../../components/Portal/MyDataSection';
+import { ClinicalHistorySection } from '../../components/Portal/ClinicalHistorySection';
+import { AppointmentsSection } from '../../components/Portal/AppointmentsSection';
+import { useTenantResolver } from '../../hooks/useTenantResolver';
+import { useParams } from 'react-router-dom';
 
 const PatientPortal: React.FC = () => {
     const { slug } = useParams<{ slug: string }>();
-    const { user, logout } = useAuth();
-    const navigate = useNavigate();
+    const { tenant, isLoading } = useTenantResolver(slug);
+    const [activeTab, setActiveTab] = useState('home');
 
-    const handleLogout = async () => {
-        await logout();
-        navigate(`/${slug}/login`);
-    };
+    if (isLoading) {
+        return <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#020617', color: '#fff' }}>Cargando portal...</div>;
+    }
+
+    if (!tenant) {
+        return <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#020617', color: '#ef4444' }}>Portal no encontrado.</div>;
+    }
 
     return (
-        <PortalContainer style={{ minHeight: 'auto', padding: '0', background: 'transparent' }}>
+        <PatientKYCGuard>
+            <PortalLayout activeTab={activeTab} onTabChange={setActiveTab}>
+            {activeTab === 'home' && (
+                <div style={{ maxWidth: '800px' }}>
+                    <h2 style={{ fontSize: '2rem', color: 'var(--primary-color, #4ade80)', marginBottom: '1rem' }}>
+                        ¡Bienvenido a tu Portal!
+                    </h2>
+                    <p style={{ color: '#94a3b8', fontSize: '1.1rem', lineHeight: '1.6', marginBottom: '2rem' }}>
+                        Aquí podrás gestionar tus retiros, ver tu historial de dispensario y mantenerte al tanto de las novedades de la asociación. Utiliza el menú lateral para navegar por las distintas secciones.
+                    </p>
+                    <div style={{ padding: '1.5rem', background: 'rgba(30, 41, 59, 0.5)', borderRadius: '1rem', border: '1px solid rgba(255,255,255,0.05)' }}>
+                        <h3 style={{ color: '#f8fafc', marginBottom: '0.5rem' }}>Aviso Importante</h3>
+                        <p style={{ color: '#cbd5e1', fontSize: '0.95rem' }}>
+                            Asegúrate de revisar el dispensario regularmente para conocer la disponibilidad de nuevos insumos de tu tratamiento.
+                        </p>
+                    </div>
+                </div>
+            )}
 
-            <div style={{ maxWidth: '1200px', width: '100%', padding: '1rem 0 2rem 0' }}>
-                <h2 style={{ fontSize: '2rem', color: 'var(--primary-color, #4ade80)' }}>Bienvenido a tu dispensario</h2>
-                <p style={{ color: '#94a3b8', fontSize: '1.1rem' }}>Selecciona los insumos para tu tratamiento y confirma la reserva.</p>
-            </div>
-            <DispensaryCatalog />
-        </PortalContainer>
+            {activeTab === 'my-data' && <MyDataSection />}
+
+            {activeTab === 'clinical' && <ClinicalHistorySection />}
+
+            {activeTab === 'appointments' && <AppointmentsSection />}
+            
+            {activeTab === 'dispensary' && (
+                <div style={{ maxWidth: '1200px', width: '100%' }}>
+                    <div style={{ marginBottom: '2rem' }}>
+                        <h2 style={{ fontSize: '2rem', color: 'var(--primary-color, #4ade80)' }}>Dispensario</h2>
+                        <p style={{ color: '#94a3b8', fontSize: '1.1rem' }}>Selecciona los insumos para tu tratamiento y confirma la reserva.</p>
+                    </div>
+                    <DispensaryCatalog />
+                </div>
+            )}
+
+            {activeTab === 'history' && (
+                <div style={{ maxWidth: '800px' }}>
+                    <h2 style={{ fontSize: '2rem', color: 'var(--primary-color, #4ade80)', marginBottom: '1rem' }}>Mis Retiros</h2>
+                    <p style={{ color: '#94a3b8', fontSize: '1.1rem' }}>Historial de tus retiros en el club.</p>
+                    {/* Placeholder for future implementation */}
+                    <div style={{ marginTop: '2rem', padding: '2rem', textAlign: 'center', background: 'rgba(30, 41, 59, 0.3)', borderRadius: '1rem', border: '1px dashed rgba(255,255,255,0.1)', color: '#64748b' }}>
+                        No hay retiros registrados aún.
+                    </div>
+                </div>
+            )}
+        </PortalLayout>
+        </PatientKYCGuard>
     );
 };
 

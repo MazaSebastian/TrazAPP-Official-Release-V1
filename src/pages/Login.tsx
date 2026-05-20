@@ -273,7 +273,27 @@ const Login: React.FC = () => {
     }
 
     if (user) {
-      navigate('/', { replace: true });
+      // Check if this user is a 'member' — if so, redirect to their org portal
+      const checkMemberRedirect = async () => {
+        try {
+          const { supabase } = await import('../services/supabaseClient');
+          const { data: membership } = await supabase
+            .from('organization_members')
+            .select('role, organization:organizations(slug)')
+            .eq('user_id', user.id)
+            .single();
+
+          if (membership?.role === 'member' && (membership as any).organization?.slug) {
+            navigate(`/${(membership as any).organization.slug}/portal`, { replace: true });
+            return;
+          }
+        } catch (err) {
+          console.error('[Login] Error checking member redirect:', err);
+        }
+        // Fallback: send to admin dashboard for non-member roles
+        navigate('/', { replace: true });
+      };
+      checkMemberRedirect();
     }
   }, [user, navigate]);
 

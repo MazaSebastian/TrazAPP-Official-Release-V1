@@ -5,7 +5,7 @@ export interface User {
   id: string;
   email: string;
   name: string;
-  role: 'super_admin' | 'owner' | 'admin' | 'grower' | 'medico' | 'staff' | 'partner';
+  role: 'super_admin' | 'owner' | 'admin' | 'grower' | 'medico' | 'staff' | 'partner' | 'member';
   avatar?: string;
   professional_signature_url?: string;
   has_completed_tour?: boolean;
@@ -72,6 +72,37 @@ export interface Organization {
     addressText: string;
     phoneText: string;
   };
+  custom_domain?: string;
+  landing_settings?: {
+    heroTitle?: string;
+    heroSubtitle?: string;
+    portalSubtitle?: string;
+    aboutText?: string;
+    backgroundUrl?: string;
+    gamePlanTitle?: string;
+    step1Title?: string;
+    step1Text?: string;
+    step2Title?: string;
+    step2Text?: string;
+    step3Title?: string;
+    step3Text?: string;
+    catalogTitle?: string;
+    catalogSubtitle?: string;
+    contactTitle?: string;
+    contactText?: string;
+    contactEmail?: string;
+    contactPhone?: string;
+  };
+}
+
+export interface LandingArticle {
+  id: string;
+  organization_id: string;
+  title: string;
+  description: string;
+  image_url?: string;
+  order_index: number;
+  created_at: string;
 }
 
 export interface Plan {

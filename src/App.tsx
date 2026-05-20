@@ -6,6 +6,7 @@ import Dashboard from './pages/Dashboard';
 import ClientManagement from './pages/admin/ClientManagement';
 import SystemMonitoring from './pages/admin/SystemMonitoring';
 import AdminDashboard from './pages/admin/AdminDashboard';
+import DeviceInventory from './pages/admin/DeviceInventory';
 import Crops from './pages/Crops';
 import CropDetail from './pages/CropDetail';
 import Rooms from './pages/Rooms';
@@ -34,6 +35,7 @@ import Informes from './pages/Informes'; // Added Informes route
 import Patients from './pages/Patients';
 import PatientDetail from './pages/PatientDetail';
 import Templates from './pages/Templates';
+import Appointments from './pages/Appointments';
 import GrowyDashboard from './pages/GrowyDashboard';
 import AccountInfo from './pages/AccountInfo';
 import { notificationService } from './services/notificationService';
@@ -46,6 +48,8 @@ import { PublicTracking } from './pages/PublicTracking'; // QR Scan Public Route
 import PatientOnboarding from './pages/PatientOnboarding'; // Self-Onboarding
 import TenantLogin from './pages/public/TenantLogin';
 import PatientPortal from './pages/public/PatientPortal';
+import { TenantLanding } from './pages/public/TenantLanding';
+import TenantApply from './pages/public/TenantApply';
 import { useAuth } from './context/AuthContext';
 import { DataProvider } from './context/DataContext';
 import { OrganizationProvider } from './context/OrganizationContext';
@@ -151,15 +155,19 @@ function App() {
   const isEmailConfirmed = location.pathname === '/email-confirmed';
   const isPublicTracking = location.pathname.startsWith('/track/');
 
-  // Custom White-Label Routes
-  const isTenantLogin = /^\/[^/]+\/login$/.test(location.pathname);
-  const isPatientPortal = /^\/[^/]+\/portal$/.test(location.pathname);
+  // Custom White-Label Logic
+  const isCustomDomain = window.location.hostname !== 'localhost' && !window.location.hostname.includes('trazapp.com');
 
-  // Consider Tenant Login as public route for styling
-  const isPublicRoute = isLogin || isRegister || isForgotPassword || isUpdatePassword || isEmailConfirmed || isPublicTracking || isTenantLogin;
+  // Routes
+  const isTenantLogin = /^\/[^/]+\/login$/.test(location.pathname) || (isCustomDomain && isLogin);
+  const isPatientPortal = /^\/[^/]+\/portal$/.test(location.pathname) || (isCustomDomain && location.pathname === '/portal');
+  const isTenantLanding = (isCustomDomain && location.pathname === '/') || (!isCustomDomain && /^\/[^/]+$/.test(location.pathname) && !['/login', '/register', '/forgot-password', '/update-password', '/email-confirmed', '/admin', '/shipping'].includes(location.pathname));
 
-  // We DO want the admin sidebar for the patient portal based on the user's request.
-  const hideAdminChrome = isPublicRoute;
+  // Consider Tenant Login and Landing as public routes for styling
+  const isPublicRoute = isLogin || isRegister || isForgotPassword || isUpdatePassword || isEmailConfirmed || isPublicTracking || isTenantLogin || isTenantLanding || /^\/[^/]+\/apply$/.test(location.pathname);
+
+  // We do not want the admin chrome for the patient portal because it has its own sidebar layout.
+  const hideAdminChrome = isPublicRoute || isPatientPortal;
 
   return (
     <DataProvider>
@@ -187,32 +195,48 @@ function App() {
           <SessionTimeoutWarning />
 
           <Routes>
-            <Route path="/login" element={<Login />} />
+            <Route path="/login" element={isCustomDomain ? <TenantLogin /> : <Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/update-password" element={<UpdatePassword />} />
             <Route path="/email-confirmed" element={<EmailConfirmed />} />
             <Route path="/track/:id" element={<PublicTracking />} />
             <Route path="/invite/:token" element={<PatientOnboarding />} />
+            
+            {/* White-Label Custom Domain Roots */}
+            {isCustomDomain && (
+              <>
+                <Route path="/" element={<TenantLanding />} />
+                <Route path="/portal" element={
+                  <RequireAuth>
+                    <PatientPortal />
+                  </RequireAuth>
+                } />
+              </>
+            )}
 
-            {/* White-Label Public & Portal Routes */}
+            {/* White-Label Fallback Slug Routes */}
+            <Route path="/:slug" element={<TenantLanding />} />
             <Route path="/:slug/login" element={<TenantLogin />} />
+            <Route path="/:slug/apply" element={<TenantApply />} />
             <Route path="/:slug/portal" element={
               <RequireAuth>
-                <MainContent>
-                  <PatientPortal />
-                </MainContent>
+                <PatientPortal />
               </RequireAuth>
-            } />            {/* Protected Routes Wrapped in Main Content */}
-            <Route path="/" element={
-              <RequireAuth>
-                <KYCGuard>
-                  <MainContent>
-                    <Dashboard />
-                  </MainContent>
-                </KYCGuard>
-              </RequireAuth>
-            } />
+            } />            
+
+            {/* Protected Routes Wrapped in Main Content */}
+            {!isCustomDomain && (
+              <Route path="/" element={
+                <RequireAuth>
+                  <KYCGuard>
+                    <MainContent>
+                      <Dashboard />
+                    </MainContent>
+                  </KYCGuard>
+                </RequireAuth>
+              } />
+            )}
 
             <Route path="/shipping" element={
               <RequireAuth>
@@ -247,6 +271,16 @@ function App() {
                 <KYCGuard>
                   <MainContent>
                     <SystemMonitoring />
+                  </MainContent>
+                </KYCGuard>
+              </RequireAuth>
+            } />
+
+            <Route path="/admin/devices" element={
+              <RequireAuth>
+                <KYCGuard>
+                  <MainContent>
+                    <DeviceInventory />
                   </MainContent>
                 </KYCGuard>
               </RequireAuth>
@@ -531,6 +565,18 @@ function App() {
                   <KYCGuard>
                     <MainContent>
                       <Templates />
+                    </MainContent>
+                  </KYCGuard>
+                </RoleGuard>
+              </RequireAuth>
+            } />
+
+            <Route path="/appointments" element={
+              <RequireAuth>
+                <RoleGuard allowedRoles={['admin', 'medico']}>
+                  <KYCGuard>
+                    <MainContent>
+                      <Appointments />
                     </MainContent>
                   </KYCGuard>
                 </RoleGuard>

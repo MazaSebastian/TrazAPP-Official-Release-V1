@@ -1,5 +1,5 @@
 import { supabase } from './supabaseClient';
-import { Organization } from '../types';
+import { Organization, LandingArticle } from '../types';
 import { planService } from './planService';
 
 export const organizationService = {
@@ -76,7 +76,7 @@ export const organizationService = {
      */
     async updateOrganizationBranding(
         orgId: string,
-        branding: { slug?: string; primary_color?: string; secondary_color?: string },
+        branding: { slug?: string; primary_color?: string; secondary_color?: string; custom_domain?: string; landing_settings?: any },
         logoFile?: File
     ): Promise<Organization> {
         let logo_url = undefined;
@@ -118,6 +118,27 @@ export const organizationService = {
     },
 
     /**
+     * Upload landing background image
+     */
+    async uploadLandingBackground(orgId: string, bgFile: File): Promise<string> {
+        const fileExt = bgFile.name.split('.').pop();
+        const fileName = `${orgId}-bg-${Date.now()}.${fileExt}`;
+        const filePath = `backgrounds/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+            .from('organizations')
+            .upload(filePath, bgFile, { upsert: true });
+
+        if (uploadError) {
+            console.error('Error uploading background:', uploadError);
+            throw uploadError;
+        }
+
+        const { data } = supabase.storage.from('organizations').getPublicUrl(filePath);
+        return data.publicUrl;
+    },
+
+    /**
      * Get organization details including plan info/limits.
      * This logic might be better placed in a hook or context that merges org data with plan data.
      */
@@ -143,7 +164,42 @@ export const organizationService = {
     },
 
     /**
-     * Get organization by slug for the white-label portal
+     * Get organization by custom_domain or slug for the white-label portal
+     */
+    async getOrganizationByDomainOrSlug(hostname: string, slug?: string): Promise<Organization | null> {
+        // Try to match custom domain first
+        if (hostname !== 'localhost' && !hostname.includes('trazapp.com')) {
+            const { data, error } = await supabase
+                .from('organizations')
+                .select('*')
+                .eq('custom_domain', hostname)
+                .single();
+
+            if (data && !error) return data as Organization;
+        }
+
+        // Fallback to slug if provided
+        if (slug) {
+            const { data, error } = await supabase
+                .from('organizations')
+                .select('*')
+                .eq('slug', slug)
+                .single();
+
+            if (error) {
+                if (error.code !== 'PGRST116') {
+                    console.error('Error fetching organization by slug:', error);
+                }
+                return null;
+            }
+            return data as Organization;
+        }
+
+        return null;
+    },
+
+    /**
+     * Get organization by slug for the white-label portal (Legacy, use getOrganizationByDomainOrSlug instead)
      */
     async getOrganizationBySlug(slug: string): Promise<Organization | null> {
         const { data, error } = await supabase
@@ -181,7 +237,8 @@ export const organizationService = {
                     avatar_url
                 )
             `)
-            .eq('organization_id', orgId);
+            .eq('organization_id', orgId)
+            .not('role', 'in', '("partner","member")');
 
         if (error) {
             console.error('Error fetching organization members:', error);
@@ -252,7 +309,8 @@ export const organizationService = {
         const { count: membersCount, error: countError } = await supabase
             .from('organization_members')
             .select('*', { count: 'exact', head: true })
-            .eq('organization_id', orgId);
+            .eq('organization_id', orgId)
+            .not('role', 'in', '("partner","member")');
 
         if (countError) throw countError;
 
@@ -292,5 +350,99 @@ export const organizationService = {
         }
 
         return data;
+    },
+
+    // ==========================================
+    // LANDING ARTICLES (PORTFOLIO / MILESTONES)
+    // ==========================================
+
+    async getLandingArticles(orgId: string): Promise<LandingArticle[]> {
+        const { data, error } = await supabase
+            .from('landing_articles')
+            .select('*')
+            .eq('organization_id', orgId)
+            .order('order_index', { ascending: true })
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            console.error('Error fetching landing articles:', error);
+            return [];
+        }
+        return data as LandingArticle[];
+    },
+
+    async uploadLandingArticleImage(orgId: string, articleId: string, imageFile: File): Promise<string> {
+        const fileExt = imageFile.name.split('.').pop();
+        const filePath = `${orgId}/articles/${articleId}.${fileExt}`;
+
+        const { error: uploadError } = await supabase.storage
+            .from('organizations')
+            .upload(filePath, imageFile, { upsert: true });
+
+        if (uploadError) {
+            console.error('Error uploading article image:', uploadError);
+            throw uploadError;
+        }
+
+        const { data } = supabase.storage
+            .from('organizations')
+            .getPublicUrl(filePath);
+
+        return data.publicUrl;
+    },
+
+    async createLandingArticle(orgId: string, articleData: Partial<LandingArticle>, imageFile?: File): Promise<LandingArticle> {
+        // Create an ID first if we have an image so we can use it in the path
+        const articleId = articleData.id || crypto.randomUUID();
+        let imageUrl = articleData.image_url;
+
+        if (imageFile) {
+            imageUrl = await this.uploadLandingArticleImage(orgId, articleId, imageFile);
+        }
+
+        const { data, error } = await supabase
+            .from('landing_articles')
+            .insert([{
+                ...articleData,
+                id: articleId,
+                organization_id: orgId,
+                image_url: imageUrl,
+            }])
+            .select()
+            .single();
+
+        if (error) {
+            console.error('Error creating landing article:', error);
+            throw error;
+        }
+
+        return data as LandingArticle;
+    },
+
+    async deleteLandingArticle(id: string, imageUrl?: string): Promise<void> {
+        // Optional: delete image from storage if we can parse the path
+        if (imageUrl && imageUrl.includes('/organizations/')) {
+            try {
+                const urlParts = imageUrl.split('/organizations/');
+                if (urlParts.length > 1) {
+                    const filePath = urlParts[1];
+                    // remove any query params
+                    const cleanPath = filePath.split('?')[0];
+                    await supabase.storage.from('organizations').remove([cleanPath]);
+                }
+            } catch (e) {
+                console.error('Error cleaning up article image:', e);
+            }
+        }
+
+        const { error } = await supabase
+            .from('landing_articles')
+            .delete()
+            .eq('id', id);
+
+        if (error) {
+            console.error('Error deleting landing article:', error);
+            throw error;
+        }
     }
 };

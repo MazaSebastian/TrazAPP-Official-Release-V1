@@ -9,6 +9,7 @@ import BlurText from '../../components/BlurText';
 import StarBorder from '../../components/StarBorder';
 import { organizationService } from '../../services/organizationService';
 import { Organization } from '../../types';
+import { useTenantResolver } from '../../hooks/useTenantResolver';
 
 const fadeIn = keyframes`
   from { opacity: 0; transform: translateY(10px); }
@@ -238,42 +239,16 @@ const TenantLogin: React.FC = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
-    const [tenant, setTenant] = useState<Organization | null>(null);
-    const [tenantLoading, setTenantLoading] = useState(true);
+
+    // Use our new generic tenant resolver
+    const { tenant, isLoading: tenantLoading } = useTenantResolver(slug);
 
     const { login, user } = useAuth();
     const navigate = useNavigate();
 
     useEffect(() => {
-        async function loadTenant() {
-            if (!slug) return;
-            const org = await organizationService.getOrganizationBySlug(slug);
-            if (org) {
-                setTenant(org);
-
-                // Inject Theme Colors directly for the login page
-                const root = document.documentElement;
-                const hexToRgb = (hex: string) => {
-                    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-                    return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : null;
-                };
-
-                const primary = org.primary_color || '#a855f7';
-                const secondary = org.secondary_color || '#7c3aed';
-
-                root.style.setProperty('--primary-color', primary);
-                root.style.setProperty('--secondary-color', secondary);
-                root.style.setProperty('--primary-color-rgb', hexToRgb(primary) || '168, 85, 247');
-                root.style.setProperty('--secondary-color-rgb', hexToRgb(secondary) || '124, 58, 237');
-            }
-            setTenantLoading(false);
-        }
-        loadTenant();
-    }, [slug]);
-
-    useEffect(() => {
         if (user && tenant) {
-            if (user.role === 'partner') {
+            if (user.role === 'partner' || user.role === 'member') {
                 navigate(`/${tenant.slug}/portal`, { replace: true });
             } else {
                 navigate('/', { replace: true }); // Admins can go to generic dashboard

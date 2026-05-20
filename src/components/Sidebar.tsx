@@ -25,7 +25,8 @@ import {
   FaClipboardList,
   FaFileAlt, // Added for Informes
   FaExclamationTriangle,
-  FaProjectDiagram
+  FaProjectDiagram,
+  FaCalendarAlt
 } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 import { useOrganization } from '../context/OrganizationContext';
@@ -310,6 +311,9 @@ const Sidebar: React.FC = () => {
               <StyledNavLink to="/admin/monitoring">
                 <FaHeartbeat /> Monitoreo
               </StyledNavLink>
+              <StyledNavLink to="/admin/devices">
+                <FaPlug /> Inventario Dispositivos
+              </StyledNavLink>
               <StyledNavLink to="/settings">
                 <FaCog /> Configuración
               </StyledNavLink>
@@ -384,6 +388,9 @@ const Sidebar: React.FC = () => {
                     <StyledNavLink to="/templates" style={{ opacity: planLevel >= 3 ? 1 : 0.6 }}>
                       <FaClipboardList /> Plantillas
                       {planLevel < 3 && <FaLock className="lock-icon" title="Requiere Plan ONG" />}
+                    </StyledNavLink>
+                    <StyledNavLink to="/appointments">
+                      <FaCalendarAlt /> Turnos
                     </StyledNavLink>
                   </>
                 )}
