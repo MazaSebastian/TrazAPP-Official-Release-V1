@@ -376,7 +376,13 @@ export const TenantLanding: React.FC = () => {
     if (!tenant) return <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#111', color: '#ef4444' }}>Portal de organización no encontrado.</div>;
 
     const handleLoginClick = () => {
-        const isCustomDomain = window.location.hostname !== 'localhost' && !window.location.hostname.includes('trazapp.com');
+        const hostname = window.location.hostname.toLowerCase();
+        const isMainDomain = 
+            hostname === 'localhost' || 
+            hostname.endsWith('trazapp.com') || 
+            hostname.endsWith('trazapp.ar') || 
+            hostname.endsWith('vercel.app');
+        const isCustomDomain = !isMainDomain;
         if (isCustomDomain) {
             navigate('/login');
         } else {

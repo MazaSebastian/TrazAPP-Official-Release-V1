@@ -156,7 +156,13 @@ function App() {
   const isPublicTracking = location.pathname.startsWith('/track/');
 
   // Custom White-Label Logic
-  const isCustomDomain = window.location.hostname !== 'localhost' && !window.location.hostname.includes('trazapp.com');
+  const hostname = window.location.hostname.toLowerCase();
+  const isMainDomain = 
+    hostname === 'localhost' || 
+    hostname.endsWith('trazapp.com') || 
+    hostname.endsWith('trazapp.ar') || 
+    hostname.endsWith('vercel.app');
+  const isCustomDomain = !isMainDomain;
 
   // Routes
   const isTenantLogin = /^\/[^/]+\/login$/.test(location.pathname) || (isCustomDomain && isLogin);

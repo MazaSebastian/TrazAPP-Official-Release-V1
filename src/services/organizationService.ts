@@ -168,7 +168,14 @@ export const organizationService = {
      */
     async getOrganizationByDomainOrSlug(hostname: string, slug?: string): Promise<Organization | null> {
         // Try to match custom domain first
-        if (hostname !== 'localhost' && !hostname.includes('trazapp.com')) {
+        const lowerHost = hostname.toLowerCase();
+        const isMainDomain = 
+            lowerHost === 'localhost' || 
+            lowerHost.endsWith('trazapp.com') || 
+            lowerHost.endsWith('trazapp.ar') || 
+            lowerHost.endsWith('vercel.app');
+
+        if (!isMainDomain) {
             const { data, error } = await supabase
                 .from('organizations')
                 .select('*')

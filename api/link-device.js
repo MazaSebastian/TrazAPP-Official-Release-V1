@@ -4,11 +4,6 @@
 
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseAdmin = createClient(
-  process.env.REACT_APP_SUPABASE_URL || process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY, // Service role — bypasses RLS
-);
-
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
@@ -16,6 +11,19 @@ export default async function handler(req, res) {
 
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
+
+  // ─── Initialize Supabase clients inside handler to prevent loading/import time crashes ───
+  const supabaseUrl = process.env.REACT_APP_SUPABASE_URL || process.env.SUPABASE_URL;
+  const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!supabaseUrl || !supabaseServiceRoleKey) {
+    console.error('Missing Supabase credentials in serverless environment.');
+    return res.status(500).json({ 
+      error: 'Error de servidor: Variables de entorno de base de datos no configuradas en Vercel (SUPABASE_URL y/o SUPABASE_SERVICE_ROLE_KEY).' 
+    });
+  }
+
+  const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey);
 
   try {
     const { device_id, pin, organization_id, alias } = req.body;
@@ -33,9 +41,14 @@ export default async function handler(req, res) {
     const jwt = authHeader.replace('Bearer ', '');
 
     // Create a user-context client to verify the JWT
+    const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
+    if (!supabaseAnonKey) {
+      return res.status(500).json({ error: 'Error de servidor: Variable SUPABASE_ANON_KEY no configurada.' });
+    }
+
     const supabaseUser = createClient(
-      process.env.REACT_APP_SUPABASE_URL || process.env.SUPABASE_URL,
-      process.env.REACT_APP_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY,
+      supabaseUrl,
+      supabaseAnonKey,
       { global: { headers: { Authorization: `Bearer ${jwt}` } } }
     );
 
