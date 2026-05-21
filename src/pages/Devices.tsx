@@ -466,6 +466,62 @@ function MetricValue({ value, unit, label, icon, color }: { value: number | null
   );
 }
 
+const CountdownText = styled.span`
+  margin-left: 6px;
+  color: #64748b;
+  font-size: 0.8rem;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  
+  strong {
+    color: #10b981;
+    font-variant-numeric: tabular-nums;
+  }
+`;
+
+interface DeviceCountdownProps {
+  lastSeenAt: string | null;
+  online: boolean;
+}
+
+const DeviceCountdown: React.FC<DeviceCountdownProps> = ({ lastSeenAt, online }) => {
+  const [secondsLeft, setSecondsLeft] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!online || !lastSeenAt) {
+      setSecondsLeft(null);
+      return;
+    }
+
+    const intervalVal = 10; // Telemetry reports every 10 seconds
+
+    const updateCountdown = () => {
+      const lastSeen = new Date(lastSeenAt).getTime();
+      const now = Date.now();
+      const elapsedMs = now - lastSeen;
+      const elapsedS = Math.floor(elapsedMs / 1000);
+      
+      const remaining = intervalVal - (elapsedS % intervalVal);
+      setSecondsLeft(remaining > 0 ? remaining : 10);
+    };
+
+    updateCountdown();
+    const interval = setInterval(updateCountdown, 1000);
+
+    return () => clearInterval(interval);
+  }, [lastSeenAt, online]);
+
+  if (!online || secondsLeft === null) return null;
+
+  return (
+    <CountdownText>
+      • Próx. lectura en: <strong>{secondsLeft}s</strong>
+    </CountdownText>
+  );
+};
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 const Devices: React.FC = () => {
   const [devices, setDevices] = useState<TrazAppDevice[]>([]);
@@ -611,7 +667,18 @@ const Devices: React.FC = () => {
 
               <CardFooter>
                 <span className="last-seen">
-                  {online ? <><FaWifi style={{ color: '#10b981', marginRight: 4 }} />Activo</> : <><FaTimesCircle style={{ marginRight: 4 }} />{formatLastSeen(device.last_seen_at)}</>}
+                  {online ? (
+                    <>
+                      <FaWifi style={{ color: '#10b981', marginRight: 4 }} />
+                      Activo
+                      <DeviceCountdown lastSeenAt={device.last_seen_at} online={online} />
+                    </>
+                  ) : (
+                    <>
+                      <FaTimesCircle style={{ marginRight: 4 }} />
+                      {formatLastSeen(device.last_seen_at)}
+                    </>
+                  )}
                   {device.firmware && <span style={{ marginLeft: 8, color: '#334155' }}>{device.firmware}</span>}
                 </span>
                 <div className="actions">
