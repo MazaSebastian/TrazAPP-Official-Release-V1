@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import styled, { keyframes } from 'styled-components';
-import { FaMicrochip, FaPlus, FaTimes, FaWifi, FaTimesCircle, FaThermometerHalf, FaTint, FaLeaf, FaEdit, FaTrash, FaInfoCircle } from 'react-icons/fa';
+import { FaMicrochip, FaPlus, FaTimes, FaWifi, FaTimesCircle, FaThermometerHalf, FaTint, FaLeaf, FaEdit, FaTrash, FaInfoCircle, FaSync } from 'react-icons/fa';
 import { deviceService, TrazAppDevice, LinkDevicePayload } from '../services/deviceService';
 import { supabase, getSelectedOrgId } from '../services/supabaseClient';
 
@@ -68,6 +68,43 @@ const AddButton = styled.button`
     box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
   }
   &:active { transform: translateY(0); }
+`;
+
+const HeaderActions = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+`;
+
+const RefreshButton = styled.button<{ $spinning: boolean }>`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #94a3b8;
+  padding: 0.75rem;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+  height: 42px;
+  width: 42px;
+
+  svg {
+    font-size: 0.95rem;
+    animation: ${p => p.$spinning ? spin : 'none'} 1s linear infinite;
+  }
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #10b981;
+    border-color: rgba(16, 185, 129, 0.3);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.1);
+  }
+  &:active { transform: translateY(0); }
+  &:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 `;
 
 const Grid = styled.div`
@@ -433,6 +470,7 @@ function MetricValue({ value, unit, label, icon, color }: { value: number | null
 const Devices: React.FC = () => {
   const [devices, setDevices] = useState<TrazAppDevice[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [linking, setLinking] = useState(false);
   const [linkError, setLinkError] = useState<string | null>(null);
@@ -443,6 +481,13 @@ const Devices: React.FC = () => {
     const data = await deviceService.getMyDevices();
     setDevices(data);
     setLoading(false);
+  }, []);
+
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    const data = await deviceService.getMyDevices();
+    setDevices(data);
+    setRefreshing(false);
   }, []);
 
   useEffect(() => {
@@ -501,9 +546,19 @@ const Devices: React.FC = () => {
     <Container>
       <Header>
         <h1><FaMicrochip /> Dispositivos TrazAPP</h1>
-        <AddButton onClick={() => setShowModal(true)}>
-          <FaPlus /> Vincular Dispositivo
-        </AddButton>
+        <HeaderActions>
+          <RefreshButton 
+            onClick={handleRefresh} 
+            $spinning={refreshing} 
+            title="Actualizar lecturas"
+            disabled={refreshing || loading}
+          >
+            <FaSync />
+          </RefreshButton>
+          <AddButton onClick={() => setShowModal(true)}>
+            <FaPlus /> Vincular Dispositivo
+          </AddButton>
+        </HeaderActions>
       </Header>
 
       <Grid>
