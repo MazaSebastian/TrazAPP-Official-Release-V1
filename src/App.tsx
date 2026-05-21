@@ -167,7 +167,13 @@ function App() {
   // Routes
   const isTenantLogin = /^\/[^/]+\/login$/.test(location.pathname) || (isCustomDomain && isLogin);
   const isPatientPortal = /^\/[^/]+\/portal$/.test(location.pathname) || (isCustomDomain && location.pathname === '/portal');
-  const isTenantLanding = (isCustomDomain && location.pathname === '/') || (!isCustomDomain && /^\/[^/]+$/.test(location.pathname) && !['/login', '/register', '/forgot-password', '/update-password', '/email-confirmed', '/admin', '/shipping'].includes(location.pathname));
+  const isTenantLanding = (isCustomDomain && location.pathname === '/') || (!isCustomDomain && /^\/[^/]+$/.test(location.pathname) && ![
+    '/login', '/register', '/forgot-password', '/update-password', '/email-confirmed',
+    '/admin', '/shipping', '/crops', '/rooms', '/genetics', '/clones', '/devices',
+    '/laboratory', '/extractions', '/insumos', '/providers', '/stock', '/settings',
+    '/compras', '/expenses', '/metrics', '/informes', '/dispensary', '/account',
+    '/patients', '/templates', '/appointments', '/growy-dashboard'
+  ].includes(location.pathname));
 
   // Consider Tenant Login and Landing as public routes for styling
   const isPublicRoute = isLogin || isRegister || isForgotPassword || isUpdatePassword || isEmailConfirmed || isPublicTracking || isTenantLogin || isTenantLanding || /^\/[^/]+\/apply$/.test(location.pathname);
