@@ -272,6 +272,15 @@ const Sidebar: React.FC = () => {
     setIsOpen(false);
   }, [location]);
 
+  // Check if a specific module is enabled.
+  const isModuleEnabled = (moduleKey: string): boolean => {
+    if (!currentOrganization) return true;
+    if (currentOrganization.onboarding_completed === false) return true;
+    const enabled = currentOrganization.enabled_modules;
+    if (!enabled || typeof enabled !== 'object') return true;
+    return enabled[moduleKey] !== false;
+  };
+
   return (
     <>
       <MobileHeader>
@@ -340,32 +349,43 @@ const Sidebar: React.FC = () => {
                   <FaChartLine /> Dashboard
                 </StyledNavLink>
 
-                {['owner', 'grower', 'staff'].includes(currentRole || '') && (
+                {['owner', 'grower', 'staff'].includes(currentRole || '') && 
+                 (isModuleEnabled('crops') || isModuleEnabled('esquejes') || isModuleEnabled('devices') || isModuleEnabled('madres') || isModuleEnabled('cruces_rd') || isModuleEnabled('laboratorio')) && (
                   <>
                     <SectionTitle>Cultivo</SectionTitle>
 
-                    <StyledNavLink
-                      to="/crops"
-                      className={tourStepIndex === 4 && location.pathname !== '/crops' ? "tour-crops-link tour-active-pulse" : "tour-crops-link"}
-                    >
-                      <FaSeedling /> Cultivos
-                    </StyledNavLink>
-                    <StyledNavLink to="/clones">
-                      <FaCut /> Esquejes
-                    </StyledNavLink>
-                    <StyledNavLink to="/devices">
-                      <FaPlug /> Dispositivos
-                    </StyledNavLink>
-                    <StyledNavLink to="/genetics" end style={{ opacity: planLevel >= 2 ? 1 : 0.6 }}>
-                      <FaDna /> Madres
-                      {planLevel < 2 && <FaLock className="lock-icon" title="Requiere Plan Equipo" />}
-                    </StyledNavLink>
-                    <StyledNavLink to="/genetics/rd" style={{ opacity: planLevel >= 2 ? 1 : 0.6 }}>
-                      <FaProjectDiagram /> R&D Cruces
-                      {planLevel < 2 && <FaLock className="lock-icon" title="Requiere Plan Equipo" />}
-                    </StyledNavLink>
+                    {isModuleEnabled('crops') && (
+                      <StyledNavLink
+                        to="/crops"
+                        className={tourStepIndex === 4 && location.pathname !== '/crops' ? "tour-crops-link tour-active-pulse" : "tour-crops-link"}
+                      >
+                        <FaSeedling /> Cultivos
+                      </StyledNavLink>
+                    )}
+                    {isModuleEnabled('esquejes') && (
+                      <StyledNavLink to="/clones">
+                        <FaCut /> Esquejes
+                      </StyledNavLink>
+                    )}
+                    {isModuleEnabled('devices') && (
+                      <StyledNavLink to="/devices">
+                        <FaPlug /> Dispositivos
+                      </StyledNavLink>
+                    )}
+                    {isModuleEnabled('madres') && (
+                      <StyledNavLink to="/genetics" end style={{ opacity: planLevel >= 2 ? 1 : 0.6 }}>
+                        <FaDna /> Madres
+                        {planLevel < 2 && <FaLock className="lock-icon" title="Requiere Plan Equipo" />}
+                      </StyledNavLink>
+                    )}
+                    {isModuleEnabled('cruces_rd') && (
+                      <StyledNavLink to="/genetics/rd" style={{ opacity: planLevel >= 2 ? 1 : 0.6 }}>
+                        <FaProjectDiagram /> R&D Cruces
+                        {planLevel < 2 && <FaLock className="lock-icon" title="Requiere Plan Equipo" />}
+                      </StyledNavLink>
+                    )}
 
-                    {['owner', 'medico'].includes(currentRole || '') && (
+                    {['owner', 'medico'].includes(currentRole || '') && isModuleEnabled('laboratorio') && (
                       <StyledNavLink to="/laboratory" style={{ opacity: planLevel >= 2 ? 1 : 0.6 }}>
                         <FaFlask /> Laboratorio
                         {planLevel < 2 && <FaLock className="lock-icon" title="Requiere Plan Equipo" />}
@@ -374,54 +394,68 @@ const Sidebar: React.FC = () => {
                   </>
                 )}
 
-                {['owner', 'admin', 'medico'].includes(currentRole || '') && (
+                {['owner', 'admin', 'medico'].includes(currentRole || '') && 
+                 (isModuleEnabled('dispensary') || isModuleEnabled('patients') || isModuleEnabled('templates') || isModuleEnabled('appointments')) && (
                   <>
                     <SectionTitle>Médico / Dispensario</SectionTitle>
 
-                    <StyledNavLink to="/dispensary">
-                      <FaHandHoldingMedical /> Dispensario
-                    </StyledNavLink>
-                    <StyledNavLink to="/patients" style={{ opacity: planLevel >= 3 ? 1 : 0.6 }}>
-                      <FaIdCard /> Socios
-                      {planLevel < 3 && <FaLock className="lock-icon" title="Requiere Plan ONG" />}
-                    </StyledNavLink>
-                    <StyledNavLink to="/templates" style={{ opacity: planLevel >= 3 ? 1 : 0.6 }}>
-                      <FaClipboardList /> Plantillas
-                      {planLevel < 3 && <FaLock className="lock-icon" title="Requiere Plan ONG" />}
-                    </StyledNavLink>
-                    <StyledNavLink to="/appointments">
-                      <FaCalendarAlt /> Turnos
-                    </StyledNavLink>
+                    {isModuleEnabled('dispensary') && (
+                      <StyledNavLink to="/dispensary">
+                        <FaHandHoldingMedical /> Dispensario
+                      </StyledNavLink>
+                    )}
+                    {isModuleEnabled('patients') && (
+                      <StyledNavLink to="/patients" style={{ opacity: planLevel >= 3 ? 1 : 0.6 }}>
+                        <FaIdCard /> Socios
+                        {planLevel < 3 && <FaLock className="lock-icon" title="Requiere Plan ONG" />}
+                      </StyledNavLink>
+                    )}
+                    {isModuleEnabled('templates') && (
+                      <StyledNavLink to="/templates" style={{ opacity: planLevel >= 3 ? 1 : 0.6 }}>
+                        <FaClipboardList /> Plantillas
+                        {planLevel < 3 && <FaLock className="lock-icon" title="Requiere Plan ONG" />}
+                      </StyledNavLink>
+                    )}
+                    {isModuleEnabled('appointments') && (
+                      <StyledNavLink to="/appointments">
+                        <FaCalendarAlt /> Turnos
+                      </StyledNavLink>
+                    )}
                   </>
                 )}
 
-                {['owner', 'admin', 'grower', 'staff'].includes(currentRole || '') && (
+                {['owner', 'admin', 'grower', 'staff'].includes(currentRole || '') && 
+                 (isModuleEnabled('insumos') || isModuleEnabled('informes') || isModuleEnabled('stock') || isModuleEnabled('expenses') || isModuleEnabled('metrics')) && (
                   <SectionTitle>Gestión</SectionTitle>
                 )}
 
                 {['owner', 'admin', 'grower', 'staff'].includes(currentRole || '') && (
                   <>
-                    <StyledNavLink
-                      to="/insumos"
-                      style={{ opacity: planLevel >= 2 ? 1 : 0.6 }}
-                      className={tourStepIndex === 15 && location.pathname !== '/insumos' ? "tour-inventory-link tour-active-pulse" : "tour-inventory-link"}
-                    >
-                      <FaShoppingBag /> Insumos
-                      {planLevel < 2 && <FaLock className="lock-icon" title="Requiere Plan Equipo" />}
-                    </StyledNavLink>
-                    <StyledNavLink to="/informes">
-                      <FaFileAlt /> Informes
-                    </StyledNavLink>
+                    {isModuleEnabled('insumos') && (
+                      <StyledNavLink
+                        to="/insumos"
+                        style={{ opacity: planLevel >= 2 ? 1 : 0.6 }}
+                        className={tourStepIndex === 15 && location.pathname !== '/insumos' ? "tour-inventory-link tour-active-pulse" : "tour-inventory-link"}
+                      >
+                        <FaShoppingBag /> Insumos
+                        {planLevel < 2 && <FaLock className="lock-icon" title="Requiere Plan Equipo" />}
+                      </StyledNavLink>
+                    )}
+                    {isModuleEnabled('informes') && (
+                      <StyledNavLink to="/informes">
+                        <FaFileAlt /> Informes
+                      </StyledNavLink>
+                    )}
                   </>
                 )}
 
-                {['owner', 'grower'].includes(currentRole || '') && (
+                {['owner', 'grower'].includes(currentRole || '') && isModuleEnabled('stock') && (
                   <StyledNavLink to="/stock">
                     <FaBoxes /> Stock
                   </StyledNavLink>
                 )}
 
-                {['owner', 'admin'].includes(currentRole || '') && (
+                {['owner', 'admin'].includes(currentRole || '') && isModuleEnabled('expenses') && (
                   <StyledNavLink to="/expenses" style={{ opacity: planLevel >= 2 ? 1 : 0.6 }}>
                     <FaMoneyBillWave /> Gastos
                     {planLevel < 2 && <FaLock className="lock-icon" title="Requiere Plan Equipo" />}
@@ -430,10 +464,12 @@ const Sidebar: React.FC = () => {
 
                 {['owner'].includes(currentRole || '') && (
                   <>
-                    <StyledNavLink to="/metrics" style={{ opacity: planLevel >= 2 ? 1 : 0.6 }}>
-                      <FaChartPie /> Métricas
-                      {planLevel < 2 && <FaLock className="lock-icon" title="Requiere Plan Equipo" />}
-                    </StyledNavLink>
+                    {isModuleEnabled('metrics') && (
+                      <StyledNavLink to="/metrics" style={{ opacity: planLevel >= 2 ? 1 : 0.6 }}>
+                        <FaChartPie /> Métricas
+                        {planLevel < 2 && <FaLock className="lock-icon" title="Requiere Plan Equipo" />}
+                      </StyledNavLink>
+                    )}
                     <StyledNavLink to="/settings">
                       <FaCog /> Configuración
                     </StyledNavLink>

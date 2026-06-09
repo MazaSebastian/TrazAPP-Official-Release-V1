@@ -379,9 +379,12 @@ export const TenantLanding: React.FC = () => {
         const hostname = window.location.hostname.toLowerCase();
         const isMainDomain = 
             hostname === 'localhost' || 
+            hostname === '127.0.0.1' ||
+            hostname === '[::1]' ||
             hostname.endsWith('trazapp.com') || 
             hostname.endsWith('trazapp.ar') || 
-            hostname.endsWith('vercel.app');
+            hostname.endsWith('vercel.app') ||
+            /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/.test(hostname);
         const isCustomDomain = !isMainDomain;
         if (isCustomDomain) {
             navigate('/login');

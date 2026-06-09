@@ -52,12 +52,13 @@ import { TenantLanding } from './pages/public/TenantLanding';
 import TenantApply from './pages/public/TenantApply';
 import { useAuth } from './context/AuthContext';
 import { DataProvider } from './context/DataContext';
-import { OrganizationProvider } from './context/OrganizationContext';
+import { OrganizationProvider, useOrganization } from './context/OrganizationContext';
 import './App.css';
 
 import Sidebar from './components/Sidebar';
 import ClickSpark from './components/ClickSpark';
 import { GuidedTour } from './components/GuidedTour';
+import { OnboardingWizard } from './components/OnboardingWizard';
 
 import { ChatWidget } from './components/AI/ChatWidget';
 import { GrowyOrb } from './components/GrowyOrb';
@@ -159,9 +160,12 @@ function App() {
   const hostname = window.location.hostname.toLowerCase();
   const isMainDomain = 
     hostname === 'localhost' || 
+    hostname === '127.0.0.1' ||
+    hostname === '[::1]' ||
     hostname.endsWith('trazapp.com') || 
     hostname.endsWith('trazapp.ar') || 
-    hostname.endsWith('vercel.app');
+    hostname.endsWith('vercel.app') ||
+    /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/.test(hostname);
   const isCustomDomain = !isMainDomain;
 
   // Routes
@@ -178,440 +182,473 @@ function App() {
   // Consider Tenant Login and Landing as public routes for styling
   const isPublicRoute = isLogin || isRegister || isForgotPassword || isUpdatePassword || isEmailConfirmed || isPublicTracking || isTenantLogin || isTenantLanding || /^\/[^/]+\/apply$/.test(location.pathname);
 
-  // We do not want the admin chrome for the patient portal because it has its own sidebar layout.
   const hideAdminChrome = isPublicRoute || isPatientPortal;
 
   return (
     <DataProvider>
       <OrganizationProvider>
-        <div className={`App ${isPublicRoute || isPatientPortal ? 'public-theme' : ''}`}>
-          <ClickSpark
-            sparkColor="#03fc41"
-            sparkSize={5}
-            sparkRadius={20}
-            sparkCount={8}
-            duration={500}
-            easing="ease-in-out"
-            extraScale={0.9}
-          />
-          {!hideAdminChrome && <GuidedTour />}
-          {!hideAdminChrome && <Sidebar />}
-          {/* Temporarily hidden per user request */}
-          {/* {!hideAdminChrome && <ChatWidget />} */}
-          {/* New Growy Assistant */}
-          {!hideAdminChrome && <GrowyOrb />}
-
-          <SystemBroadcastBanner />
-
-          {/* Session Timeout Warning Modal */}
-          <SessionTimeoutWarning />
-
-          <Routes>
-            <Route path="/login" element={isCustomDomain ? <TenantLogin /> : <Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/update-password" element={<UpdatePassword />} />
-            <Route path="/email-confirmed" element={<EmailConfirmed />} />
-            <Route path="/track/:id" element={<PublicTracking />} />
-            <Route path="/invite/:token" element={<PatientOnboarding />} />
-            
-            {/* White-Label Custom Domain Roots */}
-            {isCustomDomain && (
-              <>
-                <Route path="/" element={<TenantLanding />} />
-                <Route path="/portal" element={
-                  <RequireAuth>
-                    <PatientPortal />
-                  </RequireAuth>
-                } />
-              </>
-            )}
-
-            {/* White-Label Fallback Slug Routes */}
-            <Route path="/:slug" element={<TenantLanding />} />
-            <Route path="/:slug/login" element={<TenantLogin />} />
-            <Route path="/:slug/apply" element={<TenantApply />} />
-            <Route path="/:slug/portal" element={
-              <RequireAuth>
-                <PatientPortal />
-              </RequireAuth>
-            } />            
-
-            {/* Protected Routes Wrapped in Main Content */}
-            {!isCustomDomain && (
-              <Route path="/" element={
-                <RequireAuth>
-                  <KYCGuard>
-                    <MainContent>
-                      <Dashboard />
-                    </MainContent>
-                  </KYCGuard>
-                </RequireAuth>
-              } />
-            )}
-
-            <Route path="/shipping" element={
-              <RequireAuth>
-                <MainContent>
-                  <div style={{ padding: '2rem', color: '#fff' }}><h2>Envíos</h2><p>Módulo de envíos en construcción...</p></div>
-                </MainContent>
-              </RequireAuth>
-            } />
-
-            <Route path="/admin" element={
-              <RequireAuth>
-                <KYCGuard>
-                  <MainContent>
-                    <AdminDashboard />
-                  </MainContent>
-                </KYCGuard>
-              </RequireAuth>
-            } />
-
-            <Route path="/admin/clients" element={
-              <RequireAuth>
-                <KYCGuard>
-                  <MainContent>
-                    <ClientManagement />
-                  </MainContent>
-                </KYCGuard>
-              </RequireAuth>
-            } />
-
-            <Route path="/admin/monitoring" element={
-              <RequireAuth>
-                <KYCGuard>
-                  <MainContent>
-                    <SystemMonitoring />
-                  </MainContent>
-                </KYCGuard>
-              </RequireAuth>
-            } />
-
-            <Route path="/admin/devices" element={
-              <RequireAuth>
-                <KYCGuard>
-                  <MainContent>
-                    <DeviceInventory />
-                  </MainContent>
-                </KYCGuard>
-              </RequireAuth>
-            } />
-
-            {/* GROWER / CULTIVO MODULES */}
-            <Route path="/crops" element={
-              <RequireAuth>
-                <RoleGuard allowedRoles={['grower', 'staff']}>
-                  <KYCGuard>
-                    <MainContent>
-                      <Crops />
-                    </MainContent>
-                  </KYCGuard>
-                </RoleGuard>
-              </RequireAuth>
-            } />
-            <Route path="/crops/:id" element={
-              <RequireAuth>
-                <RoleGuard allowedRoles={['grower', 'staff']}>
-                  <KYCGuard>
-                    <MainContent>
-                      <CropDetail />
-                    </MainContent>
-                  </KYCGuard>
-                </RoleGuard>
-              </RequireAuth>
-            } />
-
-            <Route path="/rooms" element={
-              <RequireAuth>
-                <RoleGuard allowedRoles={['grower', 'staff']}>
-                  <KYCGuard>
-                    <MainContent>
-                      <Rooms />
-                    </MainContent>
-                  </KYCGuard>
-                </RoleGuard>
-              </RequireAuth>
-            } />
-
-            <Route path="/rooms/:id" element={
-              <RequireAuth>
-                <RoleGuard allowedRoles={['grower', 'staff']}>
-                  <KYCGuard>
-                    <MainContent>
-                      <RoomDetail />
-                    </MainContent>
-                  </KYCGuard>
-                </RoleGuard>
-              </RequireAuth>
-            } />
-            <Route path="/genetics" element={
-              <RequireAuth>
-                <RoleGuard allowedRoles={['grower', 'staff']}>
-                  <KYCGuard>
-                    <MainContent>
-                      <Genetics />
-                    </MainContent>
-                  </KYCGuard>
-                </RoleGuard>
-              </RequireAuth>
-            } />
-            <Route path="/genetics/rd" element={
-              <RequireAuth>
-                <RoleGuard allowedRoles={['grower', 'staff']}>
-                  <KYCGuard>
-                    <MainContent>
-                      <GeneticsRD />
-                    </MainContent>
-                  </KYCGuard>
-                </RoleGuard>
-              </RequireAuth>
-            } />
-            <Route path="/genetic/:id" element={
-              <RequireAuth>
-                <RoleGuard allowedRoles={['grower', 'staff']}>
-                  <KYCGuard>
-                    <MainContent>
-                      <GeneticDetail />
-                    </MainContent>
-                  </KYCGuard>
-                </RoleGuard>
-              </RequireAuth>
-            } />
-            <Route path="/clones" element={
-              <RequireAuth>
-                <RoleGuard allowedRoles={['grower', 'staff']}>
-                  <KYCGuard>
-                    <MainContent>
-                      <Clones />
-                    </MainContent>
-                  </KYCGuard>
-                </RoleGuard>
-              </RequireAuth>
-            } />
-            <Route path="/clones/:id" element={
-              <RequireAuth>
-                <RoleGuard allowedRoles={['grower', 'staff']}>
-                  <KYCGuard>
-                    <MainContent>
-                      <BatchDetail />
-                    </MainContent>
-                  </KYCGuard>
-                </RoleGuard>
-              </RequireAuth>
-            } />
-            <Route path="/devices" element={
-              <RequireAuth>
-                <RoleGuard allowedRoles={['grower', 'staff']}>
-                  <KYCGuard>
-                    <MainContent>
-                      <Devices />
-                    </MainContent>
-                  </KYCGuard>
-                </RoleGuard>
-              </RequireAuth>
-            } />
-
-            <Route path="/laboratory" element={
-              <RequireAuth>
-                <RoleGuard allowedRoles={['medico']}>
-                  <KYCGuard>
-                    <MainContent>
-                      <LaboratoryPage />
-                    </MainContent>
-                  </KYCGuard>
-                </RoleGuard>
-              </RequireAuth>
-            } />
-
-            <Route path="/extractions" element={
-              <RequireAuth>
-                <RoleGuard allowedRoles={['medico']}>
-                  <KYCGuard>
-                    <MainContent>
-                      <Extractions />
-                    </MainContent>
-                  </KYCGuard>
-                </RoleGuard>
-              </RequireAuth>
-            } />
-
-            <Route path="/insumos" element={
-              <RequireAuth>
-                <RoleGuard allowedRoles={['admin', 'grower', 'staff']}>
-                  <KYCGuard>
-                    <MainContent>
-                      <Insumos />
-                    </MainContent>
-                  </KYCGuard>
-                </RoleGuard>
-              </RequireAuth>
-            } />
-
-            <Route path="/providers" element={
-              <RequireAuth>
-                <RoleGuard allowedRoles={['admin', 'grower', 'staff']}>
-                  <KYCGuard>
-                    <MainContent>
-                      <InsumoProviders />
-                    </MainContent>
-                  </KYCGuard>
-                </RoleGuard>
-              </RequireAuth>
-            } />
-
-            {/* FINANCE / ADMIN MODULES */}
-            <Route path="/stock" element={
-              <RequireAuth>
-                <RoleGuard allowedRoles={['admin', 'grower']}>
-                  <KYCGuard>
-                    <MainContent>
-                      <Stock />
-                    </MainContent>
-                  </KYCGuard>
-                </RoleGuard>
-              </RequireAuth>
-            } />
-
-            <Route path="/settings" element={
-              <RequireAuth>
-                <RoleGuard allowedRoles={[]}>
-                  <KYCGuard>
-                    <MainContent>
-                      <Settings />
-                    </MainContent>
-                  </KYCGuard>
-                </RoleGuard>
-              </RequireAuth>
-            } />
-            <Route path="/compras" element={
-              <RequireAuth>
-                <RoleGuard allowedRoles={['admin']}>
-                  <KYCGuard>
-                    <MainContent>
-                      <Compras />
-                    </MainContent>
-                  </KYCGuard>
-                </RoleGuard>
-              </RequireAuth>
-            } />
-            <Route path="/expenses" element={
-              <RequireAuth>
-                <RoleGuard allowedRoles={['admin']}>
-                  <KYCGuard>
-                    <MainContent>
-                      <Expenses />
-                    </MainContent>
-                  </KYCGuard>
-                </RoleGuard>
-              </RequireAuth>
-            } />
-            <Route path="/metrics" element={
-              <RequireAuth>
-                <RoleGuard allowedRoles={[]}>
-                  <KYCGuard>
-                    <MainContent>
-                      <Metrics />
-                    </MainContent>
-                  </KYCGuard>
-                </RoleGuard>
-              </RequireAuth>
-            } />
-            <Route path="/informes" element={
-              <RequireAuth>
-                <RoleGuard allowedRoles={['admin', 'grower', 'staff', 'medico']}>
-                  <KYCGuard>
-                    <MainContent>
-                      <Informes />
-                    </MainContent>
-                  </KYCGuard>
-                </RoleGuard>
-              </RequireAuth>
-            } />
-
-            {/* MEDICAL / PATIENTS MODULES */}
-            <Route path="/dispensary" element={
-              <RequireAuth>
-                <RoleGuard allowedRoles={['admin', 'medico']}>
-                  <KYCGuard>
-                    <MainContent>
-                      <Dispensary />
-                    </MainContent>
-                  </KYCGuard>
-                </RoleGuard>
-              </RequireAuth>
-            } />
-            <Route path="/account" element={
-              <RequireAuth>
-                <MainContent>
-                  <AccountInfo />
-                </MainContent>
-              </RequireAuth>
-            } />
-
-            <Route path="/patients" element={
-              <RequireAuth>
-                <RoleGuard allowedRoles={['admin', 'medico']}>
-                  <KYCGuard>
-                    <MainContent>
-                      <Patients />
-                    </MainContent>
-                  </KYCGuard>
-                </RoleGuard>
-              </RequireAuth>
-            } />
-            <Route path="/patients/:id" element={
-              <RequireAuth>
-                <RoleGuard allowedRoles={['admin', 'medico']}>
-                  <KYCGuard>
-                    <MainContent>
-                      <PatientDetail />
-                    </MainContent>
-                  </KYCGuard>
-                </RoleGuard>
-              </RequireAuth>
-            } />
-            <Route path="/templates" element={
-              <RequireAuth>
-                <RoleGuard allowedRoles={['admin', 'medico']}>
-                  <KYCGuard>
-                    <MainContent>
-                      <Templates />
-                    </MainContent>
-                  </KYCGuard>
-                </RoleGuard>
-              </RequireAuth>
-            } />
-
-            <Route path="/appointments" element={
-              <RequireAuth>
-                <RoleGuard allowedRoles={['admin', 'medico']}>
-                  <KYCGuard>
-                    <MainContent>
-                      <Appointments />
-                    </MainContent>
-                  </KYCGuard>
-                </RoleGuard>
-              </RequireAuth>
-            } />
-
-            <Route path="/growy-dashboard" element={
-              <RequireAuth>
-                <KYCGuard>
-                  <MainContent>
-                    <GrowyDashboard />
-                  </MainContent>
-                </KYCGuard>
-              </RequireAuth>
-            } />
-
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </div>
+        <AppContent
+          isPublicRoute={isPublicRoute}
+          isPatientPortal={isPatientPortal}
+          hideAdminChrome={hideAdminChrome}
+          isCustomDomain={isCustomDomain}
+        />
       </OrganizationProvider>
-    </DataProvider >
+    </DataProvider>
   );
 }
 
+interface AppContentProps {
+  isPublicRoute: boolean;
+  isPatientPortal: boolean;
+  hideAdminChrome: boolean;
+  isCustomDomain: boolean;
+}
+
+const AppContent: React.FC<AppContentProps> = ({
+  isPublicRoute,
+  isPatientPortal,
+  hideAdminChrome,
+  isCustomDomain
+}) => {
+  const { user } = useAuth();
+  const { currentOrganization } = useOrganization();
+
+  const showOnboarding = 
+    user && 
+    user.role !== 'super_admin' && 
+    currentOrganization && 
+    currentOrganization.onboarding_completed === false && 
+    !hideAdminChrome;
+
+  return (
+    <div className={`App ${isPublicRoute || isPatientPortal ? 'public-theme' : ''}`}>
+      <ClickSpark
+        sparkColor="#03fc41"
+        sparkSize={5}
+        sparkRadius={20}
+        sparkCount={8}
+        duration={500}
+        easing="ease-in-out"
+        extraScale={0.9}
+      />
+      {!hideAdminChrome && <GuidedTour />}
+      {!hideAdminChrome && <Sidebar />}
+      {/* Temporarily hidden per user request */}
+      {/* {!hideAdminChrome && <ChatWidget />} */}
+      {/* New Growy Assistant */}
+      {!hideAdminChrome && <GrowyOrb />}
+
+      <SystemBroadcastBanner />
+
+      {/* Session Timeout Warning Modal */}
+      <SessionTimeoutWarning />
+
+      {showOnboarding && <OnboardingWizard />}
+
+      <Routes>
+        <Route path="/login" element={isCustomDomain ? <TenantLogin /> : <Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/update-password" element={<UpdatePassword />} />
+        <Route path="/email-confirmed" element={<EmailConfirmed />} />
+        <Route path="/track/:id" element={<PublicTracking />} />
+        <Route path="/invite/:token" element={<PatientOnboarding />} />
+        
+        {/* White-Label Custom Domain Roots */}
+        {isCustomDomain && (
+          <>
+            <Route path="/" element={<TenantLanding />} />
+            <Route path="/portal" element={
+              <RequireAuth>
+                <PatientPortal />
+              </RequireAuth>
+            } />
+          </>
+        )}
+
+        {/* White-Label Fallback Slug Routes */}
+        <Route path="/:slug" element={<TenantLanding />} />
+        <Route path="/:slug/login" element={<TenantLogin />} />
+        <Route path="/:slug/apply" element={<TenantApply />} />
+        <Route path="/:slug/portal" element={
+          <RequireAuth>
+            <PatientPortal />
+          </RequireAuth>
+        } />            
+
+        {/* Protected Routes Wrapped in Main Content */}
+        {!isCustomDomain && (
+          <Route path="/" element={
+            <RequireAuth>
+              <KYCGuard>
+                <MainContent>
+                  <Dashboard />
+                </MainContent>
+              </KYCGuard>
+            </RequireAuth>
+          } />
+        )}
+
+        <Route path="/shipping" element={
+          <RequireAuth>
+            <MainContent>
+              <div style={{ padding: '2rem', color: '#fff' }}><h2>Envíos</h2><p>Módulo de envíos en construcción...</p></div>
+            </MainContent>
+          </RequireAuth>
+        } />
+
+        <Route path="/admin" element={
+          <RequireAuth>
+            <KYCGuard>
+              <MainContent>
+                <AdminDashboard />
+              </MainContent>
+            </KYCGuard>
+          </RequireAuth>
+        } />
+
+        <Route path="/admin/clients" element={
+          <RequireAuth>
+            <KYCGuard>
+              <MainContent>
+                <ClientManagement />
+              </MainContent>
+            </KYCGuard>
+          </RequireAuth>
+        } />
+
+        <Route path="/admin/monitoring" element={
+          <RequireAuth>
+            <KYCGuard>
+              <MainContent>
+                <SystemMonitoring />
+              </MainContent>
+            </KYCGuard>
+          </RequireAuth>
+        } />
+
+        <Route path="/admin/devices" element={
+          <RequireAuth>
+            <KYCGuard>
+              <MainContent>
+                <DeviceInventory />
+              </MainContent>
+            </KYCGuard>
+          </RequireAuth>
+        } />
+
+        {/* GROWER / CULTIVO MODULES */}
+        <Route path="/crops" element={
+          <RequireAuth>
+            <RoleGuard allowedRoles={['grower', 'staff']}>
+              <KYCGuard>
+                <MainContent>
+                  <Crops />
+                </MainContent>
+              </KYCGuard>
+            </RoleGuard>
+          </RequireAuth>
+        } />
+        <Route path="/crops/:id" element={
+          <RequireAuth>
+            <RoleGuard allowedRoles={['grower', 'staff']}>
+              <KYCGuard>
+                <MainContent>
+                  <CropDetail />
+                </MainContent>
+              </KYCGuard>
+            </RoleGuard>
+          </RequireAuth>
+        } />
+
+        <Route path="/rooms" element={
+          <RequireAuth>
+            <RoleGuard allowedRoles={['grower', 'staff']}>
+              <KYCGuard>
+                <MainContent>
+                  <Rooms />
+                </MainContent>
+              </KYCGuard>
+            </RoleGuard>
+          </RequireAuth>
+        } />
+
+        <Route path="/rooms/:id" element={
+          <RequireAuth>
+            <RoleGuard allowedRoles={['grower', 'staff']}>
+              <KYCGuard>
+                <MainContent>
+                  <RoomDetail />
+                </MainContent>
+              </KYCGuard>
+            </RoleGuard>
+          </RequireAuth>
+        } />
+        <Route path="/genetics" element={
+          <RequireAuth>
+            <RoleGuard allowedRoles={['grower', 'staff']}>
+              <KYCGuard>
+                <MainContent>
+                  <Genetics />
+                </MainContent>
+              </KYCGuard>
+            </RoleGuard>
+          </RequireAuth>
+        } />
+        <Route path="/genetics/rd" element={
+          <RequireAuth>
+            <RoleGuard allowedRoles={['grower', 'staff']}>
+              <KYCGuard>
+                <MainContent>
+                  <GeneticsRD />
+                </MainContent>
+              </KYCGuard>
+            </RoleGuard>
+          </RequireAuth>
+        } />
+        <Route path="/genetic/:id" element={
+          <RequireAuth>
+            <RoleGuard allowedRoles={['grower', 'staff']}>
+              <KYCGuard>
+                <MainContent>
+                  <GeneticDetail />
+                </MainContent>
+              </KYCGuard>
+            </RoleGuard>
+          </RequireAuth>
+        } />
+        <Route path="/clones" element={
+          <RequireAuth>
+            <RoleGuard allowedRoles={['grower', 'staff']}>
+              <KYCGuard>
+                <MainContent>
+                  <Clones />
+                </MainContent>
+              </KYCGuard>
+            </RoleGuard>
+          </RequireAuth>
+        } />
+        <Route path="/clones/:id" element={
+          <RequireAuth>
+            <RoleGuard allowedRoles={['grower', 'staff']}>
+              <KYCGuard>
+                <MainContent>
+                  <BatchDetail />
+                </MainContent>
+              </KYCGuard>
+            </RoleGuard>
+          </RequireAuth>
+        } />
+        <Route path="/devices" element={
+          <RequireAuth>
+            <RoleGuard allowedRoles={['grower', 'staff']}>
+              <KYCGuard>
+                <MainContent>
+                  <Devices />
+                </MainContent>
+              </KYCGuard>
+            </RoleGuard>
+          </RequireAuth>
+        } />
+
+        <Route path="/laboratory" element={
+          <RequireAuth>
+            <RoleGuard allowedRoles={['medico']}>
+              <KYCGuard>
+                <MainContent>
+                  <LaboratoryPage />
+                </MainContent>
+              </KYCGuard>
+            </RoleGuard>
+          </RequireAuth>
+        } />
+
+        <Route path="/extractions" element={
+          <RequireAuth>
+            <RoleGuard allowedRoles={['medico']}>
+              <KYCGuard>
+                <MainContent>
+                  <Extractions />
+                </MainContent>
+              </KYCGuard>
+            </RoleGuard>
+          </RequireAuth>
+        } />
+
+        <Route path="/insumos" element={
+          <RequireAuth>
+            <RoleGuard allowedRoles={['admin', 'grower', 'staff']}>
+              <KYCGuard>
+                <MainContent>
+                  <Insumos />
+                </MainContent>
+              </KYCGuard>
+            </RoleGuard>
+          </RequireAuth>
+        } />
+
+        <Route path="/providers" element={
+          <RequireAuth>
+            <RoleGuard allowedRoles={['admin', 'grower', 'staff']}>
+              <KYCGuard>
+                <MainContent>
+                  <InsumoProviders />
+                </MainContent>
+              </KYCGuard>
+            </RoleGuard>
+          </RequireAuth>
+        } />
+
+        {/* FINANCE / ADMIN MODULES */}
+        <Route path="/stock" element={
+          <RequireAuth>
+            <RoleGuard allowedRoles={['admin', 'grower']}>
+              <KYCGuard>
+                <MainContent>
+                  <Stock />
+                </MainContent>
+              </KYCGuard>
+            </RoleGuard>
+          </RequireAuth>
+        } />
+
+        <Route path="/settings" element={
+          <RequireAuth>
+            <RoleGuard allowedRoles={[]}>
+              <KYCGuard>
+                <MainContent>
+                  <Settings />
+                </MainContent>
+              </KYCGuard>
+            </RoleGuard>
+          </RequireAuth>
+        } />
+        <Route path="/compras" element={
+          <RequireAuth>
+            <RoleGuard allowedRoles={['admin']}>
+              <KYCGuard>
+                <MainContent>
+                  <Compras />
+                </MainContent>
+              </KYCGuard>
+            </RoleGuard>
+          </RequireAuth>
+        } />
+        <Route path="/expenses" element={
+          <RequireAuth>
+            <RoleGuard allowedRoles={['admin']}>
+              <KYCGuard>
+                <MainContent>
+                  <Expenses />
+                </MainContent>
+              </KYCGuard>
+            </RoleGuard>
+          </RequireAuth>
+        } />
+        <Route path="/metrics" element={
+          <RequireAuth>
+            <RoleGuard allowedRoles={[]}>
+              <KYCGuard>
+                <MainContent>
+                  <Metrics />
+                </MainContent>
+              </KYCGuard>
+            </RoleGuard>
+          </RequireAuth>
+        } />
+        <Route path="/informes" element={
+          <RequireAuth>
+            <RoleGuard allowedRoles={['admin', 'grower', 'staff', 'medico']}>
+              <KYCGuard>
+                <MainContent>
+                  <Informes />
+                </MainContent>
+              </KYCGuard>
+            </RoleGuard>
+          </RequireAuth>
+        } />
+
+        {/* MEDICAL / PATIENTS MODULES */}
+        <Route path="/dispensary" element={
+          <RequireAuth>
+            <RoleGuard allowedRoles={['admin', 'medico']}>
+              <KYCGuard>
+                <MainContent>
+                  <Dispensary />
+                </MainContent>
+              </KYCGuard>
+            </RoleGuard>
+          </RequireAuth>
+        } />
+        <Route path="/account" element={
+          <RequireAuth>
+            <MainContent>
+              <AccountInfo />
+            </MainContent>
+          </RequireAuth>
+        } />
+
+        <Route path="/patients" element={
+          <RequireAuth>
+            <RoleGuard allowedRoles={['admin', 'medico']}>
+              <KYCGuard>
+                <MainContent>
+                  <Patients />
+                </MainContent>
+              </KYCGuard>
+            </RoleGuard>
+          </RequireAuth>
+        } />
+        <Route path="/patients/:id" element={
+          <RequireAuth>
+            <RoleGuard allowedRoles={['admin', 'medico']}>
+              <KYCGuard>
+                <MainContent>
+                  <PatientDetail />
+                </MainContent>
+              </KYCGuard>
+            </RoleGuard>
+          </RequireAuth>
+        } />
+        <Route path="/templates" element={
+          <RequireAuth>
+            <RoleGuard allowedRoles={['admin', 'medico']}>
+              <KYCGuard>
+                <MainContent>
+                  <Templates />
+                </MainContent>
+              </KYCGuard>
+            </RoleGuard>
+          </RequireAuth>
+        } />
+
+        <Route path="/appointments" element={
+          <RequireAuth>
+            <RoleGuard allowedRoles={['admin', 'medico']}>
+              <KYCGuard>
+                <MainContent>
+                  <Appointments />
+                </MainContent>
+              </KYCGuard>
+            </RoleGuard>
+          </RequireAuth>
+        } />
+
+        <Route path="/growy-dashboard" element={
+          <RequireAuth>
+            <KYCGuard>
+              <MainContent>
+                <GrowyDashboard />
+              </MainContent>
+            </KYCGuard>
+          </RequireAuth>
+        } />
+
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </div>
+  );
+};
 
 export default App;

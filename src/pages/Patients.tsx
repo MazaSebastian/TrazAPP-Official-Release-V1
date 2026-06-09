@@ -242,6 +242,19 @@ const SearchInput = styled.input`
   }
 `;
 
+const FilterContainer = styled.div`
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  align-items: center;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: stretch;
+  }
+`;
+
+
 // Modal Styles
 const Modal = styled.div<{ isOpen: boolean; $isClosing?: boolean }>`
   display: ${props => props.isOpen ? 'flex' : 'none'};
@@ -367,6 +380,8 @@ const Patients: React.FC = () => {
     const [patients, setPatients] = useState<Patient[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
+    const [sortBy, setSortBy] = useState<'name_asc' | 'name_desc' | 'antiquity_desc' | 'antiquity_asc'>('name_asc');
+    const [treatmentFilter, setTreatmentFilter] = useState<'all' | 'treatment' | 'dispensation'>('all');
 
     // Modal States
     const [isAddOpen, setIsAddOpen] = useState(false);
@@ -421,10 +436,12 @@ const Patients: React.FC = () => {
         pathology: '',
         phone: '',
         address: '',
-        notes: ''
+        notes: '',
+        followsTreatment: true
     });
 
     const [hasReprocann, setHasReprocann] = useState<boolean | null>(null);
+    const [treatmentChoice, setTreatmentChoice] = useState<boolean | null>(null);
 
     // File States
     const [files, setFiles] = useState<{
@@ -492,6 +509,7 @@ const Patients: React.FC = () => {
                     file_reprocann_url: urlReprocann || undefined,
                     file_affidavit_url: urlAffidavit || undefined,
                     file_consent_url: urlConsent || undefined,
+                    follows_treatment: regForm.followsTreatment,
                 };
 
                 await patientsService.upsertPatient(updatedData);
@@ -523,7 +541,8 @@ const Patients: React.FC = () => {
                     phone: regForm.phone,
                     address: regForm.address,
                     notes: regForm.notes,
-                    monthly_limit: 40
+                    monthly_limit: 40,
+                    follows_treatment: regForm.followsTreatment,
                 };
 
                 const createdPatient = await patientsService.registerNewPatient(initialPatientData, userData);
@@ -585,15 +604,18 @@ const Patients: React.FC = () => {
             pathology: '',
             phone: '',
             address: '',
-            notes: ''
+            notes: '',
+            followsTreatment: true
         });
         setFiles({});
         setHasReprocann(null);
+        setTreatmentChoice(null);
         setEditingPatientId(null);
     };
 
     const openFullEdit = (patient: Patient) => {
         setHasReprocann(!!patient.reprocann_number);
+        setTreatmentChoice(patient.follows_treatment !== false);
         setEditingPatientId(patient.id);
 
         setRegForm({
@@ -609,7 +631,8 @@ const Patients: React.FC = () => {
             pathology: patient.pathology || '',
             phone: patient.phone || '',
             address: patient.address || '',
-            notes: patient.notes || ''
+            notes: patient.notes || '',
+            followsTreatment: patient.follows_treatment !== false
         });
 
         setIsAddOpen(true);
@@ -653,13 +676,44 @@ const Patients: React.FC = () => {
         }
     };
 
-    const filteredPatients = patients.filter(p =>
-        p.profile?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        p.reprocann_number?.includes(searchTerm)
-    );
+    const filteredPatients = patients.filter(p => {
+        const matchesSearch = p.profile?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                              p.reprocann_number?.includes(searchTerm);
+        
+        const matchesTreatment = 
+            treatmentFilter === 'all' ? true :
+            treatmentFilter === 'treatment' ? p.follows_treatment !== false :
+            treatmentFilter === 'dispensation' ? p.follows_treatment === false : true;
 
-    const activePatients = filteredPatients.filter(p => p.is_approved_by_org !== false);
-    const waitingPatients = filteredPatients.filter(p => p.is_approved_by_org === false);
+        return matchesSearch && matchesTreatment;
+    });
+
+    const sortedPatients = [...filteredPatients].sort((a, b) => {
+        if (sortBy === 'name_asc') {
+            const nameA = (a.profile?.full_name || '').trim().toLowerCase();
+            const nameB = (b.profile?.full_name || '').trim().toLowerCase();
+            return nameA.localeCompare(nameB, 'es', { sensitivity: 'base' });
+        }
+        if (sortBy === 'name_desc') {
+            const nameA = (a.profile?.full_name || '').trim().toLowerCase();
+            const nameB = (b.profile?.full_name || '').trim().toLowerCase();
+            return nameB.localeCompare(nameA, 'es', { sensitivity: 'base' });
+        }
+        if (sortBy === 'antiquity_desc') {
+            const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
+            const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
+            return dateA - dateB;
+        }
+        if (sortBy === 'antiquity_asc') {
+            const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
+            const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
+            return dateB - dateA;
+        }
+        return 0;
+    });
+
+    const activePatients = sortedPatients.filter(p => p.is_approved_by_org !== false);
+    const waitingPatients = sortedPatients.filter(p => p.is_approved_by_org === false);
 
     const handleProcessImportBatch = async (
         validPatients: ParsedPatient[],
@@ -749,11 +803,39 @@ const Patients: React.FC = () => {
                     </TabButton>
                 </TabContainer>
 
-                <SearchInput
-                    placeholder="Buscar por nombre o reprocann..."
-                    value={searchTerm}
-                    onChange={e => setSearchTerm(e.target.value)}
-                />
+                <FilterContainer>
+                    <div style={{ flex: 1 }}>
+                        <SearchInput
+                            placeholder="Buscar por nombre o reprocann..."
+                            value={searchTerm}
+                            onChange={e => setSearchTerm(e.target.value)}
+                            style={{ marginBottom: 0 }}
+                        />
+                    </div>
+                    <div style={{ width: '220px', flexShrink: 0 }}>
+                        <CustomSelect
+                            value={treatmentFilter}
+                            onChange={val => setTreatmentFilter(val as any)}
+                            options={[
+                                { value: 'all', label: 'Todos los Socios' },
+                                { value: 'treatment', label: 'En Tratamiento' },
+                                { value: 'dispensation', label: 'Solo Dispensa' }
+                            ]}
+                        />
+                    </div>
+                    <div style={{ width: '220px', flexShrink: 0 }}>
+                        <CustomSelect
+                            value={sortBy}
+                            onChange={val => setSortBy(val as any)}
+                            options={[
+                                { value: 'name_asc', label: 'Nombre (A - Z)' },
+                                { value: 'name_desc', label: 'Nombre (Z - A)' },
+                                { value: 'antiquity_desc', label: 'Antigüedad (Mayor a Menor)' },
+                                { value: 'antiquity_asc', label: 'Antigüedad (Menor a Mayor)' }
+                            ]}
+                        />
+                    </div>
+                </FilterContainer>
 
                 {isLoading ? (
                     <LoadingSpinner />
@@ -763,12 +845,24 @@ const Patients: React.FC = () => {
                             <PatientCard key={patient.id} onClick={() => openEdit(patient)}>
                                 {/* Desktop View */}
                                 <div className="desktop-content">
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                                        <StatusBadge status={patient.is_approved_by_org === false ? 'pending' : patient.reprocann_status}>
-                                            {patient.is_approved_by_org === false ? 'EN ESPERA' :
-                                                patient.reprocann_status === 'active' ? 'Activo' :
-                                                    patient.reprocann_status === 'expired' ? 'Vencido' : 'Pendiente'}
-                                        </StatusBadge>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', alignItems: 'center' }}>
+                                        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                                            <StatusBadge status={patient.is_approved_by_org === false ? 'pending' : patient.reprocann_status}>
+                                                {patient.is_approved_by_org === false ? 'EN ESPERA' :
+                                                    patient.reprocann_status === 'active' ? 'Activo' :
+                                                        patient.reprocann_status === 'expired' ? 'Vencido' : 'Pendiente'}
+                                            </StatusBadge>
+                                            <span style={{ 
+                                                fontSize: '0.75rem', 
+                                                padding: '0.2rem 0.6rem', 
+                                                borderRadius: '12px', 
+                                                background: patient.follows_treatment !== false ? 'rgba(59, 130, 246, 0.15)' : 'rgba(148, 163, 184, 0.15)',
+                                                color: patient.follows_treatment !== false ? '#60a5fa' : '#cbd5e1',
+                                                border: patient.follows_treatment !== false ? '1px solid rgba(59, 130, 246, 0.3)' : '1px solid rgba(148, 163, 184, 0.3)'
+                                            }}>
+                                                {patient.follows_treatment !== false ? 'Tratamiento' : 'Solo Dispensa'}
+                                            </span>
+                                        </div>
                                         <span style={{ fontSize: '0.8rem', color: '#718096' }}>Límite Mensual: {patient.monthly_limit}g</span>
                                     </div>
                                     <h3 style={{ margin: '0 0 0.25rem 0' }}>{patient.profile?.full_name || 'Sin Nombre'}</h3>
@@ -810,9 +904,19 @@ const Patients: React.FC = () => {
                                 {/* Mobile View (Compact Single Line) */}
                                 <div className="mobile-content">
                                     <div className="m-info">
-                                        <span className="m-name">{patient.profile?.full_name || 'Sin Nombre'}</span>
-                                        <span style={{ color: '#475569' }}>-</span>
-                                        <span className="m-dni">{patient.document_number || 'Sin DNI'}</span>
+                                         <span className="m-name">{patient.profile?.full_name || 'Sin Nombre'}</span>
+                                         <span style={{ color: '#475569' }}>-</span>
+                                         <span className="m-dni">{patient.document_number || 'Sin DNI'}</span>
+                                         <span style={{ 
+                                             marginLeft: '0.5rem',
+                                             fontSize: '0.65rem', 
+                                             padding: '0.1rem 0.4rem', 
+                                             borderRadius: '8px', 
+                                             background: patient.follows_treatment !== false ? 'rgba(59, 130, 246, 0.15)' : 'rgba(148, 163, 184, 0.15)',
+                                             color: patient.follows_treatment !== false ? '#60a5fa' : '#cbd5e1'
+                                         }}>
+                                             {patient.follows_treatment !== false ? 'Tratamiento' : 'Dispensa'}
+                                         </span>
                                     </div>
                                     <StatusBadge status={patient.is_approved_by_org === false ? 'pending' : patient.reprocann_status} style={{ fontSize: '0.65rem', padding: '0.15rem 0.4rem' }}>
                                         {patient.is_approved_by_org === false ? 'EN ESPERA' :
@@ -874,20 +978,126 @@ const Patients: React.FC = () => {
                                     <ActionButton type="button" style={{ margin: '0 auto', background: 'rgba(239, 68, 68, 0.1)', color: '#f87171', border: 'none' }} onClick={() => { closeAddModal(); resetForm(); }}>Cancelar</ActionButton>
                                 </div>
                             </div>
+                        ) : treatmentChoice === null ? (
+                            <div style={{ textAlign: 'center', padding: '2rem 1rem' }}>
+                                <h3 style={{ fontSize: '1.4rem', color: '#f8fafc', marginBottom: '2.5rem', fontWeight: 500 }}>
+                                    ¿Sigue un tratamiento con la ONG?
+                                </h3>
+                                <div style={{ display: 'flex', gap: '1.5rem', justifyContent: 'center' }}>
+                                    <ActionButton
+                                        type="button"
+                                        onClick={() => {
+                                            setTreatmentChoice(true);
+                                            setRegForm(prev => ({ ...prev, followsTreatment: true }));
+                                        }}
+                                        style={{
+                                            padding: '1.5rem 2.5rem',
+                                            fontSize: '1.1rem',
+                                            flexDirection: 'column',
+                                            gap: '1rem',
+                                            background: 'rgba(59, 130, 246, 0.1)',
+                                            borderColor: 'rgba(59, 130, 246, 0.3)',
+                                            color: '#60a5fa'
+                                        }}
+                                    >
+                                        <FaCheckCircle size={32} />
+                                        SÍ, SIGUE TRATAMIENTO
+                                    </ActionButton>
+
+                                    <ActionButton
+                                        type="button"
+                                        onClick={() => {
+                                            setTreatmentChoice(false);
+                                            setRegForm(prev => ({ ...prev, followsTreatment: false }));
+                                        }}
+                                        style={{
+                                            padding: '1.5rem 2.5rem',
+                                            fontSize: '1.1rem',
+                                            flexDirection: 'column',
+                                            gap: '1rem',
+                                            background: 'rgba(148, 163, 184, 0.1)',
+                                            borderColor: 'rgba(148, 163, 184, 0.3)',
+                                            color: '#cbd5e1'
+                                        }}
+                                    >
+                                        <FaNotesMedical size={32} />
+                                        NO, SOLO DISPENSA
+                                    </ActionButton>
+                                </div>
+                                <div style={{ marginTop: '3rem', display: 'flex', justifyContent: 'center', gap: '1rem' }}>
+                                    <ActionButton 
+                                        type="button" 
+                                        style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', color: '#cbd5e1' }} 
+                                        onClick={() => setHasReprocann(null)}
+                                    >
+                                        Atrás
+                                    </ActionButton>
+                                    <ActionButton 
+                                        type="button" 
+                                        style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#f87171', border: 'none' }} 
+                                        onClick={() => { closeAddModal(); resetForm(); }}
+                                    >
+                                        Cancelar
+                                    </ActionButton>
+                                </div>
+                            </div>
                         ) : (
                             <form onSubmit={handleRegister} style={{ animation: 'fadeIn 0.3s ease-out' }}>
 
                                 <SectionHeader>Datos Personales</SectionHeader>
 
-                                <FormGroup>
-                                    <label>Nombre Completo</label>
-                                    <input
-                                        value={regForm.fullName}
-                                        onChange={e => setRegForm({ ...regForm, fullName: e.target.value })}
-                                        placeholder="Nombre y Apellido"
-                                        required
-                                    />
-                                </FormGroup>
+                                <FormRow>
+                                    <FormGroup>
+                                        <label>Nombre Completo</label>
+                                        <input
+                                            value={regForm.fullName}
+                                            onChange={e => setRegForm({ ...regForm, fullName: e.target.value })}
+                                            placeholder="Nombre y Apellido"
+                                            required
+                                        />
+                                    </FormGroup>
+                                    <FormGroup>
+                                        <label>¿Sigue tratamiento con la ONG?</label>
+                                        <div style={{ display: 'flex', gap: '0.5rem', height: '42px' }}>
+                                            <button
+                                                type="button"
+                                                onClick={() => setRegForm({ ...regForm, followsTreatment: true })}
+                                                style={{
+                                                    flex: 1,
+                                                    borderRadius: '8px',
+                                                    border: '1px solid',
+                                                    fontWeight: 500,
+                                                    fontSize: '0.85rem',
+                                                    cursor: 'pointer',
+                                                    transition: 'all 0.2s',
+                                                    background: regForm.followsTreatment ? 'rgba(59, 130, 246, 0.2)' : 'rgba(255, 255, 255, 0.05)',
+                                                    borderColor: regForm.followsTreatment ? '#3b82f6' : 'rgba(255, 255, 255, 0.1)',
+                                                    color: regForm.followsTreatment ? '#60a5fa' : '#cbd5e1',
+                                                }}
+                                            >
+                                                SÍ
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setRegForm({ ...regForm, followsTreatment: false })}
+                                                style={{
+                                                    flex: 1,
+                                                    borderRadius: '8px',
+                                                    border: '1px solid',
+                                                    fontWeight: 500,
+                                                    fontSize: '0.85rem',
+                                                    cursor: 'pointer',
+                                                    transition: 'all 0.2s',
+                                                    background: !regForm.followsTreatment ? 'rgba(148, 163, 184, 0.2)' : 'rgba(255, 255, 255, 0.05)',
+                                                    borderColor: !regForm.followsTreatment ? '#94a3b8' : 'rgba(255, 255, 255, 0.1)',
+                                                    color: !regForm.followsTreatment ? '#cbd5e1' : '#cbd5e1',
+                                                }}
+                                            >
+                                                NO
+                                            </button>
+                                        </div>
+                                    </FormGroup>
+                                </FormRow>
 
                                 <FormRow>
                                     <FormGroup>
@@ -1066,6 +1276,7 @@ const Patients: React.FC = () => {
                                         <p><strong>Teléfono:</strong> {selectedPatient.phone || '-'}</p>
                                         <p><strong>Dirección:</strong> {selectedPatient.address || '-'}</p>
                                         <p><strong>Límite Mensual:</strong> {selectedPatient.monthly_limit}g</p>
+                                        <p><strong>Tratamiento ONG:</strong> {selectedPatient.follows_treatment !== false ? 'Sigue Tratamiento con ONG' : 'Solo Dispensa'}</p>
                                     </div>
                                     <div>
                                         <SectionHeader style={{ marginTop: 0 }}>Datos REPROCANN</SectionHeader>

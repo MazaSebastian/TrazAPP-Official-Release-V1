@@ -336,7 +336,7 @@ const placesLibrary: "places"[] = ["places"];
 
 const Settings: React.FC = () => {
   const { user, resetTour } = useAuth();
-  const { currentOrganization } = useOrganization();
+  const { currentOrganization, updateOnboardingState } = useOrganization();
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'users' | 'customization' | 'weather' | 'system' | 'web'>('users');
   const [saving, setSaving] = useState(false);
@@ -1835,6 +1835,32 @@ const Settings: React.FC = () => {
             style={{ background: 'rgba(56, 189, 248, 0.2)', color: '#38bdf8', borderColor: 'rgba(56, 189, 248, 0.5)' }}
           >
             <FaPlay /> Reiniciar Tutorial Guiado
+          </SaveButton>
+        </div>
+
+        <div style={{ marginBottom: '1.5rem', background: 'rgba(15, 23, 42, 0.5)', padding: '1.5rem', borderRadius: '0.5rem', border: '1px solid rgba(255,255,255,0.05)' }}>
+          <div style={{ marginBottom: '1rem' }}>
+            <Label style={{ display: 'block', marginBottom: '0.5rem', color: '#f8fafc' }}>Onboarding Modular (Growy)</Label>
+            <p style={{ color: '#94a3b8', fontSize: '0.9rem', margin: '0 0 1rem 0' }}>
+              Al reiniciar el onboarding, se restablecerá el estado de configuración inicial de la organización y se abrirá el asistente interactivo de Growy para elegir qué módulos habilitar.
+            </p>
+          </div>
+
+          <SaveButton
+            onClick={async () => {
+              if (window.confirm('¿Seguro que deseas reiniciar el proceso de Onboarding de tu organización? Esto ocultará temporalmente los módulos hasta que completes el asistente.')) {
+                try {
+                  await updateOnboardingState(false, null);
+                  setToast({ isOpen: true, message: 'Onboarding reiniciado. ¡Iniciando asistente!', type: 'success' });
+                } catch (err) {
+                  console.error(err);
+                  setToast({ isOpen: true, message: 'Error al reiniciar el onboarding.', type: 'error' });
+                }
+              }
+            }}
+            style={{ background: 'rgba(74, 222, 128, 0.2)', color: '#4ade80', borderColor: 'rgba(74, 222, 128, 0.5)' }}
+          >
+            <FaPlay /> Reiniciar Onboarding Modular
           </SaveButton>
         </div>
       </Section>

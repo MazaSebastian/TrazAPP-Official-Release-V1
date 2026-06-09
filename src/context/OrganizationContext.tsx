@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../services/supabaseClient';
 import { Organization } from '../types';
 import { useAuth } from './AuthContext';
+import { organizationService } from '../services/organizationService';
 
 interface OrganizationContextType {
     currentOrganization: Organization | null;
@@ -10,6 +11,7 @@ interface OrganizationContextType {
     organizations: Organization[];
     isLoading: boolean;
     selectOrganization: (orgId: string) => void;
+    updateOnboardingState: (onboardingCompleted: boolean, enabledModules: any) => Promise<void>;
 }
 
 const OrganizationContext = createContext<OrganizationContextType | undefined>(undefined);
@@ -165,8 +167,19 @@ export const OrganizationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         }
     };
 
+    const updateOnboardingState = async (onboardingCompleted: boolean, enabledModules: any) => {
+        if (!currentOrganization) return;
+        const updatedOrg = await organizationService.updateOrganizationOnboarding(
+            currentOrganization.id,
+            onboardingCompleted,
+            enabledModules
+        );
+        setCurrentOrganization(updatedOrg);
+        setOrganizations(prev => prev.map(o => o.id === updatedOrg.id ? updatedOrg : o));
+    };
+
     return (
-        <OrganizationContext.Provider value={{ currentOrganization, currentRole, organizations, isLoading, selectOrganization }}>
+        <OrganizationContext.Provider value={{ currentOrganization, currentRole, organizations, isLoading, selectOrganization, updateOnboardingState }}>
             {children}
         </OrganizationContext.Provider>
     );

@@ -118,6 +118,32 @@ export const organizationService = {
     },
 
     /**
+     * Update organization onboarding status and custom enabled modules
+     */
+    async updateOrganizationOnboarding(
+        orgId: string,
+        onboardingCompleted: boolean,
+        enabledModules: any
+    ): Promise<Organization> {
+        const { data, error } = await supabase
+            .from('organizations')
+            .update({
+                onboarding_completed: onboardingCompleted,
+                enabled_modules: enabledModules
+            })
+            .eq('id', orgId)
+            .select()
+            .single();
+
+        if (error) {
+            console.error('Error updating organization onboarding:', error);
+            throw error;
+        }
+
+        return data as Organization;
+    },
+
+    /**
      * Upload landing background image
      */
     async uploadLandingBackground(orgId: string, bgFile: File): Promise<string> {
@@ -171,9 +197,12 @@ export const organizationService = {
         const lowerHost = hostname.toLowerCase();
         const isMainDomain = 
             lowerHost === 'localhost' || 
+            lowerHost === '127.0.0.1' ||
+            lowerHost === '[::1]' ||
             lowerHost.endsWith('trazapp.com') || 
             lowerHost.endsWith('trazapp.ar') || 
-            lowerHost.endsWith('vercel.app');
+            lowerHost.endsWith('vercel.app') ||
+            /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/.test(lowerHost);
 
         if (!isMainDomain) {
             const { data, error } = await supabase

@@ -53,6 +53,8 @@ export interface Organization {
   created_at: string;
   subscription_status?: 'active' | 'trial' | 'past_due' | 'cancelled' | 'pending_validation';
   valid_until?: string;
+  onboarding_completed?: boolean;
+  enabled_modules?: any;
   // Lead info
   owner_name?: string;
   phone?: string;
