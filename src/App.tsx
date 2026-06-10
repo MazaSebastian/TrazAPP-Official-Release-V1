@@ -58,7 +58,6 @@ import './App.css';
 import Sidebar from './components/Sidebar';
 import ClickSpark from './components/ClickSpark';
 import { GuidedTour } from './components/GuidedTour';
-import { OnboardingWizard } from './components/OnboardingWizard';
 
 import { ChatWidget } from './components/AI/ChatWidget';
 import { GrowyOrb } from './components/GrowyOrb';
@@ -214,13 +213,6 @@ const AppContent: React.FC<AppContentProps> = ({
   const { user } = useAuth();
   const { currentOrganization } = useOrganization();
 
-  const showOnboarding = 
-    user && 
-    user.role !== 'super_admin' && 
-    currentOrganization && 
-    currentOrganization.onboarding_completed === false && 
-    !hideAdminChrome;
-
   return (
     <div className={`App ${isPublicRoute || isPatientPortal ? 'public-theme' : ''}`}>
       <ClickSpark
@@ -243,8 +235,6 @@ const AppContent: React.FC<AppContentProps> = ({
 
       {/* Session Timeout Warning Modal */}
       <SessionTimeoutWarning />
-
-      {showOnboarding && <OnboardingWizard />}
 
       <Routes>
         <Route path="/login" element={isCustomDomain ? <TenantLogin /> : <Login />} />

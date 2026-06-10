@@ -174,6 +174,7 @@ const PatientDetail: React.FC = () => {
   // New Evolution State
   const [isEvolutionModalOpen, setIsEvolutionModalOpen] = useState(false);
   const [isUploadingEvolution, setIsUploadingEvolution] = useState(false);
+  const [isDragActive, setIsDragActive] = useState(false);
   const [newEvolution, setNewEvolution] = useState({
     title: "",
     date: new Date().toISOString().split("T")[0],
@@ -404,6 +405,31 @@ const PatientDetail: React.FC = () => {
       alert("Error adding evolution");
     } finally {
       setIsUploadingEvolution(false);
+    }
+  };
+
+  const handleDrag = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setIsDragActive(true);
+    } else if (e.type === "dragleave") {
+      setIsDragActive(false);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragActive(false);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      setNewEvolution((prev) => ({
+        ...prev,
+        files: [
+          ...prev.files,
+          ...Array.from(e.dataTransfer.files),
+        ],
+      }));
     }
   };
 
@@ -2129,53 +2155,69 @@ const PatientDetail: React.FC = () => {
                 </label>
 
                 <label
+                  htmlFor="evolution-file-input"
+                  onDragEnter={handleDrag}
+                  onDragOver={handleDrag}
+                  onDragLeave={handleDrag}
+                  onDrop={handleDrop}
                   style={{
                     display: "flex",
                     flexDirection: "column",
                     alignItems: "center",
                     justifyContent: "center",
                     padding: "1.5rem",
-                    border: "2px dashed rgba(255, 255, 255, 0.2)",
+                    border: `2px dashed ${isDragActive ? "#38bdf8" : "rgba(255, 255, 255, 0.2)"}`,
                     borderRadius: "0.5rem",
-                    background: "rgba(15, 23, 42, 0.3)",
+                    background: isDragActive
+                      ? "rgba(56, 189, 248, 0.1)"
+                      : "rgba(15, 23, 42, 0.3)",
                     cursor: "pointer",
                     transition: "all 0.2s ease",
-                    color: "#94a3b8",
+                    color: isDragActive ? "#38bdf8" : "#94a3b8",
                     marginBottom: "1rem",
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.background = "rgba(15, 23, 42, 0.6)";
-                    e.currentTarget.style.borderColor =
-                      "rgba(56, 189, 248, 0.5)";
-                    e.currentTarget.style.color = "#38bdf8";
+                    if (!isDragActive) {
+                      e.currentTarget.style.background = "rgba(15, 23, 42, 0.6)";
+                      e.currentTarget.style.borderColor =
+                        "rgba(56, 189, 248, 0.5)";
+                      e.currentTarget.style.color = "#38bdf8";
+                    }
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.background = "rgba(15, 23, 42, 0.3)";
-                    e.currentTarget.style.borderColor =
-                      "rgba(255, 255, 255, 0.2)";
-                    e.currentTarget.style.color = "#94a3b8";
+                    if (!isDragActive) {
+                      e.currentTarget.style.background = "rgba(15, 23, 42, 0.3)";
+                      e.currentTarget.style.borderColor =
+                        "rgba(255, 255, 255, 0.2)";
+                      e.currentTarget.style.color = "#94a3b8";
+                    }
                   }}
                 >
                   <FaUpload size={24} style={{ marginBottom: "0.5rem" }} />
-                  <span>Click para elegir archivos</span>
-                  <input
-                    type="file"
-                    multiple
-                    onChange={(e) => {
-                      if (e.target.files) {
-                        setNewEvolution((prev) => ({
-                          ...prev,
-                          files: [
-                            ...prev.files,
-                            ...Array.from(e.target.files!),
-                          ],
-                        }));
-                        e.target.value = ""; // Reset input to allow adding same file again if removed
-                      }
-                    }}
-                    style={{ display: "none" }}
-                  />
+                  <span>
+                    {isDragActive
+                      ? "Arrastra para soltar"
+                      : "Click para elegir archivos o arrastra aquí"}
+                  </span>
                 </label>
+                <input
+                  id="evolution-file-input"
+                  type="file"
+                  multiple
+                  onChange={(e) => {
+                    if (e.target.files) {
+                      setNewEvolution((prev) => ({
+                        ...prev,
+                        files: [
+                          ...prev.files,
+                          ...Array.from(e.target.files!),
+                        ],
+                      }));
+                      e.target.value = ""; // Reset input to allow adding same file again if removed
+                    }
+                  }}
+                  style={{ display: "none" }}
+                />
 
                 {newEvolution.files.length > 0 && (
                   <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
@@ -2206,6 +2248,7 @@ const PatientDetail: React.FC = () => {
                           {file.name}
                         </span>
                         <button
+                          type="button"
                           onClick={() =>
                             setNewEvolution((prev) => ({
                               ...prev,

@@ -16,6 +16,16 @@ import { ImportPatientsModal, ParsedPatient } from '../components/ImportPatients
 import { InvitePatientModal } from '../components/Patients/InvitePatientModal';
 import { supabase } from '../services/supabaseClient';
 
+const formatDateOfBirth = (dob: string | undefined | null) => {
+    if (!dob) return '-';
+    const datePart = dob.split('T')[0];
+    const parts = datePart.split('-');
+    if (parts.length === 3) {
+        return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    }
+    return dob;
+};
+
 const fadeIn = keyframes`
   from { opacity: 0; }
   to { opacity: 1; }
@@ -1273,6 +1283,7 @@ const Patients: React.FC = () => {
                                     <div>
                                         <SectionHeader style={{ marginTop: 0 }}>Datos Personales</SectionHeader>
                                         <p><strong>DNI:</strong> {selectedPatient.document_number || '-'}</p>
+                                        <p><strong>Fecha de Nacimiento:</strong> {formatDateOfBirth(selectedPatient.date_of_birth)}</p>
                                         <p><strong>Teléfono:</strong> {selectedPatient.phone || '-'}</p>
                                         <p><strong>Dirección:</strong> {selectedPatient.address || '-'}</p>
                                         <p><strong>Límite Mensual:</strong> {selectedPatient.monthly_limit}g</p>

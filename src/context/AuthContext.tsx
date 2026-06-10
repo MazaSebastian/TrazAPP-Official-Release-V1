@@ -40,6 +40,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Refs to hold mutable state inside event listeners without forcing re-renders
   const isIdleWarningOpenRef = React.useRef(false); // Fix dependency cycle
   const lastActivityRef = React.useRef<number>(Date.now());
+  const expiryTimeRef = React.useRef<number | null>(null);
   const warningTimerRef = React.useRef<NodeJS.Timeout | null>(null);
   const countdownIntervalRef = React.useRef<NodeJS.Timeout | null>(null);
 
@@ -47,6 +48,44 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   useEffect(() => {
     isIdleWarningOpenRef.current = isIdleWarningOpen;
   }, [isIdleWarningOpen]);
+
+  const triggerSessionExpiration = React.useCallback(() => {
+    if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
+    if (warningTimerRef.current) clearTimeout(warningTimerRef.current);
+    
+    // Hard reset logic to guarantee they are kicked out even if React state is stale
+    localStorage.clear();
+    localStorage.setItem('session_timeout_flag', 'true');
+    
+    // Attempt to gracefully sign out in the background, but primarily force the redirect
+    if (supabase) {
+      supabase.auth.signOut().catch(e => console.warn('Silent signout error:', e));
+    }
+    
+    // Note: window.location.href bypasses React Router so the app fully reloads
+    setTimeout(() => {
+       window.location.href = '/login'; 
+    }, 100);
+  }, []);
+
+  const startCountdown = React.useCallback((expiryTime: number) => {
+    if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
+
+    const updateCountdown = () => {
+      const now = Date.now();
+      const remaining = Math.max(0, Math.round((expiryTime - now) / 1000));
+      setIdleCountdown(remaining);
+
+      if (remaining <= 0) {
+        triggerSessionExpiration();
+      }
+    };
+
+    // Run once immediately
+    updateCountdown();
+
+    countdownIntervalRef.current = setInterval(updateCountdown, 1000);
+  }, [triggerSessionExpiration]);
 
   const resetActivity = React.useCallback(() => {
     // If warning is already open, user must explicitly click "Keep Session"
@@ -61,32 +100,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // Set new timer to trigger warning
     warningTimerRef.current = setTimeout(() => {
       setIsIdleWarningOpen(true);
-      setIdleCountdown(WARNING_DURATION);
-      
-      // Start countdown
-      countdownIntervalRef.current = setInterval(() => {
-        setIdleCountdown((prev) => {
-          if (prev <= 1) {
-            // Time's up! Nuke the session
-            if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
-            
-            // Hard reset logic to guarantee they are kicked out even if React state is stale
-            localStorage.clear();
-            localStorage.setItem('session_timeout_flag', 'true');
-            
-            // Attempt to gracefully sign out in the background, but primarily force the redirect
-            // Note: window.location.href bypasses React Router so the app fully reloads
-            setTimeout(() => {
-               window.location.href = '/login'; 
-            }, 100);
-            
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
+      const expiryTime = Date.now() + WARNING_DURATION * 1000;
+      expiryTimeRef.current = expiryTime;
+      startCountdown(expiryTime);
     }, IDLE_TIMEOUT);
-  }, []); // Empty deps because we use refs for mutable state check
+  }, [startCountdown]);
 
   const continueSession = () => {
     setIsIdleWarningOpen(false);
@@ -114,14 +132,47 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       window.addEventListener(event, handleActivity, { passive: true });
     });
 
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        const elapsed = Date.now() - lastActivityRef.current;
+        const totalTimeout = IDLE_TIMEOUT + WARNING_DURATION * 1000;
+
+        if (elapsed >= totalTimeout) {
+          triggerSessionExpiration();
+        } else if (elapsed >= IDLE_TIMEOUT) {
+          setIsIdleWarningOpen(true);
+          const expiryTime = lastActivityRef.current + totalTimeout;
+          expiryTimeRef.current = expiryTime;
+          startCountdown(expiryTime);
+        } else {
+          if (isIdleWarningOpenRef.current) {
+            setIsIdleWarningOpen(false);
+          }
+          if (warningTimerRef.current) clearTimeout(warningTimerRef.current);
+          if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
+
+          const timeRemaining = IDLE_TIMEOUT - elapsed;
+          warningTimerRef.current = setTimeout(() => {
+            setIsIdleWarningOpen(true);
+            const expiryTime = Date.now() + WARNING_DURATION * 1000;
+            expiryTimeRef.current = expiryTime;
+            startCountdown(expiryTime);
+          }, timeRemaining);
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
     return () => {
       events.forEach(event => {
         window.removeEventListener(event, handleActivity);
       });
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
       if (warningTimerRef.current) clearTimeout(warningTimerRef.current);
       if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
     };
-  }, [user, resetActivity]);
+  }, [user, resetActivity, startCountdown, triggerSessionExpiration]);
   // --- END INACTIVITY TRACKING LOGIC ---
 
   useEffect(() => {

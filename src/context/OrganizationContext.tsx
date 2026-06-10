@@ -11,7 +11,6 @@ interface OrganizationContextType {
     organizations: Organization[];
     isLoading: boolean;
     selectOrganization: (orgId: string) => void;
-    updateOnboardingState: (onboardingCompleted: boolean, enabledModules: any) => Promise<void>;
 }
 
 const OrganizationContext = createContext<OrganizationContextType | undefined>(undefined);
@@ -167,19 +166,8 @@ export const OrganizationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         }
     };
 
-    const updateOnboardingState = async (onboardingCompleted: boolean, enabledModules: any) => {
-        if (!currentOrganization) return;
-        const updatedOrg = await organizationService.updateOrganizationOnboarding(
-            currentOrganization.id,
-            onboardingCompleted,
-            enabledModules
-        );
-        setCurrentOrganization(updatedOrg);
-        setOrganizations(prev => prev.map(o => o.id === updatedOrg.id ? updatedOrg : o));
-    };
-
     return (
-        <OrganizationContext.Provider value={{ currentOrganization, currentRole, organizations, isLoading, selectOrganization, updateOnboardingState }}>
+        <OrganizationContext.Provider value={{ currentOrganization, currentRole, organizations, isLoading, selectOrganization }}>
             {children}
         </OrganizationContext.Provider>
     );
