@@ -718,6 +718,7 @@ const Dispensary: React.FC = () => {
                                 value={dispenseForm.memberId}
                                 onChange={val => setDispenseForm({ ...dispenseForm, memberId: val })}
                                 placeholder="Seleccionar Paciente..."
+                                isSearchable={true}
                                 options={patients.map(p => ({
                                     value: p.profile_id,
                                     label: `${p.profile?.full_name || 'Sin Nombre'} (Límite: ${p.monthly_limit}g)`

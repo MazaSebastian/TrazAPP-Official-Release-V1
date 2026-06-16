@@ -70,7 +70,7 @@ const OptionItem = styled.div<{ $isSelected: boolean }>`
   }
 `;
 
-const GroupLabel = styled.div`
+const GroupLabel = styled.div<{ $isSearchable?: boolean }>`
   padding: 0.5rem 1rem;
   font-size: 0.85rem;
   font-weight: 700;
@@ -79,12 +79,50 @@ const GroupLabel = styled.div`
   text-transform: uppercase;
   letter-spacing: 0.05em;
   position: sticky;
-  top: 0;
+  top: ${p => p.$isSearchable ? '48px' : '0'};
   z-index: 10;
 `;
 
 const HiddenSelect = styled.select`
   display: none;
+`;
+
+const SearchInputContainer = styled.div`
+  padding: 0.5rem;
+  position: sticky;
+  top: 0;
+  background: rgba(15, 23, 42, 0.95);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  z-index: 20;
+  box-sizing: border-box;
+`;
+
+const SearchInput = styled.input`
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  background: rgba(30, 41, 59, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 0.375rem;
+  color: #f8fafc;
+  font-size: 0.875rem;
+  outline: none;
+  transition: all 0.2s;
+
+  &:focus {
+    border-color: #4ade80;
+    box-shadow: 0 0 0 2px rgba(74, 222, 128, 0.1);
+  }
+
+  &::placeholder {
+    color: #64748b;
+  }
+`;
+
+const NoResults = styled.div`
+  padding: 0.75rem 1rem;
+  color: #64748b;
+  text-align: center;
+  font-size: 0.9rem;
 `;
 
 interface Option {
@@ -100,14 +138,24 @@ interface CustomSelectProps {
     placeholder?: string;
     triggerStyle?: React.CSSProperties;
     disabled?: boolean;
+    isSearchable?: boolean;
 }
 
-export const CustomSelect: React.FC<CustomSelectProps> = ({ value, onChange, options, placeholder = "Seleccionar...", triggerStyle, disabled = false }) => {
+export const CustomSelect: React.FC<CustomSelectProps> = ({
+    value,
+    onChange,
+    options,
+    placeholder = "Seleccionar...",
+    triggerStyle,
+    disabled = false,
+    isSearchable = false
+}) => {
     const [isOpen, setIsOpen] = useState(false);
     const [coords, setCoords] = useState({ top: 0, left: 0, width: 0, isUpwards: false });
+    const [searchTerm, setSearchTerm] = useState('');
     const containerRef = useRef<HTMLDivElement>(null);
-
     const dropdownRef = useRef<HTMLDivElement>(null);
+    const searchInputRef = useRef<HTMLInputElement>(null);
 
     const selectedOption = options.find(opt => opt.value === value);
 
@@ -147,6 +195,23 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({ value, onChange, opt
             setIsOpen(!isOpen);
         }
     };
+
+    // Reset search term when dropdown closes
+    useEffect(() => {
+        if (!isOpen) {
+            setSearchTerm('');
+        }
+    }, [isOpen]);
+
+    // Auto-focus search input when opening
+    useEffect(() => {
+        if (isOpen && isSearchable && searchInputRef.current) {
+            const timeoutId = setTimeout(() => {
+                searchInputRef.current?.focus();
+            }, 50);
+            return () => clearTimeout(timeoutId);
+        }
+    }, [isOpen, isSearchable]);
 
     // Close when clicking outside - Updated to handle Portal clicks
     useEffect(() => {
@@ -190,6 +255,13 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({ value, onChange, opt
         setIsOpen(false);
     };
 
+    // Filter options based on search term (matching label or group name)
+    const filteredOptions = options.filter(opt => {
+        const matchesLabel = opt.label.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesGroup = opt.group ? opt.group.toLowerCase().includes(searchTerm.toLowerCase()) : false;
+        return matchesLabel || matchesGroup;
+    });
+
     return (
         <SelectContainer ref={containerRef}>
             <SelectTrigger $isOpen={isOpen} $disabled={disabled} onClick={toggleOpen} style={triggerStyle}>
@@ -203,11 +275,26 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({ value, onChange, opt
                     $coords={coords}
                     onMouseDown={(e) => e.stopPropagation()} // Prevent closing when clicking scrollbar/empty space in dropdown
                 >
+                    {isSearchable && (
+                        <SearchInputContainer>
+                            <SearchInput
+                                ref={searchInputRef}
+                                type="text"
+                                placeholder="Buscar..."
+                                value={searchTerm}
+                                onChange={e => setSearchTerm(e.target.value)}
+                            />
+                        </SearchInputContainer>
+                    )}
                     {(() => {
-                        const hasGroups = options.some(opt => opt.group);
+                        if (filteredOptions.length === 0) {
+                            return <NoResults>No se encontraron resultados</NoResults>;
+                        }
+
+                        const hasGroups = filteredOptions.some(opt => opt.group);
 
                         if (!hasGroups) {
-                            return options.map(option => (
+                            return filteredOptions.map(option => (
                                 <OptionItem
                                     key={option.value}
                                     $isSelected={option.value === value}
@@ -219,7 +306,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({ value, onChange, opt
                         }
 
                         // Group Options
-                        const grouped = options.reduce((acc, opt) => {
+                        const grouped = filteredOptions.reduce((acc, opt) => {
                             const groupName = opt.group || 'Sin Grupo';
                             if (!acc[groupName]) acc[groupName] = [];
                             acc[groupName].push(opt);
@@ -228,7 +315,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({ value, onChange, opt
 
                         return Object.entries(grouped).map(([groupName, groupOptions]) => (
                             <React.Fragment key={groupName}>
-                                <GroupLabel>{groupName}</GroupLabel>
+                                <GroupLabel $isSearchable={isSearchable}>{groupName}</GroupLabel>
                                 {groupOptions.map(option => (
                                     <OptionItem
                                         key={option.value}

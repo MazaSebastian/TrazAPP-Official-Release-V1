@@ -450,7 +450,10 @@ const PatientDetail: React.FC = () => {
   const ProfileHeaderContent = (
     <Header>
       <div>
-        <h1>{patient?.name || "Perfil del Paciente"}</h1>
+        <h1>
+          Perfil del Paciente
+          {patient?.profile?.full_name ? ` - ${patient.profile.full_name}` : patient?.name ? ` - ${patient.name}` : ""}
+        </h1>
         <div
           style={{
             display: "flex",
