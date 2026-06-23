@@ -158,7 +158,7 @@ export const deviceService = {
   /**
    * Update device alias and room assignment.
    */
-  async updateDevice(deviceId: string, updates: { alias?: string; room_id?: string | null }): Promise<void> {
+  async updateDevice(deviceId: string, updates: { alias?: string | null; room_id?: string | null }): Promise<void> {
     if (!supabase) return;
 
     const { error } = await supabase

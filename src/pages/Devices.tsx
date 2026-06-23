@@ -3,6 +3,7 @@ import styled, { keyframes } from 'styled-components';
 import { FaMicrochip, FaPlus, FaTimes, FaWifi, FaTimesCircle, FaThermometerHalf, FaTint, FaLeaf, FaEdit, FaTrash, FaInfoCircle, FaSync } from 'react-icons/fa';
 import { deviceService, TrazAppDevice, LinkDevicePayload } from '../services/deviceService';
 import { supabase, getSelectedOrgId } from '../services/supabaseClient';
+import { TrazAppDeviceDetailModal } from '../components/TrazAppDeviceDetailModal';
 
 // ─── Animations ──────────────────────────────────────────────────────────────
 const pulse = keyframes`
@@ -120,11 +121,13 @@ const DeviceCard = styled.div<{ $online: boolean }>`
   border-radius: 1.25rem;
   padding: 1.5rem;
   animation: ${slideUp} 0.4s ease;
-  transition: border-color 0.3s, box-shadow 0.3s;
+  transition: border-color 0.3s, box-shadow 0.3s, transform 0.2s;
   box-shadow: ${p => p.$online ? '0 0 0 1px rgba(16,185,129,0.1), 0 8px 32px rgba(0,0,0,0.3)' : '0 8px 32px rgba(0,0,0,0.3)'};
+  cursor: pointer;
 
   &:hover {
     border-color: ${p => p.$online ? 'rgba(16, 185, 129, 0.5)' : 'rgba(255,255,255,0.12)'};
+    transform: translateY(-2px);
   }
 `;
 
@@ -171,9 +174,9 @@ const StatusBadge = styled.div<{ $online: boolean }>`
   }
 `;
 
-const MetricsGrid = styled.div`
+const MetricsGrid = styled.div<{ $cols?: number }>`
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(${p => p.$cols || 2}, 1fr);
   gap: 0.75rem;
   margin-bottom: 1rem;
 `;
@@ -528,6 +531,7 @@ const Devices: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [selectedDevice, setSelectedDevice] = useState<TrazAppDevice | null>(null);
   const [linking, setLinking] = useState(false);
   const [linkError, setLinkError] = useState<string | null>(null);
   const [form, setForm] = useState<LinkDevicePayload>({ device_id: '', pin: '', alias: '' });
@@ -637,7 +641,7 @@ const Devices: React.FC = () => {
           const tempColor = deviceService.getTempColor(s?.temp_c);
 
           return (
-            <DeviceCard key={device.device_id} $online={online}>
+            <DeviceCard key={device.device_id} $online={online} onClick={() => setSelectedDevice(device)}>
               <CardHeader>
                 <DeviceTitle>
                   <h3>{device.alias || device.device_id}</h3>
@@ -649,9 +653,12 @@ const Devices: React.FC = () => {
                 </StatusBadge>
               </CardHeader>
 
-              <MetricsGrid>
+              <MetricsGrid $cols={s?.soil_pct !== undefined && s?.soil_pct !== null ? 3 : 2}>
                 <MetricValue value={s?.temp_c} unit="°C" label="Temperatura" icon={<FaThermometerHalf />} color={tempColor} />
-                <MetricValue value={s?.hum_pct} unit="%" label="Humedad" icon={<FaTint />} color="#3b82f6" />
+                <MetricValue value={s?.hum_pct} unit="%" label="Ambiente" icon={<FaTint />} color="#3b82f6" />
+                {s?.soil_pct !== undefined && s?.soil_pct !== null && (
+                  <MetricValue value={s?.soil_pct} unit="%" label="Suelo" icon={<FaLeaf />} color="#14b8a6" />
+                )}
               </MetricsGrid>
 
               <VpdBadge $color={vpdColor}>
@@ -682,7 +689,7 @@ const Devices: React.FC = () => {
                   {device.firmware && <span style={{ marginLeft: 8, color: '#334155' }}>{device.firmware}</span>}
                 </span>
                 <div className="actions">
-                  <IconBtn title="Desvincular" $danger onClick={() => handleUnlink(device.device_id)}>
+                  <IconBtn title="Desvincular" $danger onClick={(e) => { e.stopPropagation(); handleUnlink(device.device_id); }}>
                     <FaTrash />
                   </IconBtn>
                 </div>
@@ -751,6 +758,14 @@ const Devices: React.FC = () => {
             </ModalActions>
           </Modal>
         </Overlay>
+      )}
+
+      {selectedDevice && (
+        <TrazAppDeviceDetailModal
+          device={selectedDevice}
+          onClose={() => setSelectedDevice(null)}
+          onUpdate={fetchDevices}
+        />
       )}
     </Container>
   );
