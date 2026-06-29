@@ -4,6 +4,7 @@ import { FaMicrochip, FaPlus, FaTimes, FaWifi, FaTimesCircle, FaThermometerHalf,
 import { deviceService, TrazAppDevice, LinkDevicePayload } from '../services/deviceService';
 import { supabase, getSelectedOrgId } from '../services/supabaseClient';
 import { TrazAppDeviceDetailModal } from '../components/TrazAppDeviceDetailModal';
+import toast from 'react-hot-toast';
 
 // ─── Animations ──────────────────────────────────────────────────────────────
 const pulse = keyframes`
@@ -598,8 +599,14 @@ const Devices: React.FC = () => {
 
   const handleUnlink = async (deviceId: string) => {
     if (!window.confirm('¿Desvincular este dispositivo de tu organización?')) return;
-    await deviceService.unlinkDevice(deviceId);
-    setDevices(prev => prev.filter(d => d.device_id !== deviceId));
+    try {
+      await deviceService.unlinkDevice(deviceId);
+      setDevices(prev => prev.filter(d => d.device_id !== deviceId));
+      toast.success('Dispositivo desvinculado con éxito');
+    } catch (err: any) {
+      console.error('[Devices] handleUnlink error:', err);
+      toast.error('Error al desvincular el dispositivo: ' + (err.message || 'Error de base de datos'));
+    }
   };
 
   return (

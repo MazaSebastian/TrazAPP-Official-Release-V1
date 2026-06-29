@@ -142,15 +142,7 @@ export const deviceService = {
     if (!supabase) return;
 
     const { error } = await supabase
-      .from('trazapp_devices')
-      .update({
-        organization_id: null,
-        user_id:         null,
-        is_provisioned:  false,
-        alias:           null,
-        room_id:         null,
-      })
-      .eq('device_id', deviceId);
+      .rpc('unlink_device', { p_device_id: deviceId });
 
     if (error) throw error;
   },

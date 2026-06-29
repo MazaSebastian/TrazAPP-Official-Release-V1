@@ -59,7 +59,7 @@ CREATE POLICY "Users can view their org devices"
 -- Only the Super Admin (via service role / Edge Function) can INSERT new devices.
 -- The link-device API route will use service_role to assign org_id after PIN verification.
 
--- Users can update their own org's devices (alias, room assignment)
+-- Users can update their own org's devices (alias, room assignment, or unlink device)
 CREATE POLICY "Users can update their org devices"
   ON trazapp_devices FOR UPDATE
   TO authenticated
@@ -70,6 +70,7 @@ CREATE POLICY "Users can update their org devices"
     )
   )
   WITH CHECK (
+    organization_id IS NULL OR
     organization_id IN (
       SELECT organization_id FROM organization_members
       WHERE user_id = auth.uid()
