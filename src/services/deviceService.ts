@@ -4,7 +4,7 @@
 import { supabase, getSelectedOrgId } from './supabaseClient';
 
 const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-const LINK_DEVICE_URL = isLocal ? 'http://localhost:3001/api/link-device' : '/api/link-device';
+const LINK_DEVICE_URL = isLocal ? 'https://software.trazapp.ar/api/link-device' : '/api/link-device';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 

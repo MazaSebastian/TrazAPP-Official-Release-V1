@@ -3,7 +3,7 @@ import axios from 'axios';
 import { supabase } from './supabaseClient';
 
 const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-const API_URL = isLocal ? 'http://localhost:3001/api/tuya' : '/api/tuya';
+const API_URL = isLocal ? 'https://software.trazapp.ar/api/tuya' : '/api/tuya';
 
 export interface DeviceSettings {
     device_id: string;
