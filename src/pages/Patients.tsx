@@ -506,6 +506,7 @@ const Patients: React.FC = () => {
 
                 const updatedData: Partial<Patient> = {
                     id: editingPatientId,
+                    profile_id: patientToEdit?.profile_id,
                     reprocann_number: regForm.reprocannNumber,
                     reprocann_status: regForm.reprocannStatus as any,
                     expiration_date: regForm.expirationDate || undefined,

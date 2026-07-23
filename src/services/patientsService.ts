@@ -90,18 +90,34 @@ export const patientsService = {
         delete payload.profile;
         delete payload.created_at;
 
-        const { data, error } = await supabase
-            .from('aurora_patients')
-            .upsert(payload, { onConflict: 'profile_id' })
-            .select()
-            .single();
+        if (patient.id) {
+            const { data, error } = await supabase
+                .from('aurora_patients')
+                .update(payload)
+                .eq('id', patient.id)
+                .select()
+                .single();
 
-        if (error) {
-            console.error('Error saving patient:', error);
-            throw error;
+            if (error) {
+                console.error('Error updating patient:', error);
+                throw error;
+            }
+
+            return data;
+        } else {
+            const { data, error } = await supabase
+                .from('aurora_patients')
+                .upsert(payload, { onConflict: 'profile_id' })
+                .select()
+                .single();
+
+            if (error) {
+                console.error('Error saving patient:', error);
+                throw error;
+            }
+
+            return data;
         }
-
-        return data;
     },
 
     // Specific method to create a patient from an existing user profile
