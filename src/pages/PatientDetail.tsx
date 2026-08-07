@@ -400,9 +400,23 @@ const PatientDetail: React.FC = () => {
         next_follow_up_months: 6,
         audio_url: null,
       }); // Reset
-    } catch (e) {
-      console.error(e);
-      alert("Error adding evolution");
+    } catch (e: any) {
+      console.error("Error adding evolution:", e);
+      const errorMessage = e?.message || e?.error_description || (typeof e === "string" ? e : "");
+
+      Swal.fire({
+        title: "Error al guardar la evolución",
+        html: `
+          <p class="mb-2">No se pudo registrar la nota de evolución.</p>
+          ${errorMessage ? `<p class="text-xs text-red-300 font-mono bg-red-950/50 p-2.5 rounded border border-red-500/20 mb-3 text-left overflow-auto max-h-24">${errorMessage}</p>` : ""}
+          <p class="text-xs text-slate-300 bg-slate-800/80 p-2 rounded border border-slate-700 text-left">💡 <b>Sugerencia:</b> Si tu sesión estuvo inactiva o hubo un corte de conexión, por favor <b>refrescá la página (F5)</b> e intentá guardar nuevamente.</p>
+        `,
+        icon: "error",
+        background: "rgba(30, 41, 59, 0.95)",
+        color: "#f8fafc",
+        confirmButtonColor: "#3b82f6",
+        customClass: { popup: "glass-modal border border-white/10 rounded-xl" }
+      });
     } finally {
       setIsUploadingEvolution(false);
     }

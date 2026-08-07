@@ -202,7 +202,7 @@ export const patientsService = {
 
         if (uploadError) {
             console.error('Error uploading file:', uploadError);
-            return null;
+            throw uploadError;
         }
 
         // Get Public URL
