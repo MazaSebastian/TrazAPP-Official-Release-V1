@@ -14,7 +14,8 @@ import { getInsumoCategories, createInsumoCategory, deleteInsumoCategory } from 
 import { Plan, TaskType, InsumoCategory, LandingArticle } from '../types';
 import { tasksService } from '../services/tasksService';
 import { supabase } from '../services/supabaseClient';
-import { FaUserPlus, FaUserShield, FaTrash, FaTimes, FaTasks, FaPlus, FaMapMarkerAlt, FaPlay, FaBoxes, FaWrench, FaPalette } from 'react-icons/fa';
+import { FaUserPlus, FaUserShield, FaTrash, FaTimes, FaTasks, FaPlus, FaMapMarkerAlt, FaPlay, FaBoxes, FaWrench, FaPalette, FaRobot } from 'react-icons/fa';
+import { AiAgentsSettings } from '../components/AiAgentsSettings';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import Swal from 'sweetalert2';
 import { MapSelector } from '../components/MapSelector';
@@ -38,57 +39,58 @@ export const scaleUp = keyframes`
 `;
 
 const PageContainer = styled.div`
-  padding: 1rem;
-  padding-top: 1.5rem;
-  max-width: 800px;
+  padding: 2rem 2.5rem;
+  max-width: 1560px;
   margin: 0 auto;
   min-height: 100vh;
   color: #f8fafc;
   
   @media (max-width: 768px) {
-    padding: 1rem;
-    padding-top: 1.5rem; /* Ajustado para eliminar el padding superior excesivo */
+    padding: 1.25rem 1rem;
   }
 `;
 
 const Header = styled.div`
   display: flex;
-  align-items: center;
-  margin-bottom: 2rem;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 2.25rem;
   
   h1 {
-    font-size: 1.875rem;
-    font-weight: 700;
-    color: #f8fafc;
+    font-size: clamp(1.75rem, 3.5vw, 2.5rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
     margin: 0;
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: 0.85rem;
     
     @media (max-width: 768px) {
-      justify-content: center;
-      width: 100%;
+      font-size: 1.4rem;
     }
   }
 `;
 
 const Section = styled.div`
-  background: rgba(30, 41, 59, 0.6);
-  border-radius: 1rem;
-  padding: 2rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+  background: rgba(17, 24, 39, 0.7);
+  backdrop-filter: blur(16px);
+  border-radius: 1.5rem;
+  padding: 2rem 2.25rem;
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.35);
   margin-bottom: 2rem;
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 `;
 
 const SectionHeader = styled.h2`
   font-size: 1.25rem;
-  font-weight: 600;
+  font-weight: 700;
   color: #f8fafc;
   margin: 0 0 1.5rem 0;
-  padding-bottom: 0.75rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -97,7 +99,7 @@ const SectionHeader = styled.h2`
 
   @media (max-width: 768px) {
     flex-direction: column;
-    align-items: center;    /* Centrado global en móviles */
+    align-items: center;
     text-align: center;
     justify-content: center;
     gap: 1rem;
@@ -117,23 +119,23 @@ const FormGrid = styled.div`
 `;
 
 const SaveButton = styled.button`
-  background: rgba(var(--primary-color-rgb, 168, 85, 247), 0.2);
-  color: #d8b4fe;
-  border: 1px solid rgba(var(--primary-color-rgb, 168, 85, 247), 0.5);
-  padding: 0.75rem 1.5rem;
-  border-radius: 0.5rem;
-  font-weight: 600;
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: #ffffff;
+  border: none;
+  font-weight: 700;
+  font-size: 0.925rem;
+  padding: 0.75rem 1.4rem;
+  border-radius: 0.875rem;
   cursor: pointer;
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  transition: all 0.2s;
-  backdrop-filter: blur(8px);
+  gap: 0.6rem;
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.35);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   
   &:hover:not(:disabled) {
-    background: rgba(var(--primary-color-rgb, 168, 85, 247), 0.3);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(16, 185, 129, 0.5);
   }
   
   &:disabled {
@@ -298,8 +300,8 @@ const ModalContentDetail = styled.div`
 const TabsContainer = styled.div`
   display: flex;
   gap: 1rem;
-  margin-bottom: 2rem;
-  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 2.25rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   overflow-x: auto;
   
   &::-webkit-scrollbar {
@@ -314,21 +316,21 @@ const TabsContainer = styled.div`
 const Tab = styled.button<{ $active: boolean }>`
   background: none;
   border: none;
-  padding: 1rem 1.5rem;
+  padding: 0.85rem 1.5rem;
   font-size: 1rem;
-  font-weight: 600;
-  color: ${props => props.$active ? '#c084fc' : '#94a3b8'};
-  border-bottom: 2px solid ${props => props.$active ? '#c084fc' : 'transparent'};
-  margin-bottom: -2px;
+  font-weight: 700;
+  color: ${props => props.$active ? '#34d399' : '#94a3b8'};
+  border-bottom: 3px solid ${props => props.$active ? '#10b981' : 'transparent'};
+  margin-bottom: -1px;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  transition: color 0.2s;
+  gap: 0.6rem;
+  transition: all 0.2s;
   white-space: nowrap;
 
   &:hover {
-    color: #d8b4fe;
+    color: #f1f5f9;
   }
 `;
 
@@ -338,7 +340,7 @@ const Settings: React.FC = () => {
   const { user, resetTour } = useAuth();
   const { currentOrganization } = useOrganization();
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'users' | 'customization' | 'weather' | 'system' | 'web'>('users');
+  const [activeTab, setActiveTab] = useState<'users' | 'agents' | 'customization' | 'weather' | 'system' | 'web'>('users');
   const [saving, setSaving] = useState(false);
   const [genetics, setGenetics] = useState<Genetic[]>([]);
 
@@ -1851,6 +1853,9 @@ const Settings: React.FC = () => {
         <Tab $active={activeTab === 'users'} onClick={() => setActiveTab('users')}>
           <FaUserShield /> Roles y Usuarios
         </Tab>
+        <Tab $active={activeTab === 'agents'} onClick={() => setActiveTab('agents')}>
+          <FaRobot /> Agentes IA & API Keys
+        </Tab>
         <Tab $active={activeTab === 'web'} onClick={() => setActiveTab('web')}>
           <FaPalette /> Mi Web
         </Tab>
@@ -1866,6 +1871,11 @@ const Settings: React.FC = () => {
       </TabsContainer>
 
       {activeTab === 'users' && renderUsersTab()}
+      {activeTab === 'agents' && (
+        <Section>
+          <AiAgentsSettings />
+        </Section>
+      )}
       {activeTab === 'web' && renderWebTab()}
       {activeTab === 'customization' && renderCustomizationTab()}
       {activeTab === 'weather' && renderWeatherTab()}

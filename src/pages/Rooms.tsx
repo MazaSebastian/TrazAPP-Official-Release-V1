@@ -1,518 +1,978 @@
 import React, { useState, useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { useNavigate } from 'react-router-dom';
-import { FaWarehouse, FaPlus, FaThermometerHalf, FaTint, FaEdit, FaTrash, FaMapMarkedAlt } from 'react-icons/fa';
+import {
+  FaWarehouse,
+  FaPlus,
+  FaThermometerHalf,
+  FaTint,
+  FaEdit,
+  FaTrash,
+  FaMapMarkedAlt,
+  FaSearch,
+  FaArrowRight,
+  FaLayerGroup,
+  FaSeedling,
+  FaLeaf,
+  FaClock
+} from 'react-icons/fa';
 import { roomsService } from '../services/roomsService';
 import { Room } from '../types/rooms';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ConfirmModal } from '../components/ConfirmModal';
 import { ToastModal } from '../components/ToastModal';
 
-const fadeIn = keyframes`
-  from { opacity: 0; transform: translateY(10px); }
+const floatIn = keyframes`
+  from { opacity: 0; transform: translateY(16px); }
   to { opacity: 1; transform: translateY(0); }
 `;
 
-const Container = styled.div`
-  padding: 2rem;
-  padding-top: 1.5rem;
-  max-width: 1400px;
-  margin: 0 auto;
-  animation: ${fadeIn} 0.5s ease-in-out;
+const fadeIn = keyframes`
+  from { opacity: 0; }
+  to { opacity: 1; }
 `;
 
-const Header = styled.div`
+const fadeOut = keyframes`
+  from { opacity: 1; }
+  to { opacity: 0; }
+`;
+
+const scaleIn = keyframes`
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+`;
+
+const scaleOut = keyframes`
+  from { transform: scale(1); opacity: 1; }
+  to { transform: scale(0.95); opacity: 0; }
+`;
+
+const Container = styled.div`
+  padding: 2rem 2.5rem;
+  max-width: 1560px;
+  margin: 0 auto;
+  min-height: 100vh;
+  background: #090d16;
+  color: #f8fafc;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  animation: ${floatIn} 0.4s ease-out;
+
+  @media (max-width: 768px) {
+    padding: 1.25rem 1rem;
+  }
+`;
+
+const HeaderRow = styled.div`
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
+  align-items: flex-end;
+  margin-bottom: 2.25rem;
 
+  @media (max-width: 900px) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.25rem;
+  }
+`;
+
+const TitleBlock = styled.div`
   h1 {
-    font-size: 2rem;
+    font-size: clamp(1.75rem, 4vw, 2.5rem);
     font-weight: 800;
-    color: #1a202c;
-    background: linear-gradient(135deg, #2f855a 0%, #38b2ac 100%);
+    letter-spacing: -0.03em;
+    background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     margin: 0;
   }
+
+  p {
+    color: #94a3b8;
+    font-size: 0.975rem;
+    margin-top: 0.4rem;
+    font-weight: 500;
+  }
 `;
 
-const CreateButton = styled.button`
-  background: #3182ce;
-  color: white;
-  padding: 0.75rem 1.5rem;
-  border-radius: 0.75rem;
-  border: none;
-  font-weight: 600;
-  font-size: 1rem;
+const ButtonGroup = styled.div`
   display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  gap: 0.85rem;
+  flex-wrap: wrap;
+`;
+
+const SecondaryButton = styled.button`
+  background: rgba(255, 255, 255, 0.05);
+  color: #e2e8f0;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  font-weight: 700;
+  font-size: 0.9rem;
+  padding: 0.75rem 1.3rem;
+  border-radius: 0.875rem;
   cursor: pointer;
-  transition: all 0.2s;
-  box-shadow: 0 4px 6px rgba(49, 130, 206, 0.3);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  backdrop-filter: blur(12px);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 
   &:hover {
-    background: #2b6cb0;
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    border-color: rgba(255, 255, 255, 0.25);
     transform: translateY(-2px);
+  }
+`;
+
+const PrimaryButton = styled.button`
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: #ffffff;
+  border: none;
+  font-weight: 700;
+  font-size: 0.925rem;
+  padding: 0.75rem 1.4rem;
+  border-radius: 0.875rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.35);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(16, 185, 129, 0.5);
+  }
+`;
+
+const KPIGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2.25rem;
+`;
+
+const KPICard = styled.div<{ $glowColor?: string }>`
+  background: rgba(17, 24, 39, 0.7);
+  backdrop-filter: blur(16px);
+  border-radius: 1.25rem;
+  padding: 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.35);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &:hover {
+    transform: translateY(-4px);
+    border-color: ${props => props.$glowColor || 'rgba(16, 185, 129, 0.4)'};
+    box-shadow: 0 20px 35px -5px rgba(0, 0, 0, 0.5);
+  }
+
+  .kpi-header {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    color: #94a3b8;
+    text-transform: uppercase;
+    margin-bottom: 0.75rem;
+
+    .icon {
+      color: ${props => props.$glowColor || '#34d399'};
+      font-size: 0.95rem;
+    }
+  }
+
+  .value {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #ffffff;
+    margin-bottom: 0.3rem;
+  }
+
+  .sub {
+    font-size: 0.825rem;
+    color: #64748b;
+    font-weight: 500;
+  }
+`;
+
+const FilterRow = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.75rem;
+  gap: 1rem;
+  flex-wrap: wrap;
+
+  .search-box {
+    background: rgba(17, 24, 39, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 0.875rem;
+    padding: 0.6rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    width: 320px;
+    backdrop-filter: blur(12px);
+
+    input {
+      background: transparent;
+      border: none;
+      color: #f1f5f9;
+      font-size: 0.9rem;
+      width: 100%;
+      outline: none;
+
+      &::placeholder {
+        color: #64748b;
+      }
+    }
+
+    svg {
+      color: #64748b;
+    }
+  }
+
+  .filter-chips {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+`;
+
+const FilterChip = styled.button<{ $active?: boolean }>`
+  background: ${props => props.$active ? 'rgba(16, 185, 129, 0.15)' : 'rgba(31, 41, 55, 0.5)'};
+  color: ${props => props.$active ? '#34d399' : '#94a3b8'};
+  border: 1px solid ${props => props.$active ? 'rgba(16, 185, 129, 0.35)' : 'rgba(255, 255, 255, 0.07)'};
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 0.5rem 1rem;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    color: #f1f5f9;
+    border-color: rgba(16, 185, 129, 0.3);
   }
 `;
 
 const Grid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 1.75rem;
 `;
 
-const RoomCard = styled.div`
-  background: white;
-  border-radius: 1.25rem;
-  overflow: hidden;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-  border: 1px solid #edf2f7;
-  transition: transform 0.2s, box-shadow 0.2s;
-  cursor: pointer;
+const RoomCard = styled.div<{ $stageColor?: string }>`
+  background: rgba(17, 24, 39, 0.7);
+  backdrop-filter: blur(16px);
+  border-radius: 1.5rem;
+  padding: 1.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.35);
   position: relative;
-
-  &:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-  }
-`;
-
-const RoomHeader = styled.div<{ type: string }>`
-  padding: 1.5rem;
-  background: ${props => {
-        switch (props.type) {
-            case 'vegetation': return '#f0fff4'; // Green
-            case 'flowering': return '#fff5f5'; // Red/Pink
-            case 'drying': return '#fffaf0'; // Orange
-            case 'curing': return '#fffaf0'; // Orange (Legacy)
-            case 'living_soil': return '#e6fffa'; // Teal/Mint
-            default: return '#f7fafc';
-        }
-    }};
-  border-bottom: 1px solid #e2e8f0;
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-
-  .icon {
-    width: 48px;
-    height: 48px;
-    background: white;
-    border-radius: 1rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.5rem;
-    color: ${props => {
-        switch (props.type) {
-            case 'vegetation': return '#38a169';
-            case 'flowering': return '#e53e3e';
-            case 'drying': return '#dd6b20';
-            case 'curing': return '#dd6b20';
-            case 'living_soil': return '#319795';
-            default: return '#718096';
-        }
-    }};
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-  }
-
-  div {
-    flex: 1;
-    h3 { margin: 0; color: #2d3748; font-size: 1.25rem; }
-    span { font-size: 0.875rem; color: #718096; text-transform: uppercase; font-weight: 600; letter-spacing: 0.05em; }
-  }
-`;
-
-const RoomBody = styled.div`
-  padding: 1.5rem;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-`;
-
-const StatRow = styled.div`
-  display: flex;
   justify-content: space-between;
-  align-items: center;
-  padding: 0.5rem 0;
-  border-bottom: 1px solid #f7fafc;
-  
-  &:last-child { border-bottom: none; }
+  min-height: 250px;
+  cursor: pointer;
 
-  .label { display: flex; align-items: center; gap: 0.5rem; color: #718096; font-size: 0.9rem; }
-  .value { font-weight: 600; color: #2d3748; }
-`;
+  &:hover {
+    transform: translateY(-5px);
+    border-color: ${props => props.$stageColor || 'rgba(16, 185, 129, 0.4)'};
+    box-shadow: 0 20px 40px -5px rgba(0, 0, 0, 0.5);
+  }
 
-// Simple Modal Components
-const ModalOverlay = styled.div`
-  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.5); z-index: 1000;
-  display: flex; align-items: center; justify-content: center;
-  backdrop-filter: blur(4px);
-`;
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: ${props => props.$stageColor || 'linear-gradient(90deg, #10b981, #059669)'};
+  }
 
-const ModalContent = styled.div`
-  background: white; padding: 2rem; border-radius: 1rem; width: 90%; max-width: 500px;
-`;
-
-const FormGroup = styled.div`
-  margin-bottom: 1rem;
-  label { display: block; margin-bottom: 0.5rem; font-weight: 600; color: #4a5568; }
-  input, select { width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; }
-`;
-
-const Actions = styled.div`
+  .room-top {
     display: flex;
-    gap: 0.5rem;
-`;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1.25rem;
+  }
 
-const ActionButton = styled.button<{ color: string }>`
-    background: white;
-    border: 1px solid transparent;
-    color: ${p => p.color};
-    width: 32px;
-    height: 32px;
-    border-radius: 0.5rem;
+  .room-header-left {
     display: flex;
     align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.2s;
+    gap: 0.85rem;
 
-    &:hover {
-        background: ${p => p.color}15;
-        border-color: ${p => p.color}30;
+    .icon-wrapper {
+      width: 46px;
+      height: 46px;
+      border-radius: 0.875rem;
+      background: ${props => props.$stageColor ? props.$stageColor + '22' : 'rgba(16, 185, 129, 0.15)'};
+      border: 1px solid ${props => props.$stageColor ? props.$stageColor + '44' : 'rgba(16, 185, 129, 0.3)'};
+      color: ${props => props.$stageColor || '#34d399'};
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
     }
-`;
 
+    .room-info {
+      .room-name {
+        font-size: 1.25rem;
+        font-weight: 800;
+        color: #f8fafc;
+        letter-spacing: -0.02em;
+      }
 
-const rotate = keyframes`
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+      .room-stage-tag {
+        font-size: 0.725rem;
+        font-weight: 800;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: ${props => props.$stageColor || '#34d399'};
+        margin-top: 0.15rem;
+      }
+    }
+  }
+
+  .room-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    .action-icon {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 0.5rem;
+      padding: 0.45rem;
+      cursor: pointer;
+      color: #94a3b8;
+      transition: all 0.2s ease;
+
+      &:hover {
+        color: #38bdf8;
+        border-color: rgba(56, 189, 248, 0.35);
+        background: rgba(56, 189, 248, 0.1);
+      }
+
+      &.delete:hover {
+        color: #f43f5e;
+        border-color: rgba(244, 63, 94, 0.35);
+        background: rgba(244, 63, 94, 0.1);
+      }
+    }
+  }
+
+  .telemetry-block {
+    background: rgba(31, 41, 55, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 0.875rem;
+    padding: 0.85rem 1rem;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+
+    .telemetry-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.2rem;
+
+      .t-label {
+        font-size: 0.725rem;
+        color: #64748b;
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+        font-weight: 600;
+
+        svg {
+          font-size: 0.8rem;
+        }
+      }
+
+      .t-value {
+        font-size: 0.95rem;
+        font-weight: 800;
+        color: #f1f5f9;
+      }
+    }
+
+    .divider {
+      width: 1px;
+      height: 24px;
+      background: rgba(255, 255, 255, 0.08);
+    }
+  }
+
+  .card-footer {
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    padding-top: 1rem;
+    margin-top: 0.85rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    .enter-link {
+      color: #34d399;
+      font-weight: 700;
+      font-size: 0.875rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: all 0.2s ease;
+
+      &:hover {
+        gap: 0.6rem;
+        color: #6ee7b7;
+      }
+    }
+  }
 `;
 
 const CreateCard = styled.div`
-  background: #f7fafc;
-  border-radius: 1.25rem;
-  border: 2px dashed #cbd5e0;
+  background: rgba(17, 24, 39, 0.4);
+  border: 2px dashed rgba(16, 185, 129, 0.35);
+  backdrop-filter: blur(12px);
+  border-radius: 1.5rem;
+  padding: 2rem;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   min-height: 250px;
-  gap: 1rem;
-  transition: all 0.2s ease;
-  opacity: 0.8;
-  color: #a0aec0;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
   &:hover {
-    border-color: #3182ce;
-    color: #3182ce;
-    background: #ebf8ff;
-    opacity: 1;
+    border-color: #10b981;
+    background: rgba(16, 185, 129, 0.08);
+    transform: translateY(-4px);
+    box-shadow: 0 15px 30px -5px rgba(16, 185, 129, 0.2);
+
+    .plus-circle {
+      transform: scale(1.1);
+      background: #10b981;
+      color: #042f2e;
+      box-shadow: 0 0 20px rgba(16, 185, 129, 0.5);
+    }
+
+    .create-text {
+      color: #34d399;
+    }
+  }
+
+  .plus-circle {
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    background: rgba(16, 185, 129, 0.15);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    color: #34d399;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    margin-bottom: 1rem;
+    transition: all 0.3s ease;
+  }
+
+  .create-text {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #e2e8f0;
+    transition: color 0.2s ease;
+    text-align: center;
+  }
+
+  .create-sub {
+    font-size: 0.825rem;
+    color: #64748b;
+    margin-top: 0.35rem;
+    text-align: center;
   }
 `;
 
-const DashedCircle = styled.div`
-  width: 60px;
-  height: 60px;
-  position: relative;
+const ModalOverlay = styled.div`
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.5rem;
-  color: inherit;
-  transition: all 0.5s ease;
+  z-index: 9999;
+  backdrop-filter: blur(8px);
+  animation: ${fadeIn} 0.2s ease-in-out forwards;
+`;
 
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
-    border-radius: 50%;
-    border: 2px dashed currentColor;
-    transition: all 0.5s ease;
-  }
+const ModalContent = styled.div`
+  background: rgba(17, 24, 39, 0.95);
+  backdrop-filter: blur(16px);
+  padding: 2rem;
+  border-radius: 1.5rem;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 20px 40px -5px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  animation: ${scaleIn} 0.2s ease-in-out forwards;
 
-  ${CreateCard}:hover &::before {
-    animation: ${rotate} 10s linear infinite;
+  h2 {
+    margin-top: 0;
+    color: #f8fafc;
+    margin-bottom: 1.5rem;
+    font-size: 1.35rem;
+    font-weight: 700;
   }
 `;
 
-const Rooms: React.FC = () => {
-    const navigate = useNavigate();
-    const [rooms, setRooms] = useState<Room[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [newRoom, setNewRoom] = useState({ name: '', type: 'vegetation', capacity: 0 });
-    const [editingRoomId, setEditingRoomId] = useState<string | null>(null);
-    const [isConfirmDeleteOpen, setIsConfirmDeleteOpen] = useState(false);
-    const [roomToDelete, setRoomToDelete] = useState<string | null>(null);
-    const [isDeleting, setIsDeleting] = useState(false);
-    const [toastAnimate, setToastAnimate] = useState(true);
-    const [toastOpen, setToastOpen] = useState(false);
-    const [toastMessage, setToastMessage] = useState('');
-    const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('info');
+const FormGroup = styled.div`
+  margin-bottom: 1.25rem;
 
-    useEffect(() => {
-        loadRooms(true);
-    }, []);
+  label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #94a3b8;
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
 
-    const loadRooms = async (isInitial = false) => {
-        setLoading(true);
+  input, select {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background: rgba(31, 41, 55, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0.75rem;
+    color: #f8fafc;
+    font-size: 0.95rem;
+    outline: none;
 
-        try {
-            const data = await roomsService.getRooms();
-            setRooms(data);
-        } catch (error) {
-            console.error("Error loading rooms", error);
-            // Fallback for user feedback since setError isn't a state here
-            setToastMessage("Error al cargar las salas. Por favor, intenta de nuevo.");
-            setToastType('error');
-            setToastOpen(true);
-        } finally {
-            setLoading(false);
-        }
-    };
+    &:focus {
+      border-color: #10b981;
+      box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+    }
+  }
 
-    const handleCreateOrUpdateRoom = async () => {
-        if (!newRoom.name) return;
+  select option {
+    background: #111827;
+    color: #f8fafc;
+  }
+`;
 
-        if (editingRoomId) {
-            const success = await roomsService.updateRoom(editingRoomId, {
-                name: newRoom.name,
-                type: newRoom.type as any,
-                capacity: newRoom.capacity
-            });
-            if (success) {
-                setRooms(rooms.map(r => r.id === editingRoomId ? { ...r, ...newRoom, type: newRoom.type as any } : r));
-                closeModal();
-            }
-        } else {
-            const created = await roomsService.createRoom({
-                name: newRoom.name,
-                type: newRoom.type as any,
-                capacity: newRoom.capacity
-            });
+const ModalActions = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 2rem;
 
-            if (created) {
-                setRooms([...rooms, created]);
-                closeModal();
-            }
-        }
-    };
+  button {
+    padding: 0.65rem 1.25rem;
+    border-radius: 0.75rem;
+    font-weight: 700;
+    font-size: 0.875rem;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s ease;
 
-    const handleEdit = (e: React.MouseEvent, room: Room) => {
-        e.stopPropagation(); // Prevent navigation to detail
-        setEditingRoomId(room.id);
-        setNewRoom({
-            name: room.name,
-            type: room.type,
-            capacity: room.capacity
-        });
-        setIsModalOpen(true);
-    };
+    &.cancel {
+      background: rgba(255, 255, 255, 0.05);
+      color: #94a3b8;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      &:hover { background: rgba(255, 255, 255, 0.1); color: #f1f5f9; }
+    }
 
-    const handleDeleteClick = (e: React.MouseEvent, id: string) => {
-        e.stopPropagation(); // Prevent navigation to detail
+    &.save {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: #ffffff;
+      box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+      &:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5); }
+    }
+  }
+`;
 
-        const room = rooms.find(r => r.id === id);
-        const activeBatches = room?.batches?.filter(b => b.stage !== 'completed') || [];
+export const Rooms: React.FC = () => {
+  const navigate = useNavigate();
+  const [rooms, setRooms] = useState<Room[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [typeFilter, setTypeFilter] = useState<string>('all');
 
-        if (activeBatches.length > 0) {
-            setToastMessage(`No puedes eliminar esta sala porque contiene ${activeBatches.length} lote(s) con plantas vivas. Mueve o desecha las plantas primero.`);
-            setToastType('error');
-            setToastAnimate(true);
-            setToastOpen(true);
-            return;
-        }
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [newRoom, setNewRoom] = useState({ name: '', type: 'vegetation', capacity: 0 });
+  const [editingRoomId, setEditingRoomId] = useState<string | null>(null);
 
-        setRoomToDelete(id);
-        setIsConfirmDeleteOpen(true);
-    };
+  const [isConfirmDeleteOpen, setIsConfirmDeleteOpen] = useState(false);
+  const [roomToDelete, setRoomToDelete] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-    const handleConfirmDelete = async () => {
-        if (!roomToDelete) return;
+  const [toastOpen, setToastOpen] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('info');
 
-        setIsDeleting(true);
-        try {
-            const success = await roomsService.deleteRoom(roomToDelete);
-            setIsDeleting(false);
+  useEffect(() => {
+    loadRooms(true);
+  }, []);
 
-            if (success) {
-                setRooms(rooms.filter(r => r.id !== roomToDelete));
-                // Show Success Toast
-                setToastMessage(`La sala ha sido eliminada correctamente.`);
-                setToastType('success');
-                setToastAnimate(false);
-                setToastOpen(true);
-            } else {
-                setToastMessage("Error al eliminar la Sala. Inténtalo de nuevo.");
-                setToastType('error');
-                setToastAnimate(true);
-                setToastOpen(true);
-            }
-        } catch (error: any) {
-            setIsDeleting(false);
-            setToastMessage(error.message || "Error al eliminar la Sala. Inténtalo de nuevo.");
-            setToastType('error');
-            setToastAnimate(true);
-            setToastOpen(true);
-        }
-        setIsConfirmDeleteOpen(false);
-        setRoomToDelete(null);
-    };
+  const loadRooms = async (isInitial = false) => {
+    setLoading(true);
+    try {
+      const data = await roomsService.getRooms();
+      setRooms(data);
+    } catch (error) {
+      console.error("Error loading rooms", error);
+      setToastMessage("Error al cargar las salas. Por favor, intenta de nuevo.");
+      setToastType('error');
+      setToastOpen(true);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    const closeModal = () => {
-        setIsModalOpen(false);
-        setEditingRoomId(null);
-        setNewRoom({ name: '', type: 'vegetation', capacity: 0 });
-    };
+  const handleCreateOrUpdateRoom = async () => {
+    if (!newRoom.name) return;
 
-    if (loading) return <LoadingSpinner fullScreen duration={1500} />;
+    if (editingRoomId) {
+      const success = await roomsService.updateRoom(editingRoomId, {
+        name: newRoom.name,
+        type: newRoom.type as any,
+        capacity: newRoom.capacity
+      });
+      if (success) {
+        setRooms(rooms.map(r => r.id === editingRoomId ? { ...r, ...newRoom, type: newRoom.type as any } : r));
+        closeModal();
+        setToastMessage("Sala actualizada correctamente.");
+        setToastType('success');
+        setToastOpen(true);
+      }
+    } else {
+      const created = await roomsService.createRoom({
+        name: newRoom.name,
+        type: newRoom.type as any,
+        capacity: newRoom.capacity
+      });
 
-    return (
-        <Container>
-            <Header>
-                <h1>Salas de Cultivo</h1>
-                <div style={{ display: 'flex', gap: '1rem' }}>
-                    <CreateButton onClick={() => navigate('/rooms/map')} style={{ background: 'white', color: '#2b6cb0', border: '1px solid #2b6cb0' }}>
-                        <FaMapMarkedAlt /> Mapa Interactivo
-                    </CreateButton>
-                    <CreateButton onClick={() => setIsModalOpen(true)}>
-                        <FaPlus /> Nueva Sala
-                    </CreateButton>
+      if (created) {
+        setRooms([...rooms, created]);
+        closeModal();
+        setToastMessage("Sala creada correctamente.");
+        setToastType('success');
+        setToastOpen(true);
+      }
+    }
+  };
+
+  const handleEdit = (e: React.MouseEvent, room: Room) => {
+    e.stopPropagation();
+    setEditingRoomId(room.id);
+    setNewRoom({
+      name: room.name,
+      type: room.type,
+      capacity: room.capacity
+    });
+    setIsModalOpen(true);
+  };
+
+  const handleDeleteClick = (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    const room = rooms.find(r => r.id === id);
+    const activeBatches = room?.batches?.filter(b => b.stage !== 'completed') || [];
+
+    if (activeBatches.length > 0) {
+      setToastMessage(`No puedes eliminar esta sala porque contiene ${activeBatches.length} lote(s) con plantas vivas.`);
+      setToastType('error');
+      setToastOpen(true);
+      return;
+    }
+
+    setRoomToDelete(id);
+    setIsConfirmDeleteOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!roomToDelete) return;
+    setIsDeleting(true);
+    try {
+      const success = await roomsService.deleteRoom(roomToDelete);
+      setIsDeleting(false);
+
+      if (success) {
+        setRooms(rooms.filter(r => r.id !== roomToDelete));
+        setToastMessage(`La sala ha sido eliminada correctamente.`);
+        setToastType('success');
+        setToastOpen(true);
+      } else {
+        setToastMessage("Error al eliminar la sala.");
+        setToastType('error');
+        setToastOpen(true);
+      }
+    } catch (error: any) {
+      setIsDeleting(false);
+      setToastMessage(error.message || "Error al eliminar la sala.");
+      setToastType('error');
+      setToastOpen(true);
+    }
+    setIsConfirmDeleteOpen(false);
+    setRoomToDelete(null);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setEditingRoomId(null);
+    setNewRoom({ name: '', type: 'vegetation', capacity: 0 });
+  };
+
+  const getStageColor = (type: string) => {
+    switch (type) {
+      case 'vegetation':
+      case 'clones':
+        return '#38bdf8'; // Sky Blue
+      case 'flowering':
+        return '#f59e0b'; // Amber
+      case 'drying':
+      case 'curing':
+        return '#a855f7'; // Purple
+      case 'living_soil':
+        return '#10b981'; // Emerald
+      default:
+        return '#34d399';
+    }
+  };
+
+  const filteredRooms = rooms.filter(room => {
+    const matchesSearch = room.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesType = typeFilter === 'all' || room.type === typeFilter;
+    return matchesSearch && matchesType;
+  });
+
+  const countByType = (t: string) => rooms.filter(r => r.type === t || (t === 'drying' && r.type === 'curing')).length;
+
+  if (loading) return <LoadingSpinner fullScreen duration={1500} />;
+
+  return (
+    <Container>
+      {/* HEADER SECTION */}
+      <HeaderRow>
+        <TitleBlock>
+          <h1>Salas de Cultivo y Zonas de Producción</h1>
+          <p>Gestión de espacios, parámetros ambientales (Temp/Humedad) y capacidad de lotes en tiempo real</p>
+        </TitleBlock>
+
+        <ButtonGroup>
+          <SecondaryButton onClick={() => navigate('/rooms/map')}>
+            <FaMapMarkedAlt /> Mapa Interactivo
+          </SecondaryButton>
+
+          <PrimaryButton onClick={() => setIsModalOpen(true)}>
+            <FaPlus /> Nueva Sala
+          </PrimaryButton>
+        </ButtonGroup>
+      </HeaderRow>
+
+      {/* KPI OVERVIEW GRID */}
+      <KPIGrid>
+        <KPICard $glowColor="#10b981">
+          <div className="kpi-header">
+            <FaWarehouse className="icon" /> SALAS TOTALES
+          </div>
+          <div className="value">{rooms.length} Salas</div>
+          <div className="sub">Espacios de producción habilitados</div>
+        </KPICard>
+
+        <KPICard $glowColor="#38bdf8">
+          <div className="kpi-header">
+            <FaSeedling className="icon" /> VEGETATIVO & CLONES
+          </div>
+          <div className="value">{countByType('vegetation') + countByType('clones')} Salas</div>
+          <div className="sub">Desarrollo radicular y crecimiento</div>
+        </KPICard>
+
+        <KPICard $glowColor="#f59e0b">
+          <div className="kpi-header">
+            <FaLeaf className="icon" /> FLORACIÓN
+          </div>
+          <div className="value">{countByType('flowering')} Salas</div>
+          <div className="sub">Generación de resina y desarrollo de flor</div>
+        </KPICard>
+
+        <KPICard $glowColor="#a855f7">
+          <div className="kpi-header">
+            <FaClock className="icon" /> SECADO & CURADO
+          </div>
+          <div className="value">{countByType('drying')} Salas</div>
+          <div className="sub">Procesamiento post-cosecha controlado</div>
+        </KPICard>
+      </KPIGrid>
+
+      {/* FILTER & SEARCH ROW */}
+      <FilterRow>
+        <div className="search-box">
+          <FaSearch />
+          <input
+            type="text"
+            placeholder="Buscar sala por nombre..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+
+        <div className="filter-chips">
+          <FilterChip $active={typeFilter === 'all'} onClick={() => setTypeFilter('all')}>
+            Todas ({rooms.length})
+          </FilterChip>
+          <FilterChip $active={typeFilter === 'vegetation'} onClick={() => setTypeFilter('vegetation')}>
+            Vegetativo ({countByType('vegetation')})
+          </FilterChip>
+          <FilterChip $active={typeFilter === 'flowering'} onClick={() => setTypeFilter('flowering')}>
+            Floración ({countByType('flowering')})
+          </FilterChip>
+          <FilterChip $active={typeFilter === 'drying'} onClick={() => setTypeFilter('drying')}>
+            Secado ({countByType('drying')})
+          </FilterChip>
+        </div>
+      </FilterRow>
+
+      {/* ROOMS GRID */}
+      <Grid>
+        {filteredRooms.map(room => {
+          const stageColor = getStageColor(room.type);
+          return (
+            <RoomCard key={room.id} $stageColor={stageColor} onClick={() => navigate(`/rooms/${room.id}`)}>
+              <div>
+                <div className="room-top">
+                  <div className="room-header-left">
+                    <div className="icon-wrapper">
+                      <FaWarehouse />
+                    </div>
+                    <div className="room-info">
+                      <div className="room-name">{room.name}</div>
+                      <div className="room-stage-tag">
+                        {room.type === 'living_soil' ? 'AGRO/LIVING SOIL' : room.type === 'curing' ? 'SECADO' : room.type.toUpperCase()}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="room-actions">
+                    <div className="action-icon" title="Editar" onClick={(e) => handleEdit(e, room)}><FaEdit /></div>
+                    <div className="action-icon delete" title="Eliminar" onClick={(e) => handleDeleteClick(e, room.id)}><FaTrash /></div>
+                  </div>
                 </div>
-            </Header>
 
-            <Grid>
-                {rooms.map(room => (
-                    <RoomCard key={room.id} onClick={() => navigate(`/rooms/${room.id}`)}>
-                        <RoomHeader type={room.type}>
-                            <div className="icon"><FaWarehouse /></div>
-                            <div>
-                                <h3>{room.name}</h3>
-                                <span>{room.type === 'living_soil' ? 'Agro/Living Soil' : room.type === 'curing' ? 'Secado' : room.type}</span>
-                            </div>
-                            <Actions>
-                                <ActionButton color="#3182ce" onClick={(e) => handleEdit(e, room)} title="Editar">
-                                    <FaEdit />
-                                </ActionButton>
-                                <ActionButton color="#e53e3e" onClick={(e) => handleDeleteClick(e, room.id)} title="Eliminar">
-                                    <FaTrash />
-                                </ActionButton>
-                            </Actions>
-                        </RoomHeader>
-                        <RoomBody>
+                <div className="telemetry-block">
+                  <div className="telemetry-item">
+                    <span className="t-label"><FaThermometerHalf style={{ color: '#f43f5e' }} /> TEMP</span>
+                    <span className="t-value">24.5 °C</span>
+                  </div>
+                  <div className="divider" />
+                  <div className="telemetry-item">
+                    <span className="t-label"><FaTint style={{ color: '#38bdf8' }} /> HUMEDAD</span>
+                    <span className="t-value">62 %</span>
+                  </div>
+                  <div className="divider" />
+                  <div className="telemetry-item">
+                    <span className="t-label"><FaLeaf style={{ color: '#10b981' }} /> CAPACIDAD</span>
+                    <span className="t-value">{room.capacity || '--'} Plantas</span>
+                  </div>
+                </div>
+              </div>
 
-                            <StatRow>
-                                <div className="label"><FaThermometerHalf /> Temp. Actual</div>
-                                <div className="value">{room.current_temperature ? `${room.current_temperature}°C` : '--'}</div>
-                            </StatRow>
-                            <StatRow>
-                                <div className="label"><FaTint /> Humedad</div>
-                                <div className="value">{room.current_humidity ? `${room.current_humidity}%` : '--'}</div>
-                            </StatRow>
-                        </RoomBody>
-                    </RoomCard>
-                ))}
-                <CreateCard onClick={() => setIsModalOpen(true)}>
-                    <DashedCircle>
-                        <FaPlus />
-                    </DashedCircle>
-                    <span style={{ fontWeight: 600, fontSize: '1rem', color: 'inherit', textAlign: 'center', padding: '0 1rem' }}>Haz click aquí para crear una nueva sala</span>
-                </CreateCard>
-            </Grid>
+              <div className="card-footer">
+                <span style={{ fontSize: '0.8rem', color: '#64748b' }}>Ver mapa y mesas</span>
+                <span className="enter-link">
+                  Ver Detalle de Sala <FaArrowRight />
+                </span>
+              </div>
+            </RoomCard>
+          );
+        })}
 
-            {isModalOpen && (
-                <ModalOverlay>
-                    <ModalContent>
-                        <h2>{editingRoomId ? 'Editar Sala' : 'Nueva Sala'}</h2>
-                        <FormGroup>
-                            <label>Nombre</label>
-                            <input
-                                value={newRoom.name}
-                                onChange={e => setNewRoom({ ...newRoom, name: e.target.value })}
-                                placeholder="Ej: Sala Vegetación A"
-                            />
-                        </FormGroup>
-                        <FormGroup>
-                            <label>Tipo</label>
-                            <select
-                                value={newRoom.type}
-                                onChange={e => setNewRoom({ ...newRoom, type: e.target.value })}
-                            >
-                                <option value="vegetation">Vegetación</option>
-                                <option value="flowering">Floración</option>
-                                <option value="drying">Secado</option>
-                                <option value="clones">Esquejera</option>
-                                <option value="general">General/Mixta</option>
-                                <option value="living_soil">Agro/Living Soil</option>
+        {/* CREATE NEW ROOM CARD */}
+        <CreateCard onClick={() => setIsModalOpen(true)}>
+          <div className="plus-circle">
+            <FaPlus />
+          </div>
+          <div className="create-text">Haz click aquí para crear una nueva sala</div>
+          <div className="create-sub">Asigná tipo de sala, capacidad y distribución</div>
+        </CreateCard>
+      </Grid>
 
-                            </select>
-                        </FormGroup>
+      {/* CREATE / EDIT MODAL */}
+      {isModalOpen && (
+        <ModalOverlay onClick={closeModal}>
+          <ModalContent onClick={(e) => e.stopPropagation()}>
+            <h2>{editingRoomId ? 'Editar Sala' : 'Nueva Sala de Cultivo'}</h2>
+            <FormGroup>
+              <label>Nombre de la Sala</label>
+              <input
+                type="text"
+                placeholder="Ej: Sala Vegetativo A / Floración 1"
+                value={newRoom.name}
+                onChange={(e) => setNewRoom({ ...newRoom, name: e.target.value })}
+                autoFocus
+              />
+            </FormGroup>
 
-                        {newRoom.type === 'clones' && (
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                                <FormGroup>
-                                    <label>Filas (A-Z)</label>
-                                    <input
-                                        type="number"
-                                        min="1"
-                                        max="26"
-                                        value={(newRoom as any).grid_rows || ''}
-                                        onChange={e => setNewRoom({ ...newRoom, grid_rows: parseInt(e.target.value) } as any)}
-                                        placeholder="Ej: 5"
-                                    />
-                                </FormGroup>
-                                <FormGroup>
-                                    <label>Columnas (1-N)</label>
-                                    <input
-                                        type="number"
-                                        min="1"
-                                        max="20"
-                                        value={(newRoom as any).grid_columns || ''}
-                                        onChange={e => setNewRoom({ ...newRoom, grid_columns: parseInt(e.target.value) } as any)}
-                                        placeholder="Ej: 10"
-                                    />
-                                </FormGroup>
-                            </div>
-                        )}
+            <FormGroup>
+              <label>Etapa / Tipo de Sala</label>
+              <select
+                value={newRoom.type}
+                onChange={(e) => setNewRoom({ ...newRoom, type: e.target.value })}
+              >
+                <option value="vegetation">Vegetativo (Vegetation)</option>
+                <option value="flowering">Floración (Flowering)</option>
+                <option value="drying">Secado / Curado (Drying)</option>
+                <option value="living_soil">Living Soil / Orgánico</option>
+              </select>
+            </FormGroup>
 
-                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '2rem' }}>
-                            <button onClick={closeModal} style={{ padding: '0.75rem', background: 'none', border: '1px solid #e2e8f0', borderRadius: '0.5rem', cursor: 'pointer' }}>Cancelar</button>
-                            <button onClick={handleCreateOrUpdateRoom} style={{ padding: '0.75rem 1.5rem', background: '#3182ce', color: 'white', border: 'none', borderRadius: '0.5rem', cursor: 'pointer', fontWeight: 'bold' }}>
-                                {editingRoomId ? 'Actualizar' : 'Crear Sala'}
-                            </button>
-                        </div>
-                    </ModalContent>
-                </ModalOverlay>
-            )
-            }
+            <FormGroup>
+              <label>Capacidad Estimada (Plantas)</label>
+              <input
+                type="number"
+                placeholder="Ej: 100"
+                value={newRoom.capacity || ''}
+                onChange={(e) => setNewRoom({ ...newRoom, capacity: parseInt(e.target.value) || 0 })}
+              />
+            </FormGroup>
 
-            <ConfirmModal
-                isOpen={isConfirmDeleteOpen}
-                title="Eliminar Sala"
-                message="¿Estás seguro de que deseas eliminar esta sala? Esta acción no se puede deshacer y borrará todos los datos asociados."
-                onClose={() => setIsConfirmDeleteOpen(false)}
-                onConfirm={handleConfirmDelete}
-                confirmText="Eliminar"
-                isDanger
-                isLoading={isDeleting}
-            />
-            <ToastModal
-                isOpen={toastOpen}
-                message={toastMessage}
-                type={toastType}
-                onClose={() => setToastOpen(false)}
-                animateOverlay={toastAnimate}
-            />
-        </Container >
-    );
+            <ModalActions>
+              <button className="cancel" onClick={closeModal}>Cancelar</button>
+              <button className="save" onClick={handleCreateOrUpdateRoom}>
+                {editingRoomId ? 'Guardar Cambios' : 'Crear Sala'}
+              </button>
+            </ModalActions>
+          </ModalContent>
+        </ModalOverlay>
+      )}
+
+      {/* CONFIRM DELETE MODAL */}
+      <ConfirmModal
+        isOpen={isConfirmDeleteOpen}
+        title="¿Eliminar Sala?"
+        message="Esta acción no se puede deshacer. ¿Estás seguro de que deseas eliminar esta sala?"
+        onConfirm={handleConfirmDelete}
+        onClose={() => {
+          setIsConfirmDeleteOpen(false);
+          setRoomToDelete(null);
+        }}
+        confirmText={isDeleting ? 'Eliminando...' : 'Eliminar'}
+        cancelText="Cancelar"
+      />
+
+      {/* TOAST MODAL */}
+      <ToastModal
+        isOpen={toastOpen}
+        message={toastMessage}
+        type={toastType}
+        onClose={() => setToastOpen(false)}
+      />
+    </Container>
+  );
 };
 
 export default Rooms;

@@ -103,17 +103,50 @@ const BalanceCard = styled(Card)`
   display: flex;
   flex-direction: column;
   
-  h2 { font-size: 1rem; color: #94a3b8; margin: 0 0 0.5rem 0; }
-  .balance { font-size: 3rem; font-weight: 800; margin: 0; color: #f8fafc; }
+  h2 { font-size: 0.95rem; color: #94a3b8; margin: 0 0 0.5rem 0; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
+  .balance { font-size: 3rem; font-weight: 800; margin: 0; }
 
   @media (max-width: 768px) {
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    padding: 1rem 1.5rem;
-    
-    h2 { font-size: 0.9rem; margin: 0; }
-    .balance { font-size: 2rem; }
+    padding: 1.25rem;
+    .balance { font-size: 2.25rem; }
+  }
+`;
+
+const MetricsContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  flex: 1;
+`;
+
+const MetricsRow = styled.div`
+  display: flex;
+  gap: 2.5rem;
+  flex-wrap: wrap;
+
+  @media (max-width: 768px) {
+    gap: 1.5rem;
+  }
+`;
+
+const MetricBox = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+
+  h3 {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #94a3b8;
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .metric-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0;
   }
 `;
 
@@ -504,9 +537,16 @@ const Expenses: React.FC = () => {
         return areaTotals;
     };
 
-    const totalBalance = calculateBalance();
+    const totalIncome = filteredMovements
+        .filter(m => m.type === 'INGRESO')
+        .reduce((acc, curr) => acc + curr.amount, 0);
+
+    const totalExpenses = filteredMovements
+        .filter(m => m.type === 'EGRESO')
+        .reduce((acc, curr) => acc + curr.amount, 0);
+
+    const totalBalance = totalIncome - totalExpenses;
     const areaMetrics = calculateAreaMetrics();
-    const totalExpenses = Object.values(areaMetrics).reduce((a, b) => a + b, 0);
 
     const formatMoney = (val: number) => {
         return new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(val);
@@ -566,18 +606,31 @@ const Expenses: React.FC = () => {
                 </Header>
 
                 <Grid>
-                    <BalanceCard style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '2rem' }}>
-                        <div>
-                            <h2>Saldo Total</h2>
-                            <p className="balance" style={{ color: totalBalance >= 0 ? '#4ade80' : '#f87171' }}>
-                                {formatMoney(totalBalance)}
-                            </p>
+                    <BalanceCard style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '2rem' }}>
+                        <MetricsContainer>
+                            <div>
+                                <h2>Saldo Total</h2>
+                                <p className="balance" style={{ color: totalBalance >= 0 ? '#4ade80' : '#f87171' }}>
+                                    {formatMoney(totalBalance)}
+                                </p>
+                            </div>
 
-                            <h2 style={{ marginTop: '2rem' }}>Egresos Totales</h2>
-                            <p className="balance" style={{ color: '#f87171', fontSize: '1.5rem' }}>
-                                -{formatMoney(totalExpenses)}
-                            </p>
-                        </div>
+                            <MetricsRow>
+                                <MetricBox>
+                                    <h3>Ingresos Totales</h3>
+                                    <p className="metric-value" style={{ color: '#4ade80' }}>
+                                        +{formatMoney(totalIncome)}
+                                    </p>
+                                </MetricBox>
+
+                                <MetricBox>
+                                    <h3>Egresos Totales</h3>
+                                    <p className="metric-value" style={{ color: '#f87171' }}>
+                                        -{formatMoney(totalExpenses)}
+                                    </p>
+                                </MetricBox>
+                            </MetricsRow>
+                        </MetricsContainer>
 
                         {totalExpenses > 0 && (
                             <div style={{ height: '220px', width: '300px', flexShrink: 0 }}>

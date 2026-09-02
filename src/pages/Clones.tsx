@@ -46,40 +46,32 @@ const Container = styled.div`
 
 const SummaryGrid = styled.div`
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 300px));
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
     gap: 1.5rem;
-    margin-bottom: 2rem;
-    
-    @media (max-width: 768px) {
-        grid-template-columns: 1fr; /* Ensures cards take full width */
-    }
+    margin-bottom: 2.25rem;
 `;
 
 const SummaryCard = styled.div<{ isTotal?: boolean }>`
-    background: rgba(15, 23, 42, 0.4);
+    background: rgba(17, 24, 39, 0.7);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
-    padding: 1.25rem;
-    border-radius: 1rem;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
-    border: 1px solid ${p => p.isTotal ? 'rgba(74, 222, 128, 0.15)' : 'rgba(255, 255, 255, 0.05)'};
+    padding: 1.5rem;
+    border-radius: 1.25rem;
+    box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     position: relative;
     overflow: hidden;
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.3s;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     cursor: default;
 
     &:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.6), 0 0 15px 0 ${p => p.isTotal ? 'rgba(74, 222, 128, 0.15)' : 'rgba(148, 163, 184, 0.1)'};
-        border: 1px solid ${p => p.isTotal ? 'rgba(74, 222, 128, 0.3)' : 'rgba(255, 255, 255, 0.1)'};
+        transform: translateY(-4px);
+        box-shadow: 0 20px 35px -5px rgba(0, 0, 0, 0.5);
+        border-color: rgba(16, 185, 129, 0.4);
     }
 
-    ${p => p.isTotal && `
-        background: rgba(20, 83, 45, 0.15);
-    `}
-
     h3 {
-        margin: 0 0 0.25rem 0;
+        margin: 0 0 0.5rem 0;
         font-size: 0.75rem;
         text-transform: uppercase;
         letter-spacing: 0.05em;
@@ -88,9 +80,9 @@ const SummaryCard = styled.div<{ isTotal?: boolean }>`
     }
 
     .value {
-        font-size: 1.5rem;
+        font-size: 2rem;
         font-weight: 800;
-        color: ${p => p.isTotal ? '#4ade80' : '#f8fafc'};
+        color: ${p => p.isTotal ? '#34d399' : '#ffffff'};
         line-height: 1.2;
     }
 
@@ -99,99 +91,67 @@ const SummaryCard = styled.div<{ isTotal?: boolean }>`
         right: 1.25rem;
         top: 50%;
         transform: translateY(-50%);
-        font-size: 1.75rem;
-        opacity: 0.15;
-        color: ${p => p.isTotal ? '#4ade80' : '#cbd5e1'};
-    }
-
-    @media (max-width: 768px) {
-        display: flex;
-        align-items: center;
-        justify-content: center; /* Center horizontally overall */
-        padding: 1rem;
-        gap: 1rem; /* Use gap instead of margins for distribution */
-        
-        h3 {
-            margin: 0;
-            font-size: 0.85rem;
-            text-align: right; /* To balance near the value */
-        }
-
-        .value {
-            font-size: 1.2rem;
-            margin: 0;
-        }
-        
-        .icon {
-            font-size: 1.25rem;
-            position: relative; /* Take it out of absolute so it flows inside the flexbox naturally */
-            right: auto;
-            top: auto;
-            transform: none;
-        }
+        font-size: 2rem;
+        opacity: 0.2;
+        color: ${p => p.isTotal ? '#34d399' : '#38bdf8'};
     }
 `;
 
 const Header = styled.div`
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
+  align-items: flex-end;
+  margin-bottom: 2.25rem;
 
   h1 {
-    font-size: 2rem;
+    font-size: clamp(1.75rem, 4vw, 2.5rem);
     font-weight: 800;
-    color: #e2e8f0;
+    letter-spacing: -0.03em;
+    background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
     margin: 0;
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-
-    @media (max-width: 768px) {
-        font-size: 1.5rem;
-        justify-content: center;
-        width: 100%;
-        margin-bottom: 1rem;
-    }
+    gap: 0.85rem;
   }
 
   @media (max-width: 768px) {
       flex-direction: column;
-      justify-content: center;
-      align-items: center;
+      align-items: flex-start;
+      gap: 1.25rem;
   }
 `;
 
 const CreateButton = styled.button`
-background: rgba(74, 222, 128, 0.2);
-color: #4ade80;
-padding: 0.75rem 1.5rem;
-border - radius: 0.75rem;
-border: 1px solid rgba(74, 222, 128, 0.5);
-font - weight: 600;
-cursor: pointer;
-display: flex;
-align - items: center;
-gap: 0.5rem;
-transition: all 0.2s;
-box - shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-backdrop - filter: blur(8px);
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: #ffffff;
+  border: none;
+  font-weight: 700;
+  font-size: 0.925rem;
+  padding: 0.75rem 1.4rem;
+  border-radius: 0.875rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.35);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 
   &:hover {
-    background: rgba(74, 222, 128, 0.3);
     transform: translateY(-2px);
-    box - shadow: 0 6px 8px rgba(0, 0, 0, 0.3);
-}
+    box-shadow: 0 8px 24px rgba(16, 185, 129, 0.5);
+  }
 `;
 
 const HistorySection = styled.div`
-    background: rgba(15, 23, 42, 0.6);
+    background: rgba(17, 24, 39, 0.7);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    border-radius: 1rem;
-    padding: 1.5rem;
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 1.5rem;
+    padding: 1.75rem;
+    box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.35);
 `;
 
 const FilterContainer = styled.div`

@@ -43,61 +43,69 @@ const CollapsibleWrapper = ({ isOpen, children }: { isOpen: boolean; children: R
 // --- Styled Components ---
 
 const PageContainer = styled.div`
-  padding: 1rem;
-  padding-top: 1.5rem;
-  max-width: 1400px;
+  padding: 2rem 2.5rem;
+  max-width: 1560px;
   margin: 0 auto;
   min-height: 100vh;
+  color: #f8fafc;
 
   @media (max-width: 768px) {
-    padding: 0.5rem;
-    padding-top: 4rem;
+    padding: 1.25rem 1rem;
   }
 `;
 
 const Header = styled.div`
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  margin-bottom: 2rem;
+  align-items: flex-end;
+  margin-bottom: 2.25rem;
   flex-wrap: wrap;
-  gap: 1rem;
+  gap: 1.25rem;
 
   h1 {
-    font-size: 1.875rem;
-    font-weight: 700;
-    color: #f8fafc;
+    font-size: clamp(1.75rem, 3.5vw, 2.5rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
     margin: 0;
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: 0.85rem;
   }
 `;
 
 const ActionButton = styled.button<{ variant?: 'primary' | 'danger' | 'secondary' | 'ghost' | 'info' }>`
   background: ${props =>
-    props.variant === 'primary' ? 'rgba(74, 222, 128, 0.2)' :
-      props.variant === 'danger' ? 'rgba(239, 68, 68, 0.2)' :
-        props.variant === 'info' ? 'rgba(56, 189, 248, 0.2)' :
-          props.variant === 'secondary' ? 'rgba(30, 41, 59, 0.6)' : 'transparent'};
+    props.variant === 'primary' ? 'linear-gradient(135deg, #10b981, #059669)' :
+      props.variant === 'danger' ? 'linear-gradient(135deg, rgba(244, 63, 94, 0.25), rgba(225, 29, 72, 0.35))' :
+        props.variant === 'info' ? 'rgba(56, 189, 248, 0.15)' :
+          props.variant === 'secondary' ? 'rgba(255, 255, 255, 0.05)' : 'transparent'};
   color: ${props =>
-    props.variant === 'primary' ? '#4ade80' :
-      props.variant === 'danger' ? '#f87171' :
+    props.variant === 'primary' ? '#ffffff' :
+      props.variant === 'danger' ? '#fecdd3' :
         props.variant === 'info' ? '#38bdf8' :
-          props.variant === 'secondary' ? '#cbd5e1' : '#cbd5e1'};
+          props.variant === 'secondary' ? '#e2e8f0' : '#cbd5e1'};
   border: ${props =>
-    props.variant === 'primary' ? '1px solid rgba(74, 222, 128, 0.5)' :
-      props.variant === 'danger' ? '1px solid rgba(239, 68, 68, 0.5)' :
-        props.variant === 'info' ? '1px solid rgba(56, 189, 248, 0.5)' :
-          props.variant === 'secondary' ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid transparent'};
-  padding: 0.5rem 1rem;
-  border-radius: 0.5rem;
-  font-weight: 600;
+    props.variant === 'secondary' ? '1px solid rgba(255, 255, 255, 0.12)' :
+      props.variant === 'info' ? '1px solid rgba(56, 189, 248, 0.3)' : 'none'};
+  padding: 0.75rem 1.4rem;
+  border-radius: 0.875rem;
+  font-weight: 700;
+  font-size: 0.925rem;
   cursor: pointer;
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  transition: all 0.2s;
+  gap: 0.6rem;
+  backdrop-filter: blur(12px);
+  box-shadow: ${props => props.variant === 'primary' ? '0 4px 16px rgba(16, 185, 129, 0.35)' : 'none'};
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: ${props => props.variant === 'primary' ? '0 8px 24px rgba(16, 185, 129, 0.5)' : 'none'};
+  }
   font-size: 0.9rem;
   box-shadow: ${props => props.variant === 'primary' ? '0 4px 6px rgba(0, 0, 0, 0.2)' : 'none'};
   backdrop-filter: blur(8px);

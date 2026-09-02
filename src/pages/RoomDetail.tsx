@@ -454,26 +454,27 @@ const DashedCircle = styled.div`
 `;
 
 const EmptyStickyState = styled.div`
-  background: rgba(15, 23, 42, 0.4);
-  backdrop-filter: blur(12px);
-  border-radius: 0.75rem;
-  border: 2px dashed rgba(255, 255, 255, 0.2);
+  background: rgba(17, 24, 39, 0.5);
+  backdrop-filter: blur(16px);
+  border-radius: 1.25rem;
+  border: 1px dashed rgba(245, 158, 11, 0.35);
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   cursor: pointer;
-  padding: 1.5rem;
-  gap: 1.5rem;
-  transition: all 0.2s ease;
+  padding: 1.5rem 1.85rem;
+  gap: 1.25rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   color: #94a3b8;
   width: 100%;
   margin-top: 1rem;
 
   &:hover {
-    border-color: #fde047; /* Yellow/Gold */
-    color: #facc15;
-    background: rgba(253, 224, 71, 0.1);
-    box-shadow: 0 0 15px rgba(253, 224, 71, 0.2);
+    border-color: rgba(245, 158, 11, 0.6);
+    color: #fbbf24;
+    background: rgba(245, 158, 11, 0.12);
+    box-shadow: 0 10px 25px -5px rgba(245, 158, 11, 0.2);
+    transform: translateY(-2px);
   }
 `;
 
@@ -524,41 +525,44 @@ const getTaskStyles = (type: string) => {
 
 // Badges
 const Badge = styled.span<{ stage?: string, taskType?: string }>`
-padding: 2px 8px;
-border-radius: 9999px;
-font-size: 0.7rem;
-font-weight: 600;
-text-transform: capitalize;
-display: inline-flex;
-align-items: center;
-border: 1px solid transparent; 
+  padding: 0.3rem 0.85rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid transparent; 
   
   ${p => {
         if (p.stage) {
             return `
-            background: ${p.stage === 'vegetation' ? 'rgba(74, 222, 128, 0.1)' : p.stage === 'flowering' ? 'rgba(244, 114, 182, 0.1)' : (p.stage === 'drying' || p.stage === 'curing') ? 'rgba(251, 146, 60, 0.1)' : p.stage === 'living_soil' ? 'rgba(45, 212, 191, 0.1)' : 'rgba(148, 163, 184, 0.1)'};
-            color: ${p.stage === 'vegetation' ? '#4ade80' : p.stage === 'flowering' ? '#f472b6' : (p.stage === 'drying' || p.stage === 'curing') ? '#fb923c' : p.stage === 'living_soil' ? '#2dd4bf' : '#cbd5e1'};
-            border-color: ${p.stage === 'vegetation' ? 'rgba(74, 222, 128, 0.2)' : p.stage === 'flowering' ? 'rgba(244, 114, 182, 0.2)' : (p.stage === 'drying' || p.stage === 'curing') ? 'rgba(251, 146, 60, 0.2)' : p.stage === 'living_soil' ? 'rgba(45, 212, 191, 0.2)' : 'rgba(148, 163, 184, 0.2)'};
-            backdrop-filter: blur(4px);
+            background: ${p.stage === 'vegetation' ? 'rgba(56, 189, 248, 0.15)' : p.stage === 'flowering' ? 'rgba(245, 158, 11, 0.15)' : (p.stage === 'drying' || p.stage === 'curing') ? 'rgba(168, 85, 247, 0.15)' : p.stage === 'living_soil' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(148, 163, 184, 0.15)'};
+            color: ${p.stage === 'vegetation' ? '#38bdf8' : p.stage === 'flowering' ? '#f59e0b' : (p.stage === 'drying' || p.stage === 'curing') ? '#c084fc' : p.stage === 'living_soil' ? '#34d399' : '#cbd5e1'};
+            border-color: ${p.stage === 'vegetation' ? 'rgba(56, 189, 248, 0.3)' : p.stage === 'flowering' ? 'rgba(245, 158, 11, 0.3)' : (p.stage === 'drying' || p.stage === 'curing') ? 'rgba(168, 85, 247, 0.3)' : p.stage === 'living_soil' ? 'rgba(16, 185, 129, 0.3)' : 'rgba(148, 163, 184, 0.3)'};
+            backdrop-filter: blur(8px);
           `;
         }
         if (p.taskType) {
             const s = getTaskStyles(p.taskType || '');
-            return `background: ${s.bg}; color: ${s.color}; border-color: ${s.border || 'transparent'}; backdrop-filter: blur(4px);`;
+            return `background: ${s.bg}; color: ${s.color}; border-color: ${s.border || 'transparent'}; backdrop-filter: blur(8px);`;
         }
-        return `background: rgba(148, 163, 184, 0.1); color: #cbd5e1; border-color: rgba(148, 163, 184, 0.2); backdrop-filter: blur(4px);`;
-    }
-    }
+        return `background: rgba(148, 163, 184, 0.15); color: #cbd5e1; border-color: rgba(148, 163, 184, 0.3); backdrop-filter: blur(8px);`;
+    }}
 `;
 
-
 const Title = styled.h1`
-  font-size: 1.8rem;
-  color: #f8fafc;
-  margin: 1rem 0 0.5rem;
+  font-size: clamp(1.75rem, 3.5vw, 2.5rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin: 0;
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.85rem;
 
   @media (max-width: 768px) {
     font-size: 1.4rem;
@@ -572,28 +576,26 @@ const Title = styled.h1`
 const StyledActionButton = styled.button<{ $variant?: 'primary' | 'secondary' | 'gold' | 'success' | 'danger' }>`
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  border-radius: 0.5rem;
-  font-weight: 600;
+  gap: 0.6rem;
+  padding: 0.65rem 1.25rem;
+  border-radius: 0.875rem;
+  font-weight: 700;
+  font-size: 0.875rem;
   cursor: pointer;
-  transition: all 0.2s ease-in-out;
-  border: ${p => p.$variant === 'secondary' ? '1px solid rgba(255, 255, 255, 0.1)' : 'none'};
-  backdrop-filter: blur(8px);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  border: ${p => p.$variant === 'secondary' ? '1px solid rgba(255, 255, 255, 0.12)' : 'none'};
+  backdrop-filter: blur(12px);
   background: ${p => {
         switch (p.$variant) {
-            case 'gold': return 'rgba(214, 158, 46, 0.2)';
-            case 'primary': return 'rgba(74, 222, 128, 0.2)';
-            case 'success': return 'rgba(74, 222, 128, 0.2)'; // Map success to green
-            case 'danger': return 'rgba(239, 68, 68, 0.2)';
-            default: return 'rgba(15, 23, 42, 0.4)';
+            case 'gold': return 'linear-gradient(135deg, rgba(245, 158, 11, 0.25), rgba(217, 119, 6, 0.35))';
+            case 'primary': return 'linear-gradient(135deg, #10b981, #059669)';
+            case 'success': return 'linear-gradient(135deg, #10b981, #059669)';
+            case 'danger': return 'linear-gradient(135deg, rgba(244, 63, 94, 0.25), rgba(225, 29, 72, 0.35))';
+            default: return 'rgba(31, 41, 55, 0.6)';
         }
     }};
   color: ${p => {
         switch (p.$variant) {
-            case 'gold': return '#fcd34d';
-            case 'primary': return '#4ade80';
-            case 'success': return '#4ade80';
             case 'danger': return '#f87171';
             default: return '#f8fafc';
         }
@@ -966,21 +968,23 @@ const HoverButton = styled.button`
 const BackButton = styled.button`
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  background: rgba(15, 23, 42, 0.6);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 0.5rem;
-  color: #f8fafc;
-  font-weight: 600;
+  gap: 0.55rem;
+  background: rgba(255, 255, 255, 0.05);
+  color: #e2e8f0;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 0.875rem;
+  font-weight: 700;
   cursor: pointer;
-  padding: 0.5rem 1rem;
-  font-size: 0.95rem;
-  transition: all 0.2s;
+  padding: 0.6rem 1.2rem;
+  font-size: 0.9rem;
+  backdrop-filter: blur(12px);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 
   &:hover {
     background: rgba(255, 255, 255, 0.1);
-    border-color: rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+    border-color: rgba(255, 255, 255, 0.25);
+    transform: translateY(-2px);
   }
 `;
 
@@ -1061,22 +1065,22 @@ const RoomHeaderContainer = styled.div`
 `;
 
 const StatCard = styled.div`
-  background: rgba(15, 23, 42, 0.4);
-  backdrop-filter: blur(12px);
+  background: rgba(17, 24, 39, 0.7);
+  backdrop-filter: blur(16px);
   padding: 1.5rem;
-  border-radius: 1rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+  border-radius: 1.25rem;
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.35);
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: flex-start;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  transition: transform 0.2s, box-shadow 0.2s;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
   &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
-    border-color: rgba(255, 255, 255, 0.2);
+    transform: translateY(-4px);
+    box-shadow: 0 20px 35px -5px rgba(0, 0, 0, 0.5);
+    border-color: rgba(16, 185, 129, 0.4);
   }
   
   @media (max-width: 768px) {

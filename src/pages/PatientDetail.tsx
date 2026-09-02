@@ -36,36 +36,44 @@ import AudioRecorderWidget from "../components/AudioRecorderWidget";
 // --- Styled Components (Dashboard First) ---
 
 const Container = styled.div`
-  max-width: 1400px;
+  max-width: 1560px;
   margin: 0 auto;
-  padding: 1.5rem;
+  padding: 2rem 2.5rem;
   color: #f8fafc;
   min-height: 100vh;
+
+  @media (max-width: 768px) {
+    padding: 1.25rem 1rem;
+  }
 `;
 
 const Header = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 2rem;
+  margin-bottom: 2.25rem;
 
   h1 {
-    font-size: 1.5rem;
-    color: #f8fafc;
+    font-size: clamp(1.5rem, 3vw, 2.25rem);
+    font-weight: 800;
+    background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: 0.85rem;
   }
 `;
 
 const HashBadge = styled.span`
-  background: rgba(15, 23, 42, 0.6);
-  color: #38bdf8;
-  border: 1px solid rgba(56, 189, 248, 0.3);
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
   font-family: monospace;
-  padding: 0.25rem 0.75rem;
-  border-radius: 0.5rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 0.75rem;
   font-size: 0.9rem;
+  font-weight: 700;
   letter-spacing: 0.05em;
   display: flex;
   align-items: center;
@@ -75,26 +83,28 @@ const HashBadge = styled.span`
 const Grid = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-  gap: 1.5rem;
+  gap: 1.75rem;
 `;
 
 const InfoBox = styled.div`
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-top: 4px solid ${(props) => props.color || "rgba(255, 255, 255, 0.1)"};
+  background: rgba(17, 24, 39, 0.7);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 4px solid ${(props) => props.color || "rgba(16, 185, 129, 0.5)"};
+  border-radius: 1.5rem;
   position: relative;
   overflow: hidden;
   color: #f8fafc;
 `;
 
 const Card = styled.div<{ color?: string }>`
-  background: rgba(30, 41, 59, 0.6);
-  backdrop-filter: blur(12px);
-  border-radius: 1rem;
-  padding: 1.5rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-top: 4px solid ${(props) => props.color || "rgba(255, 255, 255, 0.1)"};
+  background: rgba(17, 24, 39, 0.7);
+  backdrop-filter: blur(16px);
+  border-radius: 1.5rem;
+  padding: 1.75rem;
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 4px solid ${(props) => props.color || "rgba(16, 185, 129, 0.5)"};
   position: relative;
   overflow: hidden;
   color: #f8fafc;

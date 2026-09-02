@@ -13,11 +13,9 @@ import {
   FaCheck,
   FaThermometerHalf,
   FaTint,
-  FaWind,
-  FaPrint
+  FaWind
 } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
-import { KYCBanner } from '../components/KYCBanner';
 
 // --- STITCH DESIGN SYSTEM ANIMATIONS & TOKENS ---
 
@@ -38,6 +36,78 @@ const Container = styled.div`
 
   @media (max-width: 768px) {
     padding: 1.25rem 1rem;
+  }
+`;
+
+const BannerOfficialProposal = styled.div`
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(56, 189, 248, 0.15));
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  backdrop-filter: blur(12px);
+  border-radius: 1rem;
+  padding: 1rem 1.5rem;
+  margin-bottom: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .left {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+  }
+
+  .badge {
+    background: #10b981;
+    color: #042f2e;
+    font-weight: 800;
+    font-size: 0.75rem;
+    padding: 0.3rem 0.65rem;
+    border-radius: 9999px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .text {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #e2e8f0;
+
+    span {
+      color: #34d399;
+    }
+  }
+
+  .actions {
+    display: flex;
+    gap: 0.75rem;
+  }
+`;
+
+const ApplyButton = styled.button`
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: #ffffff;
+  border: none;
+  font-weight: 700;
+  font-size: 0.875rem;
+  padding: 0.65rem 1.25rem;
+  border-radius: 0.75rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+  transition: all 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5);
   }
 `;
 
@@ -389,7 +459,7 @@ const StickyNoteCard = styled.div`
   }
 `;
 
-export const Dashboard: React.FC = () => {
+export const DashboardV2: React.FC = () => {
   const { user } = useAuth();
 
   const [taskState, setTaskState] = useState([
@@ -404,13 +474,26 @@ export const Dashboard: React.FC = () => {
 
   return (
     <Container>
-      <KYCBanner />
+      {/* BANNER PROPOSAL FOR OFFICIAL GOOGLE STITCH UI */}
+      <BannerOfficialProposal>
+        <div className="left">
+          <span className="badge">NUEVO DISEÑO STITCH</span>
+          <div className="text">
+            Previsualización en vivo de la <span>UI V2 de TrazAPP</span> basada en Google Stitch System.
+          </div>
+        </div>
+        <div className="actions">
+          <ApplyButton onClick={() => alert('¡Estética aprobada! Procederemos a aplicar este sistema a toda la plataforma.')}>
+            <FaMagic /> Aplicar como UI Oficial
+          </ApplyButton>
+        </div>
+      </BannerOfficialProposal>
 
       {/* HEADER SECTION */}
       <HeaderRow>
         <TitleBlock>
           <h1>¡Hola, {user?.name || 'Sebastian'}! 👋</h1>
-          <p>Panel de Control Operativo y Trazo Digital • TrazAPP</p>
+          <p>Domingo, 9 de Agosto de 2026 • Panel de Control Operativo y Trazo Digital</p>
         </TitleBlock>
 
         {/* TELEMETRY WIDGET */}
@@ -592,4 +675,4 @@ export const Dashboard: React.FC = () => {
   );
 };
 
-export default Dashboard;
+export default DashboardV2;

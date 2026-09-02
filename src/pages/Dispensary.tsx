@@ -65,126 +65,69 @@ const TabButton = styled.button<{ $isActive: boolean }>`
 `;
 
 const PageContainer = styled.div`
-padding: 1rem;
-padding-top: 1.5rem;
-max-width: 1200px;
-margin: 0 auto;
-min-height: 100vh;
+  padding: 2rem 2.5rem;
+  max-width: 1560px;
+  margin: 0 auto;
+  min-height: 100vh;
+  color: #f8fafc;
 
-@media(max-width: 768px) {
-    padding: 0.5rem;
-    padding-top: 4rem;
-}
+  @media (max-width: 768px) {
+    padding: 1.25rem 1rem;
+  }
 `;
 
 const Header = styled.div`
-display: flex;
-align-items: center;
-justify-content: space-between;
-margin-bottom: 2rem;
-flex-wrap: wrap;
-gap: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 2.25rem;
+  flex-wrap: wrap;
+  gap: 1.25rem;
 
-@media(max-width: 768px) {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 0.75rem;
-}
-  
   h1 {
-    font-size: 2rem;
+    font-size: clamp(1.75rem, 3.5vw, 2.5rem);
     font-weight: 800;
-    margin: 0;
-    background: linear-gradient(135deg, #4ade80 0%, #38bdf8 100%);
+    letter-spacing: -0.03em;
+    background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
     -webkit-background-clip: text;
-    -webkit-text - fill-color: transparent;
+    -webkit-text-fill-color: transparent;
+    margin: 0;
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-
-    @media(max-width: 768px) {
-        font-size: 1.5rem;
-    }
-}
+    gap: 0.85rem;
+  }
 `;
 
 const ButtonStyled = styled.button<{ variant?: 'primary' | 'secondary' | 'danger' }>`
-display: flex;
-align-items: center;
-justify-content: center;
-gap: 0.5rem;
-padding: 0.75rem 1rem;
-border: none;
-border-radius: 0.75rem;
-font-size: 0.875rem;
-font-weight: 600;
-cursor: pointer;
-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-position: relative;
-overflow: hidden;
+  background: ${props =>
+        props.variant === 'danger' ? 'linear-gradient(135deg, rgba(244, 63, 94, 0.25), rgba(225, 29, 72, 0.35))' :
+            props.variant === 'secondary' ? 'rgba(255, 255, 255, 0.05)' :
+                'linear-gradient(135deg, #10b981, #059669)'};
+  color: ${props => props.variant === 'secondary' ? '#e2e8f0' : '#ffffff'};
+  border: ${props => props.variant === 'secondary' ? '1px solid rgba(255, 255, 255, 0.12)' : 'none'};
+  font-weight: 700;
+  font-size: 0.925rem;
+  padding: 0.75rem 1.4rem;
+  border-radius: 0.875rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  backdrop-filter: blur(12px);
+  box-shadow: ${props => props.variant === 'secondary' ? 'none' : '0 4px 16px rgba(16, 185, 129, 0.35)'};
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 
-background: ${props => {
-        switch (props.variant) {
-            case 'primary': return 'rgba(74, 222, 128, 0.15)';
-            case 'danger': return 'rgba(239, 68, 68, 0.1)';
-            case 'secondary': return 'rgba(148, 163, 184, 0.1)';
-            default: return 'rgba(255, 255, 255, 0.05)';
-        }
-    }
-    };
-
-backdrop-filter: ${props => props.variant === 'primary' ? 'blur(8px)' : 'none'};
-
-border: 1px solid ${props => {
-        switch (props.variant) {
-            case 'primary': return 'rgba(74, 222, 128, 0.3)';
-            case 'danger': return 'rgba(239, 68, 68, 0.3)';
-            case 'secondary': return 'rgba(148, 163, 184, 0.2)';
-            default: return 'rgba(255, 255, 255, 0.1)';
-        }
-    }
-    };
-
-color: ${props => {
-        switch (props.variant) {
-            case 'primary': return '#4ade80';
-            case 'danger': return '#fca5a5';
-            case 'secondary': return '#e2e8f0';
-            default: return '#f8fafc';
-        }
-    }
-    };
-  
   &:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px ${props => {
-        switch (props.variant) {
-            case 'primary': return 'rgba(74, 222, 128, 0.3)';
-            case 'danger': return 'rgba(239, 68, 68, 0.2)';
-            default: return 'rgba(0, 0, 0, 0.2)';
-        }
-    }
-    };
-    background: ${props => {
-        switch (props.variant) {
-            case 'primary': return 'linear-gradient(135deg, rgba(74, 222, 128, 0.3) 0%, rgba(56, 189, 248, 0.3) 100%)';
-            case 'danger': return 'rgba(239, 68, 68, 0.2)';
-            case 'secondary': return 'rgba(148, 163, 184, 0.2)';
-            default: return 'rgba(255, 255, 255, 0.1)';
-        }
-    }
-    };
-}
-  
-  &:active {
-    transform: translateY(0);
-}
-  
+    box-shadow: ${props => props.variant === 'secondary' ? 'none' : '0 8px 24px rgba(16, 185, 129, 0.5)'};
+  }
+
   &:disabled {
     opacity: 0.5;
     cursor: not-allowed;
     transform: none;
-}
+    box-shadow: none;
+  }
 `;
 
 // Re-using the locally defined ButtonStyled as Button for this file to match Stock.tsx usage

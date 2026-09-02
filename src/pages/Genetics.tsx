@@ -41,61 +41,58 @@ const modalSlideOut = keyframes`
 `;
 
 const Container = styled.div`
-  padding: 2rem;
-  padding-top: 1.5rem;
-  max-width: 1400px;
+  padding: 2rem 2.5rem;
+  max-width: 1560px;
   margin: 0 auto;
-  animation: ${fadeIn} 0.5s ease-in-out;
+  min-height: 100vh;
+  color: #f8fafc;
+
+  @media (max-width: 768px) {
+    padding: 1.25rem 1rem;
+  }
 `;
 
 const Header = styled.div`
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
+  align-items: flex-end;
+  margin-bottom: 2.25rem;
 
   h1 {
-    font-size: 2rem;
+    font-size: clamp(1.75rem, 3.5vw, 2.5rem);
     font-weight: 800;
-    color: #f8fafc;
+    letter-spacing: -0.03em;
+    background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
     margin: 0;
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-
-    @media (max-width: 768px) {
-        font-size: 1.5rem;
-        justify-content: center;
-        width: 100%;
-        margin-bottom: 1rem;
-        flex-wrap: wrap;
-        text-align: center;
-    }
+    gap: 0.85rem;
   }
 
   @media (max-width: 768px) {
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.25rem;
   }
 `;
 
-
 const ContentGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.75rem;
 
   @media (max-width: 768px) {
-      grid-template-columns: 1fr;
+    grid-template-columns: 1fr;
   }
 `;
 
 const StatsGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
   gap: 1.5rem;
-  margin-bottom: 2rem;
+  margin-bottom: 2.25rem;
 
   @media (max-width: 768px) {
       grid-template-columns: 1fr;

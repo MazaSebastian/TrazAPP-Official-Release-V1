@@ -3,6 +3,9 @@ import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 
 // import LiveChat from './components/LiveChat'; // Disabling LiveChat for CRM cleanup
 import Dashboard from './pages/Dashboard';
+import DashboardV2 from './pages/DashboardV2';
+import RoomDetailV2 from './pages/RoomDetailV2';
+import CropsV2 from './pages/CropsV2';
 import ClientManagement from './pages/admin/ClientManagement';
 import SystemMonitoring from './pages/admin/SystemMonitoring';
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -175,7 +178,7 @@ function App() {
     '/admin', '/shipping', '/crops', '/rooms', '/genetics', '/clones', '/devices',
     '/laboratory', '/extractions', '/insumos', '/providers', '/stock', '/settings',
     '/compras', '/expenses', '/metrics', '/informes', '/dispensary', '/account',
-    '/patients', '/templates', '/appointments', '/growy-dashboard'
+    '/patients', '/templates', '/appointments', '/growy-dashboard', '/dashboard-v2', '/room-v2', '/crops-v2'
   ].includes(location.pathname));
 
   // Consider Tenant Login and Landing as public routes for styling
@@ -279,6 +282,36 @@ const AppContent: React.FC<AppContentProps> = ({
             </RequireAuth>
           } />
         )}
+
+        <Route path="/dashboard-v2" element={
+          <RequireAuth>
+            <KYCGuard>
+              <MainContent>
+                <DashboardV2 />
+              </MainContent>
+            </KYCGuard>
+          </RequireAuth>
+        } />
+
+        <Route path="/room-v2" element={
+          <RequireAuth>
+            <KYCGuard>
+              <MainContent>
+                <RoomDetailV2 />
+              </MainContent>
+            </KYCGuard>
+          </RequireAuth>
+        } />
+
+        <Route path="/crops-v2" element={
+          <RequireAuth>
+            <KYCGuard>
+              <MainContent>
+                <CropsV2 />
+              </MainContent>
+            </KYCGuard>
+          </RequireAuth>
+        } />
 
         <Route path="/shipping" element={
           <RequireAuth>

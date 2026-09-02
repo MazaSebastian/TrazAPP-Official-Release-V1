@@ -47,85 +47,91 @@ const slideDown = keyframes`
 `;
 
 const PageContainer = styled.div`
-  padding: 1rem;
-  padding-top: 1.5rem;
-  max-width: 1400px; 
+  padding: 2rem 2.5rem;
+  max-width: 1560px;
   margin: 0 auto;
   min-height: 100vh;
   color: #f8fafc;
   box-sizing: border-box;
+
+  @media (max-width: 768px) {
+    padding: 1.25rem 1rem;
+  }
 `;
 
 const Header = styled.div`
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
+  align-items: flex-end;
+  margin-bottom: 2.25rem;
 
   @media (max-width: 768px) {
     flex-direction: column;
-    gap: 1rem;
-    align-items: stretch;
+    gap: 1.25rem;
+    align-items: flex-start;
   }
 `;
 
 const Title = styled.h1`
-  font-size: 1.8rem;
-  color: #f8fafc;
+  font-size: clamp(1.75rem, 3.5vw, 2.5rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin: 0;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.85rem;
 
   @media (max-width: 768px) {
-    justify-content: center;
-    text-align: center;
+    font-size: 1.4rem;
   }
 `;
 
 const ActionButton = styled.button`
-  background: rgba(var(--primary-color-rgb, 168, 85, 247), 0.2);
-  color: #d8b4fe;
-  border: 1px solid rgba(var(--primary-color-rgb, 168, 85, 247), 0.5);
-  padding: 0.75rem 1.5rem;
-  border-radius: 0.5rem;
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: #ffffff;
+  border: none;
+  font-weight: 700;
+  font-size: 0.925rem;
+  padding: 0.75rem 1.4rem;
+  border-radius: 0.875rem;
   cursor: pointer;
-  font-weight: 600;
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  transition: all 0.2s;
-  backdrop-filter: blur(8px);
-  justify-content: center;
+  gap: 0.6rem;
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.35);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 
   &:hover {
-    background: rgba(var(--primary-color-rgb, 168, 85, 247), 0.3);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(16, 185, 129, 0.5);
   }
 
   &:disabled {
-      background: rgba(100, 116, 139, 0.2);
-      color: #94a3b8;
-      border-color: rgba(100, 116, 139, 0.5);
-      cursor: not-allowed;
-      transform: none;
-      box-shadow: none;
+    background: rgba(100, 116, 139, 0.2);
+    color: #94a3b8;
+    border-color: rgba(100, 116, 139, 0.5);
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
   }
 `;
 
 const TabContainer = styled.div`
   display: flex;
   gap: 1rem;
-  margin-bottom: 1.5rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 1.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   padding-bottom: 0.5rem;
 `;
 
 const TabButton = styled.button<{ $active?: boolean }>`
   background: transparent;
   border: none;
-  color: ${props => props.$active ? '#f8fafc' : '#64748b'};
-  font-weight: 600;
+  color: ${props => props.$active ? '#34d399' : '#94a3b8'};
+  font-weight: 700;
   font-size: 1rem;
   padding: 0.5rem 1rem;
   cursor: pointer;
@@ -133,7 +139,7 @@ const TabButton = styled.button<{ $active?: boolean }>`
   transition: all 0.2s;
 
   &:hover {
-    color: #e2e8f0;
+    color: #f1f5f9;
   }
 
   &::after {
@@ -142,32 +148,33 @@ const TabButton = styled.button<{ $active?: boolean }>`
     bottom: -0.6rem;
     left: 0;
     right: 0;
-    height: 2px;
-    background: ${props => props.$active ? '#3b82f6' : 'transparent'};
+    height: 3px;
+    border-radius: 9999px;
+    background: ${props => props.$active ? '#10b981' : 'transparent'};
     transition: all 0.2s;
   }
 `;
 
 const CardGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.75rem;
 `;
 
 const PatientCard = styled.div`
-  background: rgba(30, 41, 59, 0.6);
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  padding: 1.5rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
-  transition: all 0.3s;
+  background: rgba(17, 24, 39, 0.7);
+  backdrop-filter: blur(16px);
+  border-radius: 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 1.75rem;
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.35);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
-  backdrop-filter: blur(12px);
 
   &:hover {
     transform: translateY(-4px);
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
-    border-color: rgba(var(--primary-color-rgb, 168, 85, 247), 0.3);
+    box-shadow: 0 20px 35px -5px rgba(0, 0, 0, 0.5);
+    border-color: rgba(16, 185, 129, 0.4);
   }
 
   .desktop-content {
@@ -205,28 +212,29 @@ const PatientCard = styled.div`
   }
 
   @media (max-width: 768px) {
-    padding: 0.75rem 1rem;
-    border-radius: 0.75rem;
+    padding: 1rem;
+    border-radius: 1rem;
   }
 `;
 
 const StatusBadge = styled.span<{ status: string }>`
   background: ${props =>
-        props.status === 'active' ? 'rgba(74, 222, 128, 0.2)' :
-            props.status === 'expired' ? 'rgba(239, 68, 68, 0.2)' :
-                props.status === 'pending' ? 'rgba(234, 179, 8, 0.2)' : 'rgba(148, 163, 184, 0.2)'};
+        props.status === 'active' ? 'rgba(16, 185, 129, 0.15)' :
+            props.status === 'expired' ? 'rgba(244, 63, 94, 0.15)' :
+                props.status === 'pending' ? 'rgba(245, 158, 11, 0.15)' : 'rgba(148, 163, 184, 0.15)'};
   color: ${props =>
-        props.status === 'active' ? '#4ade80' :
-            props.status === 'expired' ? '#f87171' :
-                props.status === 'pending' ? '#facc15' : '#cbd5e1'};
+        props.status === 'active' ? '#34d399' :
+            props.status === 'expired' ? '#f43f5e' :
+                props.status === 'pending' ? '#f59e0b' : '#cbd5e1'};
   border: 1px solid ${props =>
-        props.status === 'active' ? 'rgba(74, 222, 128, 0.5)' :
-            props.status === 'expired' ? 'rgba(239, 68, 68, 0.5)' :
-                props.status === 'pending' ? 'rgba(234, 179, 8, 0.5)' : 'rgba(148, 163, 184, 0.5)'};
-  padding: 0.25rem 0.5rem;
-  border-radius: 999px;
+        props.status === 'active' ? 'rgba(16, 185, 129, 0.3)' :
+            props.status === 'expired' ? 'rgba(244, 63, 94, 0.3)' :
+                props.status === 'pending' ? 'rgba(245, 158, 11, 0.3)' : 'rgba(148, 163, 184, 0.3)'};
+  padding: 0.3rem 0.75rem;
+  border-radius: 9999px;
   font-size: 0.75rem;
-  font-weight: bold;
+  font-weight: 800;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
 `;
 
@@ -901,7 +909,7 @@ const Patients: React.FC = () => {
                                         </ActionButton>
                                         <ActionButton
                                             type="button"
-                                            style={{ flex: 1, justifyContent: 'center', padding: '0.75rem 0.5rem', fontSize: '0.9rem', backgroundColor: 'rgba(59, 130, 246, 0.2)', color: '#60a5fa', border: '1px solid rgba(59, 130, 246, 0.4)' }}
+                                            style={{ flex: 1, justifyContent: 'center', padding: '0.75rem 0.5rem', fontSize: '0.9rem', background: 'rgba(59, 130, 246, 0.15)', color: '#60a5fa', border: '1px solid rgba(59, 130, 246, 0.3)', boxShadow: 'none' }}
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 navigate(`/patients/${patient.id || patient.profile_id}?action=new_followup`);

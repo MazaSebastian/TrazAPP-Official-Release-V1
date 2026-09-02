@@ -101,8 +101,21 @@ interface ColorPickerModalProps {
   selectedColor?: string;
   onSelectColor: (color: string) => void;
   onClose: () => void;
-  getColorHex: (colorName: string) => string;
+  getColorHex?: (colorName: string) => string;
 }
+
+const defaultGetColorHex = (c: string) => {
+  if (c.startsWith('#')) return c;
+  const map: Record<string, string> = {
+    green: '#10b981',
+    blue: '#38bdf8',
+    yellow: '#f59e0b',
+    purple: '#a855f7',
+    pink: '#ec4899',
+    red: '#f43f5e'
+  };
+  return map[c] || '#10b981';
+};
 
 export const ColorPickerModal: React.FC<ColorPickerModalProps> = ({
   isOpen,
@@ -111,7 +124,7 @@ export const ColorPickerModal: React.FC<ColorPickerModalProps> = ({
   selectedColor,
   onSelectColor,
   onClose,
-  getColorHex
+  getColorHex = defaultGetColorHex
 }) => {
   const [isVisible, setIsVisible] = React.useState(false);
   const [isClosing, setIsClosing] = React.useState(false);

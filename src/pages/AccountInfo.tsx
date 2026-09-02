@@ -8,67 +8,77 @@ import { ProfessionalSignature } from '../components/ProfessionalSignature';
 import { supabase } from '../services/supabaseClient';
 
 const PageContainer = styled.div`
-  padding: 1rem;
-  max-width: 1200px;
+  padding: 2rem 2.5rem;
+  max-width: 1560px;
   margin: 0 auto;
+  min-height: 100vh;
+  color: #f8fafc;
+
+  @media (max-width: 768px) {
+    padding: 1.25rem 1rem;
+  }
 `;
 
 const Header = styled.div`
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
+  align-items: flex-end;
+  margin-bottom: 2.25rem;
   
   h1 {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: #f8fafc;
+    font-size: clamp(1.75rem, 3.5vw, 2.5rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
     margin: 0;
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: 0.85rem;
 
     svg {
-      color: #3b82f6; 
+      color: #10b981; 
     }
   }
 `;
 
 const ProfileCard = styled.div`
-  background: rgba(15, 23, 42, 0.6);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 1rem;
-  padding: 2rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  background: rgba(17, 24, 39, 0.7);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1.5rem;
+  padding: 2.25rem;
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.35);
 `;
 
 const ProfileHeader = styled.div`
   display: flex;
   align-items: center;
-  gap: 1.5rem;
-  margin-bottom: 2rem;
+  gap: 1.75rem;
+  margin-bottom: 2.25rem;
   padding-bottom: 2rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 `;
 
 const AvatarCircle = styled.div`
-  width: 80px;
-  height: 80px;
+  width: 88px;
+  height: 88px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 2.5rem;
-  font-weight: bold;
+  font-size: 2.75rem;
+  font-weight: 800;
   color: white;
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.4);
 `;
 
 const UserName = styled.h2`
   margin: 0 0 0.5rem 0;
-  font-size: 1.5rem;
+  font-size: 1.75rem;
+  font-weight: 800;
   color: #f8fafc;
 `;
 
@@ -80,32 +90,34 @@ const UserEmail = styled.div`
   font-size: 0.95rem;
 
   svg {
-    color: #64748b;
+    color: #10b981;
   }
 `;
 
 const InfoGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1.75rem;
 `;
 
 const InfoCard = styled.div`
-  background: rgba(30, 41, 59, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 0.75rem;
-  padding: 1.5rem;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 1.25rem;
+  padding: 1.75rem;
 
   h3 {
-    margin: 0 0 1rem 0;
-    font-size: 1rem;
-    color: #cbd5e1;
+    margin: 0 0 1.25rem 0;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #f1f5f9;
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.6rem;
 
     svg {
-      color: #3b82f6;
+      color: #10b981;
     }
   }
 `;
@@ -113,36 +125,37 @@ const InfoCard = styled.div`
 const InfoRow = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
-  margin-bottom: 1rem;
+  gap: 0.35rem;
+  margin-bottom: 1.1rem;
   
   &:last-child {
     margin-bottom: 0;
   }
 
   .label {
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     color: #64748b;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
-    font-weight: 600;
+    letter-spacing: 0.06em;
+    font-weight: 700;
   }
 
   .value {
-    font-size: 1rem;
+    font-size: 1.05rem;
     color: #f8fafc;
-    font-weight: 500;
+    font-weight: 600;
   }
 `;
 
 const RoleBadge = styled.span<{ role: string }>`
   display: inline-flex;
   align-items: center;
-  padding: 0.25rem 0.75rem;
-  border-radius: 1rem;
-  font-size: 0.85rem;
-  font-weight: 600;
-  text-transform: capitalize;
+  padding: 0.35rem 0.85rem;
+  border-radius: 9999px;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 
   background: ${props => {
     switch (props.role?.toLowerCase()) {

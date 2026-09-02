@@ -1,0 +1,392 @@
+{
+  "version": "2.8",
+  "name": "Dashboard TrazAPP V1",
+  "children": [
+    {
+      "id": "canvas-root",
+      "type": "frame",
+      "name": "Dashboard Container",
+      "x": 0,
+      "y": 0,
+      "width": 1440,
+      "height": 950,
+      "fill": "#0B0F17",
+      "children": [
+        {
+          "id": "header-title",
+          "type": "text",
+          "x": 40,
+          "y": 40,
+          "content": "¡Hola, Equipo TrazAPP! 👋",
+          "fontSize": 32,
+          "fontWeight": "800",
+          "fill": "#F9FAFB"
+        },
+        {
+          "id": "header-sub",
+          "type": "text",
+          "x": 40,
+          "y": 82,
+          "content": "Domingo, 9 de Agosto de 2026 • Panel de Control Operativo y Trazo Digital",
+          "fontSize": 15,
+          "fill": "#9CA3AF"
+        },
+        {
+          "id": "weather-bg",
+          "type": "rectangle",
+          "x": 1020,
+          "y": 38,
+          "width": 380,
+          "height": 54,
+          "fill": "#1F2937",
+          "cornerRadius": 12,
+          "stroke": "rgba(255,255,255,0.1)"
+        },
+        {
+          "id": "weather-txt",
+          "type": "text",
+          "x": 1040,
+          "y": 55,
+          "content": "☀️ 24.5°C   |   💧 62% HR   |   ⚡ VPD 1.15 kPa",
+          "fontSize": 14,
+          "fontWeight": "600",
+          "fill": "#38BDF8"
+        },
+
+        {
+          "id": "kpi-1-bg",
+          "type": "rectangle",
+          "x": 40,
+          "y": 130,
+          "width": 320,
+          "height": 140,
+          "fill": "#111827",
+          "cornerRadius": 16,
+          "stroke": "#10B981"
+        },
+        {
+          "id": "kpi-1-title",
+          "type": "text",
+          "x": 64,
+          "y": 150,
+          "content": "🌱 PLANTAS ACTIVAS",
+          "fontSize": 12,
+          "fontWeight": "700",
+          "fill": "#9CA3AF"
+        },
+        {
+          "id": "kpi-1-val",
+          "type": "text",
+          "x": 64,
+          "y": 175,
+          "content": "1,420",
+          "fontSize": 36,
+          "fontWeight": "800",
+          "fill": "#F9FAFB"
+        },
+        {
+          "id": "kpi-1-sub",
+          "type": "text",
+          "x": 64,
+          "y": 230,
+          "content": "850 Floración • 420 Vege • 150 Clones",
+          "fontSize": 13,
+          "fill": "#34D399"
+        },
+
+        {
+          "id": "kpi-2-bg",
+          "type": "rectangle",
+          "x": 385,
+          "y": 130,
+          "width": 320,
+          "height": 140,
+          "fill": "#111827",
+          "cornerRadius": 16,
+          "stroke": "#F59E0B"
+        },
+        {
+          "id": "kpi-2-title",
+          "type": "text",
+          "x": 409,
+          "y": 150,
+          "content": "📅 TAREAS PENDIENTES",
+          "fontSize": 12,
+          "fontWeight": "700",
+          "fill": "#9CA3AF"
+        },
+        {
+          "id": "kpi-2-val",
+          "type": "text",
+          "x": 409,
+          "y": 175,
+          "content": "8 Tareas",
+          "fontSize": 36,
+          "fontWeight": "800",
+          "fill": "#F9FAFB"
+        },
+        {
+          "id": "kpi-2-sub",
+          "type": "text",
+          "x": 409,
+          "y": 230,
+          "content": "⚠️ 2 Urgentes para hoy",
+          "fontSize": 13,
+          "fill": "#F59E0B"
+        },
+
+        {
+          "id": "kpi-3-bg",
+          "type": "rectangle",
+          "x": 730,
+          "y": 130,
+          "width": 320,
+          "height": 140,
+          "fill": "#111827",
+          "cornerRadius": 16,
+          "stroke": "#F43F5E"
+        },
+        {
+          "id": "kpi-3-title",
+          "type": "text",
+          "x": 754,
+          "y": 150,
+          "content": "📦 STOCK ALERTA LOW",
+          "fontSize": 12,
+          "fontWeight": "700",
+          "fill": "#9CA3AF"
+        },
+        {
+          "id": "kpi-3-val",
+          "type": "text",
+          "x": 754,
+          "y": 175,
+          "content": "3 Críticos",
+          "fontSize": 36,
+          "fontWeight": "800",
+          "fill": "#F9FAFB"
+        },
+        {
+          "id": "kpi-3-sub",
+          "type": "text",
+          "x": 754,
+          "y": 230,
+          "content": "Sustrato, Fertilizante A, Alcohol",
+          "fontSize": 13,
+          "fill": "#FCA5A5"
+        },
+
+        {
+          "id": "kpi-4-bg",
+          "type": "rectangle",
+          "x": 1075,
+          "y": 130,
+          "width": 325,
+          "height": 140,
+          "fill": "#111827",
+          "cornerRadius": 16,
+          "stroke": "#38BDF8"
+        },
+        {
+          "id": "kpi-4-title",
+          "type": "text",
+          "x": 1099,
+          "y": 150,
+          "content": "⚖️ DISPENSACIONES MES",
+          "fontSize": 12,
+          "fontWeight": "700",
+          "fill": "#9CA3AF"
+        },
+        {
+          "id": "kpi-4-val",
+          "type": "text",
+          "x": 1099,
+          "y": 175,
+          "content": "1,250 g",
+          "fontSize": 36,
+          "fontWeight": "800",
+          "fill": "#F9FAFB"
+        },
+        {
+          "id": "kpi-4-sub",
+          "type": "text",
+          "x": 1099,
+          "y": 230,
+          "content": "45 Pacientes atendidos",
+          "fontSize": 13,
+          "fill": "#38BDF8"
+        },
+
+        {
+          "id": "tasks-section-bg",
+          "type": "rectangle",
+          "x": 40,
+          "y": 300,
+          "width": 860,
+          "height": 580,
+          "fill": "#111827",
+          "cornerRadius": 20,
+          "stroke": "rgba(255,255,255,0.08)"
+        },
+        {
+          "id": "tasks-title",
+          "type": "text",
+          "x": 70,
+          "y": 330,
+          "content": "📋 Checklist Operativo de Hoy",
+          "fontSize": 20,
+          "fontWeight": "700",
+          "fill": "#F9FAFB"
+        },
+
+        {
+          "id": "t-item-1-bg",
+          "type": "rectangle",
+          "x": 70,
+          "y": 380,
+          "width": 800,
+          "height": 70,
+          "fill": "#1F2937",
+          "cornerRadius": 12
+        },
+        {
+          "id": "t-item-1-txt",
+          "type": "text",
+          "x": 95,
+          "y": 405,
+          "content": "✅  Riego y nutrición con EC 1.8 en Sala Floración A   —   Lucas M. (09:30 AM)",
+          "fontSize": 15,
+          "fill": "#34D399",
+          "fontWeight": "600"
+        },
+
+        {
+          "id": "t-item-2-bg",
+          "type": "rectangle",
+          "x": 70,
+          "y": 465,
+          "width": 800,
+          "height": 70,
+          "fill": "#1F2937",
+          "cornerRadius": 12,
+          "stroke": "#F59E0B"
+        },
+        {
+          "id": "t-item-2-txt",
+          "type": "text",
+          "x": 95,
+          "y": 490,
+          "content": "⏳  Control de IPM / Prevención Biológica en Vegetativo B   —   Prioridad Alta (14:00 PM)",
+          "fontSize": 15,
+          "fill": "#FBBF24",
+          "fontWeight": "600"
+        },
+
+        {
+          "id": "right-panel-bg",
+          "type": "rectangle",
+          "x": 930,
+          "y": 300,
+          "width": 470,
+          "height": 580,
+          "fill": "#111827",
+          "cornerRadius": 20,
+          "stroke": "rgba(255,255,255,0.08)"
+        },
+        {
+          "id": "quick-title",
+          "type": "text",
+          "x": 960,
+          "y": 330,
+          "content": "⚡ Accesos Rápidos",
+          "fontSize": 20,
+          "fontWeight": "700",
+          "fill": "#F9FAFB"
+        },
+        {
+          "id": "act-1-bg",
+          "type": "rectangle",
+          "x": 960,
+          "y": 375,
+          "width": 410,
+          "height": 50,
+          "fill": "rgba(16, 185, 129, 0.15)",
+          "cornerRadius": 10,
+          "stroke": "#10B981"
+        },
+        {
+          "id": "act-1-txt",
+          "type": "text",
+          "x": 980,
+          "y": 390,
+          "content": "🌱  Crear Nuevo Lote de Cultivo",
+          "fontSize": 15,
+          "fontWeight": "600",
+          "fill": "#34D399"
+        },
+        {
+          "id": "act-2-bg",
+          "type": "rectangle",
+          "x": 960,
+          "y": 440,
+          "width": 410,
+          "height": 50,
+          "fill": "rgba(56, 189, 248, 0.15)",
+          "cornerRadius": 10,
+          "stroke": "#38BDF8"
+        },
+        {
+          "id": "act-2-txt",
+          "type": "text",
+          "x": 980,
+          "y": 455,
+          "content": "👤  Registrar Nuevo Paciente",
+          "fontSize": 15,
+          "fontWeight": "600",
+          "fill": "#38BDF8"
+        },
+
+        {
+          "id": "sticky-title",
+          "type": "text",
+          "x": 960,
+          "y": 525,
+          "content": "📌 Notas Rápidas / Stickies",
+          "fontSize": 20,
+          "fontWeight": "700",
+          "fill": "#F9FAFB"
+        },
+        {
+          "id": "sticky-bg",
+          "type": "rectangle",
+          "x": 960,
+          "y": 565,
+          "width": 410,
+          "height": 110,
+          "fill": "rgba(245, 158, 11, 0.12)",
+          "cornerRadius": 12,
+          "stroke": "#F59E0B"
+        },
+        {
+          "id": "sticky-heading",
+          "type": "text",
+          "x": 980,
+          "y": 585,
+          "content": "Recordatorio Sala 2 (Floración)",
+          "fontSize": 15,
+          "fontWeight": "700",
+          "fill": "#FBBF24"
+        },
+        {
+          "id": "sticky-body",
+          "type": "text",
+          "x": 980,
+          "y": 615,
+          "content": "Verificar calibración del sensor de pH y conductividad.",
+          "fontSize": 13,
+          "fill": "#FDE68A"
+        }
+      ]
+    }
+  ]
+}
