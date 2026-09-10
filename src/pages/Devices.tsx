@@ -1,9 +1,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';
-import { FaMicrochip, FaPlus, FaTimes, FaWifi, FaTimesCircle, FaThermometerHalf, FaTint, FaLeaf, FaEdit, FaTrash, FaInfoCircle, FaSync } from 'react-icons/fa';
+import {
+  FaMicrochip, FaPlus, FaTimes, FaWifi, FaSync, FaExclamationTriangle,
+  FaCheckCircle, FaTimesCircle, FaThermometerHalf, FaTint, FaLeaf,
+  FaTrash, FaInfoCircle
+} from 'react-icons/fa';
 import { deviceService, TrazAppDevice, LinkDevicePayload } from '../services/deviceService';
-import { supabase, getSelectedOrgId } from '../services/supabaseClient';
 import { TrazAppDeviceDetailModal } from '../components/TrazAppDeviceDetailModal';
+import { supabase, getSelectedOrgId } from '../services/supabaseClient';
 import toast from 'react-hot-toast';
 
 // ─── Animations ──────────────────────────────────────────────────────────────
@@ -12,8 +17,8 @@ const pulse = keyframes`
   50% { opacity: 0.4; }
 `;
 
-const slideUp = keyframes`
-  from { opacity: 0; transform: translateY(20px); }
+const fadeIn = keyframes`
+  from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
 `;
 
@@ -27,49 +32,35 @@ const Container = styled.div`
   padding: 2rem;
   max-width: 1400px;
   margin: 0 auto;
-  @media (max-width: 768px) { padding: 1rem; }
+  color: #f8fafc;
+  animation: ${fadeIn} 0.3s ease-out;
+
+  @media (max-width: 768px) {
+    padding: 1rem;
+  }
 `;
 
 const Header = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
   flex-wrap: wrap;
   gap: 1rem;
 
   h1 {
     font-size: 1.8rem;
     font-weight: 800;
-    color: #f8fafc;
     margin: 0;
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    svg { color: #10b981; }
-  }
-`;
+    color: #f8fafc;
 
-const AddButton = styled.button`
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  background: linear-gradient(135deg, #10b981, #059669);
-  color: white;
-  border: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: 10px;
-  font-weight: 700;
-  font-size: 0.95rem;
-  cursor: pointer;
-  transition: all 0.2s;
-  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
-
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+    svg {
+      color: #10b981;
+    }
   }
-  &:active { transform: translateY(0); }
 `;
 
 const HeaderActions = styled.div`
@@ -78,57 +69,71 @@ const HeaderActions = styled.div`
   gap: 0.75rem;
 `;
 
-const RefreshButton = styled.button<{ $spinning: boolean }>`
+const AddButton = styled.button`
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  border: none;
+  padding: 0.7rem 1.3rem;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
+  transition: all 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+  }
+`;
+
+const RefreshButton = styled.button<{ $spinning?: boolean }>`
+  background: rgba(30, 41, 59, 0.8);
+  color: #94a3b8;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(15, 23, 42, 0.6);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  color: #94a3b8;
-  padding: 0.75rem;
-  border-radius: 10px;
   cursor: pointer;
-  transition: all 0.2s;
-  height: 42px;
-  width: 42px;
+  transition: all 0.2s ease;
 
   svg {
-    font-size: 0.95rem;
-    animation: ${p => p.$spinning ? spin : 'none'} 1s linear infinite;
+    animation: ${props => props.$spinning ? spin : 'none'} 1s linear infinite;
   }
 
   &:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: #10b981;
-    border-color: rgba(16, 185, 129, 0.3);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.1);
+    background: rgba(51, 65, 85, 0.8);
+    color: #f8fafc;
   }
-  &:active { transform: translateY(0); }
-  &:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 `;
 
 const Grid = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 1.5rem;
+  gap: 1.25rem;
 `;
 
 const DeviceCard = styled.div<{ $online: boolean }>`
-  background: rgba(15, 23, 42, 0.8);
+  background: rgba(15, 23, 42, 0.75);
   backdrop-filter: blur(12px);
-  border: 1px solid ${p => p.$online ? 'rgba(16, 185, 129, 0.3)' : 'rgba(255,255,255,0.06)'};
-  border-radius: 1.25rem;
-  padding: 1.5rem;
-  animation: ${slideUp} 0.4s ease;
-  transition: border-color 0.3s, box-shadow 0.3s, transform 0.2s;
-  box-shadow: ${p => p.$online ? '0 0 0 1px rgba(16,185,129,0.1), 0 8px 32px rgba(0,0,0,0.3)' : '0 8px 32px rgba(0,0,0,0.3)'};
+  border: 1px solid ${props => props.$online ? 'rgba(16, 185, 129, 0.3)' : 'rgba(255, 255, 255, 0.08)'};
+  border-radius: 16px;
+  padding: 1.25rem;
+  transition: all 0.25s ease;
   cursor: pointer;
+  position: relative;
+  overflow: hidden;
 
   &:hover {
-    border-color: ${p => p.$online ? 'rgba(16, 185, 129, 0.5)' : 'rgba(255,255,255,0.12)'};
-    transform: translateY(-2px);
+    transform: translateY(-4px);
+    border-color: #10b981;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
   }
 `;
 
@@ -136,113 +141,93 @@ const CardHeader = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 1.25rem;
+  margin-bottom: 1rem;
 `;
 
 const DeviceTitle = styled.div`
   h3 {
-    margin: 0 0 0.2rem;
-    font-size: 1.05rem;
-    font-weight: 700;
-    color: #f1f5f9;
+    font-size: 1.1rem;
+    font-weight: 800;
+    margin: 0 0 0.2rem 0;
+    color: #f8fafc;
   }
   span {
-    font-size: 0.78rem;
+    font-size: 0.75rem;
     color: #64748b;
     font-family: monospace;
-    letter-spacing: 0.05em;
   }
 `;
 
 const StatusBadge = styled.div<{ $online: boolean }>`
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  padding: 0.3rem 0.75rem;
-  border-radius: 20px;
-  font-size: 0.75rem;
+  background: ${props => props.$online ? 'rgba(16, 185, 129, 0.15)' : 'rgba(100, 116, 139, 0.15)'};
+  border: 1px solid ${props => props.$online ? 'rgba(16, 185, 129, 0.3)' : 'rgba(100, 116, 139, 0.3)'};
+  color: ${props => props.$online ? '#34d399' : '#94a3b8'};
+  font-size: 0.7rem;
   font-weight: 700;
-  background: ${p => p.$online ? 'rgba(16,185,129,0.15)' : 'rgba(100,116,139,0.15)'};
-  color: ${p => p.$online ? '#10b981' : '#64748b'};
-  border: 1px solid ${p => p.$online ? 'rgba(16,185,129,0.3)' : 'rgba(100,116,139,0.2)'};
+  padding: 0.2rem 0.55rem;
+  border-radius: 20px;
 
   .dot {
     width: 6px;
     height: 6px;
     border-radius: 50%;
-    background: currentColor;
-    animation: ${p => p.$online ? pulse : 'none'} 2s infinite;
+    background: ${props => props.$online ? '#10b981' : '#64748b'};
+    animation: ${props => props.$online ? pulse : 'none'} 2s infinite;
   }
 `;
 
 const MetricsGrid = styled.div<{ $cols?: number }>`
   display: grid;
-  grid-template-columns: repeat(${p => p.$cols || 2}, 1fr);
-  gap: 0.75rem;
+  grid-template-columns: repeat(${props => props.$cols || 2}, 1fr);
+  gap: 0.6rem;
   margin-bottom: 1rem;
 `;
 
-const MetricCard = styled.div<{ $color: string }>`
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.06);
-  border-radius: 0.875rem;
-  padding: 0.875rem;
-  text-align: center;
+const MetricCard = styled.div<{ $color?: string }>`
+  background: rgba(30, 41, 59, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  padding: 0.6rem 0.75rem;
 
   .icon {
-    font-size: 1rem;
-    color: ${p => p.$color};
-    margin-bottom: 0.3rem;
-  }
-
-  .value {
-    font-size: 1.6rem;
-    font-weight: 800;
-    color: ${p => p.$color};
-    line-height: 1;
+    font-size: 0.8rem;
+    color: ${props => props.$color || '#94a3b8'};
     margin-bottom: 0.2rem;
   }
-
+  .value {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: #f8fafc;
+  }
   .label {
-    font-size: 0.7rem;
+    font-size: 0.65rem;
     color: #64748b;
+    font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.08em;
   }
 `;
 
 const VpdBadge = styled.div<{ $color: string }>`
+  background: rgba(15, 23, 42, 0.9);
+  border-left: 3px solid ${props => props.$color};
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  background: rgba(255,255,255,0.04);
-  border: 1px solid ${p => p.$color}33;
-  border-radius: 0.875rem;
-  padding: 0.75rem 1rem;
-  margin-bottom: 1rem;
+  align-items: center;
+  margin-bottom: 0.85rem;
 
   .left {
-    display: flex;
-    flex-direction: column;
-    gap: 0.15rem;
-    .label { font-size: 0.7rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.08em; }
-    .value { font-size: 1.1rem; font-weight: 800; color: ${p => p.$color}; }
+    .label { font-size: 0.6rem; color: #64748b; font-weight: 700; }
+    .value { font-size: 0.95rem; font-weight: 800; color: #f8fafc; }
   }
-
   .right {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 0.15rem;
-    .stage { font-size: 0.85rem; font-weight: 700; color: #94a3b8; }
-    .status {
-      font-size: 0.72rem;
-      font-weight: 700;
-      color: ${p => p.$color};
-      background: ${p => p.$color}1a;
-      padding: 0.2rem 0.5rem;
-      border-radius: 20px;
-    }
+    text-align: right;
+    .stage { font-size: 0.7rem; color: #94a3b8; font-weight: 600; display: block; }
+    .status { font-size: 0.65rem; color: ${props => props.$color}; font-weight: 700; }
   }
 `;
 
@@ -250,199 +235,184 @@ const CardFooter = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-top: 0.875rem;
-  border-top: 1px solid rgba(255,255,255,0.06);
-
-  .last-seen {
-    font-size: 0.73rem;
-    color: #475569;
-  }
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  padding-top: 0.75rem;
+  font-size: 0.75rem;
+  color: #64748b;
 
   .actions {
     display: flex;
-    gap: 0.4rem;
+    gap: 0.35rem;
   }
 `;
 
 const IconBtn = styled.button<{ $danger?: boolean }>`
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.08);
-  color: ${p => p.$danger ? '#ef4444' : '#94a3b8'};
-  padding: 0.4rem;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: ${props => props.$danger ? '#ef4444' : '#94a3b8'};
+  width: 28px;
+  height: 28px;
   border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.2s;
   display: flex;
   align-items: center;
-  font-size: 0.8rem;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
 
   &:hover {
-    background: ${p => p.$danger ? 'rgba(239,68,68,0.15)' : 'rgba(255,255,255,0.1)'};
-    color: ${p => p.$danger ? '#ef4444' : '#f1f5f9'};
-    border-color: ${p => p.$danger ? 'rgba(239,68,68,0.3)' : 'rgba(255,255,255,0.15)'};
+    background: ${props => props.$danger ? 'rgba(239, 68, 68, 0.2)' : 'rgba(255, 255, 255, 0.15)'};
+    color: ${props => props.$danger ? '#f87171' : '#f8fafc'};
   }
 `;
 
 const EmptyState = styled.div`
   grid-column: 1 / -1;
+  background: rgba(15, 23, 42, 0.6);
+  border: 2px dashed rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 3.5rem 2rem;
   text-align: center;
-  padding: 4rem 2rem;
-  background: rgba(15,23,42,0.6);
-  border: 2px dashed rgba(255,255,255,0.08);
-  border-radius: 1.25rem;
+  color: #64748b;
 
-  .icon { font-size: 3rem; color: #334155; margin-bottom: 1rem; }
-  h3 { color: #94a3b8; margin: 0 0 0.5rem; font-size: 1.1rem; }
-  p { color: #475569; font-size: 0.9rem; margin: 0; }
+  .icon {
+    font-size: 3rem;
+    color: #334155;
+    margin-bottom: 1rem;
+  }
+  h3 {
+    color: #f8fafc;
+    margin: 0 0 0.5rem 0;
+  }
+  p {
+    max-width: 450px;
+    margin: 0 auto;
+    font-size: 0.9rem;
+  }
 `;
 
-// ─── Modal ───────────────────────────────────────────────────────────────────
 const Overlay = styled.div`
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.7);
+  background: rgba(0, 0, 0, 0.8);
   backdrop-filter: blur(8px);
-  z-index: 10000;
   display: flex;
   align-items: center;
   justify-content: center;
+  z-index: 1000;
   padding: 1rem;
 `;
 
 const Modal = styled.div`
-  background: rgba(15,23,42,0.97);
-  border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 1.25rem;
-  padding: 2rem;
+  background: #0f172a;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
   width: 100%;
-  max-width: 440px;
-  box-shadow: 0 25px 50px rgba(0,0,0,0.5);
-  animation: ${slideUp} 0.3s ease;
+  max-width: 450px;
+  padding: 1.75rem;
+  color: #f8fafc;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.7);
 
   h2 {
-    margin: 0 0 0.5rem;
-    color: #f1f5f9;
     font-size: 1.3rem;
+    margin: 0 0 0.5rem 0;
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    color: #f8fafc;
     svg { color: #10b981; }
   }
-
-  .subtitle {
+  p.subtitle {
     color: #64748b;
-    font-size: 0.875rem;
-    margin: 0 0 1.75rem;
-    line-height: 1.5;
+    font-size: 0.85rem;
+    margin: 0 0 1.25rem 0;
   }
 `;
 
 const HintBox = styled.div`
-  background: rgba(16,185,129,0.08);
-  border: 1px solid rgba(16,185,129,0.2);
-  border-radius: 0.75rem;
-  padding: 1rem;
-  margin-bottom: 1.5rem;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1.25rem;
   display: flex;
   gap: 0.75rem;
-  align-items: flex-start;
+  color: #34d399;
+  font-size: 0.8rem;
 
-  svg { color: #10b981; font-size: 1rem; flex-shrink: 0; margin-top: 0.15rem; }
-
-  .text {
-    font-size: 0.82rem;
-    color: #94a3b8;
-    line-height: 1.5;
-
-    strong { color: #10b981; display: block; margin-bottom: 0.25rem; }
-    code {
-      background: rgba(0,0,0,0.3);
-      padding: 0.1rem 0.4rem;
-      border-radius: 4px;
-      font-family: monospace;
-      color: #f1f5f9;
-      font-size: 0.95em;
-    }
-  }
+  svg { font-size: 1.2rem; flex-shrink: 0; margin-top: 2px; }
+  .text { strong { color: #f8fafc; } }
 `;
 
 const FormGroup = styled.div`
-  margin-bottom: 1.25rem;
-
+  margin-bottom: 1rem;
   label {
     display: block;
     font-size: 0.8rem;
-    font-weight: 600;
+    font-weight: 700;
     color: #94a3b8;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.35rem;
   }
-
   input {
     width: 100%;
-    background: rgba(255,255,255,0.06);
-    border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 8px;
-    padding: 0.75rem 1rem;
-    color: #f1f5f9;
-    font-size: 1rem;
-    font-family: monospace;
-    outline: none;
-    box-sizing: border-box;
-    transition: border-color 0.2s;
-
-    &::placeholder { color: #475569; }
-    &:focus { border-color: #10b981; }
-  }
-`;
-
-const ModalActions = styled.div`
-  display: flex;
-  gap: 0.75rem;
-  margin-top: 1.5rem;
-
-  button {
-    flex: 1;
-    padding: 0.875rem;
-    border-radius: 10px;
-    font-weight: 700;
+    padding: 0.65rem 0.85rem;
+    color: #f8fafc;
     font-size: 0.95rem;
-    cursor: pointer;
-    border: none;
-    transition: all 0.2s;
+    box-sizing: border-box;
 
-    &.primary {
-      background: linear-gradient(135deg, #10b981, #059669);
-      color: white;
-      box-shadow: 0 4px 15px rgba(16,185,129,0.3);
-      &:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(16,185,129,0.4); }
-      &:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-    }
-
-    &.secondary {
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.1);
-      color: #94a3b8;
-      &:hover { background: rgba(255,255,255,0.1); color: #f1f5f9; }
+    &:focus {
+      outline: none;
+      border-color: #10b981;
+      background: rgba(255, 255, 255, 0.08);
     }
   }
 `;
 
 const ErrorMsg = styled.div`
-  background: rgba(239,68,68,0.1);
-  border: 1px solid rgba(239,68,68,0.3);
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #f87171;
+  padding: 0.6rem 0.85rem;
   border-radius: 8px;
-  padding: 0.75rem 1rem;
-  color: #fca5a5;
-  font-size: 0.875rem;
-  margin-top: 0.75rem;
+  font-size: 0.8rem;
+  margin-bottom: 1rem;
+`;
+
+const ModalActions = styled.div`
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+  margin-top: 1.5rem;
+
+  button {
+    padding: 0.65rem 1.2rem;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 0.85rem;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s ease;
+
+    &.primary {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: white;
+      &:hover { opacity: 0.9; }
+      &:disabled { opacity: 0.5; cursor: not-allowed; }
+    }
+    &.secondary {
+      background: rgba(255, 255, 255, 0.08);
+      color: #94a3b8;
+      &:hover { background: rgba(255, 255, 255, 0.15); color: #f8fafc; }
+    }
+  }
 `;
 
 const Spinner = styled.div`
-  width: 16px;
-  height: 16px;
-  border: 2px solid rgba(255,255,255,0.3);
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
   border-top-color: white;
   border-radius: 50%;
   animation: ${spin} 0.8s linear infinite;
@@ -628,6 +598,44 @@ const Devices: React.FC = () => {
         </HeaderActions>
       </Header>
 
+      {/* Clean Room Environmental Summary Bar */}
+      {devices.length > 0 && (
+        <div style={{
+          background: 'rgba(15, 23, 42, 0.6)',
+          backdropFilter: 'blur(10px)',
+          border: '1px solid rgba(255, 255, 255, 0.08)',
+          borderRadius: '12px',
+          padding: '1rem 1.5rem',
+          marginBottom: '1.5rem',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-around',
+          gap: '1rem',
+          flexWrap: 'wrap'
+        }}>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>Temp Promedio</div>
+            <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#ef4444' }}>
+              {(devices.filter(d => d.last_reading?.sensors).reduce((acc, d) => acc + (d.last_reading?.sensors.temp_c || 0), 0) / (devices.filter(d => d.last_reading?.sensors).length || 1)).toFixed(1)} <span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>°C</span>
+            </div>
+          </div>
+          <div style={{ height: '30px', width: '1px', background: 'rgba(255,255,255,0.1)' }} />
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>Humedad Promedio</div>
+            <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#38bdf8' }}>
+              {(devices.filter(d => d.last_reading?.sensors).reduce((acc, d) => acc + (d.last_reading?.sensors.hum_pct || 0), 0) / (devices.filter(d => d.last_reading?.sensors).length || 1)).toFixed(1)} <span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>%</span>
+            </div>
+          </div>
+          <div style={{ height: '30px', width: '1px', background: 'rgba(255,255,255,0.1)' }} />
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>VPD Promedio</div>
+            <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#10b981' }}>
+              {(devices.filter(d => d.last_reading?.sensors).reduce((acc, d) => acc + (d.last_reading?.sensors.vpd_kpa || 0), 0) / (devices.filter(d => d.last_reading?.sensors).length || 1)).toFixed(2)} <span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>kPa</span>
+            </div>
+          </div>
+        </div>
+      )}
+
       <Grid>
         {loading ? (
           <EmptyState>
@@ -651,8 +659,28 @@ const Devices: React.FC = () => {
             <DeviceCard key={device.device_id} $online={online} onClick={() => setSelectedDevice(device)}>
               <CardHeader>
                 <DeviceTitle>
-                  <h3>{device.alias || device.device_id}</h3>
-                  <span>{device.device_id}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                    <h3 style={{ margin: 0 }}>{device.alias || device.device_id}</h3>
+                    <span style={{
+                      fontSize: '0.7rem',
+                      background: (device.device_type === 'sense_7in' || device.device_id.toLowerCase().includes('7in')) ? 'rgba(14, 165, 233, 0.15)' : 'rgba(16, 185, 129, 0.15)',
+                      color: (device.device_type === 'sense_7in' || device.device_id.toLowerCase().includes('7in')) ? '#38bdf8' : '#34d399',
+                      border: `1px solid ${(device.device_type === 'sense_7in' || device.device_id.toLowerCase().includes('7in')) ? 'rgba(14, 165, 233, 0.3)' : 'rgba(16, 185, 129, 0.3)'}`,
+                      padding: '0.15rem 0.45rem',
+                      borderRadius: '4px',
+                      fontWeight: 700
+                    }}>
+                      {(device.device_type === 'sense_7in' || device.device_id.toLowerCase().includes('7in')) ? '🖥️ Monitor 7.0"' : '📟 Sensor 3.5"'}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'center', marginTop: '0.2rem', flexWrap: 'wrap' }}>
+                    <span style={{ fontFamily: 'monospace', fontSize: '0.75rem', color: '#64748b' }}>{device.device_id}</span>
+                    {(device.room_name || device.bunker_name) && (
+                      <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
+                        📍 {device.room_name ? device.room_name : 'Sala'} {device.bunker_name ? `• ${device.bunker_name}` : ''}
+                      </span>
+                    )}
+                  </div>
                 </DeviceTitle>
                 <StatusBadge $online={online}>
                   <div className="dot" />
@@ -771,7 +799,7 @@ const Devices: React.FC = () => {
         <TrazAppDeviceDetailModal
           device={selectedDevice}
           onClose={() => setSelectedDevice(null)}
-          onUpdate={fetchDevices}
+          onUpdate={handleRefresh}
         />
       )}
     </Container>

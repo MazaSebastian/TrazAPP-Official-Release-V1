@@ -39,9 +39,44 @@ export const roomsService = {
             return [];
         }
         if (data) {
-            data.forEach(room => {
+            const { data: devices } = await getClient()
+                .from('trazapp_devices')
+                .select('*')
+                .eq('is_active', true);
+
+            data.forEach((room) => {
                 if (room.batches) {
                     room.batches = room.batches.filter((b: Batch) => !b.discarded_at);
+                }
+
+                // Extract sensor readings from last_reading (handles both flat and nested formats)
+                const getSensors = (d: any) => {
+                    if (d.last_reading?.sensors) return d.last_reading.sensors;
+                    if (d.last_reading?.temp_c !== undefined) return d.last_reading;
+                    return null;
+                };
+
+                // Match devices explicitly linked to this room
+                const roomDevs = (devices || []).filter(d => {
+                    if (!getSensors(d)) return false;
+                    // Exact match: device linked to this room
+                    if (d.room_id === room.id) return true;
+                    // Fallback: device has no room_id assigned — include for all rooms in same org
+                    if (!d.room_id) return true;
+                    return false;
+                });
+
+                if (roomDevs.length > 0) {
+                    const avgT = roomDevs.reduce((acc, d) => {
+                        const s = getSensors(d);
+                        return acc + (s?.temp_c || 0);
+                    }, 0) / roomDevs.length;
+                    const avgH = roomDevs.reduce((acc, d) => {
+                        const s = getSensors(d);
+                        return acc + (s?.hum_pct || 0);
+                    }, 0) / roomDevs.length;
+                    room.current_temperature = parseFloat(avgT.toFixed(1));
+                    room.current_humidity = parseFloat(avgH.toFixed(1));
                 }
             });
         }
@@ -60,9 +95,20 @@ export const roomsService = {
             return null;
         }
         if (data) {
-            // Filter out discarded batches from the result
             if (data.batches) {
                 data.batches = data.batches.filter((b: Batch) => !b.discarded_at);
+            }
+            const { data: devices } = await getClient()
+                .from('trazapp_devices')
+                .select('*')
+                .eq('is_active', true);
+
+            const roomDevs = (devices || []).filter(d => (d.room_id === id || !d.room_id) && d.last_reading?.sensors);
+            if (roomDevs.length > 0) {
+                const avgT = roomDevs.reduce((acc, d) => acc + (d.last_reading.sensors.temp_c || 0), 0) / roomDevs.length;
+                const avgH = roomDevs.reduce((acc, d) => acc + (d.last_reading.sensors.hum_pct || 0), 0) / roomDevs.length;
+                data.current_temperature = parseFloat(avgT.toFixed(1));
+                data.current_humidity = parseFloat(avgH.toFixed(1));
             }
         }
         return data;

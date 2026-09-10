@@ -86,3 +86,7 @@ jspm_packages/
 .vercel
 .env*.local
 .env*
+
+# Local testing scripts
+scratch/
+inspect_*.js

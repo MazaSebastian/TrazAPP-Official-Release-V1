@@ -33,10 +33,12 @@ interface DeviceFormData {
   pin: string;
   alias: string;
   notes: string;
+  organization_id: string;
+  device_type: string;
 }
 
 const EMPTY_FORM: DeviceFormData = {
-  device_id: '', device_token: '', pin: '', alias: '', notes: '',
+  device_id: '', device_token: '', pin: '', alias: '', notes: '', organization_id: '', device_type: 'sensor',
 };
 
 // ─── Animations ──────────────────────────────────────────────────────────────
@@ -420,6 +422,7 @@ function isOnline(lastSeen: string | null): boolean {
 // ─── Main Component ───────────────────────────────────────────────────────────
 const DeviceInventory: React.FC = () => {
   const [devices, setDevices] = useState<AdminDevice[]>([]);
+  const [organizationsList, setOrganizationsList] = useState<{ id: string; name: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [showModal, setShowModal] = useState(false);
@@ -441,7 +444,13 @@ const DeviceInventory: React.FC = () => {
       .order('created_at', { ascending: false });
 
     if (!error) setDevices(data || []);
-    else console.error('DeviceInventory fetch error:', error);
+
+    const { data: orgsData } = await supabase
+      .from('organizations')
+      .select('id, name')
+      .order('name');
+    if (orgsData) setOrganizationsList(orgsData);
+
     setLoading(false);
   }, []);
 
@@ -458,11 +467,13 @@ const DeviceInventory: React.FC = () => {
   const openEdit = (device: AdminDevice) => {
     setEditDevice(device);
     setForm({
-      device_id:    device.device_id,
-      device_token: device.device_token,
-      pin:          device.pin,
-      alias:        device.alias || '',
-      notes:        device.notes || '',
+      device_id:       device.device_id,
+      device_token:    device.device_token,
+      pin:             device.pin,
+      alias:           device.alias || '',
+      notes:           device.notes || '',
+      organization_id: device.organization_id || '',
+      device_type:     (device as any).device_type || 'sensor',
     });
     setError(null);
     setSuccess(null);
@@ -484,15 +495,20 @@ const DeviceInventory: React.FC = () => {
     setError(null);
     setSuccess(null);
 
+    const targetOrgId = form.organization_id ? form.organization_id : null;
+    const isProv = !!targetOrgId;
+
     if (editDevice) {
       // Update
       const { error: updError } = await supabase
         .from('trazapp_devices')
         .update({
-          device_token: form.device_token,
-          pin:          form.pin,
-          alias:        form.alias || null,
-          notes:        form.notes || null,
+          device_token:    form.device_token,
+          pin:             form.pin,
+          alias:           form.alias || null,
+          notes:           form.notes || null,
+          organization_id: targetOrgId,
+          is_provisioned:  isProv,
         })
         .eq('id', editDevice.id);
 
@@ -507,13 +523,14 @@ const DeviceInventory: React.FC = () => {
       const { error: insError } = await supabase
         .from('trazapp_devices')
         .insert({
-          device_id:    form.device_id.trim(),
-          device_token: form.device_token.trim(),
-          pin:          form.pin.trim(),
-          alias:        form.alias || null,
-          notes:        form.notes || null,
-          is_active:    true,
-          is_provisioned: false,
+          device_id:       form.device_id.trim(),
+          device_token:    form.device_token.trim(),
+          pin:             form.pin.trim(),
+          alias:           form.alias || null,
+          notes:           form.notes || null,
+          organization_id: targetOrgId,
+          is_active:       true,
+          is_provisioned:  isProv,
         });
 
       if (insError) {
@@ -692,6 +709,53 @@ const DeviceInventory: React.FC = () => {
                   onChange={e => setForm(p => ({ ...p, device_token: e.target.value }))}
                 />
                 <div className="hint">Hash único generado por el firmware del ESP32 (X-Device-Secret).</div>
+              </FormGroup>
+
+              <FormGroup $full>
+                <label>Organización / Cliente Asignado (opcional)</label>
+                <select
+                  value={form.organization_id}
+                  onChange={e => setForm(p => ({ ...p, organization_id: e.target.value }))}
+                  style={{
+                    width: '100%',
+                    background: 'rgba(255,255,255,0.06)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: '8px',
+                    padding: '0.75rem 1rem',
+                    color: '#f1f5f9',
+                    fontSize: '0.95rem'
+                  }}
+                >
+                  <option value="" style={{ background: '#0f172a' }}>-- Libre (Sin asignar a cliente) --</option>
+                  {organizationsList.map(org => (
+                    <option key={org.id} value={org.id} style={{ background: '#0f172a' }}>
+                      🏢 {org.name}
+                    </option>
+                  ))}
+                </select>
+                <div className="hint">Asignar directamente a una empresa / cultivo cliente.</div>
+              </FormGroup>
+
+              <FormGroup $full>
+                <label>Tipo de Dispositivo</label>
+                <select
+                  value={form.device_type}
+                  onChange={e => setForm(p => ({ ...p, device_type: e.target.value }))}
+                  style={{
+                    width: '100%',
+                    background: 'rgba(255,255,255,0.06)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: '8px',
+                    padding: '0.75rem 1rem',
+                    color: '#f1f5f9',
+                    fontSize: '0.95rem'
+                  }}
+                >
+                  <option value="sense_7in" style={{ background: '#0f172a' }}>🖥️ Monitor TrazApp 7.0" (Lotes, Mesas, Tareas, Incidencias)</option>
+                  <option value="sensor" style={{ background: '#0f172a' }}>📟 Sensor TrazApp 3.5" (Sensado Ambiental de Mesa)</option>
+                  <option value="camera" style={{ background: '#0f172a' }}>📷 Cámara / Visión por Computadora</option>
+                  <option value="actuator" style={{ background: '#0f172a' }}>⚡ Actuador / Rele Control</option>
+                </select>
               </FormGroup>
 
               <FormGroup $full>

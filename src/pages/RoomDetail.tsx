@@ -44,7 +44,10 @@ import {
     FaEdit,
     FaDna,
     FaClock,
-    FaHeartbeat
+    FaHeartbeat,
+    FaWifi,
+    FaMicrochip,
+    FaTint
 } from 'react-icons/fa';
 // FaExclamationTriangle, FaTint, FaCut, FaSkull, FaLeaf, FaFlask, FaBroom
 import {
@@ -58,6 +61,8 @@ import { tasksService } from '../services/tasksService';
 import { stickiesService } from '../services/stickiesService';
 import { usersService } from '../services/usersService';
 import { getInsumos } from '../services/insumosService';
+import { deviceService } from '../services/deviceService';
+import { TrazAppDeviceDetailModal } from '../components/TrazAppDeviceDetailModal';
 import { Room } from '../types/rooms';
 import { Task, StickyNote, RecurrenceConfig, TaskType, Insumo } from '../types';
 import { PrintableRoomCalendar } from '../components/Esquejera/PrintableRoomCalendar';
@@ -65,6 +70,7 @@ import { PrintableRoomCalendar } from '../components/Esquejera/PrintableRoomCale
 
 import { GroupDetailModal } from '../components/GroupDetailModal';
 import { LoadingSpinner } from '../components/LoadingSpinner';
+import AudioRecorderWidget from '../components/AudioRecorderWidget';
 
 import { EsquejeraGrid } from '../components/Esquejera/EsquejeraGrid';
 import { PrintableMapReport } from '../components/Esquejera/PrintableMapReport';
@@ -454,27 +460,26 @@ const DashedCircle = styled.div`
 `;
 
 const EmptyStickyState = styled.div`
-  background: rgba(17, 24, 39, 0.5);
-  backdrop-filter: blur(16px);
-  border-radius: 1.25rem;
-  border: 1px dashed rgba(245, 158, 11, 0.35);
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(12px);
+  border-radius: 0.75rem;
+  border: 2px dashed rgba(255, 255, 255, 0.2);
   display: flex;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: center;
   cursor: pointer;
-  padding: 1.5rem 1.85rem;
-  gap: 1.25rem;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 1.5rem;
+  gap: 1.5rem;
+  transition: all 0.2s ease;
   color: #94a3b8;
   width: 100%;
   margin-top: 1rem;
 
   &:hover {
-    border-color: rgba(245, 158, 11, 0.6);
-    color: #fbbf24;
-    background: rgba(245, 158, 11, 0.12);
-    box-shadow: 0 10px 25px -5px rgba(245, 158, 11, 0.2);
-    transform: translateY(-2px);
+    border-color: #fde047; /* Yellow/Gold */
+    color: #facc15;
+    background: rgba(253, 224, 71, 0.1);
+    box-shadow: 0 0 15px rgba(253, 224, 71, 0.2);
   }
 `;
 
@@ -525,44 +530,41 @@ const getTaskStyles = (type: string) => {
 
 // Badges
 const Badge = styled.span<{ stage?: string, taskType?: string }>`
-  padding: 0.3rem 0.85rem;
-  border-radius: 9999px;
-  font-size: 0.75rem;
-  font-weight: 800;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  display: inline-flex;
-  align-items: center;
-  border: 1px solid transparent; 
+padding: 2px 8px;
+border-radius: 9999px;
+font-size: 0.7rem;
+font-weight: 600;
+text-transform: capitalize;
+display: inline-flex;
+align-items: center;
+border: 1px solid transparent; 
   
   ${p => {
         if (p.stage) {
             return `
-            background: ${p.stage === 'vegetation' ? 'rgba(56, 189, 248, 0.15)' : p.stage === 'flowering' ? 'rgba(245, 158, 11, 0.15)' : (p.stage === 'drying' || p.stage === 'curing') ? 'rgba(168, 85, 247, 0.15)' : p.stage === 'living_soil' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(148, 163, 184, 0.15)'};
-            color: ${p.stage === 'vegetation' ? '#38bdf8' : p.stage === 'flowering' ? '#f59e0b' : (p.stage === 'drying' || p.stage === 'curing') ? '#c084fc' : p.stage === 'living_soil' ? '#34d399' : '#cbd5e1'};
-            border-color: ${p.stage === 'vegetation' ? 'rgba(56, 189, 248, 0.3)' : p.stage === 'flowering' ? 'rgba(245, 158, 11, 0.3)' : (p.stage === 'drying' || p.stage === 'curing') ? 'rgba(168, 85, 247, 0.3)' : p.stage === 'living_soil' ? 'rgba(16, 185, 129, 0.3)' : 'rgba(148, 163, 184, 0.3)'};
-            backdrop-filter: blur(8px);
+            background: ${p.stage === 'vegetation' ? 'rgba(74, 222, 128, 0.1)' : p.stage === 'flowering' ? 'rgba(244, 114, 182, 0.1)' : (p.stage === 'drying' || p.stage === 'curing') ? 'rgba(251, 146, 60, 0.1)' : p.stage === 'living_soil' ? 'rgba(45, 212, 191, 0.1)' : 'rgba(148, 163, 184, 0.1)'};
+            color: ${p.stage === 'vegetation' ? '#4ade80' : p.stage === 'flowering' ? '#f472b6' : (p.stage === 'drying' || p.stage === 'curing') ? '#fb923c' : p.stage === 'living_soil' ? '#2dd4bf' : '#cbd5e1'};
+            border-color: ${p.stage === 'vegetation' ? 'rgba(74, 222, 128, 0.2)' : p.stage === 'flowering' ? 'rgba(244, 114, 182, 0.2)' : (p.stage === 'drying' || p.stage === 'curing') ? 'rgba(251, 146, 60, 0.2)' : p.stage === 'living_soil' ? 'rgba(45, 212, 191, 0.2)' : 'rgba(148, 163, 184, 0.2)'};
+            backdrop-filter: blur(4px);
           `;
         }
         if (p.taskType) {
             const s = getTaskStyles(p.taskType || '');
-            return `background: ${s.bg}; color: ${s.color}; border-color: ${s.border || 'transparent'}; backdrop-filter: blur(8px);`;
+            return `background: ${s.bg}; color: ${s.color}; border-color: ${s.border || 'transparent'}; backdrop-filter: blur(4px);`;
         }
-        return `background: rgba(148, 163, 184, 0.15); color: #cbd5e1; border-color: rgba(148, 163, 184, 0.3); backdrop-filter: blur(8px);`;
-    }}
+        return `background: rgba(148, 163, 184, 0.1); color: #cbd5e1; border-color: rgba(148, 163, 184, 0.2); backdrop-filter: blur(4px);`;
+    }
+    }
 `;
 
+
 const Title = styled.h1`
-  font-size: clamp(1.75rem, 3.5vw, 2.5rem);
-  font-weight: 800;
-  letter-spacing: -0.03em;
-  background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  margin: 0;
+  font-size: 1.8rem;
+  color: #f8fafc;
+  margin: 1rem 0 0.5rem;
   display: flex;
   align-items: center;
-  gap: 0.85rem;
+  gap: 0.75rem;
 
   @media (max-width: 768px) {
     font-size: 1.4rem;
@@ -576,26 +578,28 @@ const Title = styled.h1`
 const StyledActionButton = styled.button<{ $variant?: 'primary' | 'secondary' | 'gold' | 'success' | 'danger' }>`
   display: flex;
   align-items: center;
-  gap: 0.6rem;
-  padding: 0.65rem 1.25rem;
-  border-radius: 0.875rem;
-  font-weight: 700;
-  font-size: 0.875rem;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  border: ${p => p.$variant === 'secondary' ? '1px solid rgba(255, 255, 255, 0.12)' : 'none'};
-  backdrop-filter: blur(12px);
+  transition: all 0.2s ease-in-out;
+  border: ${p => p.$variant === 'secondary' ? '1px solid rgba(255, 255, 255, 0.1)' : 'none'};
+  backdrop-filter: blur(8px);
   background: ${p => {
         switch (p.$variant) {
-            case 'gold': return 'linear-gradient(135deg, rgba(245, 158, 11, 0.25), rgba(217, 119, 6, 0.35))';
-            case 'primary': return 'linear-gradient(135deg, #10b981, #059669)';
-            case 'success': return 'linear-gradient(135deg, #10b981, #059669)';
-            case 'danger': return 'linear-gradient(135deg, rgba(244, 63, 94, 0.25), rgba(225, 29, 72, 0.35))';
-            default: return 'rgba(31, 41, 55, 0.6)';
+            case 'gold': return 'rgba(214, 158, 46, 0.2)';
+            case 'primary': return 'rgba(74, 222, 128, 0.2)';
+            case 'success': return 'rgba(74, 222, 128, 0.2)'; // Map success to green
+            case 'danger': return 'rgba(239, 68, 68, 0.2)';
+            default: return 'rgba(15, 23, 42, 0.4)';
         }
     }};
   color: ${p => {
         switch (p.$variant) {
+            case 'gold': return '#fcd34d';
+            case 'primary': return '#4ade80';
+            case 'success': return '#4ade80';
             case 'danger': return '#f87171';
             default: return '#f8fafc';
         }
@@ -968,23 +972,21 @@ const HoverButton = styled.button`
 const BackButton = styled.button`
   display: flex;
   align-items: center;
-  gap: 0.55rem;
-  background: rgba(255, 255, 255, 0.05);
-  color: #e2e8f0;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 0.875rem;
-  font-weight: 700;
-  cursor: pointer;
-  padding: 0.6rem 1.2rem;
-  font-size: 0.9rem;
+  gap: 0.5rem;
+  background: rgba(15, 23, 42, 0.6);
   backdrop-filter: blur(12px);
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.5rem;
+  color: #f8fafc;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.5rem 1rem;
+  font-size: 0.95rem;
+  transition: all 0.2s;
 
   &:hover {
     background: rgba(255, 255, 255, 0.1);
-    color: #ffffff;
-    border-color: rgba(255, 255, 255, 0.25);
-    transform: translateY(-2px);
+    border-color: rgba(255, 255, 255, 0.2);
   }
 `;
 
@@ -1065,22 +1067,22 @@ const RoomHeaderContainer = styled.div`
 `;
 
 const StatCard = styled.div`
-  background: rgba(17, 24, 39, 0.7);
-  backdrop-filter: blur(16px);
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(12px);
   padding: 1.5rem;
-  border-radius: 1.25rem;
-  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.35);
+  border-radius: 1rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: flex-start;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: transform 0.2s, box-shadow 0.2s;
 
   &:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 20px 35px -5px rgba(0, 0, 0, 0.5);
-    border-color: rgba(16, 185, 129, 0.4);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
+    border-color: rgba(255, 255, 255, 0.2);
   }
   
   @media (max-width: 768px) {
@@ -3805,6 +3807,24 @@ const RoomDetail: React.FC = () => {
     // Calendar rendering logic removed from here as it was misplaced.
 
 
+    // --- Devices State ---
+    const [trazappDevices, setTrazappDevices] = useState<any[]>([]);
+    const [selectedDeviceForModal, setSelectedDeviceForModal] = useState<any | null>(null);
+    const [isDeviceModalOpen, setIsDeviceModalOpen] = useState(false);
+
+    const fetchTrazappDevices = async () => {
+        try {
+            const devs = await deviceService.getMyDevices();
+            setTrazappDevices(devs);
+        } catch (err) {
+            console.error("Error fetching trazapp devices:", err);
+        }
+    };
+
+    useEffect(() => {
+        fetchTrazappDevices();
+    }, []);
+
     // --- Observation Feature State ---
     const [isObservationModalOpen, setIsObservationModalOpen] = useState(false);
     const [isClosingObservation, setIsClosingObservation] = useState(false); // Animation State
@@ -4941,20 +4961,15 @@ const RoomDetail: React.FC = () => {
                                                                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
                                                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                                                                                         <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#f8fafc' }}>{map.name}</h3>
-                                                                                        <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                                                                            {/* Selection buttons removed from Map List View */}
-                                                                                        </div>
                                                                                     </div>
                                                                                     <div style={{ display: 'flex', gap: '0.5rem' }}>
                                                                                         {!isSelectionMode && (
-                                                                                            <>
-                                                                                                <button
-                                                                                                    onClick={(e) => { e.stopPropagation(); handleEditMapClick(e, map); }}
-                                                                                                    style={{ background: 'transparent', border: 'none', color: '#718096', cursor: 'pointer' }}
-                                                                                                >
-                                                                                                    <FaEdit />
-                                                                                                </button>
-                                                                                            </>
+                                                                                            <button
+                                                                                                onClick={(e) => { e.stopPropagation(); handleEditMapClick(e, map); }}
+                                                                                                style={{ background: 'transparent', border: 'none', color: '#718096', cursor: 'pointer' }}
+                                                                                            >
+                                                                                                <FaEdit />
+                                                                                            </button>
                                                                                         )}
                                                                                         <button
                                                                                             onClick={(e) => { e.stopPropagation(); setMapIdToDelete(map.id); setIsDeleteMapModalOpen(true); }}
@@ -4975,39 +4990,76 @@ const RoomDetail: React.FC = () => {
                                                                                         <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Variedades</div>
                                                                                     </div>
                                                                                 </div>
+
+                                                                                {/* Telemetría y Vincular Dispositivo a esta Mesa */}
+                                                                                {(() => {
+                                                                                    const linkedDev = trazappDevices.find(d =>
+                                                                                        (d.bunker_name === map.name || (!d.bunker_name && d.room_id === room?.id && cloneMaps.length === 1)) && d.is_active
+                                                                                    );
+                                                                                    return (
+                                                                                        <div style={{
+                                                                                            marginTop: '0.75rem',
+                                                                                            padding: '0.5rem 0.75rem',
+                                                                                            background: 'rgba(15, 23, 42, 0.7)',
+                                                                                            border: '1px solid rgba(255, 255, 255, 0.08)',
+                                                                                            borderRadius: '0.5rem',
+                                                                                            display: 'flex',
+                                                                                            alignItems: 'center',
+                                                                                            justifyContent: 'space-between',
+                                                                                            fontSize: '0.8rem'
+                                                                                        }}>
+                                                                                            {linkedDev ? (
+                                                                                                <>
+                                                                                                    <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                                                                                                        <span style={{ color: linkedDev.device_type === 'sense_7in' ? '#38bdf8' : '#00E080', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                                                                                                            {linkedDev.device_type === 'sense_7in' ? '🖥️' : <FaWifi size={12} />} {linkedDev.alias || linkedDev.device_id}
+                                                                                                        </span>
+                                                                                                        <span style={{ color: '#ef4444', fontWeight: 600 }}>
+                                                                                                            <FaThermometerHalf size={11} /> {linkedDev.last_reading?.sensors?.temp_c !== undefined ? `${linkedDev.last_reading.sensors.temp_c.toFixed(1)}°C` : '--'}
+                                                                                                        </span>
+                                                                                                        <span style={{ color: '#3b82f6', fontWeight: 600 }}>
+                                                                                                            <FaTint size={11} /> {linkedDev.last_reading?.sensors?.hum_pct !== undefined ? `${linkedDev.last_reading.sensors.hum_pct.toFixed(1)}%` : '--'}
+                                                                                                        </span>
+                                                                                                    </div>
+                                                                                                    <button
+                                                                                                        onClick={(e) => {
+                                                                                                            e.stopPropagation();
+                                                                                                            setSelectedDeviceForModal(linkedDev);
+                                                                                                            setIsDeviceModalOpen(true);
+                                                                                                        }}
+                                                                                                        style={{ background: 'rgba(59, 130, 246, 0.2)', border: '1px solid rgba(59, 130, 246, 0.4)', color: '#60a5fa', padding: '0.25rem 0.6rem', borderRadius: '0.375rem', fontSize: '0.75rem', cursor: 'pointer', fontWeight: 600 }}
+                                                                                                    >
+                                                                                                        Configurar
+                                                                                                    </button>
+                                                                                                </>
+                                                                                            ) : (
+                                                                                                <button
+                                                                                                    onClick={(e) => {
+                                                                                                        e.stopPropagation();
+                                                                                                        const availableDev = trazappDevices.find(d => !d.bunker_name || d.room_id !== room?.id) || trazappDevices[0];
+                                                                                                        if (availableDev) {
+                                                                                                            setSelectedDeviceForModal({
+                                                                                                                ...availableDev,
+                                                                                                                room_id: room?.id,
+                                                                                                                bunker_name: map.name
+                                                                                                            });
+                                                                                                            setIsDeviceModalOpen(true);
+                                                                                                        } else {
+                                                                                                            Swal.fire('Sin Dispositivos', 'No hay dispositivos TrazApp registrados para vincular.', 'info');
+                                                                                                        }
+                                                                                                    }}
+                                                                                                    style={{ background: 'rgba(16, 185, 129, 0.15)', border: '1px dashed rgba(16, 185, 129, 0.4)', color: '#34d399', padding: '0.35rem 0.75rem', borderRadius: '0.375rem', fontSize: '0.75rem', cursor: 'pointer', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', fontWeight: 600 }}
+                                                                                                >
+                                                                                                    <FaPlus size={10} /> Vincular Monitor / Sensor a {map.name}
+                                                                                                </button>
+                                                                                            )}
+                                                                                        </div>
+                                                                                    );
+                                                                                })()}
+
                                                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.75rem', color: '#64748b', fontSize: '0.75rem' }}>
                                                                                     <FaCalendarAlt size={10} />
                                                                                     <span>Creada: {map.created_at ? format(new Date(map.created_at), "d 'de' MMM yyyy", { locale: es }) : '-'}</span>
-                                                                                </div>
-                                                                            </div>
-
-                                                                            <div className={`mobile-view-map-${map.id}`} style={{ alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: '0.5rem' }}>
-                                                                                <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>
-                                                                                    <div style={{ fontSize: '1rem', fontWeight: 700, color: '#f8fafc', overflow: 'hidden', textOverflow: 'ellipsis' }}>{map.name}</div>
-                                                                                    <div style={{ fontSize: '0.8rem', color: '#94a3b8', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                                                                                        <span style={{ color: '#38bdf8', fontWeight: 600 }}>{totalPlants} Plantas</span> | <span style={{ color: '#4ade80', fontWeight: 600 }}>{uniqueGenetics} Var.</span>
-                                                                                    </div>
-                                                                                    <div style={{ fontSize: '0.7rem', color: '#64748b', display: 'flex', alignItems: 'center', gap: '0.3rem', marginTop: '0.15rem' }}>
-                                                                                        <FaCalendarAlt size={9} />
-                                                                                        <span>{map.created_at ? format(new Date(map.created_at), "d/MM/yyyy", { locale: es }) : '-'}</span>
-                                                                                    </div>
-                                                                                </div>
-
-                                                                                <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-                                                                                    {!isSelectionMode && (
-                                                                                        <button
-                                                                                            onClick={(e) => { e.stopPropagation(); handleEditMapClick(e, map); }}
-                                                                                            style={{ background: 'transparent', border: 'none', color: '#718096', cursor: 'pointer', fontSize: '1.2rem' }}
-                                                                                        >
-                                                                                            <FaEdit />
-                                                                                        </button>
-                                                                                    )}
-                                                                                    <button
-                                                                                        onClick={(e) => { e.stopPropagation(); setMapIdToDelete(map.id); setIsDeleteMapModalOpen(true); }}
-                                                                                        style={{ background: 'transparent', border: 'none', color: '#e53e3e', cursor: 'pointer', fontSize: '1.2rem' }}
-                                                                                    >
-                                                                                        <FaTrash />
-                                                                                    </button>
                                                                                 </div>
                                                                             </div>
 
@@ -6061,13 +6113,13 @@ const RoomDetail: React.FC = () => {
                                                 </FormGroup>
 
                                                 <div>
-                                                    <label style={{ display: 'block', fontWeight: 600, color: '#94a3b8', fontSize: '0.9rem', marginBottom: '0.5rem' }}>Gestor de archivos</label>
+                                                    <label style={{ display: 'block', fontWeight: 600, color: '#94a3b8', fontSize: '0.9rem', marginBottom: '0.5rem' }}>Gestor de archivos / Adjuntar Archivo</label>
                                                     <button
-                                                        onClick={() => alert("Funcionalidad de subida de fotos en desarrollo. Se integrará con Supabase Storage.")}
+                                                        onClick={() => alert("Funcionalidad de subida de fotos en desarrollo. Podés grabar notas de voz a continuación.")}
                                                         style={{
                                                             background: 'rgba(255, 255, 255, 0.05)',
                                                             border: '1px dashed rgba(255, 255, 255, 0.2)',
-                                                            padding: '1.5rem',
+                                                            padding: '1rem',
                                                             width: '100%',
                                                             borderRadius: '0.5rem',
                                                             cursor: 'pointer',
@@ -6077,13 +6129,26 @@ const RoomDetail: React.FC = () => {
                                                             justifyContent: 'center',
                                                             gap: '0.5rem',
                                                             transition: 'all 0.2s',
-                                                            fontWeight: 500
+                                                            fontWeight: 500,
+                                                            marginBottom: '1rem'
                                                         }}
-                                                        onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(74, 222, 128, 0.5)'; e.currentTarget.style.color = '#4ade80'; e.currentTarget.style.background = 'rgba(74, 222, 128, 0.1)'; }}
-                                                        onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)'; e.currentTarget.style.color = '#94a3b8'; e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'; }}
                                                     >
                                                         <FaPlus /> Subir Foto / Archivo
                                                     </button>
+
+                                                    <label style={{ display: 'block', fontWeight: 600, color: '#94a3b8', fontSize: '0.9rem', marginBottom: '0.5rem' }}>Nota de Voz (Grabar Audio para la Tarea)</label>
+                                                    <AudioRecorderWidget
+                                                        onAudioRecorded={(url) => {
+                                                            if (url) {
+                                                                setTaskForm(prev => ({
+                                                                    ...prev,
+                                                                    description: prev.description ? `${prev.description}\n[Audio Nota]: ${url}` : `[Audio Nota]: ${url}`
+                                                                }));
+                                                            }
+                                                        }}
+                                                        orgId={getSelectedOrgId() || 'task'}
+                                                        patientId={user?.id || 'room'}
+                                                    />
                                                 </div>
                                             </div>
                                         </div>
@@ -7974,6 +8039,20 @@ const RoomDetail: React.FC = () => {
                         currentDate={currentDate}
                     />
                 </div>
+
+                {/* TrazApp Device Linking & Config Modal */}
+                {isDeviceModalOpen && selectedDeviceForModal && (
+                    <TrazAppDeviceDetailModal
+                        device={selectedDeviceForModal}
+                        onClose={() => {
+                            setIsDeviceModalOpen(false);
+                            setSelectedDeviceForModal(null);
+                        }}
+                        onUpdate={() => {
+                            fetchTrazappDevices();
+                        }}
+                    />
+                )}
 
             </Container >
         </RoomDetailContainer>

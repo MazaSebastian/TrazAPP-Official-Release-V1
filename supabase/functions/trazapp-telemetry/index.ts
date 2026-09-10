@@ -1,6 +1,7 @@
 // supabase/functions/trazapp-telemetry/index.ts
 // Endpoint for ESP32 hardware devices to POST sensor telemetry.
 // Does NOT require user JWT — authenticates via device_token.
+// Returns enriched metadata (bunker, plants, tasks) for the hardware display.
 
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
@@ -11,7 +12,6 @@ const corsHeaders = {
 };
 
 Deno.serve(async (req) => {
-  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
@@ -44,7 +44,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Also accept token from X-Device-Secret header (both supported)
     const headerToken = req.headers.get('X-Device-Secret');
     const effectiveToken = headerToken || token;
 
@@ -57,7 +56,7 @@ Deno.serve(async (req) => {
     // ─── 3. Authenticate device ──────────────────────────────────────
     const { data: device, error: deviceError } = await supabase
       .from('trazapp_devices')
-      .select('id, device_id, device_token, organization_id, is_active')
+      .select('id, device_id, device_token, organization_id, is_active, room_id, bunker_name, device_type')
       .eq('device_id', device_id)
       .maybeSingle();
 
@@ -70,7 +69,6 @@ Deno.serve(async (req) => {
     }
 
     if (!device) {
-      console.warn(`Unknown device attempted telemetry: ${device_id}`);
       return new Response(JSON.stringify({ error: 'Device not registered' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -85,7 +83,6 @@ Deno.serve(async (req) => {
     }
 
     if (device.device_token !== effectiveToken) {
-      console.warn(`Token mismatch for device: ${device_id}`);
       return new Response(JSON.stringify({ error: 'Unauthorized — invalid token' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -96,19 +93,16 @@ Deno.serve(async (req) => {
     const logEntry = {
       device_id,
       organization_id: device.organization_id,
-      // Sensors
       temp_c:         sensors?.temp_c  ?? null,
       hum_pct:        sensors?.hum_pct ?? null,
       soil_pct:       sensors?.soil_pct ?? null,
       vpd_kpa:        sensors?.vpd_kpa ?? null,
-      // VPD stage
       vpd_stage:      vpd?.stage ?? null,
       vpd_stage_name: vpd?.stage_name ?? null,
       vpd_in_range:   vpd?.in_range ?? null,
       vpd_low:        vpd?.vpd_low ?? null,
       vpd_min:        vpd?.vpd_min ?? null,
       vpd_max:        vpd?.vpd_max ?? null,
-      // Device metadata
       firmware,
       uptime_s:       uptime_s ?? null,
       rssi_dbm:       meta?.rssi_dbm ?? null,
@@ -123,7 +117,6 @@ Deno.serve(async (req) => {
 
     if (logError) {
       console.error('Failed to insert telemetry log:', logError);
-      // Don't block the device — try to update last_reading anyway
     }
 
     // ─── 5. Update device snapshot ───────────────────────────────────
@@ -140,8 +133,120 @@ Deno.serve(async (req) => {
       console.error('Failed to update device last_reading:', updateError);
     }
 
-    // ─── 6. Return OK to hardware ────────────────────────────────────
-    return new Response(JSON.stringify({ success: true, message: 'Telemetry received' }), {
+    // ─── 6. Fetch enriched metadata for the device display ───────────
+    let enrichedMeta: any = {
+      bunker_name: device.bunker_name || null,
+      room_name: null,
+      room_type: null,
+      plant_count: 0,
+      genetics: [],
+      plant_stage: null,
+      tasks: [],
+      plant_tags: [],
+    };
+
+    try {
+      if (device.room_id) {
+        // Room info
+        const { data: room } = await supabase
+          .from('rooms')
+          .select('id, name, type')
+          .eq('id', device.room_id)
+          .maybeSingle();
+
+        if (room) {
+          enrichedMeta.room_name = room.name;
+          enrichedMeta.room_type = room.type;
+        }
+
+        // Active batches (lotes/mesas) in this room
+        const { data: batches } = await supabase
+          .from('batches')
+          .select('id, name, quantity, stage, genetic:genetics(name)')
+          .eq('current_room_id', device.room_id)
+          .is('discarded_at', null);
+
+        if (batches && batches.length > 0) {
+          let totalPlants = 0;
+          const geneticNames: string[] = [];
+
+          for (const batch of batches) {
+            totalPlants += batch.quantity || (batch as any).total_plants || 0;
+            const gName = (batch as any).genetic?.name;
+            if (gName && !geneticNames.includes(gName)) {
+              geneticNames.push(gName);
+            }
+            if (batch.stage) {
+              enrichedMeta.plant_stage = batch.stage;
+            }
+          }
+
+          enrichedMeta.plant_count = totalPlants;
+          enrichedMeta.genetics = geneticNames;
+        }
+
+        // Clone maps for individual plant tags
+        const { data: cloneMaps } = await supabase
+          .from('clone_maps')
+          .select('grid_data')
+          .eq('room_id', device.room_id);
+
+        if (cloneMaps && cloneMaps.length > 0) {
+          const tags: string[] = [];
+          for (const cm of cloneMaps) {
+            if (cm.grid_data && Array.isArray(cm.grid_data)) {
+              for (const row of cm.grid_data) {
+                if (Array.isArray(row)) {
+                  for (const cell of row) {
+                    if (cell && cell.tag) {
+                      tags.push(cell.tag);
+                    }
+                  }
+                }
+              }
+            }
+          }
+          enrichedMeta.plant_tags = tags;
+        }
+
+        // Pending tasks for this room
+        const { data: tasks } = await supabase
+          .from('chakra_tasks')
+          .select('id, title, due_date, status')
+          .eq('room_id', device.room_id)
+          .in('status', ['pending', 'in_progress'])
+          .order('due_date', { ascending: true })
+          .limit(5);
+
+        if (tasks) {
+          enrichedMeta.tasks = tasks.map((t: any) => ({
+            id: t.id,
+            title: t.title,
+            priority: 'normal',
+            due_date: t.due_date,
+            status: t.status,
+          }));
+        }
+      }
+    } catch (metaErr) {
+      console.error('Error fetching enriched metadata (non-blocking):', metaErr);
+    }
+
+    // ─── 7. Return OK + enriched metadata to hardware ────────────────
+    return new Response(JSON.stringify({
+      success: true,
+      message: 'Telemetry received',
+      device: {
+        bunker_name: enrichedMeta.bunker_name,
+        room_name: enrichedMeta.room_name,
+        room_type: enrichedMeta.room_type,
+        plant_count: enrichedMeta.plant_count,
+        plant_stage: enrichedMeta.plant_stage,
+        genetics: enrichedMeta.genetics,
+        tasks: enrichedMeta.tasks,
+        plant_tags: enrichedMeta.plant_tags,
+      },
+    }), {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

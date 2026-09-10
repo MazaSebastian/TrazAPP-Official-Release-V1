@@ -8,6 +8,21 @@ const LINK_DEVICE_URL = isLocal ? 'https://software.trazapp.ar/api/link-device' 
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
+export interface DeviceAlertSettings {
+  alerts_enabled: boolean;
+  temp_min: number;
+  temp_max: number;
+  hum_min: number;
+  hum_max: number;
+  soil_min: number;
+  soil_max: number;
+  vpd_min: number;
+  vpd_max: number;
+  notify_screen: boolean;
+  notify_web: boolean;
+  notify_push: boolean;
+}
+
 export interface TrazAppDevice {
   id: string;
   device_id: string;
@@ -15,6 +30,10 @@ export interface TrazAppDevice {
   firmware: string | null;
   organization_id: string | null;
   room_id: string | null;
+  room_name?: string | null;
+  bunker_name?: string | null;
+  device_type?: string | null;
+  alert_settings?: DeviceAlertSettings | null;
   last_seen_at: string | null;
   last_reading: TelemetryPayload | null;
   is_active: boolean;
@@ -82,7 +101,7 @@ export const deviceService = {
 
     const { data, error } = await supabase
       .from('trazapp_devices')
-      .select('*')
+      .select('*, rooms(name)')
       .eq('organization_id', orgId)
       .eq('is_active', true)
       .order('created_at', { ascending: false });
@@ -92,7 +111,10 @@ export const deviceService = {
       return [];
     }
 
-    return data || [];
+    return (data || []).map((item: any) => ({
+      ...item,
+      room_name: item.rooms?.name || null
+    }));
   },
 
   /**
@@ -122,16 +144,87 @@ export const deviceService = {
         }),
       });
 
-      const result = await response.json();
+      if (response.ok) {
+        const result = await response.json();
+        return { success: true, message: result.message };
+      }
+      const errRes = await response.json();
+      console.warn('[deviceService] API server returned error:', errRes);
+    } catch (err: any) {
+      console.warn('[deviceService] API fetch failed, trying direct Supabase fallback:', err);
+    }
 
-      if (!response.ok) {
-        return { success: false, error: result.error || 'Error al vincular dispositivo.' };
+    // ─── Direct Supabase RPC Fallback ──────────────────────────────────────
+    try {
+      const devId  = payload.device_id.trim();
+      const pinStr = payload.pin.trim();
+
+      const { data: rpcRes, error: rpcErr } = await supabase.rpc('link_device_with_pin', {
+        p_device_id: devId,
+        p_pin:       pinStr,
+        p_org_id:    orgId,
+        p_alias:     payload.alias?.trim() || null,
+      });
+
+      if (!rpcErr && rpcRes) {
+        if (rpcRes.success) {
+          return { success: true, message: rpcRes.message || `Dispositivo ${devId} vinculado correctamente.` };
+        } else {
+          return { success: false, error: rpcRes.error || 'Error al vincular el dispositivo.' };
+        }
       }
 
-      return { success: true, message: result.message };
-    } catch (err: any) {
-      console.error('[deviceService] linkDevice error:', err);
-      return { success: false, error: 'Error de red al vincular el dispositivo.' };
+      // Fallback a consulta directa
+      const { data: device, error: fetchErr } = await supabase
+        .from('trazapp_devices')
+        .select('*')
+        .eq('device_id', devId)
+        .maybeSingle();
+
+      if (!device) {
+        // Si el dispositivo no existe aún en trazapp_devices, se registra y vincula directamente
+        const { error: insertErr } = await supabase
+          .from('trazapp_devices')
+          .insert({
+            device_id:      devId,
+            pin:            pinStr,
+            organization_id: orgId,
+            user_id:        session.user.id,
+            is_provisioned: true,
+            is_active:      true,
+            alias:          payload.alias?.trim() || null,
+          });
+
+        if (insertErr) {
+          console.error('[deviceService] Insert error:', insertErr);
+          return { success: false, error: 'Error al registrar y vincular el dispositivo.' };
+        }
+        return { success: true, message: `Dispositivo ${devId} registrado y vinculado correctamente.` };
+      }
+
+      if (device.pin && device.pin !== pinStr) {
+        return { success: false, error: 'PIN incorrecto. Verificá los datos en la pantalla del equipo.' };
+      }
+
+      const { error: updateErr } = await supabase
+        .from('trazapp_devices')
+        .update({
+          organization_id: orgId,
+          user_id: session.user.id,
+          is_provisioned: true,
+          pin: pinStr,
+          alias: payload.alias?.trim() || null,
+        })
+        .eq('device_id', devId);
+
+      if (updateErr) {
+        return { success: false, error: 'Error al vincular el dispositivo.' };
+      }
+
+      return { success: true, message: `Dispositivo ${devId} vinculado correctamente.` };
+    } catch (fallbackErr: any) {
+      console.error('[deviceService] Fallback link error:', fallbackErr);
+      return { success: false, error: 'Error al vincular el dispositivo.' };
     }
   },
 
@@ -148,9 +241,15 @@ export const deviceService = {
   },
 
   /**
-   * Update device alias and room assignment.
+   * Update device alias, room assignment, bunker name, device type and alert settings.
    */
-  async updateDevice(deviceId: string, updates: { alias?: string | null; room_id?: string | null }): Promise<void> {
+  async updateDevice(deviceId: string, updates: { 
+    alias?: string | null; 
+    room_id?: string | null; 
+    bunker_name?: string | null; 
+    device_type?: string | null;
+    alert_settings?: DeviceAlertSettings | null;
+  }): Promise<void> {
     if (!supabase) return;
 
     const { error } = await supabase

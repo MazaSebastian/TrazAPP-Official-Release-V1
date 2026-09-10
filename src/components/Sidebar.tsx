@@ -26,7 +26,8 @@ import {
   FaFileAlt, // Added for Informes
   FaExclamationTriangle,
   FaProjectDiagram,
-  FaCalendarAlt
+  FaCalendarAlt,
+  FaTabletAlt
 } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 import { useOrganization } from '../context/OrganizationContext';

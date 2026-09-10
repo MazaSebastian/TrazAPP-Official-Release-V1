@@ -1,17 +1,18 @@
 import React, { useState, useRef, useEffect } from "react";
 import { FaMicrophone, FaStop, FaPlay, FaTrash, FaCheck } from "react-icons/fa";
 import { supabase } from "../services/supabaseClient";
+import { convertBlobTo16kHzWav } from "../utils/audioConverter";
 
 interface AudioRecorderWidgetProps {
     onAudioRecorded: (url: string | null) => void;
-    orgId: string;
-    patientId: string;
+    orgId?: string;
+    patientId?: string;
 }
 
 const AudioRecorderWidget: React.FC<AudioRecorderWidgetProps> = ({
     onAudioRecorded,
-    orgId,
-    patientId,
+    orgId = "default",
+    patientId = "task",
 }) => {
     const [isRecording, setIsRecording] = useState(false);
     const [audioUrl, setAudioUrl] = useState<string | null>(null);
@@ -102,16 +103,32 @@ const AudioRecorderWidget: React.FC<AudioRecorderWidgetProps> = ({
         setIsUploading(true);
 
         try {
+            // Convert WebM/MP4 recorded blob to 16kHz 16-bit Mono WAV for ESP32 hardware compatibility
+            let uploadBlob: Blob = audioBlob;
+            let fileExt = "webm";
+            let contentType = "audio/webm";
+
+            try {
+                const wavBlob = await convertBlobTo16kHzWav(audioBlob);
+                if (wavBlob && wavBlob.size > 0) {
+                    uploadBlob = wavBlob;
+                    fileExt = "wav";
+                    contentType = "audio/wav";
+                }
+            } catch (convErr) {
+                console.warn("WAV conversion fallback to webm:", convErr);
+            }
+
             const fileName = orgId
-                ? `${orgId}/${patientId}_${Date.now()}.webm`
-                : `${patientId}_${Date.now()}.webm`;
+                ? `${orgId}/${patientId}_${Date.now()}.${fileExt}`
+                : `${patientId}_${Date.now()}.${fileExt}`;
 
             const { data, error } = await supabase.storage
                 .from("ai_clinical_audio")
-                .upload(fileName, audioBlob, {
+                .upload(fileName, uploadBlob, {
                     cacheControl: "3600",
                     upsert: false,
-                    contentType: "audio/webm",
+                    contentType: contentType,
                 });
 
             if (error) {

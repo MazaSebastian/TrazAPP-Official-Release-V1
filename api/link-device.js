@@ -70,7 +70,28 @@ export default async function handler(req, res) {
     }
 
     if (!device) {
-      return res.status(404).json({ error: 'Dispositivo no encontrado. Verificá el Device ID.' });
+      // Auto-crear dispositivo en la base de datos y vincularlo a la organización del usuario
+      const { error: createError } = await supabaseAdmin
+        .from('trazapp_devices')
+        .insert({
+          device_id:      device_id.trim(),
+          pin:            pin.trim(),
+          organization_id: organization_id,
+          user_id:        user.id,
+          is_provisioned: true,
+          is_active:      true,
+          alias:          alias?.trim() || null,
+        });
+
+      if (createError) {
+        console.error('Failed to auto-register device:', createError);
+        return res.status(500).json({ error: 'Error al registrar y vincular el dispositivo.' });
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: `Dispositivo ${device_id} registrado y vinculado correctamente.`,
+      });
     }
 
     if (!device.is_active) {
