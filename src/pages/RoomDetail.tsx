@@ -95,6 +95,21 @@ import { ToastModal } from '../components/ToastModal';
 import { CustomDatePicker } from '../components/CustomDatePicker';
 import { PromptModal } from '../components/PromptModal';
 import { CustomSelect } from '../components/CustomSelect';
+import { Button as ShadcnButton } from '../components/ui/Button';
+import { Badge as ShadcnBadge } from '../components/ui/Badge';
+import {
+  ArrowLeft as LucideArrowLeft,
+  Sprout as LucideSprout,
+  Layers as LucideLayers,
+  Thermometer as LucideThermometer,
+  Calendar as LucideCalendar,
+  CheckSquare as LucideCheckSquare,
+  History as LucideHistory,
+  Scissors as LucideScissors,
+  Settings as LucideSettings,
+  StickyNote as LucideStickyNote,
+  RefreshCw as LucideRefreshCw
+} from 'lucide-react';
 
 import { createGlobalStyle } from 'styled-components';
 
@@ -576,59 +591,81 @@ const Title = styled.h1`
 `;
 
 const StyledActionButton = styled.button<{ $variant?: 'primary' | 'secondary' | 'gold' | 'success' | 'danger' }>`
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  border-radius: 0.5rem;
+  gap: 0.45rem;
+  padding: 0.45rem 0.95rem;
+  border-radius: 0.65rem;
   font-weight: 600;
+  font-size: 0.825rem;
+  letter-spacing: -0.01em;
   cursor: pointer;
-  transition: all 0.2s ease-in-out;
-  border: ${p => p.$variant === 'secondary' ? '1px solid rgba(255, 255, 255, 0.1)' : 'none'};
-  backdrop-filter: blur(8px);
-  background: ${p => {
-        switch (p.$variant) {
-            case 'gold': return 'rgba(214, 158, 46, 0.2)';
-            case 'primary': return 'rgba(74, 222, 128, 0.2)';
-            case 'success': return 'rgba(74, 222, 128, 0.2)'; // Map success to green
-            case 'danger': return 'rgba(239, 68, 68, 0.2)';
-            default: return 'rgba(15, 23, 42, 0.4)';
-        }
-    }};
-  color: ${p => {
-        switch (p.$variant) {
-            case 'gold': return '#fcd34d';
-            case 'primary': return '#4ade80';
-            case 'success': return '#4ade80';
-            case 'danger': return '#f87171';
-            default: return '#f8fafc';
-        }
-    }};
+  transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(12px);
+  user-select: none;
 
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
-    filter: brightness(1.1);
+  border: ${p => {
+    switch (p.$variant) {
+      case 'gold': return '1px solid rgba(245, 158, 11, 0.35)';
+      case 'primary':
+      case 'success': return '1px solid rgba(16, 185, 129, 0.35)';
+      case 'danger': return '1px solid rgba(239, 68, 68, 0.35)';
+      default: return '1px solid rgba(255, 255, 255, 0.12)';
+    }
+  }};
+
+  background: ${p => {
+    switch (p.$variant) {
+      case 'gold': return 'rgba(245, 158, 11, 0.12)';
+      case 'primary':
+      case 'success': return 'rgba(16, 185, 129, 0.14)';
+      case 'danger': return 'rgba(239, 68, 68, 0.14)';
+      default: return 'rgba(255, 255, 255, 0.05)';
+    }
+  }};
+
+  color: ${p => {
+    switch (p.$variant) {
+      case 'gold': return '#fbbf24';
+      case 'primary':
+      case 'success': return '#34d399';
+      case 'danger': return '#f87171';
+      default: return '#f1f5f9';
+    }
+  }};
+
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+
+  &:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     background: ${p => {
-        switch (p.$variant) {
-            case 'gold': return 'rgba(214, 158, 46, 0.3)';
-            case 'primary': return 'rgba(74, 222, 128, 0.3)';
-            case 'success': return 'rgba(74, 222, 128, 0.3)';
-            case 'danger': return 'rgba(239, 68, 68, 0.3)';
-            default: return 'rgba(255, 255, 255, 0.1)';
-        }
+      switch (p.$variant) {
+        case 'gold': return 'rgba(245, 158, 11, 0.22)';
+        case 'primary':
+        case 'success': return 'rgba(16, 185, 129, 0.22)';
+        case 'danger': return 'rgba(239, 68, 68, 0.22)';
+        default: return 'rgba(255, 255, 255, 0.1)';
+      }
+    }};
+    border-color: ${p => {
+      switch (p.$variant) {
+        case 'gold': return 'rgba(245, 158, 11, 0.6)';
+        case 'primary':
+        case 'success': return 'rgba(16, 185, 129, 0.6)';
+        case 'danger': return 'rgba(239, 68, 68, 0.6)';
+        default: return 'rgba(255, 255, 255, 0.22)';
+      }
     }};
   }
-  
-  &:active {
+
+  &:active:not(:disabled) {
     transform: translateY(0);
-    box-shadow: none;
   }
-  
+
   &:disabled {
-    opacity: 0.5;
+    opacity: 0.45;
     cursor: not-allowed;
-    filter: none;
     transform: none;
     box-shadow: none;
   }
@@ -969,26 +1006,6 @@ const HoverButton = styled.button`
   }
 `;
 
-const BackButton = styled.button`
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  background: rgba(15, 23, 42, 0.6);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 0.5rem;
-  color: #f8fafc;
-  font-weight: 600;
-  cursor: pointer;
-  padding: 0.5rem 1rem;
-  font-size: 0.95rem;
-  transition: all 0.2s;
-
-  &:hover {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: rgba(255, 255, 255, 0.2);
-  }
-`;
 
 const FormGroup = styled.div`
   margin-bottom: 1.5rem;
@@ -1052,101 +1069,83 @@ const HeaderGrid = styled.div`
 const RoomHeaderContainer = styled.div`
   display: flex;
   align-items: center;
-  gap: 1rem;
-  margin-bottom: 1rem;
+  gap: 1.25rem;
+  margin-bottom: 1.75rem;
   justify-content: space-between;
+  flex-wrap: wrap;
 
   @media (max-width: 768px) {
-    flex-wrap: wrap;
-    justify-content: center;
-    margin-bottom: 0.5rem;
-  }
-    justify-content: center;
-    margin-bottom: 0.5rem;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
   }
 `;
 
 const StatCard = styled.div`
-  background: rgba(15, 23, 42, 0.4);
-  backdrop-filter: blur(12px);
-  padding: 1.5rem;
-  border-radius: 1rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(16px);
+  padding: 1.35rem 1.5rem;
+  border-radius: 1.25rem;
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08);
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: space-between;
   align-items: flex-start;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  transition: transform 0.2s, box-shadow 0.2s;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
 
   &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
-    border-color: rgba(255, 255, 255, 0.2);
+    transform: translateY(-3px);
+    box-shadow: 0 20px 35px -5px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.18);
   }
   
   @media (max-width: 768px) {
     padding: 1rem;
-    border-radius: 0.75rem;
-    flex-direction: column;
-    align-items: flex-start;
-    justify-content: center;
-    gap: 0.5rem;
-    min-height: auto;
+    border-radius: 1rem;
   }
 
   h3 {
     font-size: 0.75rem;
     color: #94a3b8;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
-    margin-bottom: 0.5rem;
+    letter-spacing: 0.06em;
+    margin-bottom: 0.65rem;
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    font-weight: 600;
+    gap: 0.45rem;
+    font-weight: 700;
 
     @media (max-width: 768px) {
       font-size: 0.65rem;
       margin-bottom: 0.25rem;
-      white-space: normal;
-      text-wrap: balance;
       line-height: 1.2;
     }
   }
+
   .value {
-    font-size: 2rem;
-    font-weight: 700;
+    font-size: 2.1rem;
+    font-weight: 800;
+    letter-spacing: -0.025em;
+    font-variant-numeric: tabular-nums;
     color: #f8fafc;
-    line-height: 1.2;
+    line-height: 1.1;
 
     @media (max-width: 768px) {
-      font-size: 1.25rem;
-      line-height: 1.2;
-      display: flex;
-      align-items: center;
-      white-space: normal;
-      text-wrap: balance;
+      font-size: 1.35rem;
     }
   }
+
   .sub {
-    font-size: 0.875rem;
+    font-size: 0.8125rem;
     color: #64748b;
-    margin-top: 0.25rem;
+    margin-top: 0.4rem;
+    font-weight: 500;
 
     @media (max-width: 768px) {
       font-size: 0.75rem;
-      margin-top: 0;
-      display: flex;
-      align-items: center;
-      white-space: nowrap;
-      
-      /* Add dash separator for sub on mobile */
-      &::before {
-        content: '-';
-        margin: 0 0.25rem;
-        opacity: 0.5;
-      }
+      margin-top: 0.15rem;
     }
   }
 `;
@@ -4351,8 +4350,44 @@ const RoomDetail: React.FC = () => {
             <Container>
                 <GlobalPrintStyles />
                 <RoomHeaderContainer className="no-print">
-                    <BackButton onClick={() => navigate(room?.spot_id ? `/crops/${room.spot_id}` : '/rooms')}><FaArrowLeft /> Volver</BackButton>
-                    <Title>{room?.name} <Badge stage={room?.type}>{room?.type === 'vegetation' ? 'Vegetación' : room?.type === 'flowering' ? 'Floración' : (room?.type === 'drying' || room?.type === 'curing') ? 'Secado' : room?.type === 'living_soil' ? 'Agro/Living Soil' : room?.type}</Badge></Title>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', flexWrap: 'wrap' }}>
+                        <ShadcnButton
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => navigate(room?.spot_id ? `/crops/${room.spot_id}` : '/rooms')}
+                        >
+                            <LucideArrowLeft size={15} /> Volver
+                        </ShadcnButton>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+                            <h1 style={{
+                                fontSize: 'clamp(1.5rem, 3vw, 2.1rem)',
+                                fontWeight: 800,
+                                letterSpacing: '-0.025em',
+                                color: '#f8fafc',
+                                margin: 0,
+                                background: 'linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%)',
+                                WebkitBackgroundClip: 'text',
+                                WebkitTextFillColor: 'transparent'
+                            }}>
+                                {room?.name}
+                            </h1>
+                            <ShadcnBadge
+                                variant={
+                                    room?.type === 'flowering' ? 'purple' :
+                                    room?.type === 'vegetation' ? 'emerald' :
+                                    (room?.type === 'drying' || room?.type === 'curing') ? 'amber' :
+                                    'sky'
+                                }
+                                ping
+                            >
+                                {room?.type === 'vegetation' ? 'Vegetación' :
+                                 room?.type === 'flowering' ? 'Floración' :
+                                 (room?.type === 'drying' || room?.type === 'curing') ? 'Secado' :
+                                 room?.type === 'living_soil' ? 'Agro / Living Soil' :
+                                 room?.type || 'Sala'}
+                            </ShadcnBadge>
+                        </div>
+                    </div>
                 </RoomHeaderContainer>
 
                 {/* Room Summary Header */}
@@ -4360,15 +4395,14 @@ const RoomDetail: React.FC = () => {
                     <HeaderGrid className="no-print">
                         {/* Plants Count */}
                         <StatCard>
-
-                            <h3><FaSeedling /> {
+                            <h3><LucideSprout size={16} style={{ color: '#34d399' }} /> {
                                 room.type === 'germination' ? 'Total Semillas' :
                                     room.type === 'flowering' ? 'Total Plantas en Floración' :
                                         room.type === 'drying' ? 'Total Plantas Secandose' :
                                             ['clones', 'esquejes', 'esquejera'].includes((room.type || '').toLowerCase()) ? 'Total Esquejes' :
                                                 'Total Plantas'
                             }</h3>
-                            <div className="value" style={{ color: '#2f855a' }}>
+                            <div className="value" style={{ color: '#34d399' }}>
                                 {room.batches?.reduce((sum: any, b: any) => sum + b.quantity, 0) || 0}
                             </div>
                             <div className="sub">
@@ -4389,16 +4423,15 @@ const RoomDetail: React.FC = () => {
                         </StatCard>
 
                         {/* Total Maps Stat */}
-                        {/* Total Maps Stat */}
                         {room.type !== 'germination' && room.type !== 'drying' && (
                             <StatCard>
-                                <h3><FaMapMarkedAlt /> {
+                                <h3><LucideLayers size={16} style={{ color: '#38bdf8' }} /> {
                                     room.type === 'flowering' ? 'Total mesas de floracion' :
                                         ['vegetation', 'vegetación', 'vegetacion'].includes((room.type || '').toLowerCase()) ? 'Total Mesas Vegetación' :
                                             room.type === 'living_soil' ? 'Total Camas' :
                                                 'Total de Esquejeras'
                                 }</h3>
-                                <div className="value" style={{ color: '#2b6cb0' }}>
+                                <div className="value" style={{ color: '#38bdf8' }}>
                                     {cloneMaps.length}
                                 </div>
                                 <div className="sub">Mapas activos</div>
@@ -4407,11 +4440,11 @@ const RoomDetail: React.FC = () => {
 
                         {/* Environment */}
                         <StatCard>
-                            <h3><FaThermometerHalf /> Ambiente</h3>
+                            <h3><LucideThermometer size={16} style={{ color: '#fbbf24' }} /> Ambiente</h3>
                             <div className="value" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                <div style={{ color: '#e53e3e' }}>{room.current_temperature || '--'}°</div>
-                                <span style={{ fontSize: '1rem', color: '#cbd5e0', paddingBottom: '0.2rem' }}>/</span>
-                                <div style={{ color: '#3182ce' }}>{room.current_humidity || '--'}%</div>
+                                <div style={{ color: '#f87171' }}>{room.current_temperature || '--'}°</div>
+                                <span style={{ fontSize: '1.2rem', color: '#64748b', paddingBottom: '0.1rem' }}>/</span>
+                                <div style={{ color: '#38bdf8' }}>{room.current_humidity || '--'}%</div>
                             </div>
                             <div className="sub">
                                 Temp & Humedad
@@ -4420,7 +4453,7 @@ const RoomDetail: React.FC = () => {
 
                         {/* Date-CHANGED to Start Date */}
                         <StatCard>
-                            <h3><FaCalendarAlt /> Fecha Inicio</h3>
+                            <h3><LucideCalendar size={16} style={{ color: '#c084fc' }} /> Fecha Inicio</h3>
                             <div className="value" style={{ textTransform: 'capitalize' }}>
                                 {room.start_date
                                     ? format(new Date(room.start_date + 'T00:00:00'), "d MMM yyyy", { locale: es })
@@ -4446,8 +4479,8 @@ const RoomDetail: React.FC = () => {
                 {/* Stickies Wall Section */}
                 <div style={{ marginBottom: '2rem' }} className="no-print">
                     <div style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }} className="notes-header-container">
-                        <h2 style={{ fontSize: '1.5rem', color: '#2d3748', display: 'flex', alignItems: 'center', gap: '0.5rem' }} className="notes-title">
-                            <FaStickyNote color="#ecc94b" /> Pizarra de Notas
+                        <h2 style={{ fontSize: '1.2rem', color: '#f8fafc', fontWeight: 700, letterSpacing: '-0.02em', display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0 }} className="notes-title">
+                            <LucideStickyNote size={17} style={{ color: '#fbbf24' }} /> Pizarra de Notas
                         </h2>
                     </div>
 
@@ -4541,21 +4574,21 @@ const RoomDetail: React.FC = () => {
                         <div style={{ padding: '2rem' }} className="room-actions-wrapper">
                             <div className="no-print" style={{ marginBottom: '2rem', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
 
-                                <div className="action-buttons-container tour-change-stage" style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', justifyContent: 'center' }}>
+                                <div className="action-buttons-container tour-change-stage" style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', justifyContent: 'flex-end', alignItems: 'center' }}>
                                     {/* Hide "Nueva Tarea" for Clones/Esquejes/Germination rooms */}
                                     {!['clones', 'esquejes', 'esquejera', 'germination'].includes((room?.type as string)?.toLowerCase()) && (
                                         <StyledActionButton
                                             onClick={() => setIsTaskModalOpen(true)}
                                             $variant="secondary"
                                         >
-                                            <FaTasks /> Nueva Tarea
+                                            <LucideCheckSquare size={15} style={{ color: '#94a3b8' }} /> Nueva Tarea
                                         </StyledActionButton>
                                     )}
                                     <StyledActionButton
                                         onClick={handleOpenHistory}
                                         $variant="secondary"
                                     >
-                                        <FaHistory /> Historial
+                                        <LucideHistory size={15} style={{ color: '#94a3b8' }} /> Historial
                                     </StyledActionButton>
                                     {room?.type !== 'living_soil' ? (
                                         <StyledActionButton
@@ -4572,7 +4605,7 @@ const RoomDetail: React.FC = () => {
                                             }}
                                             $variant={room?.type === 'flowering' ? 'gold' : 'primary'}
                                         >
-                                            {room?.type === 'flowering' ? <FaCut /> : <FaExchangeAlt />}
+                                            {room?.type === 'flowering' ? <LucideScissors size={15} /> : <LucideRefreshCw size={15} />}
                                             {room?.type === 'flowering' ? 'Cosechar' : 'Transplantar'}
                                         </StyledActionButton>
                                     ) : (
@@ -4585,14 +4618,14 @@ const RoomDetail: React.FC = () => {
                                             $variant="gold"
                                             title={!room?.batches?.some(b => b.stage === 'completed') ? "No hay plantas listas para cosechar (Estado Corte)" : "Cosechar plantas finalizadas"}
                                         >
-                                            {!room?.batches?.some(b => b.stage === 'completed') ? <FaLock /> : <FaCut />} Cosechar
+                                            <LucideScissors size={15} /> Cosechar
                                         </StyledActionButton>
                                     )}
                                     <StyledActionButton
                                         onClick={() => setIsEditModalOpen(true)}
                                         $variant="secondary"
                                     >
-                                        <FaEdit /> Editar Sala
+                                        <LucideSettings size={15} style={{ color: '#94a3b8' }} /> Editar Sala
                                     </StyledActionButton>
                                 </div>
                             </div>
