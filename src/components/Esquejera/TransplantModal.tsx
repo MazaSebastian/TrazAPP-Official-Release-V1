@@ -2,8 +2,23 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import styled, { keyframes } from 'styled-components';
 import { Room, Batch, CloneMap } from '../../types/rooms';
-import { FaExchangeAlt, FaPlus, FaTrash, FaCheckSquare, FaRegSquare, FaPrint } from 'react-icons/fa';
-
+import { 
+    ArrowRightLeft, 
+    Plus as LucidePlus, 
+    Trash2 as LucideTrash2, 
+    CheckSquare as LucideCheckSquare, 
+    Square as LucideSquare, 
+    Printer as LucidePrinter, 
+    X as LucideX, 
+    Sparkles, 
+    ChevronRight, 
+    ArrowLeft, 
+    Check, 
+    Layers, 
+    Sprout
+} from 'lucide-react';
+import { Button as ShadcnButton } from '../ui/Button';
+import { Badge as ShadcnBadge } from '../ui/Badge';
 
 import { EsquejeraGrid } from './EsquejeraGrid';
 import { PrintableBatchLabels } from './PrintableBatchLabels'; // Import the new component
@@ -12,16 +27,6 @@ import ToastModal from '../ToastModal';
 import { CustomSelect } from '../CustomSelect';
 import { useReactToPrint } from 'react-to-print';
 import { Insumo } from '../../types';
-
-// ... (Rest of imports and styled components unchanged) ...
-
-// Skipping to component definition for brevity in this tool call, 
-// using TargetContent to match the block I want to change. 
-// Wait, I can't skip content in ReplacementContent if I'm replacing a block.
-// I will split this into multiple calls or just target the specific blocks.
-
-// Block 1: Imports
-
 
 interface TransplantModalProps {
     isOpen: boolean;
@@ -44,32 +49,32 @@ interface TransplantModalProps {
 
 const fadeIn = keyframes` from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } `;
 const fadeOut = keyframes` from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(10px); } `;
-const scaleIn = keyframes` from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } `;
-const scaleOut = keyframes` from { transform: scale(1); opacity: 1; } to { transform: scale(0.95); opacity: 0; } `;
+const scaleIn = keyframes` from { transform: scale(0.96); opacity: 0; } to { transform: scale(1); opacity: 1; } `;
+const scaleOut = keyframes` from { transform: scale(1); opacity: 1; } to { transform: scale(0.96); opacity: 0; } `;
 
 const StepContent = styled.div<{ $isExiting?: boolean }>`
   animation: ${p => p.$isExiting ? fadeOut : fadeIn} 0.3s ease-in-out forwards;
   display: flex; flex-direction: column; flex: 1; min-height: 0;
 `;
 
-// Styled Components (Existing + New)
+// Styled Components (Shadcn Dark Glassmorphism)
 const Overlay = styled.div<{ isClosing?: boolean }>`
   position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.5); z-index: 1000;
+  background: rgba(0, 0, 0, 0.75); z-index: 1000;
   display: flex; align-items: center; justify-content: center;
-  backdrop-filter: blur(2px);
+  backdrop-filter: blur(12px);
   animation: ${p => p.isClosing ? fadeOut : fadeIn} 0.2s ease-in-out forwards;
 `;
 
 const Content = styled.div<{ isClosing?: boolean }>`
-  background: rgba(15, 23, 42, 0.95);
-  backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(15, 23, 42, 0.96);
+  backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   color: #f8fafc;
-  padding: 0; border-radius: 1rem;
+  padding: 0; border-radius: 1.25rem;
   width: 95%; max-width: 1100px; height: 90vh;
   display: flex; flex-direction: column;
-  box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.05);
   overflow: hidden;
   animation: ${p => p.isClosing ? scaleOut : scaleIn} 0.2s ease-in-out forwards;
 
@@ -79,16 +84,82 @@ const Content = styled.div<{ isClosing?: boolean }>`
 `;
 
 const ModalHeader = styled.div`
-  padding: 1.5rem 2rem 0 2rem;
+  padding: 1.5rem 2rem 1.25rem 2rem;
   flex-shrink: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(15, 23, 42, 0.5);
 
   @media (max-width: 768px) {
-    padding: 1rem 1rem 0 1rem;
+    padding: 1rem;
+  }
+`;
+
+const HeaderTop = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1.25rem;
+`;
+
+const HeaderInfo = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+`;
+
+const IconBadge = styled.div`
+  width: 44px;
+  height: 44px;
+  border-radius: 0.75rem;
+  background: linear-gradient(135deg, rgba(74, 222, 128, 0.2), rgba(16, 185, 129, 0.05));
+  border: 1px solid rgba(74, 222, 128, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #4ade80;
+  box-shadow: 0 0 20px rgba(74, 222, 128, 0.15);
+`;
+
+const Title = styled.h2`
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #f8fafc;
+  margin: 0;
+  letter-spacing: -0.02em;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+`;
+
+const Subtitle = styled.p`
+  margin: 0.25rem 0 0 0;
+  font-size: 0.85rem;
+  color: #94a3b8;
+`;
+
+const CloseButton = styled.button`
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #94a3b8;
+  width: 36px;
+  height: 36px;
+  border-radius: 0.625rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #f8fafc;
+    border-color: rgba(255, 255, 255, 0.2);
+    transform: scale(1.05);
   }
 `;
 
 const ModalBody = styled.div`
-  padding: 1rem 2rem;
+  padding: 1.5rem 2rem;
   flex: 1;
   min-height: 0; /* Critical for scrolling */
   overflow: hidden;
@@ -102,11 +173,12 @@ const ModalBody = styled.div`
 `;
 
 const ModalFooter = styled.div`
-  padding: 1rem 2rem 1.5rem 2rem;
+  padding: 1.25rem 2rem;
   flex-shrink: 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
   display: flex;
   justify-content: flex-end;
+  align-items: center;
   gap: 1rem;
   background: rgba(15, 23, 42, 0.6);
 
@@ -131,7 +203,7 @@ const StepFlexContainer = styled.div<{ $overflowHidden?: boolean }>`
 `;
 
 const ColumnLeft = styled.div`
-  flex: 1; min-width: 250px;
+  flex: 1; min-width: 260px;
   @media (max-width: 768px) { min-width: 100%; flex: none; }
 `;
 
@@ -145,50 +217,99 @@ const Step2Column = styled.div`
   @media (max-width: 768px) { flex: none; overflow: visible; min-height: 450px; }
 `;
 
-const Title = styled.h2`
-  font-size: 1.5rem; color: #f8fafc; margin-bottom: 1rem;
-  display: flex; align-items: center; gap: 0.5rem;
+const Section = styled.div` margin-bottom: 1.5rem; `;
+const Label = styled.label` 
+  display: block; 
+  font-weight: 600; 
+  font-size: 0.85rem;
+  color: #cbd5e1; 
+  margin-bottom: 0.5rem; 
+  letter-spacing: -0.01em;
 `;
 
-const Section = styled.div` margin-bottom: 1.5rem; `;
-const Label = styled.label` display: block; font-weight: 600; color: #cbd5e1; margin-bottom: 0.5rem; `;
+const TabContainer = styled.div` 
+  display: flex; 
+  gap: 0.35rem; 
+  margin-bottom: 1rem; 
+  background: rgba(15, 23, 42, 0.6);
+  padding: 0.25rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  width: fit-content;
+`;
 
-
-const TabContainer = styled.div` display: flex; gap: 0.5rem; margin-bottom: 1rem; border-bottom: 1px solid rgba(255, 255, 255, 0.1); `;
 const Tab = styled.button<{ $active: boolean }>`
-  padding: 0.5rem 1rem; background: ${p => p.$active ? 'rgba(30, 41, 59, 0.8)' : 'rgba(15, 23, 42, 0.4)'};
-  border: 1px solid rgba(255, 255, 255, 0.1); border-bottom: ${p => p.$active ? 'none' : '1px solid rgba(255, 255, 255, 0.1)'};
-  border-radius: 0.5rem 0.5rem 0 0; margin-bottom: -1px;
-  color: ${p => p.$active ? '#4ade80' : '#94a3b8'}; font-weight: ${p => p.$active ? 'bold' : 'normal'};
-  cursor: pointer; display: flex; align-items: center; gap: 0.5rem;
-  &:hover { background: rgba(30, 41, 59, 0.8); color: ${p => p.$active ? '#4ade80' : '#cbd5e1'}; }
+  padding: 0.45rem 1rem;
+  background: ${p => p.$active ? 'rgba(30, 41, 59, 0.9)' : 'transparent'};
+  border: 1px solid ${p => p.$active ? 'rgba(255, 255, 255, 0.12)' : 'transparent'};
+  border-radius: 0.5rem;
+  color: ${p => p.$active ? '#4ade80' : '#94a3b8'}; 
+  font-weight: ${p => p.$active ? '600' : '500'};
+  font-size: 0.85rem;
+  cursor: pointer; 
+  display: flex; 
+  align-items: center; 
+  gap: 0.5rem;
+  transition: all 0.15s ease;
+  box-shadow: ${p => p.$active ? '0 2px 8px rgba(0,0,0,0.3)' : 'none'};
+
+  &:hover { 
+    color: ${p => p.$active ? '#4ade80' : '#f8fafc'};
+    background: ${p => p.$active ? 'rgba(30, 41, 59, 0.9)' : 'rgba(255, 255, 255, 0.04)'};
+  }
 `;
 
 const StepIndicator = styled.div`
-  display: flex; gap: 1rem; border-bottom: 2px solid rgba(255, 255, 255, 0.1); padding-bottom: 1rem;
+  display: flex; 
+  align-items: center;
+  gap: 0.75rem;
 `;
-const Step = styled.div<{ $active: boolean; $completed: boolean }>`
-  font-weight: bold; color: ${p => p.$active ? '#4ade80' : p.$completed ? '#86efac' : '#475569'};
-  display: flex; align-items: center; gap: 0.5rem;
+
+const StepPill = styled.div<{ $active: boolean; $completed: boolean }>`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 9999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  background: ${p => p.$active ? 'rgba(74, 222, 128, 0.12)' : p.$completed ? 'rgba(74, 222, 128, 0.08)' : 'rgba(255, 255, 255, 0.03)'};
+  border: 1px solid ${p => p.$active ? 'rgba(74, 222, 128, 0.4)' : p.$completed ? 'rgba(74, 222, 128, 0.2)' : 'rgba(255, 255, 255, 0.08)'};
+  color: ${p => p.$active ? '#4ade80' : p.$completed ? '#86efac' : '#64748b'};
+  box-shadow: ${p => p.$active ? '0 0 12px rgba(74, 222, 128, 0.15)' : 'none'};
+`;
+
+const StepNumber = styled.span<{ $active: boolean; $completed: boolean }>`
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  background: ${p => p.$active ? '#4ade80' : p.$completed ? '#10b981' : 'rgba(255, 255, 255, 0.1)'};
+  color: ${p => p.$active || p.$completed ? '#0f172a' : '#94a3b8'};
+  font-weight: 700;
 `;
 
 const SelectAllButton = styled.button`
   background: rgba(30, 41, 59, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   color: #cbd5e1;
   font-weight: 600;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.4rem 0.8rem;
-  border-radius: 0.375rem;
+  padding: 0.45rem 0.85rem;
+  border-radius: 0.5rem;
   transition: all 0.2s;
   box-shadow: 0 1px 2px rgba(0,0,0,0.1);
 
   &:hover {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.08);
     border-color: rgba(255, 255, 255, 0.2);
     color: #f8fafc;
   }
@@ -196,15 +317,6 @@ const SelectAllButton = styled.button`
   &:active {
     transform: translateY(1px);
   }
-`;
-
-const Button = styled.button<{ $variant?: 'primary' | 'secondary' | 'success' }>`
-  padding: 0.75rem 1.5rem; border-radius: 0.5rem; font-weight: 600; cursor: pointer; transition: all 0.2s;
-  border: ${p => p.$variant === 'secondary' ? '1px solid rgba(255, 255, 255, 0.1)' : 'none'};
-  background: ${p => p.$variant === 'secondary' ? 'rgba(30, 41, 59, 0.6)' : p.$variant === 'success' ? '#4ade80' : '#38bdf8'};
-  color: ${p => p.$variant === 'secondary' ? '#e2e8f0' : '#0f172a'};
-  &:hover { filter: brightness(1.1); transform: translateY(-1px); }
-  &:disabled { opacity: 0.5; cursor: not-allowed; }
 `;
 
 // Drag & Drop Components
@@ -622,10 +734,32 @@ export const TransplantModal: React.FC<TransplantModalProps> = ({ isOpen, onClos
         <Overlay isClosing={isClosing}>
             <Content isClosing={isClosing}>
                 <ModalHeader>
-                    <Title><FaExchangeAlt /> Transplantar Esquejes</Title>
+                    <HeaderTop>
+                        <HeaderInfo>
+                            <IconBadge>
+                                <ArrowRightLeft size={22} />
+                            </IconBadge>
+                            <div>
+                                <Title>Trasplantar Esquejes</Title>
+                                <Subtitle>Mueve esquejes seleccionados a una nueva sala y organízalos en lotes</Subtitle>
+                            </div>
+                        </HeaderInfo>
+                        <CloseButton onClick={onClose} title="Cerrar modal">
+                            <LucideX size={18} />
+                        </CloseButton>
+                    </HeaderTop>
                     <StepIndicator>
-                        <Step $active={step === 1} $completed={step > 1}>1. Selección</Step>
-                        <Step $active={step === 2} $completed={false}>2. Organización</Step>
+                        <StepPill $active={step === 1} $completed={step > 1}>
+                            <StepNumber $active={step === 1} $completed={step > 1}>
+                                {step > 1 ? <Check size={12} strokeWidth={3} /> : '1'}
+                            </StepNumber>
+                            <span>1. Selección</span>
+                        </StepPill>
+                        <ChevronRight size={14} color="#64748b" />
+                        <StepPill $active={step === 2} $completed={false}>
+                            <StepNumber $active={step === 2} $completed={false}>2</StepNumber>
+                            <span>2. Organización</span>
+                        </StepPill>
                     </StepIndicator>
                 </ModalHeader>
 
@@ -711,7 +845,7 @@ export const TransplantModal: React.FC<TransplantModalProps> = ({ isOpen, onClos
                                             <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
                                                 <div style={{ marginBottom: '0.5rem', display: 'flex', justifyContent: 'flex-end' }}>
                                                     <SelectAllButton onClick={(e) => handleSelectAll(map.id, e)} type="button">
-                                                        {allSelected ? <FaRegSquare /> : <FaCheckSquare />}
+                                                        {allSelected ? <LucideSquare size={15} /> : <LucideCheckSquare size={15} />}
                                                         {allSelected ? 'Desmarcar Todos' : 'Seleccionar Todos'}
                                                     </SelectAllButton>
                                                 </div>
@@ -747,25 +881,39 @@ export const TransplantModal: React.FC<TransplantModalProps> = ({ isOpen, onClos
                                 <StepFlexContainer $overflowHidden={true}>
                                     {/* Singles Column */}
                                     <Step2Column>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                                            <Label style={{ marginBottom: 0 }}>Esquejes Individuales ({singles.length})</Label>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                                <Label style={{ marginBottom: 0 }}>Esquejes Individuales</Label>
+                                                <ShadcnBadge variant="secondary">
+                                                    {singles.length} disp.
+                                                </ShadcnBadge>
+                                            </div>
                                             {singles.length > 0 && (
                                                 <button
                                                     onClick={autoGroup}
                                                     style={{
-                                                        background: '#4ade80', color: '#0f172a', border: 'none',
-                                                        borderRadius: '0.25rem', padding: '0.25rem 0.5rem',
-                                                        cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600
+                                                        background: 'rgba(74, 222, 128, 0.12)',
+                                                        color: '#4ade80',
+                                                        border: '1px solid rgba(74, 222, 128, 0.3)',
+                                                        borderRadius: '0.5rem',
+                                                        padding: '0.35rem 0.75rem',
+                                                        cursor: 'pointer',
+                                                        fontSize: '0.8rem',
+                                                        fontWeight: 600,
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        gap: '0.4rem',
+                                                        transition: 'all 0.2s',
+                                                        boxShadow: '0 0 10px rgba(74, 222, 128, 0.1)'
                                                     }}
                                                     title="Agrupar automáticamente por Genética"
                                                 >
-                                                    Agrupar Todo
+                                                    <Sparkles size={13} /> Agrupar Todo
                                                 </button>
                                             )}
                                         </div>
                                         <div style={{ flex: 1, overflowY: 'auto', paddingRight: '0.5rem' }}>
                                             <DroppableContainer id="singles">
-                                                {/* Selection Box Visual */}
                                                 {/* Selection Box Visual - Rendered via Portal to avoid transform issues */}
                                                 {selectionBox && createPortal(
                                                     <div style={{
@@ -802,12 +950,17 @@ export const TransplantModal: React.FC<TransplantModalProps> = ({ isOpen, onClos
                                                         }, {} as Record<string, string[]>);
 
                                                         return Object.entries(grouped).map(([geneticName, ids]) => (
-                                                            <div key={geneticName} style={{ marginBottom: '1rem' }}>
+                                                            <div key={geneticName} style={{ marginBottom: '1.25rem' }}>
                                                                 <div style={{
-                                                                    fontSize: '0.85rem', fontWeight: 'bold', color: '#94a3b8',
-                                                                    marginBottom: '0.5rem', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', paddingBottom: '0.25rem'
+                                                                    fontSize: '0.85rem', fontWeight: 600, color: '#94a3b8',
+                                                                    marginBottom: '0.5rem', borderBottom: '1px solid rgba(255, 255, 255, 0.08)', paddingBottom: '0.35rem',
+                                                                    display: 'flex', alignItems: 'center', justifyContent: 'space-between'
                                                                 }}>
-                                                                    {geneticName} <span style={{ fontWeight: 'normal' }}>({ids.length})</span>
+                                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                                                                        <Sprout size={14} color="#4ade80" />
+                                                                        <span style={{ color: '#f8fafc' }}>{geneticName}</span>
+                                                                    </div>
+                                                                    <span style={{ fontSize: '0.75rem', color: '#64748b' }}>{ids.length} esquejes</span>
                                                                 </div>
                                                                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
                                                                     {ids.map(id => {
@@ -819,16 +972,20 @@ export const TransplantModal: React.FC<TransplantModalProps> = ({ isOpen, onClos
                                                                                     data-draggable-id={id}
                                                                                     onClick={(e) => handleOrganizeClick(id, e)}
                                                                                     style={{
-                                                                                        padding: '0.5rem',
-                                                                                        background: isSelected ? 'rgba(56, 189, 248, 0.2)' : 'rgba(30, 41, 59, 0.6)',
-                                                                                        border: isSelected ? '2px solid #38bdf8' : '1px solid rgba(255, 255, 255, 0.1)',
-                                                                                        borderRadius: '0.25rem',
+                                                                                        padding: '0.45rem 0.75rem',
+                                                                                        background: isSelected ? 'rgba(56, 189, 248, 0.2)' : 'rgba(30, 41, 59, 0.7)',
+                                                                                        border: isSelected ? '1px solid #38bdf8' : '1px solid rgba(255, 255, 255, 0.1)',
+                                                                                        borderRadius: '0.5rem',
                                                                                         fontSize: '0.8rem', cursor: 'grab',
-                                                                                        boxShadow: isSelected ? '0 0 0 2px rgba(56, 189, 248, 0.3)' : '0 1px 2px rgba(0,0,0,0.2)',
-                                                                                        transition: 'all 0.1s',
-                                                                                        userSelect: 'none'
+                                                                                        boxShadow: isSelected ? '0 0 12px rgba(56, 189, 248, 0.3)' : '0 1px 2px rgba(0,0,0,0.2)',
+                                                                                        transition: 'all 0.15s ease',
+                                                                                        userSelect: 'none',
+                                                                                        display: 'flex',
+                                                                                        alignItems: 'center',
+                                                                                        gap: '0.4rem'
                                                                                     }}>
-                                                                                    <strong>{b?.tracking_code}</strong><br />
+                                                                                    <div style={{ width: 6, height: 6, borderRadius: '50%', background: isSelected ? '#38bdf8' : '#4ade80' }} />
+                                                                                    <strong style={{ color: isSelected ? '#38bdf8' : '#e2e8f0' }}>{b?.tracking_code}</strong>
                                                                                 </div>
                                                                             </DraggableItem>
                                                                         )
@@ -844,34 +1001,111 @@ export const TransplantModal: React.FC<TransplantModalProps> = ({ isOpen, onClos
 
                                     {/* Groups Column */}
                                     <Step2Column>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                                            <Label style={{ marginBottom: 0 }}>Grupos Nuevos</Label>
-                                            <button onClick={addGroup} style={{ background: '#4ade80', color: '#0f172a', border: 'none', borderRadius: '0.25rem', padding: '0.25rem 0.5rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.25rem', fontWeight: 600 }}>
-                                                <FaPlus /> Nuevo Grupo
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                                <Label style={{ marginBottom: 0 }}>Grupos Nuevos</Label>
+                                                <ShadcnBadge variant="emerald">
+                                                    {groups.length} creados
+                                                </ShadcnBadge>
+                                            </div>
+                                            <button 
+                                                onClick={addGroup} 
+                                                style={{ 
+                                                    background: 'linear-gradient(135deg, #10b981, #059669)', 
+                                                    color: '#ffffff', 
+                                                    border: 'none', 
+                                                    borderRadius: '0.5rem', 
+                                                    padding: '0.35rem 0.75rem', 
+                                                    cursor: 'pointer', 
+                                                    display: 'flex', 
+                                                    alignItems: 'center', 
+                                                    gap: '0.35rem', 
+                                                    fontWeight: 600,
+                                                    fontSize: '0.8rem',
+                                                    boxShadow: '0 2px 8px rgba(16, 185, 129, 0.3)',
+                                                    transition: 'all 0.2s'
+                                                }}
+                                            >
+                                                <LucidePlus size={14} /> Nuevo Grupo
                                             </button>
                                         </div>
-                                        <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1rem', padding: '0.5rem' }}>
+                                        <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1rem', padding: '0.25rem' }}>
                                             {groups.map(group => (
-                                                <div key={group.id} style={{ border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '0.5rem', overflow: 'hidden', flexShrink: 0 }}>
-                                                    <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '0.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                        <input
-                                                            value={group.name}
-                                                            onChange={e => setGroups(prev => prev.map(g => g.id === group.id ? { ...g, name: e.target.value } : g))}
-                                                            style={{ border: 'none', background: 'transparent', fontWeight: 'bold', flex: 1, color: '#f8fafc' }}
-                                                        />
-                                                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                                <div key={group.id} style={{ 
+                                                    border: '1px solid rgba(255, 255, 255, 0.1)', 
+                                                    borderRadius: '0.75rem', 
+                                                    overflow: 'hidden', 
+                                                    flexShrink: 0,
+                                                    background: 'rgba(15, 23, 42, 0.5)',
+                                                    boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
+                                                }}>
+                                                    <div style={{ 
+                                                        background: 'rgba(30, 41, 59, 0.85)', 
+                                                        padding: '0.6rem 0.85rem', 
+                                                        display: 'flex', 
+                                                        justifyContent: 'space-between', 
+                                                        alignItems: 'center',
+                                                        borderBottom: '1px solid rgba(255, 255, 255, 0.08)'
+                                                    }}>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1 }}>
+                                                            <Layers size={14} color="#4ade80" />
+                                                            <input
+                                                                value={group.name}
+                                                                onChange={e => setGroups(prev => prev.map(g => g.id === group.id ? { ...g, name: e.target.value } : g))}
+                                                                style={{ 
+                                                                    border: 'none', 
+                                                                    background: 'transparent', 
+                                                                    fontWeight: 600, 
+                                                                    fontSize: '0.9rem',
+                                                                    color: '#f8fafc',
+                                                                    outline: 'none',
+                                                                    width: '80%'
+                                                                }}
+                                                            />
+                                                        </div>
+                                                        <div style={{ display: 'flex', gap: '0.4rem' }}>
                                                             <button
                                                                 onClick={() => handlePrintLabels(group)}
                                                                 title="Imprimir Etiquetas"
-                                                                style={{ color: '#cbd5e1', border: 'none', background: 'rgba(255, 255, 255, 0.1)', cursor: 'pointer', padding: '0.25rem', borderRadius: '0.25rem' }}
+                                                                style={{ 
+                                                                    color: '#cbd5e1', 
+                                                                    border: '1px solid rgba(255, 255, 255, 0.1)', 
+                                                                    background: 'rgba(255, 255, 255, 0.05)', 
+                                                                    cursor: 'pointer', 
+                                                                    padding: '0.35rem', 
+                                                                    borderRadius: '0.375rem',
+                                                                    display: 'flex',
+                                                                    alignItems: 'center',
+                                                                    justifyContent: 'center'
+                                                                }}
                                                             >
-                                                                <FaPrint />
+                                                                <LucidePrinter size={14} />
                                                             </button>
-                                                            <button onClick={() => removeGroup(group.id)} style={{ color: '#f87171', border: 'none', background: 'none', cursor: 'pointer' }}><FaTrash /></button>
+                                                            <button 
+                                                                onClick={() => removeGroup(group.id)} 
+                                                                title="Eliminar Grupo"
+                                                                style={{ 
+                                                                    color: '#f87171', 
+                                                                    border: '1px solid rgba(248, 113, 113, 0.2)', 
+                                                                    background: 'rgba(239, 68, 68, 0.1)', 
+                                                                    cursor: 'pointer', 
+                                                                    padding: '0.35rem', 
+                                                                    borderRadius: '0.375rem',
+                                                                    display: 'flex',
+                                                                    alignItems: 'center',
+                                                                    justifyContent: 'center'
+                                                                }}
+                                                            >
+                                                                <LucideTrash2 size={14} />
+                                                            </button>
                                                         </div>
                                                     </div>
                                                     <DroppableContainer id={`group-${group.id}`}>
-                                                        {group.batchIds.length === 0 && <span style={{ color: '#94a3b8', fontSize: '0.8rem' }}>Arrastra esquejes aquí</span>}
+                                                        {group.batchIds.length === 0 && (
+                                                            <span style={{ color: '#64748b', fontSize: '0.8rem', fontStyle: 'italic', display: 'block', textAlign: 'center', padding: '0.75rem 0' }}>
+                                                                Arrastra esquejes aquí para asignarlos al lote
+                                                            </span>
+                                                        )}
                                                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
                                                             {group.batchIds.map(id => {
                                                                 const b = getBatch(id);
@@ -881,14 +1115,18 @@ export const TransplantModal: React.FC<TransplantModalProps> = ({ isOpen, onClos
                                                                         <div
                                                                             onClick={(e) => handleOrganizeClick(id, e)}
                                                                             style={{
-                                                                                padding: '0.25rem 0.5rem',
-                                                                                background: isSelected ? 'rgba(56, 189, 248, 0.2)' : 'rgba(74, 222, 128, 0.2)',
-                                                                                borderRadius: '0.25rem',
-                                                                                fontSize: '0.75rem', fontWeight: 'bold',
+                                                                                padding: '0.35rem 0.65rem',
+                                                                                background: isSelected ? 'rgba(56, 189, 248, 0.2)' : 'rgba(74, 222, 128, 0.15)',
+                                                                                borderRadius: '0.375rem',
+                                                                                fontSize: '0.75rem', fontWeight: 600,
                                                                                 color: isSelected ? '#38bdf8' : '#4ade80',
                                                                                 cursor: 'grab',
-                                                                                border: isSelected ? '2px solid #38bdf8' : '1px solid transparent'
+                                                                                border: isSelected ? '1px solid #38bdf8' : '1px solid rgba(74, 222, 128, 0.3)',
+                                                                                display: 'flex',
+                                                                                alignItems: 'center',
+                                                                                gap: '0.3rem'
                                                                             }}>
+                                                                            <div style={{ width: 5, height: 5, borderRadius: '50%', background: isSelected ? '#38bdf8' : '#4ade80' }} />
                                                                             {b?.tracking_code}
                                                                         </div>
                                                                     </DraggableItem>
@@ -909,13 +1147,25 @@ export const TransplantModal: React.FC<TransplantModalProps> = ({ isOpen, onClos
                 <ModalFooter>
                     {step === 1 ? (
                         <>
-                            <Button $variant="secondary" onClick={onClose}>Cancelar</Button>
-                            <Button $variant="success" onClick={handleNextStep}>Siguiente: Organizar</Button>
+                            <ShadcnButton variant="secondary" onClick={onClose}>
+                                Cancelar
+                            </ShadcnButton>
+                            <ShadcnButton variant="default" onClick={handleNextStep}>
+                                Siguiente: Organizar <ChevronRight size={16} style={{ marginLeft: 6 }} />
+                            </ShadcnButton>
                         </>
                     ) : (
                         <>
-                            <Button $variant="secondary" onClick={handleBackStep}>Atrás</Button>
-                            <Button $variant="success" onClick={handleConfirm} disabled={loading}>{loading ? 'Procesando...' : 'Confirmar Todo'}</Button>
+                            <ShadcnButton variant="secondary" onClick={handleBackStep}>
+                                <ArrowLeft size={16} style={{ marginRight: 6 }} /> Atrás
+                            </ShadcnButton>
+                            <ShadcnButton variant="default" onClick={handleConfirm} disabled={loading}>
+                                {loading ? 'Procesando...' : (
+                                    <>
+                                        <Check size={16} style={{ marginRight: 6 }} /> Confirmar Todo
+                                    </>
+                                )}
+                            </ShadcnButton>
                         </>
                     )}
                 </ModalFooter>
