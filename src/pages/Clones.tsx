@@ -2,10 +2,27 @@ import React, { useState, useEffect } from 'react';
 import styled, { createGlobalStyle, keyframes } from 'styled-components';
 import { useNavigate, Link } from 'react-router-dom';
 import {
-    FaBarcode, FaExchangeAlt, FaMinusCircle, FaEdit, FaTrash,
-    FaCut, FaTimes, FaLevelUpAlt, FaPlus, FaAngleRight, FaAngleDown,
-    FaTint, FaLeaf, FaSun, FaCheckCircle, FaDna, FaPrint, FaHashtag
-} from 'react-icons/fa';
+    Barcode,
+    ArrowRightLeft,
+    MinusCircle,
+    Edit3,
+    Trash2,
+    Scissors,
+    X as LucideX,
+    CornerDownRight,
+    Plus,
+    ChevronRight,
+    ChevronDown,
+    Droplets,
+    Leaf,
+    Sun,
+    CheckCircle2,
+    Dna,
+    Printer,
+    Hash
+} from 'lucide-react';
+import { ShadcnButton } from '../components/ui/Button';
+import { ShadcnBadge } from '../components/ui/Badge';
 import { Tooltip } from '../components/Tooltip';
 import { roomsService } from '../services/roomsService';
 import { geneticsService } from '../services/geneticsService';
@@ -631,37 +648,26 @@ const getStatusBadge = (batch: any, onNavigate?: (path: string) => void) => {
         const isClickable = onNavigate && roomId;
 
         return (
-            <span
+            <ShadcnBadge
+                variant="emerald"
+                dot
                 onClick={(e) => {
                     if (isClickable) {
                         e.stopPropagation();
                         onNavigate(`/rooms/${roomId}?mapId=${batch.clone_map_id}`);
                     }
                 }}
-                style={{
-                    display: 'inline-flex', alignItems: 'center', gap: '4px',
-                    background: 'rgba(72, 187, 120, 0.1)', color: '#48bb78',
-                    padding: '2px 8px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 600, border: '1px solid rgba(72, 187, 120, 0.2)',
-                    cursor: isClickable ? 'pointer' : 'default',
-                    transition: 'all 0.2s',
-                    whiteSpace: 'nowrap'
-                }}
+                className={isClickable ? "cursor-pointer hover:opacity-80 transition-opacity" : ""}
                 title={isClickable ? "Abrir Mapa Activo" : "En Mapa"}
             >
-                <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#48bb78' }} />
                 En Mapa
-            </span>
+            </ShadcnBadge>
         );
     }
     return (
-        <span style={{
-            display: 'inline-flex', alignItems: 'center', gap: '4px',
-            background: 'rgba(236, 201, 75, 0.1)', color: '#ecc94b',
-            padding: '2px 8px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 600, border: '1px solid rgba(236, 201, 75, 0.2)', whiteSpace: 'nowrap'
-        }}>
-            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#ecc94b' }} />
+        <ShadcnBadge variant="amber" dot>
             Disponible
-        </span>
+        </ShadcnBadge>
     );
 };
 
@@ -670,21 +676,21 @@ const getStageBadge = (roomType?: string) => {
         case 'clones':
         case 'esquejera':
             return (
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: 'rgba(56, 189, 248, 0.1)', color: '#38bdf8', padding: '2px 6px', borderRadius: '4px', fontSize: '0.65rem', fontWeight: 600 }}>
-                    <FaTint style={{ fontSize: '0.6rem' }} /> Clones
-                </span>
+                <ShadcnBadge variant="sky" className="gap-1 text-[11px] py-0.5">
+                    <Droplets size={12} /> Clones
+                </ShadcnBadge>
             );
         case 'vegetation':
             return (
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: 'rgba(72, 187, 120, 0.1)', color: '#48bb78', padding: '2px 6px', borderRadius: '4px', fontSize: '0.65rem', fontWeight: 600 }}>
-                    <FaLeaf style={{ fontSize: '0.6rem' }} /> Vegetación
-                </span>
+                <ShadcnBadge variant="emerald" className="gap-1 text-[11px] py-0.5">
+                    <Leaf size={12} /> Vegetación
+                </ShadcnBadge>
             );
         case 'flowering':
             return (
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: 'rgba(159, 122, 234, 0.1)', color: '#9f7aea', padding: '2px 6px', borderRadius: '4px', fontSize: '0.65rem', fontWeight: 600 }}>
-                    <FaSun style={{ fontSize: '0.6rem' }} /> Floración
-                </span>
+                <ShadcnBadge variant="purple" className="gap-1 text-[11px] py-0.5">
+                    <Sun size={12} /> Floración
+                </ShadcnBadge>
             );
         default:
             return null; // Return nothing if unknown
@@ -769,10 +775,10 @@ const BatchGroupRow = ({ group, onBarcodeClick, onMoveClick, onDiscardClick, onE
                         onClick={(e) => { e.stopPropagation(); setIsExpanded(!isExpanded); }}
                         style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#319795', display: 'flex', alignItems: 'center', padding: 0 }}
                     >
-                        {isExpanded ? <FaAngleDown /> : <FaAngleRight />}
+                        {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
                     </button>
                 )}
-                <FaBarcode style={{ color: '#f8fafc' }} />
+                <Barcode size={16} style={{ color: '#f8fafc' }} />
                 <strong>{displayName}</strong>
             </div>
         );
@@ -823,11 +829,11 @@ const BatchGroupRow = ({ group, onBarcodeClick, onMoveClick, onDiscardClick, onE
                 <td data-label="Acciones" style={{ textAlign: 'center', ...cellStyle, justifyContent: 'center' }}>
                     <div style={{ display: 'flex', justifyContent: 'center' }}>
                         <Tooltip text="Ver Código de Barras">
-                            <ActionButton color="#4a5568" onClick={(e) => { e.stopPropagation(); onBarcodeClick({ ...root, clone_units: children, displayName: displayName }); }}><FaBarcode /></ActionButton>
+                            <ActionButton color="#4a5568" onClick={(e) => { e.stopPropagation(); onBarcodeClick({ ...root, clone_units: children, displayName: displayName }); }}><Barcode size={16} /></ActionButton>
                         </Tooltip>
                         {/* 
                         <Tooltip text="Mover a Sala (Transplante)">
-                            <ActionButton color="#ed8936" onClick={(e) => { e.stopPropagation(); onMoveClick(root); }}><FaExchangeAlt /></ActionButton>
+                            <ActionButton color="#ed8936" onClick={(e) => { e.stopPropagation(); onMoveClick(root); }}><ArrowRightLeft size={16} /></ActionButton>
                         </Tooltip> 
                         */}
                         <Tooltip text="Dar de Baja (Descarte)">
@@ -841,7 +847,7 @@ const BatchGroupRow = ({ group, onBarcodeClick, onMoveClick, onDiscardClick, onE
                                     originalRoot: root,
                                     groupChildren: children
                                 });
-                            }}><FaMinusCircle /></ActionButton>
+                            }}><MinusCircle size={16} /></ActionButton>
                         </Tooltip>
                         <Tooltip text="Editar Lote">
                             <ActionButton color="#3182ce" onClick={(e) => {
@@ -854,10 +860,10 @@ const BatchGroupRow = ({ group, onBarcodeClick, onMoveClick, onDiscardClick, onE
                                     originalRoot: root,
                                     groupChildren: children
                                 });
-                            }}><FaEdit /></ActionButton>
+                            }}><Edit3 size={16} /></ActionButton>
                         </Tooltip>
                         <Tooltip text="Eliminar Lote">
-                            <ActionButton color="#e53e3e" onClick={(e) => { e.stopPropagation(); onDeleteClick(root); }}><FaTrash /></ActionButton>
+                            <ActionButton color="#e53e3e" onClick={(e) => { e.stopPropagation(); onDeleteClick(root); }}><Trash2 size={16} /></ActionButton>
                         </Tooltip>
                     </div>
                 </td>
@@ -882,8 +888,10 @@ const BatchGroupRow = ({ group, onBarcodeClick, onMoveClick, onDiscardClick, onE
 
         const nameDisplay = (
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', paddingLeft: '2rem' }}>
-                <FaLevelUpAlt style={{ transform: 'rotate(90deg)', color: '#a0aec0', fontSize: '1rem', minWidth: '1rem' }} title="Unidad" />
-                <FaBarcode style={{ color: '#94a3b8' }} />
+                <span title="Unidad" style={{ display: 'inline-flex', alignItems: 'center' }}>
+                    <CornerDownRight style={{ color: '#a0aec0', minWidth: '1rem' }} size={15} />
+                </span>
+                <Barcode size={16} style={{ color: '#94a3b8' }} />
                 <span>{displayName}</span>
             </div>
         );
@@ -927,13 +935,13 @@ const BatchGroupRow = ({ group, onBarcodeClick, onMoveClick, onDiscardClick, onE
                 <td data-label="Acciones" style={{ textAlign: 'center', ...cellStyle, justifyContent: 'center' }}>
                     <div style={{ display: 'flex', justifyContent: 'center' }}>
                         <Tooltip text="Ver QR de Genética">
-                            <ActionButton color="#4a5568" onClick={(e: any) => { e.stopPropagation(); onUnitPrintClick(batch, unitIndex); }}><FaBarcode /></ActionButton>
+                            <ActionButton color="#4a5568" onClick={(e: any) => { e.stopPropagation(); onUnitPrintClick(batch, unitIndex); }}><Barcode size={16} /></ActionButton>
                         </Tooltip>
                         <Tooltip text="Imprimir Etiqueta">
-                            <ActionButton color="#4ade80" onClick={(e: any) => { e.stopPropagation(); onUnitPrintClick(batch, unitIndex, true); }}><FaPrint /></ActionButton>
+                            <ActionButton color="#4ade80" onClick={(e: any) => { e.stopPropagation(); onUnitPrintClick(batch, unitIndex, true); }}><Printer size={16} /></ActionButton>
                         </Tooltip>
                         <Tooltip text="Eliminar Unidad">
-                            <ActionButton color="#e53e3e" onClick={(e: any) => { e.stopPropagation(); onUnitDeleteClick(batch, unitIndex); }}><FaTrash /></ActionButton>
+                            <ActionButton color="#e53e3e" onClick={(e: any) => { e.stopPropagation(); onUnitDeleteClick(batch, unitIndex); }}><Trash2 size={16} /></ActionButton>
                         </Tooltip>
                     </div>
                 </td>
@@ -1585,7 +1593,7 @@ const Clones: React.FC = () => {
     return (
         <Container>
             <Header>
-                <h1><FaCut /> Gestión de Esquejes</h1>
+                <h1><Scissors size={24} /> Gestión de Esquejes</h1>
 
             </Header>
 
@@ -1605,12 +1613,12 @@ const Clones: React.FC = () => {
                 <SummaryCard isTotal onClick={() => setSelectedGeneticFilter(null)} style={{ cursor: 'pointer' }}>
                     <h3>Total Esquejes</h3>
                     <div className="value">{stats.total}</div>
-                    <div className="icon"><FaCut /></div>
+                    <div className="icon"><Scissors size={28} /></div>
                 </SummaryCard>
                 <SummaryCard isTotal onClick={() => setIsBreakdownModalOpen(true)} style={{ cursor: 'pointer', background: 'rgba(56, 189, 248, 0.1)', borderColor: 'rgba(56, 189, 248, 0.3)' }}>
                     <h3>Variedades Totales</h3>
                     <div className="value">{Object.keys(stats.byGenetic).length}</div>
-                    <div className="icon"><FaDna style={{ color: '#7dd3fc' }} /></div>
+                    <div className="icon"><Dna size={28} style={{ color: '#7dd3fc' }} /></div>
                 </SummaryCard>
             </SummaryGrid>
 
@@ -1621,18 +1629,20 @@ const Clones: React.FC = () => {
                     </div>
                     <div style={{ display: 'flex', gap: '1rem', marginLeft: 'auto' }}>
                         {cloneBatches.length > 0 && (
-                            <DeleteAllButton
+                            <ShadcnButton
+                                variant="destructive"
+                                size="sm"
                                 onClick={() => setIsDeleteAllModalOpen(true)}
                                 title="Eliminar todos los lotes visibles"
                             >
-                                <FaTrash /> BORRAR TODO
-                            </DeleteAllButton>
+                                <Trash2 size={14} /> BORRAR TODO
+                            </ShadcnButton>
                         )}
                         {/* Ocultado temporalmente según solicitud */}
                         {false && (
-                            <CreateButton onClick={() => setIsCreateModalOpen(true)} style={{ margin: 0 }}>
-                                <FaPlus /> Agregar Esquejes
-                            </CreateButton>
+                            <ShadcnButton variant="default" size="sm" onClick={() => setIsCreateModalOpen(true)}>
+                                <Plus size={14} /> Agregar Esquejes
+                            </ShadcnButton>
                         )}
                     </div>
                 </HistoryHeader>
@@ -1735,9 +1745,9 @@ const Clones: React.FC = () => {
                 selectedGeneticFilter && (
                     <ModalOverlay>
                         <ModalContent style={{ maxWidth: '1000px', width: '95%' }}>
-                            <CloseIcon onClick={() => setSelectedGeneticFilter(null)}><FaTimes /></CloseIcon>
+                            <CloseIcon onClick={() => setSelectedGeneticFilter(null)}><LucideX size={18} /></CloseIcon>
                             <h2 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                <FaCut /> Lotes de {selectedGeneticFilter}
+                                <Scissors size={20} /> Lotes de {selectedGeneticFilter}
                             </h2>
 
                             <div style={{ overflowX: 'auto', maxHeight: '70vh', overflowY: 'auto' }}>
@@ -1787,9 +1797,9 @@ const Clones: React.FC = () => {
                                                                 <td data-label="Lote (Código)" style={cellStyle}>
                                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', paddingLeft: batch.parent_batch_id ? '1.5rem' : '0' }}>
                                                                         {batch.parent_batch_id && (
-                                                                            <FaLevelUpAlt style={{ transform: 'rotate(90deg)', color: '#64748b', fontSize: '1rem', minWidth: '1rem' }} />
+                                                                            <CornerDownRight style={{ color: '#64748b', minWidth: '1rem' }} size={15} />
                                                                         )}
-                                                                        <FaBarcode style={{ color: batch.parent_batch_id ? '#94a3b8' : '#f8fafc' }} />
+                                                                        <Barcode size={16} style={{ color: batch.parent_batch_id ? '#94a3b8' : '#f8fafc' }} />
                                                                         <strong>{batch.name}</strong>
                                                                         {batch.parent_batch_id && <span style={{ fontSize: '0.7rem', color: '#64748b', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px', padding: '0 4px' }}>Sub-lote</span>}
                                                                     </div>
@@ -1827,19 +1837,19 @@ const Clones: React.FC = () => {
                                                                 <td data-label="Acciones" style={{ textAlign: 'center', ...cellStyle, justifyContent: 'center' }}>
                                                                     <div style={{ display: 'flex', justifyContent: 'center' }}>
                                                                         <Tooltip text="Ver Código de Barras">
-                                                                            <ActionButton color="#4a5568" onClick={(e) => { e.stopPropagation(); handleBarcodeClick(batch); }}><FaBarcode /></ActionButton>
+                                                                            <ActionButton color="#4a5568" onClick={(e) => { e.stopPropagation(); handleBarcodeClick(batch); }}><Barcode size={16} /></ActionButton>
                                                                         </Tooltip>
                                                                         <Tooltip text="Mover a Sala (Transplante)">
-                                                                            <ActionButton color="#ed8936" onClick={(e) => { e.stopPropagation(); handleMoveClick(batch); }}><FaExchangeAlt /></ActionButton>
+                                                                            <ActionButton color="#ed8936" onClick={(e) => { e.stopPropagation(); handleMoveClick(batch); }}><ArrowRightLeft size={16} /></ActionButton>
                                                                         </Tooltip>
                                                                         <Tooltip text="Dar de Baja (Descarte)">
-                                                                            <ActionButton color="#e53e3e" onClick={(e) => { e.stopPropagation(); handleDiscardClick(batch); }}><FaMinusCircle /></ActionButton>
+                                                                            <ActionButton color="#e53e3e" onClick={(e) => { e.stopPropagation(); handleDiscardClick(batch); }}><MinusCircle size={16} /></ActionButton>
                                                                         </Tooltip>
                                                                         <Tooltip text="Editar Lote">
-                                                                            <ActionButton color="#3182ce" onClick={(e) => { e.stopPropagation(); handleEditClick(batch); }}><FaEdit /></ActionButton>
+                                                                            <ActionButton color="#3182ce" onClick={(e) => { e.stopPropagation(); handleEditClick(batch); }}><Edit3 size={16} /></ActionButton>
                                                                         </Tooltip>
                                                                         <Tooltip text="Eliminar Lote">
-                                                                            <ActionButton color="#e53e3e" onClick={(e) => { e.stopPropagation(); handleDeleteClick(batch); }}><FaTrash /></ActionButton>
+                                                                            <ActionButton color="#e53e3e" onClick={(e) => { e.stopPropagation(); handleDeleteClick(batch); }}><Trash2 size={16} /></ActionButton>
                                                                         </Tooltip>
                                                                     </div>
                                                                 </td>
@@ -1862,9 +1872,9 @@ const Clones: React.FC = () => {
 
             {/* Create Clone Batch Modal */}
             <AnimatedModal isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} allowOverflow>
-                <CloseIcon onClick={() => setIsCreateModalOpen(false)}><FaTimes /></CloseIcon>
+                <CloseIcon onClick={() => setIsCreateModalOpen(false)}><LucideX size={18} /></CloseIcon>
                 <h2 style={{ marginBottom: '1.5rem', color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <FaCut /> Nuevo Lote de Esquejes
+                    <Scissors size={20} /> Nuevo Lote de Esquejes
                 </h2>
 
                 <FormGroup style={{ zIndex: 20 }}>
@@ -1902,52 +1912,21 @@ const Clones: React.FC = () => {
                 </ModalRow>
 
                 <ModalActions>
-                    <button
+                    <ShadcnButton
+                        type="button"
+                        variant="secondary"
                         onClick={() => setIsCreateModalOpen(false)}
-                        style={{
-                            padding: '0.75rem 1.5rem',
-                            background: 'rgba(30, 41, 59, 0.6)',
-                            border: '1px solid rgba(255, 255, 255, 0.1)',
-                            borderRadius: '0.5rem',
-                            color: '#cbd5e1',
-                            cursor: 'pointer',
-                            fontWeight: 600,
-                            transition: 'all 0.2s',
-                        }}
-                        onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'; e.currentTarget.style.color = '#f8fafc'; }}
-                        onMouseLeave={e => { e.currentTarget.style.background = 'rgba(30, 41, 59, 0.6)'; e.currentTarget.style.color = '#cbd5e1'; }}
                     >
                         Cancelar
-                    </button>
-                    <button
+                    </ShadcnButton>
+                    <ShadcnButton
+                        type="button"
+                        variant="default"
                         onClick={handleCreateCloneBatch}
-                        disabled={isCreating}
-                        style={{
-                            padding: '0.75rem 1.5rem',
-                            background: isCreating ? 'rgba(74, 222, 128, 0.1)' : 'rgba(74, 222, 128, 0.2)',
-                            color: '#4ade80',
-                            border: '1px solid rgba(74, 222, 128, 0.5)',
-                            borderRadius: '0.5rem',
-                            cursor: isCreating ? 'wait' : 'pointer',
-                            fontWeight: 600,
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.5rem',
-                            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.2)',
-                            transition: 'all 0.2s'
-                        }}
-                        onMouseEnter={e => { if (!isCreating) { e.currentTarget.style.background = 'rgba(74, 222, 128, 0.3)'; e.currentTarget.style.transform = 'translateY(-1px)'; } }}
-                        onMouseLeave={e => { if (!isCreating) { e.currentTarget.style.background = 'rgba(74, 222, 128, 0.2)'; e.currentTarget.style.transform = 'none'; } }}
+                        isLoading={isCreating}
                     >
-                        {isCreating ? (
-                            <>
-                                <ButtonSpinner />
-                                <span>Creando...</span>
-                            </>
-                        ) : (
-                            'Crear Lote'
-                        )}
-                    </button>
+                        Crear Lote
+                    </ShadcnButton>
                 </ModalActions>
             </AnimatedModal>
 
@@ -1958,9 +1937,9 @@ const Clones: React.FC = () => {
                         <GlassToastContent onClick={e => e.stopPropagation()}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '1rem' }}>
                                 <h2 style={{ margin: 0, color: '#38bdf8', display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '1.25rem' }}>
-                                    <FaEdit /> Editar Lote
+                                    <Edit3 size={20} /> Editar Lote
                                 </h2>
-                                <button onClick={() => setIsEditModalOpen(false)} style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: '1.25rem' }}><FaTimes /></button>
+                                <button onClick={() => setIsEditModalOpen(false)} style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: '1.25rem' }}><LucideX size={18} /></button>
                             </div>
 
                             <div style={{ marginBottom: '1.5rem', padding: '1rem', background: 'rgba(56, 189, 248, 0.05)', borderRadius: '0.75rem', color: '#bae6fd', fontSize: '0.9rem', border: '1px solid rgba(56, 189, 248, 0.2)' }}>
@@ -2001,30 +1980,21 @@ const Clones: React.FC = () => {
                             </ModalRow>
 
                             <ModalActions>
-                                <button
+                                <ShadcnButton
+                                    type="button"
+                                    variant="secondary"
                                     onClick={() => setIsEditModalOpen(false)}
-                                    style={{ padding: '0.75rem 1.5rem', background: 'rgba(255,255,255,0.05)', color: '#cbd5e1', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '0.5rem', cursor: 'pointer', transition: 'all 0.2s' }}
-                                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
-                                    onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
                                 >
                                     Cancelar
-                                </button>
-                                <button
+                                </ShadcnButton>
+                                <ShadcnButton
+                                    type="button"
+                                    variant="default"
                                     onClick={handleSaveEdit}
                                     disabled={!editForm.quantity || parseInt(editForm.quantity) < 0}
-                                    style={{
-                                        padding: '0.75rem 1.5rem',
-                                        background: editForm.quantity && parseInt(editForm.quantity) >= 0 ? '#38bdf8' : 'rgba(56, 189, 248, 0.3)',
-                                        color: editForm.quantity && parseInt(editForm.quantity) >= 0 ? '#0f172a' : 'rgba(255,255,255,0.5)',
-                                        border: 'none',
-                                        borderRadius: '0.5rem',
-                                        cursor: editForm.quantity && parseInt(editForm.quantity) >= 0 ? 'pointer' : 'not-allowed',
-                                        fontWeight: 'bold',
-                                        transition: 'all 0.2s'
-                                    }}
                                 >
                                     Guardar Cambios
-                                </button>
+                                </ShadcnButton>
                             </ModalActions>
                         </GlassToastContent>
                     </GlassToastOverlay>
@@ -2037,9 +2007,9 @@ const Clones: React.FC = () => {
                 isMoveModalOpen && batchToMove && (
                     <ModalOverlay>
                         <ModalContent>
-                            <CloseIcon onClick={() => setIsMoveModalOpen(false)}><FaTimes /></CloseIcon>
+                            <CloseIcon onClick={() => setIsMoveModalOpen(false)}><LucideX size={18} /></CloseIcon>
                             <h2 style={{ marginBottom: '1.5rem', color: '#2d3748', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                <FaExchangeAlt /> Mover Lote
+                                <ArrowRightLeft size={20} /> Mover Lote
                             </h2>
                             <p style={{ marginBottom: '1rem' }}>Mover <strong>{batchToMove.name}</strong> a otra sala:</p>
 
@@ -2067,24 +2037,26 @@ const Clones: React.FC = () => {
                                 />
                                 <div style={{ fontSize: '0.8rem', color: '#718096', marginTop: '0.25rem' }}>
                                     {moveQuantity < batchToMove.quantity
-                                        ? `Se moverán ${moveQuantity} esquejes.Quedarán ${batchToMove.quantity - moveQuantity} en el lote original.`
+                                        ? `Se moverán ${moveQuantity} esquejes. Quedarán ${batchToMove.quantity - moveQuantity} en el lote original.`
                                         : 'Se moverá todo el lote.'}
                                 </div>
                             </FormGroup>
 
                             <ModalActions>
-                                <button
+                                <ShadcnButton
+                                    type="button"
+                                    variant="secondary"
                                     onClick={() => setIsMoveModalOpen(false)}
-                                    style={{ padding: '0.75rem', background: 'none', border: '1px solid #e2e8f0', borderRadius: '0.5rem', cursor: 'pointer' }}
                                 >
                                     Cancelar
-                                </button>
-                                <button
+                                </ShadcnButton>
+                                <ShadcnButton
+                                    type="button"
+                                    variant="default"
                                     onClick={handleConfirmMove}
-                                    style={{ padding: '0.75rem 1.5rem', background: '#ed8936', color: 'white', border: 'none', borderRadius: '0.5rem', cursor: 'pointer', fontWeight: 'bold' }}
                                 >
                                     Mover Lote
-                                </button>
+                                </ShadcnButton>
                             </ModalActions>
                         </ModalContent>
                     </ModalOverlay>
@@ -2096,7 +2068,7 @@ const Clones: React.FC = () => {
                 isBarcodeModalOpen && viewingBatch && (
                     <GlassToastOverlay onClick={() => setIsBarcodeModalOpen(false)}>
                         <GlassToastContent onClick={e => e.stopPropagation()}>
-                            <CloseIcon onClick={() => setIsBarcodeModalOpen(false)} style={{ color: '#94a3b8' }}><FaTimes /></CloseIcon>
+                            <CloseIcon onClick={() => setIsBarcodeModalOpen(false)} style={{ color: '#94a3b8' }}><LucideX size={18} /></CloseIcon>
                             <h2 style={{ textAlign: 'center', marginBottom: '0.5rem', color: '#f8fafc', fontSize: '1.4rem' }}>
                                 Ficha del Lote
                             </h2>
@@ -2151,12 +2123,22 @@ const Clones: React.FC = () => {
                                 </div>
 
                                 <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1rem', flexWrap: 'wrap' }}>
-                                    <button onClick={handlePrintTickets} style={{ flex: 1, padding: '0.75rem', background: 'rgba(56, 189, 248, 0.2)', color: '#38bdf8', border: '1px solid rgba(56, 189, 248, 0.3)', borderRadius: '0.5rem', cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', transition: 'all 0.2s', boxShadow: '0 4px 6px rgba(0,0,0,0.2)' }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(56, 189, 248, 0.3)'} onMouseLeave={e => e.currentTarget.style.background = 'rgba(56, 189, 248, 0.2)'}>
-                                        <FaPrint /> Imprimir
-                                    </button>
-                                    <button onClick={() => setIsBarcodeModalOpen(false)} style={{ flex: 1, padding: '0.75rem', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '0.5rem', cursor: 'pointer', color: '#94a3b8', fontWeight: 600, transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center' }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'} onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}>
+                                    <ShadcnButton
+                                        type="button"
+                                        variant="default"
+                                        onClick={handlePrintTickets}
+                                        className="flex-1"
+                                    >
+                                        <Printer size={16} /> Imprimir
+                                    </ShadcnButton>
+                                    <ShadcnButton
+                                        type="button"
+                                        variant="secondary"
+                                        onClick={() => setIsBarcodeModalOpen(false)}
+                                        className="flex-1"
+                                    >
                                         ← Volver
-                                    </button>
+                                    </ShadcnButton>
                                 </div>
                             </div>
                         </GlassToastContent>
@@ -2171,9 +2153,9 @@ const Clones: React.FC = () => {
                         <GlassToastContent onClick={e => e.stopPropagation()}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '1rem' }}>
                                 <h2 style={{ margin: 0, color: '#e53e3e', display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '1.25rem' }}>
-                                    <FaMinusCircle /> Descartar Esquejes
+                                    <MinusCircle size={20} /> Descartar Esquejes
                                 </h2>
-                                <button onClick={() => setIsDiscardModalOpen(false)} style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: '1.25rem' }}><FaTimes /></button>
+                                <button onClick={() => setIsDiscardModalOpen(false)} style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: '1.25rem' }}><LucideX size={18} /></button>
                             </div>
 
                             <p style={{ marginBottom: '1.5rem', color: '#94a3b8', fontSize: '0.95rem' }}>
@@ -2216,30 +2198,21 @@ const Clones: React.FC = () => {
                             </FormGroup>
 
                             <ModalActions>
-                                <button
+                                <ShadcnButton
+                                    type="button"
+                                    variant="secondary"
                                     onClick={() => setIsDiscardModalOpen(false)}
-                                    style={{ padding: '0.75rem 1.5rem', background: 'rgba(255,255,255,0.05)', color: '#cbd5e1', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '0.5rem', cursor: 'pointer', transition: 'all 0.2s' }}
-                                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
-                                    onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
                                 >
                                     Cancelar
-                                </button>
-                                <button
+                                </ShadcnButton>
+                                <ShadcnButton
+                                    type="button"
+                                    variant="destructive"
                                     onClick={handleConfirmDiscard}
                                     disabled={discardQuantity <= 0 || !discardReason.trim()}
-                                    style={{
-                                        padding: '0.75rem 1.5rem',
-                                        background: discardQuantity > 0 && discardReason.trim() ? '#e53e3e' : 'rgba(229, 62, 62, 0.3)',
-                                        color: discardQuantity > 0 && discardReason.trim() ? 'white' : 'rgba(255,255,255,0.5)',
-                                        border: 'none',
-                                        borderRadius: '0.5rem',
-                                        cursor: discardQuantity > 0 && discardReason.trim() ? 'pointer' : 'not-allowed',
-                                        fontWeight: 'bold',
-                                        transition: 'all 0.2s'
-                                    }}
                                 >
                                     Confirmar Baja
-                                </button>
+                                </ShadcnButton>
                             </ModalActions>
                         </GlassToastContent>
                     </GlassToastOverlay>
@@ -2274,27 +2247,28 @@ const Clones: React.FC = () => {
             {/* Success Modal */}
             <AnimatedModal isOpen={isSuccessModalOpen} onClose={() => setIsSuccessModalOpen(false)}>
                 <div style={{ textAlign: 'center', padding: '1rem' }}>
-                    <div style={{ color: '#48bb78', fontSize: '3rem', marginBottom: '1rem' }}>
-                        <FaCheckCircle />
+                    <div style={{ color: '#48bb78', display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
+                        <CheckCircle2 size={48} />
                     </div>
                     <h3 style={{ fontSize: '1.25rem', color: '#2d3748', marginBottom: '0.5rem' }}>¡Lote Movido!</h3>
                     <p style={{ color: '#718096', marginBottom: '1.5rem' }}>
                         El lote se ha asignado correctamente a la sala de destino.
                     </p>
-                    <button
+                    <ShadcnButton
+                        type="button"
+                        variant="default"
                         onClick={() => setIsSuccessModalOpen(false)}
-                        style={{ padding: '0.75rem 2rem', background: '#319795', color: 'white', border: 'none', borderRadius: '0.5rem', cursor: 'pointer', fontWeight: 'bold' }}
                     >
                         Aceptar
-                    </button>
+                    </ShadcnButton>
                 </div>
             </AnimatedModal>
 
             {/* Breakdown Modal */}
             <AnimatedModal isOpen={isBreakdownModalOpen} onClose={() => setIsBreakdownModalOpen(false)}>
-                <CloseIcon onClick={() => setIsBreakdownModalOpen(false)}><FaTimes /></CloseIcon>
+                <CloseIcon onClick={() => setIsBreakdownModalOpen(false)}><LucideX size={18} /></CloseIcon>
                 <h2 style={{ marginBottom: '1.5rem', color: '#2d3748', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <FaCut /> Desglose por Genética
+                    <Scissors size={20} /> Desglose por Genética
                 </h2>
 
                 <div style={{ maxHeight: '400px', overflowY: 'auto', paddingRight: '0.5rem' }}>
@@ -2318,12 +2292,13 @@ const Clones: React.FC = () => {
                 </div>
 
                 <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '2rem' }}>
-                    <button
+                    <ShadcnButton
+                        type="button"
+                        variant="secondary"
                         onClick={() => setIsBreakdownModalOpen(false)}
-                        style={{ padding: '0.75rem 2rem', background: '#2d3748', color: 'white', border: 'none', borderRadius: '0.5rem', cursor: 'pointer', fontWeight: 'bold' }}
                     >
                         Cerrar
-                    </button>
+                    </ShadcnButton>
                 </div>
             </AnimatedModal>
 
@@ -2357,9 +2332,9 @@ const Clones: React.FC = () => {
                     <GlassToastContent onClick={e => e.stopPropagation()} style={{ padding: '1.5rem', width: '90%', maxWidth: '400px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.75rem' }}>
                             <h2 style={{ margin: 0, color: '#f8fafc', fontSize: '1.15rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                <FaHashtag style={{ color: '#38bdf8' }} /> Detalle de Lote
+                                <Hash style={{ color: '#38bdf8' }} size={18} /> Detalle de Lote
                             </h2>
-                            <button onClick={() => setMobileDetailBatch(null)} style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: '1.25rem' }}><FaTimes /></button>
+                            <button onClick={() => setMobileDetailBatch(null)} style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: '1.25rem' }}><LucideX size={18} /></button>
                         </div>
 
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1.5rem' }}>
@@ -2391,7 +2366,7 @@ const Clones: React.FC = () => {
 
                         <div style={{ background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: '0.75rem', display: 'flex', justifyContent: 'center', gap: '1.5rem', flexWrap: 'wrap' }}>
                             <Tooltip text="Código Barras">
-                                <ActionButton color="#4a5568" onClick={(e) => { e.stopPropagation(); handleBarcodeClick({ ...mobileDetailBatch.root, clone_units: mobileDetailBatch.children }); setMobileDetailBatch(null); }}><FaBarcode /></ActionButton>
+                                <ActionButton color="#4a5568" onClick={(e) => { e.stopPropagation(); handleBarcodeClick({ ...mobileDetailBatch.root, clone_units: mobileDetailBatch.children }); setMobileDetailBatch(null); }}><Barcode size={16} /></ActionButton>
                             </Tooltip>
                             <Tooltip text="Baja">
                                 <ActionButton color="#e53e3e" onClick={(e) => {
@@ -2405,7 +2380,7 @@ const Clones: React.FC = () => {
                                         groupChildren: mobileDetailBatch.children
                                     });
                                     setMobileDetailBatch(null);
-                                }}><FaMinusCircle /></ActionButton>
+                                }}><MinusCircle size={16} /></ActionButton>
                             </Tooltip>
                             <Tooltip text="Editar">
                                 <ActionButton color="#3182ce" onClick={(e) => {
@@ -2419,10 +2394,10 @@ const Clones: React.FC = () => {
                                         groupChildren: mobileDetailBatch.children
                                     });
                                     setMobileDetailBatch(null);
-                                }}><FaEdit /></ActionButton>
+                                }}><Edit3 size={16} /></ActionButton>
                             </Tooltip>
                             <Tooltip text="Eliminar">
-                                <ActionButton color="#e53e3e" onClick={(e) => { e.stopPropagation(); handleDeleteClick(mobileDetailBatch.root); setMobileDetailBatch(null); }}><FaTrash /></ActionButton>
+                                <ActionButton color="#e53e3e" onClick={(e) => { e.stopPropagation(); handleDeleteClick(mobileDetailBatch.root); setMobileDetailBatch(null); }}><Trash2 size={16} /></ActionButton>
                             </Tooltip>
                         </div>
                     </GlassToastContent>
