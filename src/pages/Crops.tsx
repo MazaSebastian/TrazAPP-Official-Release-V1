@@ -253,11 +253,21 @@ const CropCard = styled.div<{ $color?: string }>`
   flex-direction: column;
   justify-content: space-between;
   min-height: 240px;
+  cursor: pointer;
 
   &:hover {
     transform: translateY(-5px);
     border-color: ${props => props.$color || 'rgba(16, 185, 129, 0.4)'};
     box-shadow: 0 20px 40px -5px rgba(0, 0, 0, 0.5);
+
+    .enter-link {
+      gap: 0.6rem;
+      color: #6ee7b7;
+
+      svg {
+        transform: translateX(4px);
+      }
+    }
   }
 
   &::before {
@@ -409,6 +419,10 @@ const CropCard = styled.div<{ $color?: string }>`
       gap: 0.4rem;
       transition: all 0.2s ease;
       cursor: pointer;
+
+      svg {
+        transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      }
 
       &:hover {
         gap: 0.6rem;
@@ -869,7 +883,11 @@ export const Crops: React.FC = () => {
           }
 
           return (
-            <CropCard key={crop.id} $color={crop.color === 'green' ? '#10b981' : crop.color === 'blue' ? '#38bdf8' : crop.color === 'yellow' ? '#f59e0b' : crop.color || '#10b981'}>
+            <CropCard
+              key={crop.id}
+              $color={crop.color === 'green' ? '#10b981' : crop.color === 'blue' ? '#38bdf8' : crop.color === 'yellow' ? '#f59e0b' : crop.color || '#10b981'}
+              onClick={() => navigate('/rooms')}
+            >
               <div>
                 <div className="crop-top">
                   <div className="crop-header-left">
@@ -879,7 +897,7 @@ export const Crops: React.FC = () => {
                     <div className="crop-name">{crop.name}</div>
                   </div>
 
-                  <div className="crop-actions">
+                  <div className="crop-actions" onClick={(e) => e.stopPropagation()}>
                     <div className="action-icon" title="Editar" onClick={(e) => { e.stopPropagation(); setEditingCrop(crop); setIsPromptOpen(true); }}><FaEdit /></div>
                     <div className="action-icon" title="Color" onClick={(e) => handleOpenColorPicker(e, crop)}><FaPalette /></div>
                     <div className="action-icon delete" title="Eliminar" onClick={(e) => handleDeleteCrop(e, crop.id, crop.name)}><FaTrash /></div>
@@ -908,7 +926,7 @@ export const Crops: React.FC = () => {
 
               <div className="card-footer">
                 <span style={{ fontSize: '0.8rem', color: '#64748b' }}>Ver salas y lotes</span>
-                <span className="enter-link" onClick={() => navigate('/rooms')}>
+                <span className="enter-link">
                   Ingresar a Cultivo <FaArrowRight />
                 </span>
               </div>

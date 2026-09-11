@@ -563,7 +563,7 @@ export const CropsV2: React.FC = () => {
       {/* CROPS GRID */}
       <CropsGrid>
         {mockCrops.map(crop => (
-          <CropCard key={crop.id} $color={crop.color}>
+          <CropCard key={crop.id} $color={crop.color} onClick={() => navigate('/room-v2')} style={{ cursor: 'pointer' }}>
             <div>
               <div className="crop-top">
                 <div className="crop-header-left">
@@ -573,7 +573,7 @@ export const CropsV2: React.FC = () => {
                   <div className="crop-name">{crop.name}</div>
                 </div>
 
-                <div className="crop-actions">
+                <div className="crop-actions" onClick={(e) => e.stopPropagation()}>
                   <div className="action-icon" title="Editar"><FaEdit /></div>
                   <div className="action-icon" title="Color"><FaPalette /></div>
                   <div className="action-icon delete" title="Eliminar"><FaTrash /></div>
@@ -598,7 +598,7 @@ export const CropsV2: React.FC = () => {
 
             <div className="card-footer">
               <span style={{ fontSize: '0.8rem', color: '#64748b' }}>Ver mapa y salas</span>
-              <span className="enter-link" onClick={() => navigate('/room-v2')} style={{ cursor: 'pointer' }}>
+              <span className="enter-link">
                 Ingresar a Cultivo <FaArrowRight />
               </span>
             </div>
