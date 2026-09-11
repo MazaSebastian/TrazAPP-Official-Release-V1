@@ -9,24 +9,21 @@ import {
   ClinicalTemplate,
 } from "../services/templatesService";
 import {
-  FaChartLine,
-  FaUserSecret,
-  FaPlus,
-  FaClipboardList,
-  FaHistory,
-  FaChevronDown,
-  FaMicrophone,
-  FaMagic,
-  FaSpinner,
-  FaTrash,
-  FaPaperclip,
-  FaUpload,
-  FaNotesMedical,
-  FaFilePdf,
-  FaSyringe,
-  FaThermometerHalf,
-  FaClock,
-} from "react-icons/fa";
+  TrendingUp,
+  Plus,
+  ClipboardList,
+  History,
+  ChevronDown,
+  Mic,
+  Sparkles,
+  Loader2,
+  Trash2,
+  Paperclip,
+  Upload,
+  Clock,
+  UserCheck,
+} from "lucide-react";
+import { Button } from "../components/ui";
 import { LoadingSpinner } from "../components/LoadingSpinner";
 import { useAuth } from "../context/AuthContext";
 import { CustomSelect } from "../components/CustomSelect";
@@ -522,7 +519,7 @@ const PatientDetail: React.FC = () => {
       </div>
       {admission && (
         <HashBadge>
-          <FaUserSecret /> {admission.patient_hash}
+          <UserCheck size={14} /> {admission.patient_hash}
         </HashBadge>
       )}
     </Header>
@@ -548,7 +545,7 @@ const PatientDetail: React.FC = () => {
             backdropFilter: "blur(12px)",
           }}
         >
-          <FaUserSecret size={64} color="#64748b" />
+          <UserCheck size={64} className="text-slate-500" strokeWidth={1.5} />
           <h2 style={{ color: "#f8fafc", marginTop: "1.5rem" }}>
             Sin Datos Clínicos
           </h2>
@@ -563,21 +560,14 @@ const PatientDetail: React.FC = () => {
             Este paciente aún no tiene una Admisión Clínica registrada
             (Baseline).
           </p>
-          <button
-            style={{
-              padding: "1rem 2rem",
-              background: "#319795",
-              color: "white",
-              borderRadius: "0.5rem",
-              border: "none",
-              fontSize: "1.1rem",
-              cursor: "pointer",
-              fontWeight: "bold",
-            }}
+          <Button
+            size="lg"
+            variant="default"
             onClick={() => setIsAdmitting(true)}
+            className="flex items-center gap-2"
           >
-            Iniciar Admisión Clínica
-          </button>
+            <Plus size={18} /> Iniciar Admisión Clínica
+          </Button>
         </div>
       </Container>
     );
@@ -611,7 +601,7 @@ const PatientDetail: React.FC = () => {
                 gap: "0.5rem",
               }}
             >
-              <FaClipboardList /> Seleccionar Plantilla Clínica (Obligatorio)
+              <ClipboardList size={16} className="text-emerald-400" /> Seleccionar Plantilla Clínica (Obligatorio)
             </label>
             <select
               style={{
@@ -964,7 +954,7 @@ const PatientDetail: React.FC = () => {
         {/*
         <Card color="#805AD5">
           <CardTitle>
-            <FaPills /> Farmacología Actual
+            <Pill size={16} /> Farmacología Actual
           </CardTitle>
           {admission.medications && admission.medications.length > 0 ? (
             <ul>
@@ -995,7 +985,7 @@ const PatientDetail: React.FC = () => {
         {/* 3. Evolution / Progress Highlight */}
         <Card color="#48BB78">
           <CardTitle>
-            <FaChartLine /> Última Evolución
+            <TrendingUp size={18} className="text-emerald-400" /> Última Evolución
           </CardTitle>
 
           {evolutions.length === 0 ? (
@@ -1130,10 +1120,12 @@ const PatientDetail: React.FC = () => {
             width: "100%",
           }}
         >
-          <span>
-            <FaHistory /> Historial Clínico
+          <span className="flex items-center gap-2">
+            <History size={18} className="text-sky-400" /> Historial Clínico
           </span>
-          <button
+          <Button
+            size="sm"
+            variant="default"
             onClick={() => {
               const roleNeedsSignature = user?.role === "medico";
               const missingSignature = roleNeedsSignature && !user?.professional_signature_url;
@@ -1157,22 +1149,10 @@ const PatientDetail: React.FC = () => {
 
               setIsEvolutionModalOpen(true);
             }}
-            style={{
-              background: "rgba(49, 130, 206, 0.2)",
-              color: "#63b3ed",
-              border: "1px solid rgba(49, 130, 206, 0.4)",
-              padding: "0.4rem 0.8rem",
-              borderRadius: "0.25rem",
-              cursor: "pointer",
-              fontSize: "0.85rem",
-              display: "flex",
-              alignItems: "center",
-              gap: "0.4rem",
-              fontWeight: "bold",
-            }}
+            className="flex items-center gap-1.5"
           >
-            <FaPlus /> Nueva Evolución / Acción
-          </button>
+            <Plus size={15} /> Nueva Evolución / Acción
+          </Button>
         </CardTitle>
 
         {evolutions.length === 0 ? (
@@ -1299,7 +1279,7 @@ const PatientDetail: React.FC = () => {
                           : "rotate(0deg)",
                       }}
                     >
-                      <FaChevronDown />
+                      <ChevronDown size={16} />
                     </div>
                   </div>
 
@@ -1412,7 +1392,7 @@ const PatientDetail: React.FC = () => {
                               marginBottom: "0.75rem",
                             }}
                           >
-                            <FaPaperclip /> Archivos Adjuntos (
+                            <Paperclip size={14} className="text-sky-400" /> Archivos Adjuntos (
                             {evo.attachments.length})
                           </strong>
                           <div
@@ -1454,7 +1434,7 @@ const PatientDetail: React.FC = () => {
                                     whiteSpace: "nowrap",
                                   }}
                                 >
-                                  <FaPaperclip />
+                                  <Paperclip size={13} />
                                   <span
                                     style={{
                                       overflow: "hidden",
@@ -1485,36 +1465,26 @@ const PatientDetail: React.FC = () => {
                           }}>
                             <div>
                               <h4 style={{ color: "#c4b5fd", margin: "0 0 0.25rem 0", fontSize: "0.95rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                                <FaMicrophone /> Audio Pendiente de Procesar
+                                <Mic size={15} className="text-violet-400" /> Audio Pendiente de Procesar
                               </h4>
                               <p style={{ color: "#a78bfa", fontSize: "0.85rem", margin: 0 }}>
                                 Existe una grabación adjunta a esta evolución.
                               </p>
                             </div>
-                            <button
+                            <Button
                               type="button"
+                              size="sm"
+                              variant="default"
                               onClick={() => handleTranscribeAudio(evo.id, evo.audio_url)}
                               disabled={transcribingEvoId === evo.id}
-                              style={{
-                                background: transcribingEvoId === evo.id ? "#6d28d9" : "#8b5cf6",
-                                color: "white",
-                                border: "none",
-                                padding: "0.6rem 1rem",
-                                borderRadius: "0.5rem",
-                                fontWeight: "bold",
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "0.5rem",
-                                cursor: transcribingEvoId === evo.id ? "wait" : "pointer",
-                                transition: "all 0.2s"
-                              }}
+                              className="flex items-center gap-1.5 bg-violet-600 hover:bg-violet-500 border-violet-500"
                             >
                               {transcribingEvoId === evo.id ? (
-                                <><FaSpinner className="fa-spin" /> Analizando...</>
+                                <><Loader2 size={14} className="animate-spin" /> Analizando...</>
                               ) : (
-                                <><FaMagic /> Extraer Legajo con IA</>
+                                <><Sparkles size={14} /> Extraer Legajo con IA</>
                               )}
-                            </button>
+                            </Button>
                           </div>
                         )}
 
@@ -1538,7 +1508,7 @@ const PatientDetail: React.FC = () => {
                             }} />
 
                             <h4 style={{ color: "#d8b4fe", display: "flex", alignItems: "center", gap: "0.5rem", marginTop: 0, marginBottom: "1rem", fontSize: "1.05rem" }}>
-                              <FaMagic /> Análisis Clínico IA
+                              <Sparkles size={16} className="text-purple-400" /> Análisis Clínico IA
                             </h4>
 
                             {evo.ai_transcript.resumen_motivo_consulta && (
@@ -1606,7 +1576,7 @@ const PatientDetail: React.FC = () => {
                                     gap: "0.3rem"
                                   }}
                                 >
-                                  <FaMicrophone /> Escuchar Audio Original
+                                  <Mic size={13} /> Escuchar Audio Original
                                 </a>
                               )}
                             </div>
@@ -1666,7 +1636,7 @@ const PatientDetail: React.FC = () => {
                     color: "#f8fafc",
                   }}
                 >
-                  <FaChartLine /> Título de la Evolución / Resumen
+                  <TrendingUp size={16} className="text-emerald-400" /> Título de la Evolución / Resumen
                 </label>
                 <input
                   type="text"
@@ -1699,7 +1669,7 @@ const PatientDetail: React.FC = () => {
                     color: "#f8fafc",
                   }}
                 >
-                  <FaClock /> Fecha del Registro / Estudio Previos
+                  <Clock size={16} className="text-sky-400" /> Fecha del Registro / Estudio Previos
                 </label>
                 <input
                   type="date"
@@ -1741,7 +1711,7 @@ const PatientDetail: React.FC = () => {
                     color: "#f8fafc",
                   }}
                 >
-                  <FaClock /> Próximo Seguimiento (en Plazo Legal)
+                  <Clock size={16} className="text-amber-400" /> Próximo Seguimiento (en Plazo Legal)
                 </label>
                 <CustomSelect
                   options={[
@@ -1781,7 +1751,7 @@ const PatientDetail: React.FC = () => {
                     gap: "0.5rem",
                   }}
                 >
-                  <FaClipboardList /> Utilizar Plantilla Clínica
+                  <ClipboardList size={16} className="text-emerald-400" /> Utilizar Plantilla Clínica
                 </label>
                 <CustomSelect
                   options={[
@@ -2102,7 +2072,7 @@ const PatientDetail: React.FC = () => {
                         gap: "0.5rem",
                       }}
                     >
-                      <FaChartLine /> Nivel de Dolor Actual (EVA)
+                      <TrendingUp size={16} className="text-emerald-400" /> Nivel de Dolor Actual (EVA)
                     </label>
                     <div
                       style={{
@@ -2177,7 +2147,7 @@ const PatientDetail: React.FC = () => {
                     gap: "0.5rem",
                   }}
                 >
-                  <FaPaperclip /> Archivos Adjuntos (Estudios, Radiografías,
+                  <Paperclip size={16} className="text-sky-400" /> Archivos Adjuntos (Estudios, Radiografías,
                   etc.)
                 </label>
 
@@ -2220,7 +2190,7 @@ const PatientDetail: React.FC = () => {
                     }
                   }}
                 >
-                  <FaUpload size={24} style={{ marginBottom: "0.5rem" }} />
+                  <Upload size={24} style={{ marginBottom: "0.5rem" }} />
                   <span>
                     {isDragActive
                       ? "Arrastra para soltar"
@@ -2291,7 +2261,7 @@ const PatientDetail: React.FC = () => {
                           }}
                           title="Eliminar archivo"
                         >
-                          <FaTrash size={12} />
+                          <Trash2 size={13} />
                         </button>
                       </li>
                     ))}
@@ -2335,63 +2305,21 @@ const PatientDetail: React.FC = () => {
                   gap: "1rem",
                 }}
               >
-                <button
+                <Button
                   type="button"
+                  variant="outline"
                   onClick={() => setIsEvolutionModalOpen(false)}
-                  style={{
-                    padding: "0.75rem 1.5rem",
-                    background: "rgba(255, 255, 255, 0.05)",
-                    color: "#cbd5e1",
-                    border: "1px solid rgba(255, 255, 255, 0.1)",
-                    borderRadius: "0.5rem",
-                    cursor: "pointer",
-                    transition: "all 0.2s",
-                    fontWeight: "500",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background =
-                      "rgba(255, 255, 255, 0.1)";
-                    e.currentTarget.style.color = "#f8fafc";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background =
-                      "rgba(255, 255, 255, 0.05)";
-                    e.currentTarget.style.color = "#cbd5e1";
-                  }}
                 >
                   Cancelar
-                </button>
-                <button
+                </Button>
+                <Button
                   type="submit"
+                  variant="default"
+                  isLoading={isUploadingEvolution}
                   disabled={isUploadingEvolution}
-                  style={{
-                    padding: "0.75rem 1.5rem",
-                    background: isUploadingEvolution
-                      ? "rgba(49, 151, 149, 0.5)"
-                      : "rgba(49, 151, 149, 0.9)",
-                    color: "white",
-                    border: "1px solid rgba(49, 151, 149, 0.5)",
-                    borderRadius: "0.5rem",
-                    cursor: isUploadingEvolution ? "wait" : "pointer",
-                    fontWeight: "bold",
-                    boxShadow: isUploadingEvolution
-                      ? "none"
-                      : "0 4px 6px -1px rgba(0,0,0,0.3)",
-                    transition: "all 0.2s",
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!isUploadingEvolution)
-                      e.currentTarget.style.background =
-                        "rgba(49, 151, 149, 1)";
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!isUploadingEvolution)
-                      e.currentTarget.style.background =
-                        "rgba(49, 151, 149, 0.9)";
-                  }}
                 >
                   {isUploadingEvolution ? "Subiendo archivos..." : "Guardar"}
-                </button>
+                </Button>
               </div>
             </form>
           </Card>
