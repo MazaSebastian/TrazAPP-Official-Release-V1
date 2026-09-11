@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import { supabase } from '../services/supabaseClient';
 import { useNavigate } from 'react-router-dom';
 import ParticleBackground from '../components/ParticleBackground';
-import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import { Eye, EyeOff } from 'lucide-react';
 
 const Container = styled.div`
   min-height: 100vh;
@@ -285,7 +285,7 @@ const UpdatePassword: React.FC = () => {
                 required
               />
               <ToggleButton type="button" onClick={() => setShowPassword(!showPassword)}>
-                {showPassword ? <FaEyeSlash /> : <FaEye />}
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </ToggleButton>
             </PasswordWrapper>
           </FormGroup>

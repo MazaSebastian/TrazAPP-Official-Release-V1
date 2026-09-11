@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import { Eye, EyeOff } from 'lucide-react';
 import Antigravity from '../components/Antigravity';
 import Aurora from '../components/Aurora';
 import BlurText from '../components/BlurText';
@@ -385,7 +385,7 @@ const Login: React.FC = () => {
                   required
                 />
                 <ToggleButton type="button" onClick={() => setShowPassword(!showPassword)}>
-                  {showPassword ? <FaEyeSlash /> : <FaEye />}
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </ToggleButton>
               </PasswordWrapper>
               <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.25rem' }}>

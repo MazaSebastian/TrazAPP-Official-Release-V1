@@ -4,7 +4,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '../services/supabaseClient';
 import { inviteService } from '../services/inviteService';
 import { useAuth } from '../context/AuthContext';
-import { FaCheckCircle, FaExclamationTriangle, FaEye, FaEyeSlash, FaArrowRight } from 'react-icons/fa';
+import { CheckCircle2, AlertTriangle, Eye, EyeOff, ArrowRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 import Antigravity from '../components/Antigravity';
@@ -647,7 +647,7 @@ const Register: React.FC = () => {
         <ContentWrapper style={{ background: 'rgba(15, 23, 42, 0.4)', padding: '3rem', borderRadius: '1.5rem', backdropFilter: 'blur(24px)' }}>
           <img src="/logotrazappfix.png" alt="Logo" style={{ width: '80px', margin: '0 0 2rem' }} />
           <div style={{ background: 'rgba(127, 29, 29, 0.4)', color: '#fca5a5', border: '1px solid #ef4444', padding: '1rem', borderRadius: '0.5rem', display: 'flex', alignItems: 'center' }}>
-            <FaExclamationTriangle style={{ marginRight: '0.5rem' }} />
+            <AlertTriangle size={18} style={{ marginRight: '0.5rem', flexShrink: 0 }} />
             {errorMsg}
           </div>
           <button onClick={() => navigate('/login')} style={{ marginTop: '2rem', padding: '1rem 3rem', background: '#16a34a', color: 'white', borderRadius: '3rem', border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: '1.1rem' }}>Volver al Login</button>
@@ -726,7 +726,7 @@ const Register: React.FC = () => {
                       onKeyDown={handleKeyDown}
                     />
                     <IconButton onClick={handleNext} disabled={!inputValue.trim()}>
-                      <FaArrowRight />
+                      <ArrowRight size={18} />
                     </IconButton>
                   </StarBorder>
                 </InputCardWrapper>
@@ -789,7 +789,7 @@ const Register: React.FC = () => {
                       onKeyDown={handleKeyDown}
                     />
                     <IconButton onClick={handleNext} disabled={!inputValue.trim()}>
-                      <FaArrowRight />
+                      <ArrowRight size={18} />
                     </IconButton>
                   </StarBorder>
                 </InputCardWrapper>
@@ -817,10 +817,10 @@ const Register: React.FC = () => {
                       onKeyDown={handleKeyDown}
                     />
                     <PasswordToggle onClick={() => setShowPassword(!showPassword)}>
-                      {showPassword ? <FaEyeSlash /> : <FaEye />}
+                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                     </PasswordToggle>
                     <IconButton onClick={handleNext} disabled={inputValue.length < 6}>
-                      <FaArrowRight />
+                      <ArrowRight size={18} />
                     </IconButton>
                   </StarBorder>
                 </InputCardWrapper>
@@ -860,7 +860,7 @@ const Register: React.FC = () => {
                         style={{ padding: '0 0.2rem', color: '#64748b' }}
                         onClick={() => setShowSummaryPassword(!showSummaryPassword)}
                       >
-                        {showSummaryPassword ? <FaEyeSlash size={16} /> : <FaEye size={16} />}
+                        {showSummaryPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                       </PasswordToggle>
                     </div>
                   </SummaryRow>
@@ -910,7 +910,7 @@ const Register: React.FC = () => {
                 style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}
               >
                 <SummaryCard style={{ textAlign: 'center', alignItems: 'center', maxWidth: '450px' }}>
-                  <FaCheckCircle style={{ color: '#4ade80', fontSize: '3.5rem', marginBottom: '0.5rem' }} />
+                  <CheckCircle2 size={56} style={{ color: '#4ade80', marginBottom: '0.5rem' }} />
                   <h3 style={{ fontSize: '1.4rem', color: '#f8fafc', fontWeight: 600, margin: '0.5rem 0' }}>¡Sistema configurado!</h3>
                   <p style={{ color: '#cbd5e1', fontSize: '1.05rem', lineHeight: '1.5', margin: '0.5rem 0 1.5rem', fontWeight: 400 }}>
                     <strong style={{ color: '#f8fafc' }}>{data.name.split(' ')[0]}</strong>, hemos enviado un mail de confirmación de acceso al sistema a tu casilla de correo.<br /><br />

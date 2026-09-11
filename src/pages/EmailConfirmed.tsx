@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';
-import { FaCheckCircle, FaExclamationTriangle } from 'react-icons/fa';
+import { CheckCircle2, AlertTriangle } from 'lucide-react';
 import { supabase } from '../services/supabaseClient';
 import Aurora from '../components/Aurora';
 import Antigravity from '../components/Antigravity';
@@ -96,7 +96,7 @@ const EmailConfirmed: React.FC = () => {
           {status === 'success' && (
             <div className="status-content">
               <SuccessIcon>
-                <FaCheckCircle />
+                <CheckCircle2 size={64} />
               </SuccessIcon>
               <Title>¡Correo Confirmado!</Title>
               <Subtitle>
@@ -111,7 +111,7 @@ const EmailConfirmed: React.FC = () => {
           {status === 'error' && (
             <div className="status-content">
               <ErrorIcon>
-                <FaExclamationTriangle />
+                <AlertTriangle size={64} />
               </ErrorIcon>
               <Title>El enlace ha expirado</Title>
               <Subtitle>
