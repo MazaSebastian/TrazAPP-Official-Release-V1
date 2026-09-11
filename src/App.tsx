@@ -58,7 +58,7 @@ import { DataProvider } from './context/DataContext';
 import { OrganizationProvider, useOrganization } from './context/OrganizationContext';
 import './App.css';
 
-import Sidebar from './components/Sidebar';
+import Sidebar, { SidebarProvider } from './components/Sidebar';
 import ClickSpark from './components/ClickSpark';
 import { GuidedTour } from './components/GuidedTour';
 
@@ -189,12 +189,14 @@ function App() {
   return (
     <DataProvider>
       <OrganizationProvider>
-        <AppContent
-          isPublicRoute={isPublicRoute}
-          isPatientPortal={isPatientPortal}
-          hideAdminChrome={hideAdminChrome}
-          isCustomDomain={isCustomDomain}
-        />
+        <SidebarProvider>
+          <AppContent
+            isPublicRoute={isPublicRoute}
+            isPatientPortal={isPatientPortal}
+            hideAdminChrome={hideAdminChrome}
+            isCustomDomain={isCustomDomain}
+          />
+        </SidebarProvider>
       </OrganizationProvider>
     </DataProvider>
   );
