@@ -7,7 +7,17 @@ import { useNavigate } from 'react-router-dom';
 import { ConfirmModal } from '../components/ConfirmModal';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ToastModal } from '../components/ToastModal';
-import { FaUserPlus, FaIdCard, FaCheckCircle, FaFileAlt, FaNotesMedical, FaWhatsapp, FaFileImport, FaPen } from 'react-icons/fa';
+import {
+  UserPlus,
+  Users,
+  CheckCircle2,
+  FileText,
+  ClipboardList,
+  MessageCircle,
+  FileUp,
+  Edit3,
+  Mail
+} from 'lucide-react';
 import { CustomSelect } from '../components/CustomSelect';
 import { CustomDatePicker } from '../components/CustomDatePicker';
 import { useOrganization } from '../context/OrganizationContext';
@@ -799,16 +809,21 @@ const Patients: React.FC = () => {
 
             <div style={{ filter: planLevel < 3 ? 'blur(4px)' : 'none', pointerEvents: planLevel < 3 ? 'none' : 'auto', userSelect: planLevel < 3 ? 'none' : 'auto', opacity: planLevel < 3 ? 0.5 : 1 }}>
                 <Header>
-                    <Title><FaIdCard /> Gestión de Socios</Title>
-                    <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-                        <ActionButton onClick={() => setIsInviteOpen(true)} style={{ background: 'rgba(16, 185, 129, 0.2)', color: '#4ade80', borderColor: 'rgba(16, 185, 129, 0.5)' }}>
-                            📨 Invitar Socio
+                    <div>
+                        <Title><Users size={32} style={{ color: '#10b981' }} /> Gestión de Socios</Title>
+                        <p style={{ color: '#94a3b8', fontSize: '0.95rem', margin: '0.35rem 0 0 0' }}>
+                            Administración del padrón de pacientes, dispensación autorizada y vinculación REPROCANN
+                        </p>
+                    </div>
+                    <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                        <ActionButton onClick={() => setIsInviteOpen(true)} style={{ background: 'rgba(16, 185, 129, 0.15)', color: '#4ade80', borderColor: 'rgba(16, 185, 129, 0.3)' }}>
+                            <Mail size={16} /> Invitar Socio
                         </ActionButton>
-                        <ActionButton onClick={() => setIsImportOpen(true)} style={{ background: 'rgba(59, 130, 246, 0.2)', color: '#60a5fa', borderColor: 'rgba(59, 130, 246, 0.5)' }}>
-                            <FaFileImport /> Importar
+                        <ActionButton onClick={() => setIsImportOpen(true)} style={{ background: 'rgba(59, 130, 246, 0.15)', color: '#60a5fa', borderColor: 'rgba(59, 130, 246, 0.3)' }}>
+                            <FileUp size={16} /> Importar
                         </ActionButton>
                         <ActionButton onClick={() => { resetForm(); setIsAddOpen(true); }}>
-                            <FaUserPlus /> Nuevo Socio
+                            <UserPlus size={16} /> Nuevo Socio
                         </ActionButton>
                     </div>
                 </Header>
@@ -905,7 +920,7 @@ const Patients: React.FC = () => {
                                                 navigate(`/patients/${patient.id || patient.profile_id}`);
                                             }}
                                         >
-                                            <FaFileAlt /> H. Clínica
+                                            <FileText size={14} /> H. Clínica
                                         </ActionButton>
                                         <ActionButton
                                             type="button"
@@ -915,7 +930,7 @@ const Patients: React.FC = () => {
                                                 navigate(`/patients/${patient.id || patient.profile_id}?action=new_followup`);
                                             }}
                                         >
-                                            <FaNotesMedical /> Seguimiento
+                                            <ClipboardList size={14} /> Seguimiento
                                         </ActionButton>
                                     </div>
                                 </div>
@@ -972,7 +987,7 @@ const Patients: React.FC = () => {
                                             color: '#4ade80'
                                         }}
                                     >
-                                        <FaCheckCircle size={32} />
+                                        <CheckCircle2 size={32} />
                                         SÍ, CUENTA CON REPROCANN
                                     </ActionButton>
 
@@ -989,7 +1004,7 @@ const Patients: React.FC = () => {
                                             color: '#cbd5e1'
                                         }}
                                     >
-                                        <FaNotesMedical size={32} />
+                                        <ClipboardList size={32} />
                                         NO, AÚN NO
                                     </ActionButton>
                                 </div>
@@ -1019,7 +1034,7 @@ const Patients: React.FC = () => {
                                             color: '#60a5fa'
                                         }}
                                     >
-                                        <FaCheckCircle size={32} />
+                                        <CheckCircle2 size={32} />
                                         SÍ, SIGUE TRATAMIENTO
                                     </ActionButton>
 
@@ -1039,7 +1054,7 @@ const Patients: React.FC = () => {
                                             color: '#cbd5e1'
                                         }}
                                     >
-                                        <FaNotesMedical size={32} />
+                                        <ClipboardList size={32} />
                                         NO, SOLO DISPENSA
                                     </ActionButton>
                                 </div>
@@ -1265,7 +1280,7 @@ const Patients: React.FC = () => {
                                                         borderRadius: '2rem'
                                                     }}
                                                 >
-                                                    <FaWhatsapp size={16} /> WhatsApp
+                                                    <MessageCircle size={16} /> WhatsApp
                                                 </ActionButton>
                                             )}
                                         </div>
@@ -1283,7 +1298,7 @@ const Patients: React.FC = () => {
                                             title="Editar información completa del paciente"
                                             style={{ padding: '0.35rem 0.6rem', fontSize: '0.75rem', width: '100%', display: 'flex', justifyContent: 'center' }}
                                         >
-                                            <FaPen /> Editar Perfil
+                                            <Edit3 size={14} /> Editar Perfil
                                         </ActionButton>
                                     </div>
                                 </div>
@@ -1310,19 +1325,19 @@ const Patients: React.FC = () => {
                                 <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginBottom: '1.5rem' }}>
                                     {selectedPatient.file_reprocann_url ? (
                                         <ActionButton as="a" href={selectedPatient.file_reprocann_url} target="_blank" style={{ fontSize: '0.9rem' }}>
-                                            <FaFileAlt /> Ver Credencial
+                                            <FileText size={14} /> Ver Credencial
                                         </ActionButton>
                                     ) : <span style={{ color: '#64748b', fontSize: '0.9rem', alignSelf: 'center' }}>Sin Credencial</span>}
 
                                     {selectedPatient.file_affidavit_url ? (
                                         <ActionButton as="a" href={selectedPatient.file_affidavit_url} target="_blank" style={{ fontSize: '0.9rem' }}>
-                                            <FaFileAlt /> Ver DDJJ
+                                            <FileText size={14} /> Ver DDJJ
                                         </ActionButton>
                                     ) : <span style={{ color: '#64748b', fontSize: '0.9rem' }}>Sin DDJJ</span>}
 
                                     {selectedPatient.file_consent_url ? (
                                         <ActionButton as="a" href={selectedPatient.file_consent_url} target="_blank" style={{ fontSize: '0.9rem' }}>
-                                            <FaFileAlt /> Ver Consentimiento
+                                            <FileText size={14} /> Ver Consentimiento
                                         </ActionButton>
                                     ) : <span style={{ color: '#64748b', fontSize: '0.9rem' }}>Sin Consentimiento</span>}
                                 </div>
@@ -1366,7 +1381,7 @@ const Patients: React.FC = () => {
                                                 });
                                             }}
                                         >
-                                            <FaCheckCircle /> ADMITIR SOCIO (APROBAR ALTA)
+                                            <CheckCircle2 size={16} /> ADMITIR SOCIO (APROBAR ALTA)
                                         </ActionButton>
                                     </div>
                                 ) : selectedPatient.reprocann_status === 'pending' && (
@@ -1399,7 +1414,7 @@ const Patients: React.FC = () => {
                                                 });
                                             }}
                                         >
-                                            <FaCheckCircle /> APROBAR TRAMITE REPROCANN
+                                            <CheckCircle2 size={16} /> APROBAR TRAMITE REPROCANN
                                         </ActionButton>
                                     </div>
                                 )}

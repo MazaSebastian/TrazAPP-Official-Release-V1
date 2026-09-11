@@ -1,7 +1,18 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import { FaBoxes, FaPlus, FaChevronDown, FaEdit, FaTrash, FaTimes, FaHistory, FaHandHoldingMedical, FaFlask, FaCheckSquare, FaPrint } from 'react-icons/fa';
+import {
+  Boxes,
+  Plus,
+  ChevronDown,
+  Edit3,
+  Trash2,
+  X,
+  History,
+  PackageCheck,
+  FlaskConical,
+  Printer
+} from 'lucide-react';
 import { dispensaryService, DispensaryBatch, DispensaryMovement } from '../services/dispensaryService';
 import { geneticsService } from '../services/geneticsService';
 import { Genetic } from '../types/genetics';
@@ -13,6 +24,8 @@ import { CustomSelect } from '../components/CustomSelect';
 import { StockLabel } from '../components/StockLabel';
 import { useOrganization } from '../context/OrganizationContext';
 import { useReactToPrint } from 'react-to-print';
+import { ShadcnButton } from '../components/ui/Button';
+import { ShadcnBadge } from '../components/ui/Badge';
 
 const CollapsibleWrapper = ({ isOpen, children }: { isOpen: boolean; children: React.ReactNode }) => {
   const contentRef = React.useRef<HTMLDivElement>(null);
@@ -89,7 +102,8 @@ const ActionButton = styled.button<{ variant?: 'primary' | 'danger' | 'secondary
           props.variant === 'secondary' ? '#e2e8f0' : '#cbd5e1'};
   border: ${props =>
     props.variant === 'secondary' ? '1px solid rgba(255, 255, 255, 0.12)' :
-      props.variant === 'info' ? '1px solid rgba(56, 189, 248, 0.3)' : 'none'};
+      props.variant === 'info' ? '1px solid rgba(56, 189, 248, 0.3)' :
+        props.variant === 'danger' ? '1px solid rgba(244, 63, 94, 0.3)' : 'none'};
   padding: 0.75rem 1.4rem;
   border-radius: 0.875rem;
   font-weight: 700;
@@ -104,23 +118,13 @@ const ActionButton = styled.button<{ variant?: 'primary' | 'danger' | 'secondary
 
   &:hover {
     transform: translateY(-2px);
-    box-shadow: ${props => props.variant === 'primary' ? '0 8px 24px rgba(16, 185, 129, 0.5)' : 'none'};
-  }
-  font-size: 0.9rem;
-  box-shadow: ${props => props.variant === 'primary' ? '0 4px 6px rgba(0, 0, 0, 0.2)' : 'none'};
-  backdrop-filter: blur(8px);
-
-  &:hover {
-    transform: translateY(-2px);
-    opacity: 1;
+    box-shadow: ${props => props.variant === 'primary' ? '0 8px 24px rgba(16, 185, 129, 0.5)' : '0 4px 12px rgba(0,0,0,0.2)'};
     background: ${props =>
-    props.variant === 'primary' ? 'rgba(74, 222, 128, 0.3)' :
+    props.variant === 'primary' ? 'linear-gradient(135deg, #059669, #047857)' :
       props.variant === 'danger' ? 'rgba(239, 68, 68, 0.3)' :
-        props.variant === 'info' ? 'rgba(56, 189, 248, 0.3)' :
+        props.variant === 'info' ? 'rgba(56, 189, 248, 0.25)' :
           props.variant === 'secondary' ? 'rgba(255, 255, 255, 0.1)' :
             props.variant === 'ghost' ? 'rgba(255, 255, 255, 0.05)' : undefined};
-    color: ${props => props.variant === 'secondary' ? '#f8fafc' : undefined};
-    box-shadow: ${props => props.variant === 'primary' ? '0 6px 8px rgba(0, 0, 0, 0.3)' : '0 2px 4px rgba(0,0,0,0.2)'};
   }
 
   &:disabled {
@@ -1008,16 +1012,20 @@ const Stock: React.FC = () => {
   return (
     <PageContainer>
       <Header>
-        <h1><FaBoxes /> Stock & Inventario</h1>
-        <div style={{ display: 'flex', gap: '1rem' }}>
-          <ActionButton variant="info" onClick={handleOpenHistory}>
-            <FaHistory /> Historial
-          </ActionButton>
-          <ActionButton variant="primary" onClick={() => setIsCreateOpen(true)}>
-            <FaPlus /> Nuevo Lote Manual
-          </ActionButton>
+        <div>
+          <h1><Boxes size={32} style={{ color: '#10b981' }} /> Stock & Inventario</h1>
+          <p style={{ color: '#94a3b8', fontSize: '0.95rem', margin: '0.35rem 0 0 0' }}>
+            Control centralizado de peso, mermas, lotes y trazabilidad física
+          </p>
         </div>
-
+        <div style={{ display: 'flex', gap: '0.75rem' }}>
+          <ShadcnButton variant="secondary" onClick={handleOpenHistory}>
+            <History size={16} /> Historial
+          </ShadcnButton>
+          <ShadcnButton onClick={() => setIsCreateOpen(true)}>
+            <Plus size={16} /> Nuevo Lote Manual
+          </ShadcnButton>
+        </div>
       </Header>
 
       <StatsGrid>
@@ -1062,7 +1070,7 @@ const Stock: React.FC = () => {
                       onClick={() => toggleRow(item.strain)}
                     >
                       <td style={{ textAlign: 'center', color: '#94a3b8' }}>
-                        <FaChevronDown style={{
+                        <ChevronDown size={16} style={{
                           opacity: 0.5,
                           transform: isExpanded ? 'rotate(180deg)' : 'rotate(-90deg)',
                           transition: 'transform 0.2s ease'
@@ -1086,26 +1094,26 @@ const Stock: React.FC = () => {
                               setOpenActionMenuId(null);
                               handleGroupDispense(item.strain);
                             }}>
-                              <FaHandHoldingMedical /> Dispensar
+                              <PackageCheck size={15} /> Dispensar
                             </ActionMenuItem>
                             <ActionMenuItem $color="#38bdf8" onClick={() => {
                               setOpenActionMenuId(null);
                               showToast("Edición masiva de genética próximamente.", 'info');
                             }}>
-                              <FaEdit /> Editar Genética
+                              <Edit3 size={15} /> Editar Genética
                             </ActionMenuItem>
                             <ActionMenuItem $color="var(--primary-color, #a855f7)" onClick={() => {
                               setOpenActionMenuId(null);
                               openGroupLabTransfer(item.strain);
                             }}>
-                              <FaFlask /> Enviar a Laboratorio
+                              <FlaskConical size={15} /> Enviar a Laboratorio
                             </ActionMenuItem>
                             <ActionMenuItem $color="#f87171" onClick={() => {
                               setOpenActionMenuId(null);
                               setDeleteData({ batch: { strain_name: item.strain }, reason: '', isBulk: true });
                               setIsDeleteOpen(true);
                             }}>
-                              <FaTrash /> Eliminar Todos
+                              <Trash2 size={15} /> Eliminar Todos
                             </ActionMenuItem>
                           </ActionMenuDropdown>
                         </ActionMenuContainer>
@@ -1146,7 +1154,7 @@ const Stock: React.FC = () => {
                                             batches: subGroup.batches
                                           });
                                         }}>
-                                          <FaBoxes /> Ver Unidades
+                                          <Boxes size={14} /> Ver Unidades
                                         </ActionButton>
                                       </div>
                                     </td>
@@ -1172,9 +1180,9 @@ const Stock: React.FC = () => {
 
       {/* CREATE MODAL */}
       <AnimatedModal isOpen={isCreateOpen} onClose={() => setIsCreateOpen(false)}>
-        <CloseIcon onClick={() => setIsCreateOpen(false)}><FaTimes /></CloseIcon>
+        <CloseIcon onClick={() => setIsCreateOpen(false)}><X size={18} /></CloseIcon>
         <h2 style={{ marginBottom: '1.5rem', color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <FaPlus /> Nuevo Lote Manual
+          <Plus size={20} /> Nuevo Lote Manual
         </h2>
         <FormGroup style={{ zIndex: 20 }}>
           <label>Genética</label>
@@ -1211,9 +1219,9 @@ const Stock: React.FC = () => {
       <AnimatedModal isOpen={isEditOpen} onClose={() => setIsEditOpen(false)}>
         {editingBatch && (
           <>
-            <CloseIcon onClick={() => setIsEditOpen(false)}><FaTimes /></CloseIcon>
+            <CloseIcon onClick={() => setIsEditOpen(false)}><X size={18} /></CloseIcon>
             <h2 style={{ marginBottom: '1rem', color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <FaEdit /> Editar Lote: {editingBatch.batch_code}
+              <Edit3 size={20} /> Editar Lote: {editingBatch.batch_code}
             </h2>
 
             <FormGroup>
@@ -1260,9 +1268,9 @@ const Stock: React.FC = () => {
       <AnimatedModal isOpen={isDeleteOpen} onClose={() => setIsDeleteOpen(false)}>
         {deleteData && (
           <>
-            <CloseIcon onClick={() => setIsDeleteOpen(false)}><FaTimes /></CloseIcon>
+            <CloseIcon onClick={() => setIsDeleteOpen(false)}><X size={18} /></CloseIcon>
             <h2 style={{ marginBottom: '1rem', color: '#f87171', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <FaTrash /> {deleteData.isBulk ? 'Eliminación Masiva' : 'Baja de Lote'}
+              <Trash2 size={20} /> {deleteData.isBulk ? 'Eliminación Masiva' : 'Baja de Lote'}
             </h2>
             <p style={{ marginBottom: '1rem' }}>
               {deleteData.isBulk ? (
@@ -1294,29 +1302,26 @@ const Stock: React.FC = () => {
         confirmModal.isOpen && (
           <div style={{
             position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-            background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)', zIndex: 9999,
+            background: 'rgba(0,0,0,0.7)', zIndex: 9999,
             display: 'flex', alignItems: 'center', justifyContent: 'center'
           }}>
             <div style={{
-              background: 'rgba(15, 23, 42, 0.95)', padding: '2rem', borderRadius: '1rem',
-              width: '90%', maxWidth: '400px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.5)',
-              border: '1px solid rgba(255, 255, 255, 0.1)', backdropFilter: 'blur(16px)'
+              background: '#1a202c', padding: '2rem', borderRadius: '0.5rem',
+              maxWidth: '400px', width: '100%', border: '1px solid #2d3748'
             }}>
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '1rem', color: confirmModal.isDanger ? '#f87171' : '#f8fafc' }}>
-                {confirmModal.title}
-              </h3>
-              <p style={{ marginBottom: '1.5rem', color: '#cbd5e1' }}>{confirmModal.message}</p>
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
-                <ActionButton variant="secondary" onClick={() => setConfirmModal({ ...confirmModal, isOpen: false })}>
+              <h3 style={{ color: '#fff', marginTop: 0 }}>{confirmModal.title}</h3>
+              <p style={{ color: '#a0aec0' }}>{confirmModal.message}</p>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1.5rem' }}>
+                <ActionButton
+                  variant="secondary"
+                  onClick={() => setConfirmModal({ ...confirmModal, isOpen: false })}
+                >
                   Cancelar
                 </ActionButton>
                 <ActionButton
                   variant={confirmModal.isDanger ? 'danger' : 'primary'}
-                  onClick={async () => {
-                    // Quick Loading State hack: change text/disable
-                    const btn = document.activeElement as HTMLButtonElement;
-                    if (btn) { btn.disabled = true; btn.innerText = "Procesando..."; }
-                    await confirmModal.onConfirm();
+                  onClick={() => {
+                    confirmModal.onConfirm();
                     setConfirmModal({ ...confirmModal, isOpen: false });
                   }}
                 >
@@ -1330,9 +1335,9 @@ const Stock: React.FC = () => {
 
       {/* HISTORY MODAL */}
       <AnimatedModal isOpen={isHistoryOpen} onClose={() => setIsHistoryOpen(false)} wide>
-        <CloseIcon onClick={() => setIsHistoryOpen(false)}><FaTimes /></CloseIcon>
+        <CloseIcon onClick={() => setIsHistoryOpen(false)}><X size={18} /></CloseIcon>
         <h2 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#f8fafc' }}>
-          <FaHistory /> Historial de Movimientos
+          <History size={20} /> Historial de Movimientos
         </h2>
 
         <div style={{ overflowX: 'auto' }}>
@@ -1391,9 +1396,9 @@ const Stock: React.FC = () => {
           const maxAvailable = itemGroup ? itemGroup.totalWeight : 0;
           return (
             <>
-              <CloseIcon onClick={() => setIsGroupDispenseOpen(false)}><FaTimes /></CloseIcon>
+              <CloseIcon onClick={() => setIsGroupDispenseOpen(false)}><X size={18} /></CloseIcon>
               <h2 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#f8fafc' }}>
-                <FaHandHoldingMedical /> Dispensar: {groupDispenseStrain}
+                <PackageCheck size={20} /> Dispensar: {groupDispenseStrain}
               </h2>
 
               <div style={{ marginBottom: '1.5rem', background: 'rgba(30, 41, 59, 0.6)', padding: '1rem', borderRadius: '0.5rem', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
@@ -1427,9 +1432,9 @@ const Stock: React.FC = () => {
       <AnimatedModal isOpen={isDispenseToShopOpen} onClose={() => setIsDispenseToShopOpen(false)}>
         {dispenseToShopBatch && (
           <>
-            <CloseIcon onClick={() => setIsDispenseToShopOpen(false)}><FaTimes /></CloseIcon>
+            <CloseIcon onClick={() => setIsDispenseToShopOpen(false)}><X size={18} /></CloseIcon>
             <h2 style={{ marginBottom: '1rem', color: '#38bdf8', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <FaHandHoldingMedical /> Enviar al Dispensario
+              <PackageCheck size={20} /> Enviar al Dispensario
             </h2>
             <p style={{ color: '#cbd5e1' }}>Transferir stock de <strong style={{ color: '#f8fafc' }}>{dispenseToShopBatch.batch_code}</strong> al punto de venta.</p>
             <p style={{ color: '#cbd5e1' }}>Disponible: <strong style={{ color: '#f8fafc' }}>{dispenseToShopBatch.current_weight}g</strong></p>
@@ -1463,9 +1468,9 @@ const Stock: React.FC = () => {
           const maxAvailable = itemGroup ? itemGroup.totalWeight : 0;
           return (
             <>
-              <CloseIcon onClick={() => setIsGroupLabOpen(false)}><FaTimes /></CloseIcon>
+              <CloseIcon onClick={() => setIsGroupLabOpen(false)}><X size={18} /></CloseIcon>
               <h2 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--primary-color, #a855f7)' }}>
-                <FaFlask /> Enviar a Laboratorio: {groupLabStrain}
+                <FlaskConical size={20} /> Enviar a Laboratorio: {groupLabStrain}
               </h2>
 
               <div style={{ marginBottom: '1.5rem', background: 'rgba(30, 41, 59, 0.6)', padding: '1rem', borderRadius: '0.5rem', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
@@ -1513,9 +1518,9 @@ const Stock: React.FC = () => {
 
       {/* LAB TRANSFER MODAL */}
       <AnimatedModal isOpen={isLabTransferOpen} onClose={() => setIsLabTransferOpen(false)}>
-        <CloseIcon onClick={() => setIsLabTransferOpen(false)}><FaTimes /></CloseIcon>
+        <CloseIcon onClick={() => setIsLabTransferOpen(false)}><X size={18} /></CloseIcon>
         <h2 style={{ marginBottom: '1.5rem', color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <FaFlask /> Enviar a Laboratorio
+          <FlaskConical size={20} /> Enviar a Laboratorio
         </h2>
         {labTransferBatch && (
           <div style={{ marginBottom: '1.5rem', background: 'rgba(30, 41, 59, 0.6)', padding: '1rem', borderRadius: '0.5rem', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
@@ -1542,9 +1547,9 @@ const Stock: React.FC = () => {
 
       {/* UNITS MODAL (Level 3 - Lote Origen Details) */}
       <AnimatedModal isOpen={modalUnitsData.isOpen} onClose={() => setModalUnitsData(prev => ({ ...prev, isOpen: false }))} wide>
-        <CloseIcon onClick={() => setModalUnitsData(prev => ({ ...prev, isOpen: false }))}><FaTimes /></CloseIcon>
+        <CloseIcon onClick={() => setModalUnitsData(prev => ({ ...prev, isOpen: false }))}><X size={18} /></CloseIcon>
         <h2 style={{ marginBottom: '1.5rem', color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <FaBoxes /> Unidades del lote: {modalUnitsData.originName}
+          <Boxes size={20} /> Unidades del lote: {modalUnitsData.originName}
         </h2>
 
         <div style={{ maxHeight: '60vh', overflowY: 'auto', paddingRight: '0.5rem' }}>
@@ -1570,16 +1575,16 @@ const Stock: React.FC = () => {
                   <td style={{ textAlign: 'right', minWidth: '120px' }}>
                     <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
                       <IconButton color="#38bdf8" title="Imprimir Etiqueta" onClick={(e) => { e.stopPropagation(); setModalUnitsData(prev => ({ ...prev, isOpen: false })); triggerPrint(batch); }}>
-                        <FaPrint size={12} />
+                        <Printer size={13} />
                       </IconButton>
                       <IconButton color="#3182ce" title="Editar Lote" onClick={(e) => { e.stopPropagation(); setModalUnitsData(prev => ({ ...prev, isOpen: false })); openEdit(batch); }}>
-                        <FaEdit size={12} />
+                        <Edit3 size={13} />
                       </IconButton>
                       <IconButton color="#805ad5" title="Enviar al Laboratorio" onClick={(e) => { e.stopPropagation(); setModalUnitsData(prev => ({ ...prev, isOpen: false })); setLabTransferBatch(batch); setLabTransferAmount(''); setIsLabTransferOpen(true); }}>
-                        <FaFlask size={12} />
+                        <FlaskConical size={13} />
                       </IconButton>
                       <IconButton color="#e53e3e" title="Dar de Baja" onClick={(e) => { e.stopPropagation(); setModalUnitsData(prev => ({ ...prev, isOpen: false })); initDelete(batch); }}>
-                        <FaTrash size={12} />
+                        <Trash2 size={13} />
                       </IconButton>
                     </div>
                   </td>

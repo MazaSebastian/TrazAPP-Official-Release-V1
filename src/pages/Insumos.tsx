@@ -1,15 +1,15 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import styled, { keyframes } from 'styled-components';
 import {
-  FaPlus,
-  FaEdit,
-  FaTrash,
-  FaBoxes,
-  FaTimesCircle,
-  FaDownload,
-  FaPaperclip,
-  FaFileInvoice
-} from 'react-icons/fa';
+  Plus,
+  Edit3,
+  Trash2,
+  Boxes,
+  X,
+  Download,
+  Paperclip,
+  FileText
+} from 'lucide-react';
 import { CustomSelect } from '../components/CustomSelect';
 import { useOrganization } from '../context/OrganizationContext';
 import UpgradeOverlay from '../components/common/UpgradeOverlay';
@@ -799,12 +799,19 @@ const Insumos: React.FC = () => {
 
       <div style={{ filter: planLevel < 2 ? 'blur(4px)' : 'none', pointerEvents: planLevel < 2 ? 'none' : 'auto', userSelect: planLevel < 2 ? 'none' : 'auto', opacity: planLevel < 2 ? 0.5 : 1 }}>
         <Header>
-          <h1>Gestión de Insumos</h1>
+          <div style={{ textAlign: 'center' }}>
+            <h1 style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem' }}>
+              <Boxes size={32} style={{ color: '#10b981' }} /> Gestión de Insumos
+            </h1>
+            <p style={{ color: '#94a3b8', fontSize: '0.95rem', margin: '0.35rem 0 0 0' }}>
+              Monitoreo de precios, stock crítico, trazabilidad de compras y órdenes automatizadas
+            </p>
+          </div>
         </Header>
 
         <TabsContainer>
           <TabButton $isActive={activeTab === 'inventory'} onClick={() => setActiveTab('inventory')}>
-            <FaBoxes style={{ marginRight: '0.5rem' }} /> Inventario
+            <Boxes size={16} style={{ marginRight: '0.5rem' }} /> Inventario
           </TabButton>
           <TabButton $isActive={activeTab === 'providers'} onClick={() => setActiveTab('providers')}>
             Proveedores
@@ -821,7 +828,7 @@ const Insumos: React.FC = () => {
           <>
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1.5rem' }}>
               <Button className="tour-add-product" onClick={() => handleOpenModal()}>
-                <FaPlus /> Nuevo Insumo
+                <Plus size={16} /> Nuevo Insumo
               </Button>
             </div>
             <StatsGrid>
@@ -860,7 +867,7 @@ const Insumos: React.FC = () => {
             />
           </div>
           <Button variant="secondary" onClick={exportToCSV}>
-            <FaDownload /> Exportar CSV
+            <Download size={16} /> Exportar CSV
           </Button>
         </Controls>
 
@@ -951,7 +958,7 @@ const Insumos: React.FC = () => {
                   <div>
                     {insumo.ticket_url ? (
                       <a href={insumo.ticket_url} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#38bdf8', textDecoration: 'none', fontSize: '0.85rem', fontWeight: 600 }}>
-                        <FaFileInvoice /> Ver Ticket
+                        <FileText size={14} /> Ver Ticket
                       </a>
                     ) : (
                       <span style={{ color: '#64748b', fontSize: '0.85rem' }}>Sin archivo</span>
@@ -963,14 +970,14 @@ const Insumos: React.FC = () => {
                       onClick={() => handleOpenModal(insumo)}
                       style={{ padding: '0.5rem' }}
                     >
-                      <FaEdit />
+                      <Edit3 size={15} />
                     </Button>
                     <Button
                       variant="danger"
                       onClick={() => handleDelete(insumo.id)}
                       style={{ padding: '0.5rem' }}
                     >
-                      <FaTrash />
+                      <Trash2 size={15} />
                     </Button>
                   </div>
                 </TableRow>
@@ -991,7 +998,7 @@ const Insumos: React.FC = () => {
             borderBottomRightRadius: '0.75rem',
             backdropFilter: 'blur(12px)'
           }}>
-            <FaBoxes style={{ fontSize: '3rem', marginBottom: '1rem', opacity: 0.5, color: '#f8fafc' }} />
+            <Boxes size={48} style={{ marginBottom: '1rem', opacity: 0.5, color: '#10b981' }} />
             <h3 style={{ color: '#f8fafc' }}>No hay insumos registrados</h3>
             <p>Comienza agregando tu primer insumo para monitorear precios y stock</p>
           </div>
@@ -1009,7 +1016,7 @@ const Insumos: React.FC = () => {
                 onClick={closeModal}
                 style={{ padding: '0.5rem' }}
               >
-                <FaTimesCircle />
+                <X size={18} />
               </Button>
             </ModalHeader>
 
@@ -1198,7 +1205,7 @@ const Insumos: React.FC = () => {
 
               <FormGroup>
                 <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <FaPaperclip /> Comprobante (Ticket/Factura)
+                  <Paperclip size={16} /> Comprobante (Ticket/Factura)
                 </label>
                 <div style={{
                   border: '1px dashed rgba(var(--primary-color-rgb, 168, 85, 247), 0.5)',
