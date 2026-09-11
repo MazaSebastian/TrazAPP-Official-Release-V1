@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import { KPICard } from '../components/charts/KPICard';
 import { TrendChart } from '../components/charts/TrendChart';
 import { metricsService, MonthlyMetric, GeneticPerformance, CostCategory } from '../services/metricsService';
-import { FaChartLine, FaLeaf, FaDollarSign, FaBolt, FaTrashRestore } from 'react-icons/fa';
+import { LineChart, Leaf, DollarSign, Zap, RotateCcw } from 'lucide-react';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { useOrganization } from '../context/OrganizationContext';
 import toast from 'react-hot-toast';
@@ -190,7 +190,7 @@ const Metrics: React.FC = () => {
                         <p>Análisis de rendimiento y financiero del año {year}</p>
                     </div>
                     <ClearButton onClick={handleClearData} disabled={isClearing}>
-                        <FaTrashRestore />
+                        <RotateCcw size={16} />
                         {isClearing ? 'Limpiando Base de Datos...' : 'Limpiar Datos de Prueba'}
                     </ClearButton>
                 </Header>
@@ -200,13 +200,13 @@ const Metrics: React.FC = () => {
                     <KPICard
                         title="Cosecha Total"
                         value={`${(totalYield / 1000).toFixed(2)} kg`}
-                        icon={<FaLeaf />}
+                        icon={<Leaf size={20} />}
                         color="#48bb78"
                     />
                     <KPICard
                         title="Ingresos Estimados"
                         value={`$${totalRevenue.toLocaleString()}`}
-                        icon={<FaDollarSign />}
+                        icon={<DollarSign size={20} />}
                         color="#3182ce"
                         trend={totalRevenue > 0 ? 10 : 0} // Mock trend for now
                         trendLabel="vs año anterior"
@@ -214,19 +214,19 @@ const Metrics: React.FC = () => {
                     <KPICard
                         title="Gastos Operativos"
                         value={`$${totalExpenses.toLocaleString()}`}
-                        icon={<FaBolt />}
+                        icon={<Zap size={20} />}
                         color="#f56565"
                     />
                     <KPICard
                         title="Efectividad Global"
                         value={`${globalEffectiveness}%`}
-                        icon={<FaChartLine />}
+                        icon={<LineChart size={20} />}
                         color={Number(globalEffectiveness) >= 80 ? "#48bb78" : "#ecc94b"}
                     />
                     <KPICard
                         title="Retorno Lab"
                         value={`${labYield.toFixed(1)}%`}
-                        icon={<FaChartLine />}
+                        icon={<LineChart size={20} />}
                         color={labYield >= 10 ? "#48bb78" : "#ecc94b"}
                     />
                 </Grid>

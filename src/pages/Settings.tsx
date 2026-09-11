@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import { FaCog, FaSave, FaDna } from 'react-icons/fa';
 import { geneticsService } from '../services/geneticsService';
 import { ToastModal } from '../components/ToastModal';
 import { ConfirmModal } from '../components/ConfirmModal';
@@ -14,7 +13,23 @@ import { getInsumoCategories, createInsumoCategory, deleteInsumoCategory } from 
 import { Plan, TaskType, InsumoCategory, LandingArticle } from '../types';
 import { tasksService } from '../services/tasksService';
 import { supabase } from '../services/supabaseClient';
-import { FaUserPlus, FaUserShield, FaTrash, FaTimes, FaTasks, FaPlus, FaMapMarkerAlt, FaPlay, FaBoxes, FaWrench, FaPalette, FaRobot } from 'react-icons/fa';
+import {
+  Settings as SettingsIcon,
+  Save,
+  Dna,
+  UserPlus,
+  ShieldCheck,
+  Trash2,
+  X,
+  CheckSquare,
+  Plus,
+  MapPin,
+  Play,
+  Package,
+  Wrench,
+  Palette,
+  Bot
+} from 'lucide-react';
 import { AiAgentsSettings } from '../components/AiAgentsSettings';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import Swal from 'sweetalert2';
@@ -965,7 +980,7 @@ const Settings: React.FC = () => {
         <Section>
           <SectionHeader>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <FaUserShield /> Gestor de Roles y Usuarios
+              <ShieldCheck /> Gestor de Roles y Usuarios
             </div>
 
             <div style={{ fontSize: '0.85rem', fontWeight: 'bold', color: orgPlan && members.length >= orgPlan.limits.max_users ? '#ef4444' : '#4ade80', background: 'rgba(15, 23, 42, 0.5)', padding: '0.25rem 0.75rem', borderRadius: '1rem', border: '1px solid rgba(255,255,255,0.1)' }}>
@@ -1021,7 +1036,7 @@ const Settings: React.FC = () => {
                   disabled={inviting || !newUserEmail || !newUserPassword || !newUserName || (orgPlan ? members.length >= orgPlan.limits.max_users : false)}
                   style={{ background: '#22c55e', color: 'white', maxWidth: '100%', width: '100%', justifyContent: 'center' }}
                 >
-                  <FaUserPlus /> {inviting ? 'Creando...' : 'Crear Usuario y Añadir'}
+                  <UserPlus /> {inviting ? 'Creando...' : 'Crear Usuario y Añadir'}
                 </SaveButton>
               </div>
             </div>
@@ -1071,7 +1086,7 @@ const Settings: React.FC = () => {
                       {canManageUsers && (
                         <td style={{ padding: '0.75rem', textAlign: 'right' }}>
                           <ActionButton $danger onClick={() => handleRemoveMember(member.user_id)} title="Eliminar usuario">
-                            <FaTrash />
+                            <Trash2 />
                           </ActionButton>
                         </td>
                       )}
@@ -1113,7 +1128,7 @@ const Settings: React.FC = () => {
       <Section>
         <SectionHeader>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <FaPalette /> Configuración "Mi Web" (Landing Page)
+            <Palette /> Configuración "Mi Web" (Landing Page)
           </div>
           <div style={{ fontSize: '0.85rem', fontWeight: 'normal', color: '#94a3b8' }}>
             Personaliza el portal de socios público
@@ -1160,7 +1175,7 @@ const Settings: React.FC = () => {
                 />
               ) : (
                 <div style={{ width: '60px', height: '60px', borderRadius: '0.5rem', background: 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <FaDna size={24} color="#94a3b8" />
+                  <Dna size={24} color="#94a3b8" />
                 </div>
               )}
               <input type="file" accept="image/*" onChange={handleLogoChange} style={{ color: '#94a3b8', width: '100%' }} />
@@ -1291,7 +1306,7 @@ const Settings: React.FC = () => {
           <h4 style={{ margin: '0 0 1rem 0', color: '#cbd5e1', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span>3. Nuestro Trabajo (Portfolio)</span>
             <SaveButton type="button" onClick={() => setShowArticleModal(true)} style={{ fontSize: '0.8rem', padding: '0.5rem 1rem' }}>
-              <FaPlus /> Añadir Artículo
+              <Plus /> Añadir Artículo
             </SaveButton>
           </h4>
           <FormGrid>
@@ -1324,7 +1339,7 @@ const Settings: React.FC = () => {
                     </div>
                   </div>
                   <ActionButton $danger type="button" onClick={() => handleDeleteArticle(article.id, article.image_url)} style={{ padding: '0.5rem' }}>
-                    <FaTrash />
+                    <Trash2 />
                   </ActionButton>
                 </div>
               ))}
@@ -1363,7 +1378,7 @@ const Settings: React.FC = () => {
 
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1.5rem', paddingTop: '1.5rem', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
           <SaveButton onClick={handleSaveMiWeb} disabled={savingLanding}>
-            <FaSave /> {savingLanding ? 'Guardando...' : 'Guardar Configuración Web'}
+            <Save /> {savingLanding ? 'Guardando...' : 'Guardar Configuración Web'}
           </SaveButton>
         </div>
       </Section>
@@ -1376,7 +1391,7 @@ const Settings: React.FC = () => {
         <Section>
           <SectionHeader>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <FaTasks /> Gestor de Tipos de Tarea
+              <CheckSquare /> Gestor de Tipos de Tarea
             </div>
             <div style={{ fontSize: '0.85rem', fontWeight: 'normal', color: '#94a3b8' }}>
               Personaliza las tareas disponibles
@@ -1401,7 +1416,7 @@ const Settings: React.FC = () => {
                 disabled={creatingTaskType || !newTaskTypeName.trim()}
                 style={{ width: 'auto', background: '#22c55e' }}
               >
-                {creatingTaskType ? 'Guardando...' : <><FaPlus /> Añadir</>}
+                {creatingTaskType ? 'Guardando...' : <><Plus /> Añadir</>}
               </SaveButton>
             </div>
           </div>
@@ -1423,7 +1438,7 @@ const Settings: React.FC = () => {
                       </td>
                       <td style={{ padding: '1rem', textAlign: 'center' }}>
                         <ActionButton $danger onClick={() => handleDeleteTaskType(t.id)} title="Eliminar tipo">
-                          <FaTrash />
+                          <Trash2 />
                         </ActionButton>
                       </td>
                     </tr>
@@ -1443,7 +1458,7 @@ const Settings: React.FC = () => {
         <Section>
           <SectionHeader>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <FaBoxes /> Gestor de Categorías de Insumos
+              <Package /> Gestor de Categorías de Insumos
             </div>
             <div style={{ fontSize: '0.85rem', fontWeight: 'normal', color: '#94a3b8' }}>
               Crea filtros personalizados para tu inventario
@@ -1468,7 +1483,7 @@ const Settings: React.FC = () => {
                 disabled={creatingInsumoCategory || !newInsumoCategoryName.trim()}
                 style={{ width: 'auto', background: '#3b82f6' }}
               >
-                {creatingInsumoCategory ? 'Guardando...' : <><FaPlus /> Añadir</>}
+                {creatingInsumoCategory ? 'Guardando...' : <><Plus /> Añadir</>}
               </SaveButton>
             </div>
           </div>
@@ -1490,7 +1505,7 @@ const Settings: React.FC = () => {
                       </td>
                       <td style={{ padding: '1rem', textAlign: 'center' }}>
                         <ActionButton $danger onClick={() => handleDeleteInsumoCategory(c.id)} title="Eliminar categoría">
-                          <FaTrash />
+                          <Trash2 />
                         </ActionButton>
                       </td>
                     </tr>
@@ -1510,7 +1525,7 @@ const Settings: React.FC = () => {
         <Section>
           <SectionHeader>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <FaPalette /> Diseño de Etiquetas (Impresión)
+              <Palette /> Diseño de Etiquetas (Impresión)
             </div>
             <div style={{ fontSize: '0.85rem', fontWeight: 'normal', color: '#94a3b8' }}>
               Personaliza el formato de las etiquetas de tus frascos y despachos
@@ -1671,7 +1686,7 @@ const Settings: React.FC = () => {
                 disabled={savingLabelSettings}
                 style={{ marginTop: 'auto' }}
               >
-                {savingLabelSettings ? 'Guardando...' : <><FaSave /> Guardar Diseño</>}
+                {savingLabelSettings ? 'Guardando...' : <><Save /> Guardar Diseño</>}
               </SaveButton>
             </div>
 
@@ -1708,7 +1723,7 @@ const Settings: React.FC = () => {
       <Section style={{ position: 'relative', zIndex: 10 }}>
         <SectionHeader>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <FaMapMarkerAlt /> Ubicación del Clima
+            <MapPin /> Ubicación del Clima
           </div>
           <div style={{ fontSize: '0.85rem', fontWeight: 'normal', color: '#94a3b8' }}>
             Configura tu zona para el Pronóstico
@@ -1719,7 +1734,7 @@ const Settings: React.FC = () => {
           <div style={{ marginBottom: '1.5rem' }}>
             <Label style={{ display: 'block', marginBottom: '0.5rem' }}>Ubicación Actual</Label>
             <div style={{ color: '#4ade80', fontWeight: 'bold', fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <FaMapMarkerAlt /> {currentLocationName}
+              <MapPin /> {currentLocationName}
             </div>
           </div>
 
@@ -1812,7 +1827,7 @@ const Settings: React.FC = () => {
       <Section>
         <SectionHeader>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <FaPlay /> Opciones de Desarrollo / Tutorial
+            <Play /> Opciones de Desarrollo / Tutorial
           </div>
           <div style={{ fontSize: '0.85rem', fontWeight: 'normal', color: '#94a3b8' }}>
             Herramientas para pruebas
@@ -1836,7 +1851,7 @@ const Settings: React.FC = () => {
             }}
             style={{ background: 'rgba(56, 189, 248, 0.2)', color: '#38bdf8', borderColor: 'rgba(56, 189, 248, 0.5)' }}
           >
-            <FaPlay /> Reiniciar Tutorial Guiado
+            <Play /> Reiniciar Tutorial Guiado
           </SaveButton>
         </div>
       </Section>
@@ -1846,27 +1861,27 @@ const Settings: React.FC = () => {
   return (
     <PageContainer>
       <Header>
-        <h1><FaCog /> Configuración</h1>
+        <h1><SettingsIcon /> Configuración</h1>
       </Header>
 
       <TabsContainer>
         <Tab $active={activeTab === 'users'} onClick={() => setActiveTab('users')}>
-          <FaUserShield /> Roles y Usuarios
+          <ShieldCheck /> Roles y Usuarios
         </Tab>
         <Tab $active={activeTab === 'agents'} onClick={() => setActiveTab('agents')}>
-          <FaRobot /> Agentes IA & API Keys
+          <Bot /> Agentes IA & API Keys
         </Tab>
         <Tab $active={activeTab === 'web'} onClick={() => setActiveTab('web')}>
-          <FaPalette /> Mi Web
+          <Palette /> Mi Web
         </Tab>
         <Tab $active={activeTab === 'customization'} onClick={() => setActiveTab('customization')}>
-          <FaPalette /> Personalización
+          <Palette /> Personalización
         </Tab>
         <Tab $active={activeTab === 'weather'} onClick={() => setActiveTab('weather')}>
-          <FaMapMarkerAlt /> Clima y Ubicación
+          <MapPin /> Clima y Ubicación
         </Tab>
         <Tab $active={activeTab === 'system'} onClick={() => setActiveTab('system')}>
-          <FaWrench /> Sistema
+          <Wrench /> Sistema
         </Tab>
       </TabsContainer>
 
@@ -1888,7 +1903,7 @@ const Settings: React.FC = () => {
               onClick={() => setSelectedUser(null)}
               style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer' }}
             >
-              <FaTimes size={20} />
+              <X size={20} />
             </button>
             <h3 style={{ margin: '0 0 0.5rem 0', color: '#f8fafc', fontSize: '1.25rem' }}>{selectedUser.profile?.full_name || 'Sin nombre'}</h3>
             <p style={{ margin: '0 0 1.5rem 0', color: '#94a3b8', fontSize: '0.9rem' }}>{selectedUser.profile?.email || 'N/A'}</p>
@@ -1923,7 +1938,7 @@ const Settings: React.FC = () => {
                 onClick={() => handleRemoveMember(selectedUser.user_id)}
                 style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid rgba(239, 68, 68, 0.3)', background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
               >
-                <FaTrash /> Eliminar Usuario
+                <Trash2 /> Eliminar Usuario
               </button>
             )}
           </ModalContentDetail>
@@ -1968,7 +1983,7 @@ const Settings: React.FC = () => {
               onClick={() => setShowArticleModal(false)}
               style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer' }}
             >
-              <FaTimes size={20} />
+              <X size={20} />
             </button>
             <h3 style={{ margin: '0 0 1.5rem 0', color: '#f8fafc', fontSize: '1.25rem' }}>Nuevo Artículo</h3>
             <form onSubmit={handleSaveArticle}>

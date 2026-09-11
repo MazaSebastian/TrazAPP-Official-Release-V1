@@ -2,19 +2,16 @@ import React from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import {
-  FaArrowLeft,
-  FaDownload,
-  FaDesktop,
-  FaLaptop,
-  FaCode,
-  FaCog,
-  FaInfoCircle,
-  FaExternalLinkAlt,
-  FaFileArchive,
-  FaWindows,
-  FaApple,
-  FaLinux
-} from 'react-icons/fa';
+  ArrowLeft,
+  Download,
+  Monitor,
+  Laptop,
+  Code,
+  Settings,
+  Info,
+  ExternalLink,
+  Archive
+} from 'lucide-react';
 
 interface SoftwareItem {
   id: string;
@@ -592,15 +589,15 @@ const SoftwarePage: React.FC = () => {
   const getCategoryIcon = (category: string) => {
     switch (category) {
       case 'Software de DJ':
-        return <FaDesktop />;
+        return <Monitor size={20} />;
       case 'Software de Video':
-        return <FaCode />;
+        return <Code size={20} />;
       case 'Software de Audio':
-        return <FaLaptop />;
+        return <Laptop size={20} />;
       case 'Herramientas de Utilidad':
-        return <FaCog />;
+        return <Settings size={20} />;
       default:
-        return <FaDesktop />;
+        return <Monitor size={20} />;
     }
   };
 
@@ -622,13 +619,25 @@ const SoftwarePage: React.FC = () => {
   const getPlatformIcon = (platform: string) => {
     switch (platform.toLowerCase()) {
       case 'windows':
-        return <FaWindows />;
+        return (
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M0 3.449L9.75 2.1v9.451H0m10.949-9.602L24 0v11.4H10.949M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-12.901-1.801"/>
+          </svg>
+        );
       case 'mac':
-        return <FaApple />;
+        return (
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.37c.62-.75 1.04-1.8 0.92-2.85-.9.04-1.98.6-2.61 1.34-.56.64-1.05 1.7-0.92 2.72 1.01.08 2.02-.49 2.61-1.21z"/>
+          </svg>
+        );
       case 'linux':
-        return <FaLinux />;
+        return (
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12.012 0c-3.793 0-6.064 2.87-6.064 6.46 0 1.99.78 4.77 1.48 6.01.12.21.14.3.06.45-.16.3-.92.83-1.58 1.47-1.05 1.03-1.52 2.18-1.52 3.65 0 2.93 2.61 5.96 7.62 5.96 4.96 0 7.58-3.03 7.58-5.96 0-1.47-.46-2.62-1.52-3.65-.66-.64-1.42-1.17-1.58-1.47-.08-.15-.06-.24.06-.45.7-1.24 1.48-4.02 1.48-6.01 0-3.59-2.27-6.46-6.02-6.46z"/>
+          </svg>
+        );
       default:
-        return <FaDesktop />;
+        return <Monitor size={14} />;
     }
   };
 
@@ -638,7 +647,7 @@ const SoftwarePage: React.FC = () => {
         <HeaderContent>
           <HeaderLeft>
             <BackButton onClick={() => navigate('/dashboard')} title="Volver al Dashboard">
-              <FaArrowLeft />
+              <ArrowLeft size={16} />
               Dashboard
             </BackButton>
             <div>
@@ -683,11 +692,11 @@ const SoftwarePage: React.FC = () => {
                           <SoftwareName>{software.name}</SoftwareName>
                           <SoftwareMeta>
                             <SoftwareMetaItem>
-                              <FaInfoCircle />
+                              <Info size={14} />
                               v{software.version}
                             </SoftwareMetaItem>
                             <SoftwareMetaItem>
-                              <FaFileArchive />
+                              <Archive size={14} />
                               {software.fileSize}
                             </SoftwareMetaItem>
                             <PlatformIcons>
@@ -705,7 +714,7 @@ const SoftwarePage: React.FC = () => {
                             onClick={() => handleDownload(software)}
                             title="Descargar"
                           >
-                            <FaDownload />
+                            <Download size={16} />
                             Descargar
                           </ActionButton>
                           {software.websiteUrl && (
@@ -713,7 +722,7 @@ const SoftwarePage: React.FC = () => {
                               onClick={() => handleWebsite(software)}
                               title="Visitar sitio web"
                             >
-                              <FaExternalLinkAlt />
+                              <ExternalLink size={16} />
                             </ActionButton>
                           )}
                         </SoftwareActions>
@@ -735,7 +744,7 @@ const SoftwarePage: React.FC = () => {
                       {software.requirements && (
                         <Requirements>
                           <RequirementsTitle>
-                            <FaInfoCircle />
+                            <Info size={14} />
                             Requisitos del sistema
                           </RequirementsTitle>
                           <RequirementsText>{software.requirements}</RequirementsText>
@@ -749,7 +758,7 @@ const SoftwarePage: React.FC = () => {
         ) : (
           <EmptyState>
             <div className="empty-icon">
-              <FaDesktop />
+              <Monitor size={48} />
             </div>
             <h3>No hay software disponible</h3>
             <p>El software de utilidad aparecerá aquí cuando esté disponible</p>
