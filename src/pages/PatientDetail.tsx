@@ -22,6 +22,7 @@ import {
   Upload,
   Clock,
   UserCheck,
+  Pencil,
 } from "lucide-react";
 import { Button } from "../components/ui";
 import { LoadingSpinner } from "../components/LoadingSpinner";
@@ -29,6 +30,7 @@ import { useAuth } from "../context/AuthContext";
 import { CustomSelect } from "../components/CustomSelect";
 import Swal from "sweetalert2";
 import AudioRecorderWidget from "../components/AudioRecorderWidget";
+import { EditEvolutionModal } from "../components/EditEvolutionModal";
 
 // --- Styled Components (Dashboard First) ---
 
@@ -178,8 +180,13 @@ const PatientDetail: React.FC = () => {
   const [expandedEvos, setExpandedEvos] = useState<number[]>([]);
   const [transcribingEvoId, setTranscribingEvoId] = useState<string | null>(null);
 
+  // Edit Evolution State
+  const [editingEvolution, setEditingEvolution] = useState<any | null>(null);
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
+
   // New Evolution State
   const [isEvolutionModalOpen, setIsEvolutionModalOpen] = useState(false);
+
   const [isUploadingEvolution, setIsUploadingEvolution] = useState(false);
   const [isDragActive, setIsDragActive] = useState(false);
   const [newEvolution, setNewEvolution] = useState({
@@ -429,7 +436,112 @@ const PatientDetail: React.FC = () => {
     }
   };
 
+  const handleSaveEditedEvolution = async (
+    payload: any,
+    newFiles: File[],
+    retainedAttachments: string[]
+  ) => {
+    if (!editingEvolution) return;
+
+    try {
+      setIsSavingEdit(true);
+
+      // 1. Upload any newly added files
+      const uploadedUrls: string[] = [];
+      for (const file of newFiles) {
+        const path = `evolutions/${id}/${Date.now()}_${file.name}`;
+        const url = await patientsService.uploadDocument(file, path);
+        if (url) uploadedUrls.push(url);
+      }
+
+      const finalAttachments = [...retainedAttachments, ...uploadedUrls];
+
+      // 2. Recalculate improvement percentage if EVA score was changed
+      let actualEvaScore = payload.eva_score;
+      let previousEva = admission?.baseline_pain_avg || 0;
+
+      // Find previous evolution in sequence (the one created immediately prior to this one)
+      const currentIndex = evolutions.findIndex((e) => e.id === editingEvolution.id);
+      if (currentIndex !== -1 && currentIndex < evolutions.length - 1) {
+        previousEva = evolutions[currentIndex + 1].eva_score;
+      }
+
+      let improvement = 0;
+      if (previousEva > 0) {
+        improvement = ((previousEva - actualEvaScore) / previousEva) * 100;
+      } else if (previousEva === 0 && actualEvaScore > 0) {
+        improvement = -100;
+      }
+
+      // 3. Prepare Audit Stamp & History
+      const editorName = user?.name
+        ? user.role === "medico"
+          ? `Dr. ${user.name}`
+          : user.name
+        : user?.email || "Profesional / Usuario";
+
+      const nowIso = new Date().toISOString();
+
+      const previousHistory =
+        editingEvolution.edit_history ||
+        editingEvolution.template_data?._audit?.edit_history ||
+        [];
+
+      const newHistoryEntry = {
+        edited_at: nowIso,
+        edited_by: editorName,
+        reason: payload.edit_reason || "Modificación de detalles clínicos",
+        previous_eva: editingEvolution.eva_score,
+        new_eva: actualEvaScore,
+      };
+
+      const finalPayload = {
+        title: payload.title,
+        date: payload.date,
+        eva_score: actualEvaScore,
+        improvement_percent: parseFloat(improvement.toFixed(2)),
+        notes: payload.notes,
+        next_follow_up_months: payload.next_follow_up_months,
+        template_id: payload.template_id,
+        template_data: payload.template_data,
+        attachments: finalAttachments,
+        updated_at: nowIso,
+        updated_by: editorName,
+        edit_history: [...previousHistory, newHistoryEntry],
+      };
+
+      await patientsService.updateEvolution(editingEvolution.id, finalPayload);
+
+      Swal.fire({
+        title: "Evolución Actualizada",
+        text: "Los cambios y el sello de auditoría han sido registrados exitosamente.",
+        icon: "success",
+        background: "rgba(30, 41, 59, 0.95)",
+        color: "#f8fafc",
+        confirmButtonColor: "#10b981",
+        customClass: { popup: "glass-modal border border-white/10 rounded-xl" },
+      });
+
+      setEditingEvolution(null);
+      loadData(id || "");
+    } catch (err: any) {
+      console.error("Error saving edited evolution:", err);
+      Swal.fire({
+        title: "Error al actualizar",
+        text: err?.message || "No se pudo actualizar la evolución clínica.",
+        icon: "error",
+        background: "rgba(30, 41, 59, 0.95)",
+        color: "#f8fafc",
+        confirmButtonColor: "#3b82f6",
+        customClass: { popup: "glass-modal border border-white/10 rounded-xl" },
+      });
+    } finally {
+      setIsSavingEdit(false);
+    }
+  };
+
   const handleDrag = (e: React.DragEvent) => {
+
     e.preventDefault();
     e.stopPropagation();
     if (e.type === "dragenter" || e.type === "dragover") {
@@ -1177,9 +1289,14 @@ const PatientDetail: React.FC = () => {
                 })
                 : "";
 
+              // Resolve audit information (columns or resilient fallback)
+              const lastModifiedAt = evo.updated_at || evo.template_data?._audit?.updated_at;
+              const lastModifiedBy = evo.updated_by || evo.template_data?._audit?.updated_by;
+              const canEdit = user?.role === "medico" || user?.role === "admin" || user?.role === "super_admin" || user?.role === "owner" || !user?.role;
+
               return (
                 <div
-                  key={idx}
+                  key={evo.id || idx}
                   style={{
                     padding: "1rem",
                     borderBottom: "1px solid rgba(255, 255, 255, 0.05)",
@@ -1205,13 +1322,14 @@ const PatientDetail: React.FC = () => {
                       alignItems: "center",
                       cursor: "pointer",
                       paddingBottom: isExpanded ? "0.75rem" : "0",
+                      gap: "0.75rem",
                     }}
                   >
                     <div
                       style={{
                         display: "flex",
                         alignItems: "center",
-                        gap: "1rem",
+                        gap: "0.85rem",
                         flexWrap: "wrap",
                       }}
                     >
@@ -1219,7 +1337,7 @@ const PatientDetail: React.FC = () => {
                         style={{
                           fontWeight: "bold",
                           color: "#e2e8f0",
-                          fontSize: "1.1rem",
+                          fontSize: "1.05rem",
                           display: "flex",
                           alignItems: "center",
                           gap: "0.5rem",
@@ -1240,7 +1358,7 @@ const PatientDetail: React.FC = () => {
                         {evo.title && (
                           <span
                             style={{
-                              marginLeft: "0.5rem",
+                              marginLeft: "0.25rem",
                               paddingLeft: "0.5rem",
                               borderLeft: "2px solid rgba(255, 255, 255, 0.2)",
                               color: "#f8fafc",
@@ -1250,6 +1368,7 @@ const PatientDetail: React.FC = () => {
                           </span>
                         )}
                       </div>
+
                       <div
                         style={{
                           color:
@@ -1269,17 +1388,56 @@ const PatientDetail: React.FC = () => {
                         {evo.improvement_percent > 0 ? "+" : ""}
                         {evo.improvement_percent}%
                       </div>
+
+                      {/* Header Audit Badge */}
+                      {lastModifiedAt && (
+                        <span
+                          title={`Última modificación: ${new Date(lastModifiedAt).toLocaleDateString("es-AR")} ${new Date(lastModifiedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} por ${lastModifiedBy || "Profesional"}`}
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "0.3rem",
+                            fontSize: "0.75rem",
+                            color: "#f59e0b",
+                            background: "rgba(245, 158, 11, 0.12)",
+                            border: "1px solid rgba(245, 158, 11, 0.3)",
+                            padding: "0.15rem 0.5rem",
+                            borderRadius: "0.25rem",
+                            fontWeight: 500,
+                          }}
+                        >
+                          <Clock size={11} /> Modificado
+                        </span>
+                      )}
                     </div>
-                    <div
-                      style={{
-                        color: "#64748b",
-                        transition: "transform 0.2s ease",
-                        transform: isExpanded
-                          ? "rotate(180deg)"
-                          : "rotate(0deg)",
-                      }}
-                    >
-                      <ChevronDown size={16} />
+
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                      {canEdit && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEditingEvolution(evo);
+                          }}
+                          className="h-7 px-2 text-xs text-slate-400 hover:text-sky-300 hover:bg-sky-500/10 border border-transparent hover:border-sky-500/20"
+                          title="Editar y agregar detalles a la evolución"
+                        >
+                          <Pencil size={12} className="mr-1" /> Editar
+                        </Button>
+                      )}
+                      <div
+                        style={{
+                          color: "#64748b",
+                          transition: "transform 0.2s ease",
+                          transform: isExpanded
+                            ? "rotate(180deg)"
+                            : "rotate(0deg)",
+                        }}
+                      >
+                        <ChevronDown size={16} />
+                      </div>
                     </div>
                   </div>
 
@@ -1293,6 +1451,63 @@ const PatientDetail: React.FC = () => {
                         animation: "fadeIn 0.3s ease",
                       }}
                     >
+                      {/* Prominent Audit Trail Banner */}
+                      {lastModifiedAt && (
+                        <div
+                          style={{
+                            marginBottom: "1rem",
+                            padding: "0.6rem 0.85rem",
+                            borderRadius: "0.5rem",
+                            background:
+                              "linear-gradient(90deg, rgba(245, 158, 11, 0.12) 0%, rgba(30, 41, 59, 0.6) 100%)",
+                            border: "1px solid rgba(245, 158, 11, 0.3)",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            flexWrap: "wrap",
+                            gap: "0.5rem",
+                            fontSize: "0.82rem",
+                          }}
+                        >
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "0.5rem",
+                              color: "#fef3c7",
+                            }}
+                          >
+                            <Clock size={15} className="text-amber-400 flex-shrink-0" />
+                            <span>
+                              <strong>Última modificación:</strong>{" "}
+                              {new Date(lastModifiedAt).toLocaleDateString("es-AR")}{" "}
+                              {new Date(lastModifiedAt).toLocaleTimeString([], {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}{" "}
+                              hs por{" "}
+                              <strong style={{ color: "#ffffff" }}>
+                                {lastModifiedBy || "Profesional actuante"}
+                              </strong>
+                            </span>
+                          </div>
+                          <span
+                            style={{
+                              fontSize: "0.72rem",
+                              color: "#fbbf24",
+                              textTransform: "uppercase",
+                              letterSpacing: "0.05em",
+                              fontWeight: 600,
+                              background: "rgba(245, 158, 11, 0.15)",
+                              padding: "0.15rem 0.45rem",
+                              borderRadius: "0.25rem",
+                            }}
+                          >
+                            Legajo Auditado
+                          </span>
+                        </div>
+                      )}
+
                       <div
                         style={{
                           fontSize: "0.95rem",
@@ -2325,8 +2540,19 @@ const PatientDetail: React.FC = () => {
           </Card>
         </div>
       )}
+
+      {/* EDIT EVOLUTION MODAL */}
+      <EditEvolutionModal
+        isOpen={!!editingEvolution}
+        onClose={() => setEditingEvolution(null)}
+        evolution={editingEvolution}
+        templates={templates}
+        onSave={handleSaveEditedEvolution}
+        isSaving={isSavingEdit}
+      />
     </Container>
   );
 };
+
 
 export default PatientDetail;

@@ -379,5 +379,60 @@ export const patientsService = {
             throw error;
         }
         return data;
+    },
+
+    async updateEvolution(id: string, updates: any): Promise<any | null> {
+        if (!supabase) return null;
+
+        // Clean out id or admission_id if inadvertently passed
+        const payload = { ...updates };
+        delete payload.id;
+        delete payload.admission_id;
+
+        // Attempt 1: Native columns update
+        const { data, error } = await supabase
+            .from('clinical_evolutions')
+            .update(payload)
+            .eq('id', id)
+            .select()
+            .single();
+
+        if (error) {
+            // Fallback in case updated_at / updated_by / edit_history columns are not yet in the DB table
+            if (error.code === '42703' && (payload.updated_at || payload.updated_by || payload.edit_history)) {
+                console.warn("Audit columns missing in DB table, applying fallback into template_data._audit");
+                const fallbackPayload = { ...payload };
+                const currentTemplateData = fallbackPayload.template_data || {};
+                fallbackPayload.template_data = {
+                    ...currentTemplateData,
+                    _audit: {
+                        updated_at: payload.updated_at,
+                        updated_by: payload.updated_by,
+                        edit_history: payload.edit_history
+                    }
+                };
+                delete fallbackPayload.updated_at;
+                delete fallbackPayload.updated_by;
+                delete fallbackPayload.edit_history;
+
+                const { data: retryData, error: retryError } = await supabase
+                    .from('clinical_evolutions')
+                    .update(fallbackPayload)
+                    .eq('id', id)
+                    .select()
+                    .single();
+
+                if (retryError) {
+                    console.error("Error updating evolution (fallback):", retryError);
+                    throw retryError;
+                }
+                return retryData;
+            }
+
+            console.error("Error updating evolution:", error);
+            throw error;
+        }
+        return data;
     }
 };
+

@@ -348,33 +348,65 @@ export const ClinicalHistorySection: React.FC = () => {
           </div>
         ) : (
           <Timeline>
-            {evolutions.map((evo, index) => (
-              <TimelineItem key={evo.id} isLatest={index === 0}>
-                <TimelineDate>
-                  <FaClock />
-                  {evo.date ? new Date(evo.date).toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' }) : 'Sin fecha'}
-                </TimelineDate>
-                <TimelineCard>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '0.5rem' }}>
-                    <TimelineTitle>{evo.title || `Control #${evolutions.length - index}`}</TimelineTitle>
-                    <EvaScore score={evo.eva_score}>EVA: {evo.eva_score}/10</EvaScore>
-                  </div>
-                  {evo.notes && <TimelineNotes>{evo.notes}</TimelineNotes>}
-                  {evo.sparing_effect && (
-                    <div style={{ marginTop: '0.75rem', fontSize: '0.85rem' }}>
-                      <span style={{ color: '#64748b' }}>Efecto ahorrador: </span>
-                      <span style={{ color: '#93c5fd' }}>{evo.sparing_effect}</span>
+            {evolutions.map((evo, index) => {
+              const lastModifiedAt = evo.updated_at || evo.template_data?._audit?.updated_at;
+              const lastModifiedBy = evo.updated_by || evo.template_data?._audit?.updated_by;
+
+              return (
+                <TimelineItem key={evo.id || index} isLatest={index === 0}>
+                  <TimelineDate>
+                    <FaClock />
+                    {evo.date ? new Date(evo.date).toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' }) : 'Sin fecha'}
+                  </TimelineDate>
+                  <TimelineCard>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '0.5rem' }}>
+                      <TimelineTitle>{evo.title || `Control #${evolutions.length - index}`}</TimelineTitle>
+                      <EvaScore score={evo.eva_score}>EVA: {evo.eva_score}/10</EvaScore>
                     </div>
-                  )}
-                  {evo.adverse_effects && (
-                    <div style={{ marginTop: '0.25rem', fontSize: '0.85rem' }}>
-                      <span style={{ color: '#64748b' }}>Efectos adversos: </span>
-                      <span style={{ color: '#fca5a5' }}>{evo.adverse_effects}</span>
-                    </div>
-                  )}
-                </TimelineCard>
-              </TimelineItem>
-            ))}
+                    {evo.notes && <TimelineNotes>{evo.notes}</TimelineNotes>}
+                    {evo.sparing_effect && (
+                      <div style={{ marginTop: '0.75rem', fontSize: '0.85rem' }}>
+                        <span style={{ color: '#64748b' }}>Efecto ahorrador: </span>
+                        <span style={{ color: '#93c5fd' }}>{evo.sparing_effect}</span>
+                      </div>
+                    )}
+                    {evo.adverse_effects && (
+                      <div style={{ marginTop: '0.25rem', fontSize: '0.85rem' }}>
+                        <span style={{ color: '#64748b' }}>Efectos adversos: </span>
+                        <span style={{ color: '#fca5a5' }}>{evo.adverse_effects}</span>
+                      </div>
+                    )}
+
+                    {/* Audit Modification Stamp */}
+                    {lastModifiedAt && (
+                      <div
+                        style={{
+                          marginTop: '0.75rem',
+                          paddingTop: '0.5rem',
+                          borderTop: '1px solid rgba(255, 255, 255, 0.06)',
+                          fontSize: '0.75rem',
+                          color: '#94a3b8',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.4rem',
+                        }}
+                      >
+                        <FaClock style={{ fontSize: '0.7rem', color: '#f59e0b' }} />
+                        <span>
+                          Última modificación:{' '}
+                          {new Date(lastModifiedAt).toLocaleDateString('es-AR')}{' '}
+                          {new Date(lastModifiedAt).toLocaleTimeString([], {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}{' '}
+                          hs ({lastModifiedBy || 'Profesional tratante'})
+                        </span>
+                      </div>
+                    )}
+                  </TimelineCard>
+                </TimelineItem>
+              );
+            })}
           </Timeline>
         )}
       </Card>
