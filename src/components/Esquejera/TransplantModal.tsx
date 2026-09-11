@@ -15,7 +15,8 @@ import {
     ArrowLeft, 
     Check, 
     Layers, 
-    Sprout
+    Sprout,
+    MapPin
 } from 'lucide-react';
 import { Button as ShadcnButton } from '../ui/Button';
 import { Badge as ShadcnBadge } from '../ui/Badge';
@@ -59,35 +60,63 @@ const StepContent = styled.div<{ $isExiting?: boolean }>`
 
 // Styled Components (Shadcn Dark Glassmorphism)
 const Overlay = styled.div<{ isClosing?: boolean }>`
-  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0, 0, 0, 0.75); z-index: 1000;
-  display: flex; align-items: center; justify-content: center;
-  backdrop-filter: blur(12px);
-  animation: ${p => p.isClosing ? fadeOut : fadeIn} 0.2s ease-in-out forwards;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.78);
+  z-index: 10001;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  padding: 1rem;
+  animation: ${p => p.isClosing ? fadeOut : fadeIn} 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 `;
 
 const Content = styled.div<{ isClosing?: boolean }>`
-  background: rgba(15, 23, 42, 0.96);
-  backdrop-filter: blur(24px);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   color: #f8fafc;
-  padding: 0; border-radius: 1.25rem;
-  width: 95%; max-width: 1100px; height: 90vh;
-  display: flex; flex-direction: column;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  padding: 0;
+  border-radius: 1.25rem;
+  width: 95%;
+  max-width: 1120px;
+  height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.06);
+  position: relative;
   overflow: hidden;
-  animation: ${p => p.isClosing ? scaleOut : scaleIn} 0.2s ease-in-out forwards;
+  animation: ${p => p.isClosing ? scaleOut : scaleIn} 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 
   @media (max-width: 768px) {
-    width: 100%; height: 100vh; border-radius: 0; max-height: 100vh;
+    width: 100%;
+    height: 100vh;
+    border-radius: 0;
+    max-height: 100vh;
   }
+`;
+
+const AmbientGlow = styled.div`
+  position: absolute;
+  top: -60px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 500px;
+  height: 140px;
+  background: radial-gradient(ellipse at center, rgba(16, 185, 129, 0.18) 0%, rgba(16, 185, 129, 0) 75%);
+  pointer-events: none;
 `;
 
 const ModalHeader = styled.div`
   padding: 1.5rem 2rem 1.25rem 2rem;
   flex-shrink: 0;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(15, 23, 42, 0.5);
+  background: rgba(15, 23, 42, 0.6);
+  position: relative;
+  z-index: 1;
 
   @media (max-width: 768px) {
     padding: 1rem;
@@ -111,13 +140,14 @@ const IconBadge = styled.div`
   width: 44px;
   height: 44px;
   border-radius: 0.75rem;
-  background: linear-gradient(135deg, rgba(74, 222, 128, 0.2), rgba(16, 185, 129, 0.05));
-  border: 1px solid rgba(74, 222, 128, 0.3);
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.25);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #4ade80;
-  box-shadow: 0 0 20px rgba(74, 222, 128, 0.15);
+  color: #34d399;
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.15);
+  flex-shrink: 0;
 `;
 
 const Title = styled.h2`
@@ -138,12 +168,12 @@ const Subtitle = styled.p`
 `;
 
 const CloseButton = styled.button`
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   color: #94a3b8;
-  width: 36px;
-  height: 36px;
-  border-radius: 0.625rem;
+  width: 34px;
+  height: 34px;
+  border-radius: 0.5rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -153,7 +183,7 @@ const CloseButton = styled.button`
   &:hover {
     background: rgba(255, 255, 255, 0.1);
     color: #f8fafc;
-    border-color: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.18);
     transform: scale(1.05);
   }
 `;
@@ -161,10 +191,12 @@ const CloseButton = styled.button`
 const ModalBody = styled.div`
   padding: 1.5rem 2rem;
   flex: 1;
-  min-height: 0; /* Critical for scrolling */
+  min-height: 0;
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  position: relative;
+  z-index: 1;
 
   @media (max-width: 768px) {
     padding: 1rem;
@@ -179,8 +211,10 @@ const ModalFooter = styled.div`
   display: flex;
   justify-content: flex-end;
   align-items: center;
-  gap: 1rem;
-  background: rgba(15, 23, 42, 0.6);
+  gap: 0.75rem;
+  background: rgba(15, 23, 42, 0.8);
+  position: relative;
+  z-index: 1;
 
   @media (max-width: 768px) {
     padding: 1rem;
@@ -192,7 +226,10 @@ const ModalFooter = styled.div`
 `;
 
 const StepFlexContainer = styled.div<{ $overflowHidden?: boolean }>`
-  display: flex; gap: 2rem; flex: 1; min-height: 0;
+  display: flex;
+  gap: 1.75rem;
+  flex: 1;
+  min-height: 0;
   ${p => p.$overflowHidden && 'overflow: hidden;'}
 
   @media (max-width: 768px) {
@@ -203,64 +240,94 @@ const StepFlexContainer = styled.div<{ $overflowHidden?: boolean }>`
 `;
 
 const ColumnLeft = styled.div`
-  flex: 1; min-width: 260px;
-  @media (max-width: 768px) { min-width: 100%; flex: none; }
+  flex: 1;
+  min-width: 280px;
+  max-width: 340px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+
+  @media (max-width: 768px) {
+    min-width: 100%;
+    max-width: 100%;
+    flex: none;
+  }
 `;
 
 const ColumnRight = styled.div`
-  flex: 3; display: flex; flex-direction: column; min-height: 0;
-  @media (max-width: 768px) { flex: none; min-height: 400px; }
+  flex: 3;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+
+  @media (max-width: 768px) {
+    flex: none;
+    min-height: 400px;
+  }
 `;
 
 const Step2Column = styled.div`
-  flex: 1; display: flex; flex-direction: column; overflow: hidden;
-  @media (max-width: 768px) { flex: none; overflow: visible; min-height: 450px; }
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  @media (max-width: 768px) {
+    flex: none;
+    overflow: visible;
+    min-height: 450px;
+  }
 `;
 
-const Section = styled.div` margin-bottom: 1.5rem; `;
-const Label = styled.label` 
-  display: block; 
-  font-weight: 600; 
-  font-size: 0.85rem;
-  color: #cbd5e1; 
-  margin-bottom: 0.5rem; 
-  letter-spacing: -0.01em;
+const Section = styled.div`
+  margin-bottom: 0;
 `;
 
-const TabContainer = styled.div` 
-  display: flex; 
-  gap: 0.35rem; 
-  margin-bottom: 1rem; 
-  background: rgba(15, 23, 42, 0.6);
+const Label = styled.label`
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #94a3b8;
+  margin-bottom: 0.5rem;
+`;
+
+const TabContainer = styled.div`
+  display: inline-flex;
+  gap: 0.25rem;
+  background: rgba(255, 255, 255, 0.03);
   padding: 0.25rem;
-  border-radius: 0.75rem;
+  border-radius: 0.625rem;
   border: 1px solid rgba(255, 255, 255, 0.08);
   width: fit-content;
 `;
 
 const Tab = styled.button<{ $active: boolean }>`
-  padding: 0.45rem 1rem;
-  background: ${p => p.$active ? 'rgba(30, 41, 59, 0.9)' : 'transparent'};
+  padding: 0.4rem 0.85rem;
+  background: ${p => p.$active ? 'rgba(255, 255, 255, 0.08)' : 'transparent'};
   border: 1px solid ${p => p.$active ? 'rgba(255, 255, 255, 0.12)' : 'transparent'};
   border-radius: 0.5rem;
-  color: ${p => p.$active ? '#4ade80' : '#94a3b8'}; 
+  color: ${p => p.$active ? '#f8fafc' : '#94a3b8'};
   font-weight: ${p => p.$active ? '600' : '500'};
-  font-size: 0.85rem;
-  cursor: pointer; 
-  display: flex; 
-  align-items: center; 
-  gap: 0.5rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
   transition: all 0.15s ease;
-  box-shadow: ${p => p.$active ? '0 2px 8px rgba(0,0,0,0.3)' : 'none'};
+  box-shadow: ${p => p.$active ? '0 1px 3px rgba(0, 0, 0, 0.3)' : 'none'};
 
-  &:hover { 
-    color: ${p => p.$active ? '#4ade80' : '#f8fafc'};
-    background: ${p => p.$active ? 'rgba(30, 41, 59, 0.9)' : 'rgba(255, 255, 255, 0.04)'};
+  &:hover {
+    color: #ffffff;
+    background: ${p => p.$active ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.04)'};
   }
 `;
 
 const StepIndicator = styled.div`
-  display: flex; 
+  display: flex;
   align-items: center;
   gap: 0.75rem;
 `;
@@ -271,13 +338,13 @@ const StepPill = styled.div<{ $active: boolean; $completed: boolean }>`
   gap: 0.5rem;
   padding: 0.35rem 0.85rem;
   border-radius: 9999px;
-  font-size: 0.8rem;
+  font-size: 0.775rem;
   font-weight: 600;
   transition: all 0.2s ease;
-  background: ${p => p.$active ? 'rgba(74, 222, 128, 0.12)' : p.$completed ? 'rgba(74, 222, 128, 0.08)' : 'rgba(255, 255, 255, 0.03)'};
-  border: 1px solid ${p => p.$active ? 'rgba(74, 222, 128, 0.4)' : p.$completed ? 'rgba(74, 222, 128, 0.2)' : 'rgba(255, 255, 255, 0.08)'};
-  color: ${p => p.$active ? '#4ade80' : p.$completed ? '#86efac' : '#64748b'};
-  box-shadow: ${p => p.$active ? '0 0 12px rgba(74, 222, 128, 0.15)' : 'none'};
+  background: ${p => p.$active ? 'rgba(16, 185, 129, 0.12)' : p.$completed ? 'rgba(16, 185, 129, 0.06)' : 'rgba(255, 255, 255, 0.03)'};
+  border: 1px solid ${p => p.$active ? 'rgba(16, 185, 129, 0.35)' : p.$completed ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255, 255, 255, 0.08)'};
+  color: ${p => p.$active ? '#34d399' : p.$completed ? '#6ee7b7' : '#64748b'};
+  box-shadow: ${p => p.$active ? '0 0 14px rgba(16, 185, 129, 0.2)' : 'none'};
 `;
 
 const StepNumber = styled.span<{ $active: boolean; $completed: boolean }>`
@@ -288,34 +355,193 @@ const StepNumber = styled.span<{ $active: boolean; $completed: boolean }>`
   align-items: center;
   justify-content: center;
   font-size: 0.7rem;
-  background: ${p => p.$active ? '#4ade80' : p.$completed ? '#10b981' : 'rgba(255, 255, 255, 0.1)'};
-  color: ${p => p.$active || p.$completed ? '#0f172a' : '#94a3b8'};
+  background: ${p => p.$active ? '#10b981' : p.$completed ? '#059669' : 'rgba(255, 255, 255, 0.1)'};
+  color: ${p => p.$active || p.$completed ? '#ffffff' : '#94a3b8'};
   font-weight: 700;
 `;
 
 const SelectAllButton = styled.button`
-  background: rgba(30, 41, 59, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   color: #cbd5e1;
-  font-weight: 600;
+  font-weight: 500;
   font-size: 0.8rem;
   cursor: pointer;
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.45rem 0.85rem;
+  gap: 0.45rem;
+  padding: 0.4rem 0.85rem;
   border-radius: 0.5rem;
   transition: all 0.2s;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
 
   &:hover {
     background: rgba(255, 255, 255, 0.08);
     border-color: rgba(255, 255, 255, 0.2);
-    color: #f8fafc;
+    color: #ffffff;
   }
 
   &:active {
     transform: translateY(1px);
+  }
+`;
+
+const SummaryCard = styled.div`
+  background: linear-gradient(180deg, rgba(16, 185, 129, 0.07) 0%, rgba(15, 23, 42, 0.6) 100%);
+  border: 1px solid rgba(16, 185, 129, 0.22);
+  border-radius: 0.875rem;
+  padding: 1.25rem 1rem;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 140px;
+    height: 45px;
+    background: radial-gradient(ellipse at top, rgba(16, 185, 129, 0.28) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .summary-count {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: #34d399;
+    letter-spacing: -0.03em;
+    line-height: 1;
+    margin-bottom: 0.35rem;
+    text-shadow: 0 0 20px rgba(16, 185, 129, 0.35);
+  }
+
+  .summary-label {
+    color: #94a3b8;
+    font-size: 0.825rem;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+  }
+
+  .substrate-estimate {
+    margin-top: 0.75rem;
+    padding-top: 0.65rem;
+    border-top: 1px solid rgba(16, 185, 129, 0.2);
+    font-size: 0.8rem;
+    color: #6ee7b7;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+
+    strong {
+      color: #a7f3d0;
+      font-weight: 700;
+    }
+  }
+`;
+
+const SubstrateCard = styled.div`
+  background: rgba(255, 255, 255, 0.02);
+  padding: 0.85rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2);
+
+  .volume-row {
+    margin-top: 0.85rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+
+    label {
+      font-size: 0.8rem;
+      color: #94a3b8;
+      font-weight: 500;
+    }
+
+    .input-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+
+      input {
+        width: 70px;
+        padding: 0.35rem 0.5rem;
+        border-radius: 0.5rem;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: rgba(15, 23, 42, 0.8);
+        color: #f8fafc;
+        font-size: 0.85rem;
+        font-weight: 600;
+        text-align: right;
+        outline: none;
+        transition: border-color 0.15s;
+
+        &:focus {
+          border-color: #34d399;
+          box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+        }
+      }
+
+      span {
+        font-size: 0.8rem;
+        color: #64748b;
+        font-weight: 600;
+      }
+    }
+  }
+`;
+
+const GridContainer = styled.div`
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0.75rem;
+  padding: 0.75rem;
+  flex: 1;
+  overflow: auto;
+  background: rgba(10, 15, 29, 0.5);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+`;
+
+const TipBox = styled.div`
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  color: #64748b;
+  text-align: center;
+  padding: 0.4rem 0.75rem;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+
+  strong {
+    color: #94a3b8;
+  }
+`;
+
+const AutoGroupButton = styled.button`
+  background: rgba(16, 185, 129, 0.12);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.28);
+  border-radius: 0.5rem;
+  padding: 0.35rem 0.75rem;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: all 0.2s;
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.1);
+
+  &:hover {
+    background: rgba(16, 185, 129, 0.2);
+    border-color: rgba(16, 185, 129, 0.45);
+    color: #6ee7b7;
+    transform: translateY(-1px);
   }
 `;
 
@@ -332,11 +558,16 @@ const DraggableItem = ({ id, children }: { id: string, children: React.ReactNode
 
 const DroppableContainer = ({ id, children, isOver }: { id: string, children: React.ReactNode, isOver?: boolean }) => {
     const { setNodeRef, isOver: activeIsOver } = useDroppable({ id });
+    const isHovered = isOver || activeIsOver;
     return (
         <div ref={setNodeRef} style={{
-            background: (isOver || activeIsOver) ? 'rgba(56, 189, 248, 0.1)' : 'rgba(15, 23, 42, 0.4)',
-            border: `2px dashed ${(isOver || activeIsOver) ? '#38bdf8' : 'rgba(255, 255, 255, 0.1)'}`,
-            borderRadius: '0.5rem', padding: '1rem', minHeight: '100px', transition: 'all 0.2s'
+            background: isHovered ? 'rgba(56, 189, 248, 0.08)' : 'rgba(15, 23, 42, 0.45)',
+            border: `2px dashed ${isHovered ? '#38bdf8' : 'rgba(255, 255, 255, 0.1)'}`,
+            borderRadius: '0.75rem',
+            padding: '1rem',
+            minHeight: '120px',
+            transition: 'all 0.2s',
+            boxShadow: isHovered ? '0 0 16px rgba(56, 189, 248, 0.15)' : 'inset 0 2px 4px rgba(0, 0, 0, 0.2)'
         }}>
             {children}
         </div>
@@ -733,6 +964,7 @@ export const TransplantModal: React.FC<TransplantModalProps> = ({ isOpen, onClos
     return (
         <Overlay isClosing={isClosing}>
             <Content isClosing={isClosing}>
+                <AmbientGlow />
                 <ModalHeader>
                     <HeaderTop>
                         <HeaderInfo>
@@ -769,7 +1001,9 @@ export const TransplantModal: React.FC<TransplantModalProps> = ({ isOpen, onClos
                             <StepFlexContainer>
                                 <ColumnLeft>
                                     <Section>
-                                        <Label>Sala de Destino</Label>
+                                        <Label>
+                                            <MapPin size={13} style={{ color: '#38bdf8' }} /> Sala de Destino
+                                        </Label>
                                         <CustomSelect
                                             value={destinationId}
                                             onChange={setDestinationId}
@@ -783,8 +1017,10 @@ export const TransplantModal: React.FC<TransplantModalProps> = ({ isOpen, onClos
                                     </Section>
 
                                     <Section>
-                                        <Label>Sustrato (Opcional)</Label>
-                                        <div style={{ background: 'rgba(30, 41, 59, 0.4)', padding: '1rem', borderRadius: '0.5rem', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                                        <Label>
+                                            <Layers size={13} style={{ color: '#34d399' }} /> Sustrato (Opcional)
+                                        </Label>
+                                        <SubstrateCard>
                                             <CustomSelect
                                                 value={substrateId}
                                                 onChange={setSubstrateId}
@@ -796,73 +1032,90 @@ export const TransplantModal: React.FC<TransplantModalProps> = ({ isOpen, onClos
                                                 }))}
                                             />
                                             {substrateId && (
-                                                <div style={{ marginTop: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                                    <label style={{ fontSize: '0.8rem', color: '#94a3b8' }}>Volumen por planta (L)</label>
-                                                    <input
-                                                        type="number"
-                                                        value={volumePerPlant}
-                                                        onChange={e => setVolumePerPlant(Number(e.target.value))}
-                                                        style={{ width: '60px', padding: '0.25rem', borderRadius: '0.25rem', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(15, 23, 42, 0.6)', color: 'white' }}
-                                                        min="0.1"
-                                                        step="0.1"
-                                                    />
+                                                <div className="volume-row">
+                                                    <label>Volumen por planta</label>
+                                                    <div className="input-wrapper">
+                                                        <input
+                                                            type="number"
+                                                            value={volumePerPlant}
+                                                            onChange={e => setVolumePerPlant(Number(e.target.value))}
+                                                            min="0.1"
+                                                            step="0.1"
+                                                        />
+                                                        <span>L</span>
+                                                    </div>
                                                 </div>
                                             )}
-                                        </div>
+                                        </SubstrateCard>
                                     </Section>
 
                                     <Section>
-                                        <Label>Resumen</Label>
-                                        <div style={{ background: 'rgba(74, 222, 128, 0.1)', padding: '1rem', borderRadius: '0.5rem', border: '1px solid rgba(74, 222, 128, 0.2)', textAlign: 'center' }}>
-                                            <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#4ade80' }}>{selectedBatchIds.size}</div>
-                                            <div style={{ color: '#cbd5e1', fontSize: '0.9rem' }}>Plantas seleccionadas</div>
+                                        <Label>
+                                            <Sparkles size={13} style={{ color: '#34d399' }} /> Resumen
+                                        </Label>
+                                        <SummaryCard>
+                                            <div className="summary-count">{selectedBatchIds.size}</div>
+                                            <div className="summary-label">
+                                                {selectedBatchIds.size === 1 ? 'Planta seleccionada' : 'Plantas seleccionadas'}
+                                            </div>
 
                                             {substrateId && selectedBatchIds.size > 0 && (
-                                                <div style={{ marginTop: '0.5rem', paddingTop: '0.5rem', borderTop: '1px solid rgba(74,222,128,0.2)', fontSize: '0.85rem', color: '#86efac' }}>
-                                                    Sustrato estimado: <strong>{(selectedBatchIds.size * volumePerPlant).toFixed(1)}L</strong>
+                                                <div className="substrate-estimate">
+                                                    <span>Sustrato estimado:</span>
+                                                    <strong>{(selectedBatchIds.size * volumePerPlant).toFixed(1)} L</strong>
                                                 </div>
                                             )}
-                                        </div>
+                                        </SummaryCard>
                                     </Section>
                                 </ColumnLeft>
                                 <ColumnRight>
-                                    <Label>Seleccionar Esquejes</Label>
-                                    <TabContainer>
-                                        {cloneMaps.map(map => (
-                                            <Tab key={map.id} $active={activeMapId === map.id} onClick={() => setActiveMapId(map.id)}>
-                                                {map.name}
-                                            </Tab>
-                                        ))}
-                                    </TabContainer>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.65rem', gap: '0.5rem', flexWrap: 'wrap' }}>
+                                        <Label style={{ marginBottom: 0 }}>
+                                            <Sprout size={13} style={{ color: '#34d399' }} /> Seleccionar Esquejes
+                                        </Label>
+                                        {activeMapId && (() => {
+                                            const map = cloneMaps.find(m => m.id === activeMapId);
+                                            if (!map) return null;
+
+                                            const mapBatches = currentRoom.batches?.filter(b => b.clone_map_id === map.id) || [];
+                                            const allSelected = mapBatches.length > 0 && mapBatches.every(b => selectedBatchIds.has(b.id));
+
+                                            return (
+                                                <SelectAllButton onClick={(e) => handleSelectAll(map.id, e)} type="button">
+                                                    {allSelected ? <LucideSquare size={14} /> : <LucideCheckSquare size={14} />}
+                                                    {allSelected ? 'Desmarcar Todos' : 'Seleccionar Todos'}
+                                                </SelectAllButton>
+                                            );
+                                        })()}
+                                    </div>
+
+                                    <div style={{ marginBottom: '0.75rem' }}>
+                                        <TabContainer>
+                                            {cloneMaps.map(map => (
+                                                <Tab key={map.id} $active={activeMapId === map.id} onClick={() => setActiveMapId(map.id)} type="button">
+                                                    {map.name}
+                                                </Tab>
+                                            ))}
+                                        </TabContainer>
+                                    </div>
+
                                     {activeMapId && (() => {
                                         const map = cloneMaps.find(m => m.id === activeMapId);
                                         if (!map) return null;
 
-                                        const mapBatches = currentRoom.batches?.filter(b => b.clone_map_id === map.id) || [];
-                                        const allSelected = mapBatches.length > 0 && mapBatches.every(b => selectedBatchIds.has(b.id));
-
                                         return (
                                             <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
-                                                <div style={{ marginBottom: '0.5rem', display: 'flex', justifyContent: 'flex-end' }}>
-                                                    <SelectAllButton onClick={(e) => handleSelectAll(map.id, e)} type="button">
-                                                        {allSelected ? <LucideSquare size={15} /> : <LucideCheckSquare size={15} />}
-                                                        {allSelected ? 'Desmarcar Todos' : 'Seleccionar Todos'}
-                                                    </SelectAllButton>
-                                                </div>
-                                                <div style={{
-                                                    border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '0.5rem', padding: '0.5rem',
-                                                    flex: 1, overflow: 'auto', background: 'rgba(15, 23, 42, 0.4)'
-                                                }}>
+                                                <GridContainer>
                                                     <EsquejeraGrid
                                                         rows={map.grid_rows} cols={map.grid_columns}
                                                         batches={currentRoom.batches?.filter(b => b.clone_map_id === map.id) || []}
                                                         onBatchClick={handleBatchClick} selectedBatchIds={selectedBatchIds} selectionMode={true}
                                                         onSelectionChange={handleSelectionChange}
                                                     />
-                                                </div>
-                                                <div style={{ marginTop: '0.5rem', fontSize: '0.75rem', color: '#64748b', textAlign: 'center', fontStyle: 'italic' }}>
-                                                    💡 Presiona <strong style={{ color: '#94a3b8' }}>Ctrl</strong> (Windows) o <strong style={{ color: '#94a3b8' }}>Cmd</strong> (Mac) + Click para seleccionar/deseleccionar unidades de forma individual
-                                                </div>
+                                                </GridContainer>
+                                                <TipBox>
+                                                    💡 Presiona <strong>Ctrl</strong> (Windows) o <strong>Cmd</strong> (Mac) + Click para seleccionar/deseleccionar unidades de forma individual
+                                                </TipBox>
                                             </div>
                                         );
                                     })()}
@@ -889,27 +1142,13 @@ export const TransplantModal: React.FC<TransplantModalProps> = ({ isOpen, onClos
                                                 </ShadcnBadge>
                                             </div>
                                             {singles.length > 0 && (
-                                                <button
+                                                <AutoGroupButton
                                                     onClick={autoGroup}
-                                                    style={{
-                                                        background: 'rgba(74, 222, 128, 0.12)',
-                                                        color: '#4ade80',
-                                                        border: '1px solid rgba(74, 222, 128, 0.3)',
-                                                        borderRadius: '0.5rem',
-                                                        padding: '0.35rem 0.75rem',
-                                                        cursor: 'pointer',
-                                                        fontSize: '0.8rem',
-                                                        fontWeight: 600,
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        gap: '0.4rem',
-                                                        transition: 'all 0.2s',
-                                                        boxShadow: '0 0 10px rgba(74, 222, 128, 0.1)'
-                                                    }}
+                                                    type="button"
                                                     title="Agrupar automáticamente por Genética"
                                                 >
                                                     <Sparkles size={13} /> Agrupar Todo
-                                                </button>
+                                                </AutoGroupButton>
                                             )}
                                         </div>
                                         <div style={{ flex: 1, overflowY: 'auto', paddingRight: '0.5rem' }}>
@@ -952,12 +1191,12 @@ export const TransplantModal: React.FC<TransplantModalProps> = ({ isOpen, onClos
                                                         return Object.entries(grouped).map(([geneticName, ids]) => (
                                                             <div key={geneticName} style={{ marginBottom: '1.25rem' }}>
                                                                 <div style={{
-                                                                    fontSize: '0.85rem', fontWeight: 600, color: '#94a3b8',
+                                                                    fontSize: '0.8rem', fontWeight: 600, color: '#94a3b8',
                                                                     marginBottom: '0.5rem', borderBottom: '1px solid rgba(255, 255, 255, 0.08)', paddingBottom: '0.35rem',
                                                                     display: 'flex', alignItems: 'center', justifyContent: 'space-between'
                                                                 }}>
                                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                                                                        <Sprout size={14} color="#4ade80" />
+                                                                        <Sprout size={14} color="#34d399" />
                                                                         <span style={{ color: '#f8fafc' }}>{geneticName}</span>
                                                                     </div>
                                                                     <span style={{ fontSize: '0.75rem', color: '#64748b' }}>{ids.length} esquejes</span>
@@ -972,7 +1211,7 @@ export const TransplantModal: React.FC<TransplantModalProps> = ({ isOpen, onClos
                                                                                     data-draggable-id={id}
                                                                                     onClick={(e) => handleOrganizeClick(id, e)}
                                                                                     style={{
-                                                                                        padding: '0.45rem 0.75rem',
+                                                                                        padding: '0.4rem 0.7rem',
                                                                                         background: isSelected ? 'rgba(56, 189, 248, 0.2)' : 'rgba(30, 41, 59, 0.7)',
                                                                                         border: isSelected ? '1px solid #38bdf8' : '1px solid rgba(255, 255, 255, 0.1)',
                                                                                         borderRadius: '0.5rem',
@@ -984,7 +1223,7 @@ export const TransplantModal: React.FC<TransplantModalProps> = ({ isOpen, onClos
                                                                                         alignItems: 'center',
                                                                                         gap: '0.4rem'
                                                                                     }}>
-                                                                                    <div style={{ width: 6, height: 6, borderRadius: '50%', background: isSelected ? '#38bdf8' : '#4ade80' }} />
+                                                                                    <div style={{ width: 6, height: 6, borderRadius: '50%', background: isSelected ? '#38bdf8' : '#34d399' }} />
                                                                                     <strong style={{ color: isSelected ? '#38bdf8' : '#e2e8f0' }}>{b?.tracking_code}</strong>
                                                                                 </div>
                                                                             </DraggableItem>
@@ -1008,26 +1247,15 @@ export const TransplantModal: React.FC<TransplantModalProps> = ({ isOpen, onClos
                                                     {groups.length} creados
                                                 </ShadcnBadge>
                                             </div>
-                                            <button 
-                                                onClick={addGroup} 
-                                                style={{ 
-                                                    background: 'linear-gradient(135deg, #10b981, #059669)', 
-                                                    color: '#ffffff', 
-                                                    border: 'none', 
-                                                    borderRadius: '0.5rem', 
-                                                    padding: '0.35rem 0.75rem', 
-                                                    cursor: 'pointer', 
-                                                    display: 'flex', 
-                                                    alignItems: 'center', 
-                                                    gap: '0.35rem', 
-                                                    fontWeight: 600,
-                                                    fontSize: '0.8rem',
-                                                    boxShadow: '0 2px 8px rgba(16, 185, 129, 0.3)',
-                                                    transition: 'all 0.2s'
-                                                }}
+                                            <ShadcnButton
+                                                variant="default"
+                                                size="sm"
+                                                onClick={addGroup}
+                                                type="button"
+                                                style={{ height: 32, padding: '0 0.75rem', fontSize: '0.8rem' }}
                                             >
-                                                <LucidePlus size={14} /> Nuevo Grupo
-                                            </button>
+                                                <LucidePlus size={14} style={{ marginRight: 4 }} /> Nuevo Grupo
+                                            </ShadcnButton>
                                         </div>
                                         <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1rem', padding: '0.25rem' }}>
                                             {groups.map(group => (
@@ -1040,7 +1268,7 @@ export const TransplantModal: React.FC<TransplantModalProps> = ({ isOpen, onClos
                                                     boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
                                                 }}>
                                                     <div style={{ 
-                                                        background: 'rgba(30, 41, 59, 0.85)', 
+                                                        background: 'rgba(30, 41, 59, 0.75)', 
                                                         padding: '0.6rem 0.85rem', 
                                                         display: 'flex', 
                                                         justifyContent: 'space-between', 
@@ -1048,18 +1276,21 @@ export const TransplantModal: React.FC<TransplantModalProps> = ({ isOpen, onClos
                                                         borderBottom: '1px solid rgba(255, 255, 255, 0.08)'
                                                     }}>
                                                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1 }}>
-                                                            <Layers size={14} color="#4ade80" />
+                                                            <Layers size={14} color="#34d399" />
                                                             <input
                                                                 value={group.name}
                                                                 onChange={e => setGroups(prev => prev.map(g => g.id === group.id ? { ...g, name: e.target.value } : g))}
                                                                 style={{ 
-                                                                    border: 'none', 
+                                                                    border: '1px solid transparent',
+                                                                    borderRadius: '0.375rem',
+                                                                    padding: '0.2rem 0.4rem',
                                                                     background: 'transparent', 
                                                                     fontWeight: 600, 
-                                                                    fontSize: '0.9rem',
+                                                                    fontSize: '0.875rem',
                                                                     color: '#f8fafc',
                                                                     outline: 'none',
-                                                                    width: '80%'
+                                                                    width: '80%',
+                                                                    transition: 'all 0.15s ease'
                                                                 }}
                                                             />
                                                         </div>
@@ -1067,36 +1298,42 @@ export const TransplantModal: React.FC<TransplantModalProps> = ({ isOpen, onClos
                                                             <button
                                                                 onClick={() => handlePrintLabels(group)}
                                                                 title="Imprimir Etiquetas"
+                                                                type="button"
                                                                 style={{ 
                                                                     color: '#cbd5e1', 
                                                                     border: '1px solid rgba(255, 255, 255, 0.1)', 
                                                                     background: 'rgba(255, 255, 255, 0.05)', 
                                                                     cursor: 'pointer', 
-                                                                    padding: '0.35rem', 
+                                                                    width: 28,
+                                                                    height: 28,
                                                                     borderRadius: '0.375rem',
                                                                     display: 'flex',
                                                                     alignItems: 'center',
-                                                                    justifyContent: 'center'
+                                                                    justifyContent: 'center',
+                                                                    transition: 'all 0.15s ease'
                                                                 }}
                                                             >
-                                                                <LucidePrinter size={14} />
+                                                                <LucidePrinter size={13} />
                                                             </button>
                                                             <button 
                                                                 onClick={() => removeGroup(group.id)} 
                                                                 title="Eliminar Grupo"
+                                                                type="button"
                                                                 style={{ 
                                                                     color: '#f87171', 
-                                                                    border: '1px solid rgba(248, 113, 113, 0.2)', 
+                                                                    border: '1px solid rgba(248, 113, 113, 0.25)', 
                                                                     background: 'rgba(239, 68, 68, 0.1)', 
                                                                     cursor: 'pointer', 
-                                                                    padding: '0.35rem', 
+                                                                    width: 28,
+                                                                    height: 28,
                                                                     borderRadius: '0.375rem',
                                                                     display: 'flex',
                                                                     alignItems: 'center',
-                                                                    justifyContent: 'center'
+                                                                    justifyContent: 'center',
+                                                                    transition: 'all 0.15s ease'
                                                                 }}
                                                             >
-                                                                <LucideTrash2 size={14} />
+                                                                <LucideTrash2 size={13} />
                                                             </button>
                                                         </div>
                                                     </div>
@@ -1116,17 +1353,19 @@ export const TransplantModal: React.FC<TransplantModalProps> = ({ isOpen, onClos
                                                                             onClick={(e) => handleOrganizeClick(id, e)}
                                                                             style={{
                                                                                 padding: '0.35rem 0.65rem',
-                                                                                background: isSelected ? 'rgba(56, 189, 248, 0.2)' : 'rgba(74, 222, 128, 0.15)',
-                                                                                borderRadius: '0.375rem',
+                                                                                background: isSelected ? 'rgba(56, 189, 248, 0.2)' : 'rgba(16, 185, 129, 0.12)',
+                                                                                borderRadius: '0.5rem',
                                                                                 fontSize: '0.75rem', fontWeight: 600,
-                                                                                color: isSelected ? '#38bdf8' : '#4ade80',
+                                                                                color: isSelected ? '#38bdf8' : '#34d399',
                                                                                 cursor: 'grab',
-                                                                                border: isSelected ? '1px solid #38bdf8' : '1px solid rgba(74, 222, 128, 0.3)',
+                                                                                border: isSelected ? '1px solid #38bdf8' : '1px solid rgba(16, 185, 129, 0.28)',
                                                                                 display: 'flex',
                                                                                 alignItems: 'center',
-                                                                                gap: '0.3rem'
+                                                                                gap: '0.3rem',
+                                                                                boxShadow: isSelected ? '0 0 10px rgba(56, 189, 248, 0.25)' : 'none',
+                                                                                transition: 'all 0.15s ease'
                                                                             }}>
-                                                                            <div style={{ width: 5, height: 5, borderRadius: '50%', background: isSelected ? '#38bdf8' : '#4ade80' }} />
+                                                                            <div style={{ width: 5, height: 5, borderRadius: '50%', background: isSelected ? '#38bdf8' : '#34d399' }} />
                                                                             {b?.tracking_code}
                                                                         </div>
                                                                     </DraggableItem>
@@ -1147,22 +1386,22 @@ export const TransplantModal: React.FC<TransplantModalProps> = ({ isOpen, onClos
                 <ModalFooter>
                     {step === 1 ? (
                         <>
-                            <ShadcnButton variant="secondary" onClick={onClose}>
+                            <ShadcnButton variant="secondary" onClick={onClose} type="button">
                                 Cancelar
                             </ShadcnButton>
-                            <ShadcnButton variant="default" onClick={handleNextStep}>
+                            <ShadcnButton variant="default" onClick={handleNextStep} type="button">
                                 Siguiente: Organizar <ChevronRight size={16} style={{ marginLeft: 6 }} />
                             </ShadcnButton>
                         </>
                     ) : (
                         <>
-                            <ShadcnButton variant="secondary" onClick={handleBackStep}>
+                            <ShadcnButton variant="secondary" onClick={handleBackStep} type="button">
                                 <ArrowLeft size={16} style={{ marginRight: 6 }} /> Atrás
                             </ShadcnButton>
-                            <ShadcnButton variant="default" onClick={handleConfirm} disabled={loading}>
+                            <ShadcnButton variant="default" onClick={handleConfirm} disabled={loading} type="button">
                                 {loading ? 'Procesando...' : (
                                     <>
-                                        <Check size={16} style={{ marginRight: 6 }} /> Confirmar Todo
+                                        <Check size={16} style={{ marginRight: 6 }} /> Confirmar Trasplante
                                     </>
                                 )}
                             </ShadcnButton>

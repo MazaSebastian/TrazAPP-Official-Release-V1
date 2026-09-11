@@ -54,6 +54,7 @@ import { Button as ShadcnButton } from '../components/ui/Button';
 import { Badge as ShadcnBadge } from '../components/ui/Badge';
 import { StickyNoteModal } from '../components/StickyNoteModal';
 import { DaySummaryModal } from '../components/DaySummaryModal';
+import { LocationActionModal } from '../components/LocationActionModal';
 import {
   ArrowLeft as LucideArrowLeft,
   Sprout as LucideSprout,
@@ -2118,6 +2119,15 @@ const RoomDetail: React.FC = () => {
         isOpen: false,
         batch: null
     });
+    const [isClosingPlantDetail, setIsClosingPlantDetail] = useState(false);
+
+    const closePlantDetailModal = () => {
+        setIsClosingPlantDetail(true);
+        setTimeout(() => {
+            setIsClosingPlantDetail(false);
+            setPlantDetailModal({ isOpen: false, batch: null });
+        }, 190);
+    };
 
     // Click-to-Fill State (Legacy-keeping for potentially manual, or removing if fully replaced)
     // We will replace handleBatchClick to open modal instead.
@@ -7005,181 +7015,46 @@ const RoomDetail: React.FC = () => {
 
                 {/* Plant Detail Modal (Unified for Map and Stock) */}
                 {
-                    plantDetailModal.isOpen && plantDetailModal.batch && (
+                    (plantDetailModal.isOpen || isClosingPlantDetail) && plantDetailModal.batch && (
                         (room?.type === 'living_soil') ? (
                             <LivingSoilBatchModal
                                 isOpen={plantDetailModal.isOpen}
-                                onClose={() => setPlantDetailModal({ isOpen: false, batch: null })}
+                                onClose={closePlantDetailModal}
                                 batch={plantDetailModal.batch}
                                 onUpdateStage={handleUpdateStage}
                                 onSaveNotes={handleSaveNotes}
                                 onDeleteBatch={(b) => {
+                                    closePlantDetailModal();
                                     setDeleteConfirm({ isOpen: true, batch: b });
-                                    setPlantDetailModal({ isOpen: false, batch: null });
                                 }}
                             />
                         ) : (
-                            <PortalModalOverlay>
-                                <ModalContent style={{ maxWidth: '500px' }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '1rem' }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                            <Sprout size={24} color="#48bb78" />
-                                            <div>
-                                                <h3 style={{ margin: 0, color: '#f8fafc' }}>{plantDetailModal.batch.tracking_code || 'Lote de Stock'}</h3>
-                                                <span style={{ fontSize: '0.9rem', color: '#94a3b8' }}>
-                                                    {plantDetailModal.batch.clone_map_id
-                                                        ? `Ubicación: ${plantDetailModal.batch.grid_position || 'N/A'} `
-                                                        : `En Stock(Disponibles: ${(plantDetailModal.batch as any)._totalQuantity || plantDetailModal.batch.quantity})`
-                                                    }
-                                                </span>
-                                            </div>
-                                        </div>
-                                        <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                            <button onClick={() => setPlantDetailModal({ ...plantDetailModal, isOpen: false })} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#a0aec0' }}>
-                                                ✕
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    <div style={{ background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', padding: '1rem', borderRadius: '0.5rem', marginBottom: '1.5rem' }}>
-                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                                            <div>
-                                                <label style={{ display: 'block', fontSize: '0.75rem', color: '#94a3b8', marginBottom: '0.25rem' }}>Nombre / Genética</label>
-                                                <strong style={{ color: '#f8fafc' }}>{plantDetailModal.batch.genetic?.name || plantDetailModal.batch.name || 'Desconocida'}</strong>
-                                            </div>
-                                            <div>
-                                                <label style={{ display: 'block', fontSize: '0.75rem', color: '#94a3b8', marginBottom: '0.25rem' }}>Fase</label>
-                                                <span style={{
-                                                    display: 'inline-block', padding: '0.1rem 0.5rem', borderRadius: '999px', fontSize: '0.75rem', fontWeight: 700,
-                                                    background: plantDetailModal.batch.stage === 'vegetation' ? 'rgba(74, 222, 128, 0.15)' :
-                                                        (plantDetailModal.batch.stage === 'clones' || plantDetailModal.batch.stage === 'seedling') ? 'rgba(167, 139, 250, 0.15)' :
-                                                            'rgba(56, 189, 248, 0.15)',
-                                                    color: plantDetailModal.batch.stage === 'vegetation' ? '#4ade80' :
-                                                        (plantDetailModal.batch.stage === 'clones' || plantDetailModal.batch.stage === 'seedling') ? 'var(--primary-color, #a855f7)' :
-                                                            '#38bdf8',
-                                                    border: `1px solid ${plantDetailModal.batch.stage === 'vegetation' ? 'rgba(74, 222, 128, 0.3)' :
-                                                        (plantDetailModal.batch.stage === 'clones' || plantDetailModal.batch.stage === 'seedling') ? 'rgba(167, 139, 250, 0.3)' :
-                                                            'rgba(56, 189, 248, 0.3)'}`
-                                                }}>
-                                                    {plantDetailModal.batch.stage === 'vegetation' ? 'Vegetativo' :
-                                                        (plantDetailModal.batch.stage === 'clones' || plantDetailModal.batch.stage === 'seedling') ? 'Plántula / Esqueje' :
-                                                            'Floración'}
-                                                </span>
-                                            </div>
-                                            {plantDetailModal.batch.notes && (
-                                                <div style={{ gridColumn: '1 / -1' }}>
-                                                    <label style={{ display: 'block', fontSize: '0.75rem', color: '#94a3b8', marginBottom: '0.25rem' }}>Notas</label>
-                                                    <p style={{ margin: 0, fontSize: '0.9rem', color: '#cbd5e1' }}>{plantDetailModal.batch.notes}</p>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    <h4 style={{ fontSize: '0.9rem', color: '#cbd5e1', marginBottom: '0.5rem', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', paddingBottom: '0.25rem' }}>
-                                        Acciones
-                                    </h4>
-
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                                        {/* Map Batch specific actions */}
-                                        {plantDetailModal.batch.clone_map_id ? (
-                                            <button
-                                                onClick={() => {
-                                                    setMovingBatch(plantDetailModal.batch);
-                                                    setPlantDetailModal({ ...plantDetailModal, isOpen: false });
-                                                }}
-                                                style={{
-                                                    width: '100%', padding: '0.75rem', borderRadius: '0.375rem', border: '1px solid rgba(56, 189, 248, 0.4)', background: 'rgba(56, 189, 248, 0.1)',
-                                                    color: '#38bdf8', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', cursor: 'pointer', fontWeight: 600,
-                                                    transition: 'all 0.2s'
-                                                }}
-                                                onMouseEnter={e => e.currentTarget.style.background = 'rgba(56, 189, 248, 0.2)'}
-                                                onMouseLeave={e => e.currentTarget.style.background = 'rgba(56, 189, 248, 0.1)'}
-                                            >
-                                                <Move /> Reubicar en otro lugar
-                                            </button>
-                                        ) : (
-                                            /* Stock Batch specific actions */
-                                            <button
-                                                onClick={() => {
-                                                    if (!plantDetailModal.batch) return;
-                                                    setAssignModal({ isOpen: true, batch: plantDetailModal.batch, quantity: (plantDetailModal.batch as any)._totalQuantity || plantDetailModal.batch.quantity || 1 });
-                                                    setPlantDetailModal({ ...plantDetailModal, isOpen: false });
-                                                }}
-                                                style={{
-                                                    width: '100%', padding: '0.75rem', borderRadius: '0.375rem', border: '1px solid rgba(56, 189, 248, 0.4)', background: 'rgba(56, 189, 248, 0.1)',
-                                                    color: '#38bdf8', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', cursor: 'pointer', fontWeight: 600,
-                                                    transition: 'all 0.2s'
-                                                }}
-                                                onMouseEnter={e => e.currentTarget.style.background = 'rgba(56, 189, 248, 0.2)'}
-                                                onMouseLeave={e => e.currentTarget.style.background = 'rgba(56, 189, 248, 0.1)'}
-                                            >
-                                                <ArrowLeft /> Asignar al Mapa
-                                            </button>
-                                        )}
-
-                                        <button
-                                            onClick={() => {
-                                                setNotePromptModal({ isOpen: true, batch: plantDetailModal.batch });
-                                                setPlantDetailModal({ ...plantDetailModal, isOpen: false });
-                                            }}
-                                            style={{
-                                                width: '100%', padding: '0.75rem', borderRadius: '0.375rem', border: '1px solid rgba(253, 224, 71, 0.4)', background: 'rgba(253, 224, 71, 0.1)',
-                                                color: '#fde047', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', cursor: 'pointer', fontWeight: 600,
-                                                transition: 'all 0.2s', marginBottom: '0.5rem'
-                                            }}
-                                            onMouseEnter={e => e.currentTarget.style.background = 'rgba(253, 224, 71, 0.2)'}
-                                            onMouseLeave={e => e.currentTarget.style.background = 'rgba(253, 224, 71, 0.1)'}
-                                        >
-                                            <LucideStickyNote /> Observación
-                                        </button>
-
-                                        <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                            <button
-                                                onClick={() => {
-                                                    if (plantDetailModal.batch) handleOpenEditBatch(plantDetailModal.batch);
-                                                }}
-                                                style={{
-                                                    flex: 1, padding: '0.75rem', borderRadius: '0.375rem', border: '1px solid rgba(255, 255, 255, 0.1)', background: 'rgba(255, 255, 255, 0.05)',
-                                                    color: '#cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', cursor: 'pointer', fontWeight: 600,
-                                                    transition: 'all 0.2s'
-                                                }}
-                                                onMouseEnter={e => {
-                                                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
-                                                    e.currentTarget.style.color = '#f8fafc';
-                                                }}
-                                                onMouseLeave={e => {
-                                                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
-                                                    e.currentTarget.style.color = '#cbd5e1';
-                                                }}
-                                            >
-                                                <Pencil /> Editar
-                                            </button>
-
-                                            <button
-                                                onClick={() => {
-                                                    setDeleteConfirm({ isOpen: true, batch: plantDetailModal.batch });
-                                                    setPlantDetailModal({ ...plantDetailModal, isOpen: false });
-                                                }}
-                                                style={{
-                                                    flex: 1, padding: '0.75rem', borderRadius: '0.375rem', border: '1px solid rgba(239, 68, 68, 0.4)', background: 'rgba(239, 68, 68, 0.1)',
-                                                    color: '#ef4444', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', cursor: 'pointer', fontWeight: 600,
-                                                    transition: 'all 0.2s'
-                                                }}
-                                                onMouseEnter={e => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.2)'}
-                                                onMouseLeave={e => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)'}
-                                            >
-                                                <LucideTrash2 /> Eliminar
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    <div style={{ marginTop: '1.5rem', textAlign: 'right' }}>
-                                        <ActionButton onClick={() => setPlantDetailModal({ ...plantDetailModal, isOpen: false })}>
-                                            Cerrar
-                                        </ActionButton>
-                                    </div>
-                                </ModalContent>
-                            </PortalModalOverlay>
+                            <LocationActionModal
+                                isOpen={plantDetailModal.isOpen}
+                                isClosing={isClosingPlantDetail}
+                                onClose={closePlantDetailModal}
+                                batch={plantDetailModal.batch}
+                                onRelocate={(b) => {
+                                    closePlantDetailModal();
+                                    setMovingBatch(b);
+                                }}
+                                onAssignToMap={(b) => {
+                                    closePlantDetailModal();
+                                    setAssignModal({ isOpen: true, batch: b, quantity: (b as any)._totalQuantity || b.quantity || 1 });
+                                }}
+                                onAddObservation={(b) => {
+                                    closePlantDetailModal();
+                                    setNotePromptModal({ isOpen: true, batch: b });
+                                }}
+                                onEdit={(b) => {
+                                    closePlantDetailModal();
+                                    handleOpenEditBatch(b);
+                                }}
+                                onDelete={(b) => {
+                                    closePlantDetailModal();
+                                    setDeleteConfirm({ isOpen: true, batch: b });
+                                }}
+                            />
                         )
                     )
                 }
