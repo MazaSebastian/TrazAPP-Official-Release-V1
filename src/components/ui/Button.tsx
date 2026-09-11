@@ -10,38 +10,59 @@ const getVariantStyles = (variant: ButtonVariant) => {
       return css`
         background: linear-gradient(135deg, #10b981 0%, #059669 100%);
         color: #ffffff;
-        border: 1px solid rgba(255, 255, 255, 0.15);
-        box-shadow: 0 2px 10px rgba(16, 185, 129, 0.35);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 2px 8px rgba(16, 185, 129, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.25);
 
         &:hover:not(:disabled) {
           background: linear-gradient(135deg, #059669 0%, #047857 100%);
-          box-shadow: 0 4px 16px rgba(16, 185, 129, 0.5);
+          box-shadow: 0 4px 14px rgba(16, 185, 129, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.3);
           transform: translateY(-1px);
+        }
+
+        &:active:not(:disabled) {
+          transform: translateY(0);
         }
       `;
     case 'secondary':
       return css`
-        background: rgba(30, 41, 59, 0.7);
+        background: rgba(255, 255, 255, 0.05);
         color: #f1f5f9;
-        border: 1px solid rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        backdrop-filter: blur(12px);
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.06);
 
         &:hover:not(:disabled) {
-          background: rgba(51, 65, 85, 0.8);
+          background: rgba(255, 255, 255, 0.1);
           color: #ffffff;
-          border-color: rgba(255, 255, 255, 0.15);
+          border-color: rgba(255, 255, 255, 0.22);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.1);
           transform: translateY(-1px);
+        }
+
+        &:active:not(:disabled) {
+          transform: translateY(0);
+          background: rgba(255, 255, 255, 0.04);
         }
       `;
     case 'outline':
       return css`
-        background: transparent;
+        background: rgba(15, 23, 42, 0.35);
         color: #cbd5e1;
-        border: 1px solid rgba(255, 255, 255, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.13);
+        backdrop-filter: blur(8px);
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.04);
 
         &:hover:not(:disabled) {
-          background: rgba(255, 255, 255, 0.05);
+          background: rgba(255, 255, 255, 0.07);
           color: #ffffff;
-          border-color: rgba(255, 255, 255, 0.25);
+          border-color: rgba(255, 255, 255, 0.24);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+          transform: translateY(-1px);
+        }
+
+        &:active:not(:disabled) {
+          transform: translateY(0);
+          background: transparent;
         }
       `;
     case 'ghost':
@@ -74,10 +95,11 @@ const getSizeStyles = (size: ButtonSize) => {
   switch (size) {
     case 'sm':
       return css`
-        padding: 0.35rem 0.75rem;
-        font-size: 0.78rem;
-        border-radius: 8px;
-        gap: 0.35rem;
+        padding: 0.42rem 0.85rem;
+        font-size: 0.8125rem;
+        font-weight: 600;
+        border-radius: 9px;
+        gap: 0.45rem;
       `;
     case 'lg':
       return css`

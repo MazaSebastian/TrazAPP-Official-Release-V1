@@ -42,6 +42,7 @@ import { TrazAppDeviceDetailModal } from '../components/TrazAppDeviceDetailModal
 import { DashboardKpiRibbon } from '../components/Dashboard/DashboardKpiRibbon';
 import { Badge } from '../components/ui/Badge';
 import { Button as ShadcnButton } from '../components/ui/Button';
+import { StickyNote, Printer, Sprout } from 'lucide-react';
 
 // --- Styled Components (Premium Eco-Tech Theme) ---
 
@@ -1444,20 +1445,20 @@ const Dashboard: React.FC = () => {
             onClick={() => setIsStickyModalOpen(true)}
             title="Pegar nueva nota rápida"
           >
-            <FaStickyNote /> Nueva Nota
+            <StickyNote size={14} style={{ color: '#fbbf24', strokeWidth: 2.2 }} /> Nueva Nota
           </ShadcnButton>
           <ShadcnButton
-            variant="outline"
+            variant="secondary"
             size="sm"
             onClick={() => handlePrintChecklist()}
             className="no-print"
             title="Descargar Planilla de Operarios"
           >
-            <FaPrint /> Imprimir Checklist
+            <Printer size={14} style={{ color: '#cbd5e1', strokeWidth: 2.2 }} /> Imprimir Checklist
           </ShadcnButton>
           <Link to="/crops" style={{ textDecoration: 'none' }}>
             <ShadcnButton size="sm">
-              <FaSeedling /> Ver Cultivos
+              <Sprout size={14} style={{ strokeWidth: 2.2 }} /> Ver Cultivos
             </ShadcnButton>
           </Link>
         </div>
@@ -1747,34 +1748,15 @@ const Dashboard: React.FC = () => {
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
               <SectionTitle style={{ marginBottom: 0 }}><FaExclamationTriangle /> Alertas & Tareas</SectionTitle>
-              <button
+              <ShadcnButton
+                variant="secondary"
+                size="sm"
                 onClick={() => handlePrintChecklist()}
                 className="no-print"
                 title="Descargar Planilla de Operarios"
-                style={{
-                  background: 'rgba(15, 23, 42, 0.4)',
-                  backdropFilter: 'blur(8px)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  borderRadius: '0.5rem',
-                  padding: '0.4rem 0.75rem',
-                  fontSize: '0.8rem',
-                  color: '#cbd5e1',
-                  fontWeight: 600,
-                  display: 'flex', alignItems: 'center', gap: '0.5rem',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s'
-                }}
-                onMouseEnter={e => {
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
-                  e.currentTarget.style.color = '#f8fafc';
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.background = 'rgba(15, 23, 42, 0.4)';
-                  e.currentTarget.style.color = '#cbd5e1';
-                }}
               >
-                <FaPrint /> Imprimir Checklist
-              </button>
+                <Printer size={14} style={{ color: '#cbd5e1', strokeWidth: 2.2 }} /> Imprimir Checklist
+              </ShadcnButton>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
               {alerts.map(alert => (
