@@ -2,18 +2,19 @@ import React, { useState } from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import { 
-  FaClipboardList, 
-  FaPlus, 
-  FaDownload,
-  FaBuilding,
-  FaUser,
-  FaCalendarAlt,
-  FaExclamationTriangle,
-  FaCheckCircle,
-  FaClock,
-  FaArrowLeft,
-  FaTimesCircle
-} from 'react-icons/fa';
+  ClipboardList, 
+  Plus, 
+  Download,
+  Building2,
+  User,
+  Calendar,
+  AlertTriangle,
+  CheckCircle2,
+  Clock,
+  ArrowLeft,
+  XCircle
+} from 'lucide-react';
+import { Button } from '../components/ui';
 
 // Interfaces
 interface Order {
@@ -32,24 +33,28 @@ interface Order {
 
 // Styled Components
 const OrdersContainer = styled.div`
-  padding: 2rem;
+  padding: 2rem 2.5rem;
   min-height: 100vh;
-  background: #f8fafc;
+  background: transparent;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
   max-width: 1200px;
   margin: 0 auto;
+  color: #f8fafc;
 `;
 
 const HeaderSection = styled.div`
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(16px);
   color: white;
-  padding: 2rem;
-  border-radius: 1rem;
+  padding: 1.75rem 2rem;
+  border-radius: 1.25rem;
   margin-bottom: 2rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
   width: 100%;
   max-width: 1000px;
 `;
@@ -58,18 +63,24 @@ const HeaderContent = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
 `;
 
 const HeaderLeft = styled.div`
   h1 {
-    font-size: 2rem;
-    font-weight: 700;
-    margin-bottom: 0.5rem;
+    font-size: clamp(1.5rem, 3vw, 2.25rem);
+    font-weight: 800;
+    margin-bottom: 0.35rem;
+    background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
   }
   
   p {
-    font-size: 1rem;
-    opacity: 0.9;
+    font-size: 0.95rem;
+    color: #94a3b8;
+    margin: 0;
   }
 `;
 
@@ -77,28 +88,6 @@ const HeaderRight = styled.div`
   display: flex;
   align-items: center;
   gap: 1rem;
-`;
-
-const BackButton = styled.button`
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  padding: 0.375rem 0.75rem;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: white;
-  border-radius: 0.375rem;
-  cursor: pointer;
-  transition: all 0.2s;
-  font-size: 0.75rem;
-  font-weight: 400;
-  opacity: 0.8;
-  
-  &:hover {
-    background: rgba(255, 255, 255, 0.2);
-    opacity: 1;
-    transform: translateY(-1px);
-  }
 `;
 
 const MainContent = styled.div`
@@ -110,10 +99,12 @@ const MainContent = styled.div`
 `;
 
 const ControlsSection = styled.div`
-  background: white;
-  border-radius: 1rem;
-  padding: 2rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(16px);
+  border-radius: 1.25rem;
+  padding: 1.75rem 2rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.35);
   width: 100%;
   max-width: 1000px;
 `;
@@ -132,21 +123,23 @@ const FormGroup = styled.div`
   
   label {
     font-weight: 600;
-    color: #374151;
+    color: #cbd5e1;
     font-size: 0.8rem;
   }
   
   input, select {
-    padding: 0.625rem;
-    border: 1px solid #d1d5db;
+    padding: 0.625rem 0.85rem;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(15, 23, 42, 0.6);
+    color: #f8fafc;
     border-radius: 0.5rem;
     font-size: 0.875rem;
-    transition: border-color 0.2s;
+    transition: all 0.2s;
     
     &:focus {
       outline: none;
-      border-color: #667eea;
-      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      border-color: #10b981;
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
     }
   }
 `;
@@ -157,77 +150,34 @@ const ActionButtons = styled.div`
   justify-content: flex-end;
 `;
 
-const ActionButton = styled.button<{ variant?: 'primary' | 'secondary' | 'success' }>`
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.625rem 1.25rem;
-  border: none;
-  border-radius: 0.5rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  font-size: 0.8rem;
-  
-  ${props => {
-    switch (props.variant) {
-      case 'primary':
-        return `
-          background: #667eea;
-          color: white;
-          &:hover {
-            background: #5a67d8;
-            transform: translateY(-1px);
-          }
-        `;
-      case 'success':
-        return `
-          background: #10b981;
-          color: white;
-          &:hover {
-            background: #059669;
-            transform: translateY(-1px);
-          }
-        `;
-      default:
-        return `
-          background: #f3f4f6;
-          color: #374151;
-          &:hover {
-            background: #e5e7eb;
-            transform: translateY(-1px);
-          }
-        `;
-    }
-  }}
-`;
-
 const OrdersGrid = styled.div`
   display: grid;
-  gap: 0.75rem;
+  gap: 1rem;
   width: 100%;
-  min-height: 0;
-  flex: 1;
+  max-width: 1000px;
 `;
 
 const OrderCard = styled.div<{ status: string }>`
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 1rem;
-  padding: 1.25rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(16px);
+  border-radius: 1.25rem;
+  padding: 1.5rem;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-left: 4px solid ${props => {
     switch (props.status) {
       case 'received': return '#f59e0b';
-      case 'in-progress': return '#3b82f6';
+      case 'in-progress': return '#38bdf8';
       case 'completed': return '#10b981';
-      default: return '#6b7280';
+      default: return '#64748b';
     }
   }};
   transition: all 0.2s;
   
   &:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 14px 30px -4px rgba(0, 0, 0, 0.45);
+    border-color: rgba(255, 255, 255, 0.15);
   }
 `;
 
@@ -236,41 +186,49 @@ const OrderHeader = styled.div`
   justify-content: space-between;
   align-items: flex-start;
   margin-bottom: 0.75rem;
+  gap: 1rem;
 `;
 
 const OrderInfo = styled.div`
   flex: 1;
   
   .order-title {
-    font-size: 1rem;
-    font-weight: 600;
-    color: #1e293b;
-    margin-bottom: 0.375rem;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #f8fafc;
+    margin-bottom: 0.5rem;
   }
   
   .order-meta {
     display: flex;
     gap: 0.75rem;
     font-size: 0.8rem;
-    color: #6b7280;
-    margin-bottom: 0.375rem;
+    color: #94a3b8;
+    margin-bottom: 0.5rem;
+    flex-wrap: wrap;
+
+    span {
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
   }
   
   .order-description {
-    color: #374151;
-    font-size: 0.8rem;
-    line-height: 1.4;
+    color: #cbd5e1;
+    font-size: 0.85rem;
+    line-height: 1.5;
   }
 `;
 
 const OrderStatus = styled.div<{ status: string }>`
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  border-radius: 2rem;
+  gap: 0.4rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 9999px;
   font-size: 0.75rem;
-  font-weight: 600;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   
@@ -278,23 +236,27 @@ const OrderStatus = styled.div<{ status: string }>`
     switch (props.status) {
       case 'received':
         return `
-          background: #fef3c7;
-          color: #92400e;
+          background: rgba(245, 158, 11, 0.15);
+          color: #fbbf24;
+          border: 1px solid rgba(245, 158, 11, 0.3);
         `;
       case 'in-progress':
         return `
-          background: #dbeafe;
-          color: #1e40af;
+          background: rgba(56, 189, 248, 0.15);
+          color: #38bdf8;
+          border: 1px solid rgba(56, 189, 248, 0.3);
         `;
       case 'completed':
         return `
-          background: #d1fae5;
-          color: #065f46;
+          background: rgba(16, 185, 129, 0.15);
+          color: #34d399;
+          border: 1px solid rgba(16, 185, 129, 0.3);
         `;
       default:
         return `
-          background: #f3f4f6;
-          color: #374151;
+          background: rgba(148, 163, 184, 0.15);
+          color: #cbd5e1;
+          border: 1px solid rgba(148, 163, 184, 0.3);
         `;
     }
   }}
@@ -303,9 +265,9 @@ const OrderStatus = styled.div<{ status: string }>`
 const OrderActions = styled.div`
   display: flex;
   gap: 0.5rem;
-  margin-top: 0.75rem;
-  padding-top: 0.75rem;
-  border-top: 1px solid #e5e7eb;
+  margin-top: 1rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
   justify-content: space-between;
   align-items: center;
 `;
@@ -314,24 +276,24 @@ const OrderMetaInfo = styled.div`
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-size: 0.7rem;
-  color: #6b7280;
+  font-size: 0.75rem;
+  color: #94a3b8;
   
   .last-updated {
     display: flex;
     align-items: center;
-    gap: 0.25rem;
+    gap: 0.35rem;
   }
 `;
 
 const StatusBadge = styled.div<{ status: string }>`
   display: flex;
   align-items: center;
-  gap: 0.25rem;
-  padding: 0.2rem 0.625rem;
-  border-radius: 1rem;
+  gap: 0.3rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 9999px;
   font-size: 0.7rem;
-  font-weight: 600;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   
@@ -339,23 +301,27 @@ const StatusBadge = styled.div<{ status: string }>`
     switch (props.status) {
       case 'received':
         return `
-          background: #fef3c7;
-          color: #92400e;
+          background: rgba(245, 158, 11, 0.15);
+          color: #fbbf24;
+          border: 1px solid rgba(245, 158, 11, 0.3);
         `;
       case 'in-progress':
         return `
-          background: #dbeafe;
-          color: #1e40af;
+          background: rgba(56, 189, 248, 0.15);
+          color: #38bdf8;
+          border: 1px solid rgba(56, 189, 248, 0.3);
         `;
       case 'completed':
         return `
-          background: #d1fae5;
-          color: #065f46;
+          background: rgba(16, 185, 129, 0.15);
+          color: #34d399;
+          border: 1px solid rgba(16, 185, 129, 0.3);
         `;
       default:
         return `
-          background: #f3f4f6;
-          color: #374151;
+          background: rgba(148, 163, 184, 0.15);
+          color: #cbd5e1;
+          border: 1px solid rgba(148, 163, 184, 0.3);
         `;
     }
   }}
@@ -363,26 +329,27 @@ const StatusBadge = styled.div<{ status: string }>`
 
 const EmptyState = styled.div`
   text-align: center;
-  padding: 2rem;
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 1rem;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  padding: 3rem 2rem;
+  background: rgba(15, 23, 42, 0.6);
+  border-radius: 1.25rem;
+  border: 1px dashed rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(12px);
   width: 100%;
   
   .empty-icon {
     font-size: 2.5rem;
-    color: #9ca3af;
+    color: #64748b;
     margin-bottom: 0.75rem;
   }
   
   h3 {
-    color: #374151;
-    margin-bottom: 0.375rem;
+    color: #f8fafc;
+    margin-bottom: 0.5rem;
   }
   
   p {
-    color: #6b7280;
-    margin-bottom: 1rem;
+    color: #94a3b8;
+    margin-bottom: 1.25rem;
   }
 `;
 
@@ -458,8 +425,6 @@ const OrdersPage: React.FC = () => {
     priority: 'medium' as 'low' | 'medium' | 'high'
   });
 
-
-
   const handleCreateOrder = () => {
     const order: Order = {
       id: Date.now().toString(),
@@ -468,15 +433,11 @@ const OrdersPage: React.FC = () => {
       item: newOrder.item,
       quantity: newOrder.quantity,
       description: newOrder.description,
-      status: 'received', // Estado inicial - será gestionado por el área técnica
+      status: 'received',
       priority: newOrder.priority,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
-    
-    // TODO: Enviar pedido al backend para que el área técnica lo reciba
-    // En el futuro, esto se integrará con el sistema del área técnica
-    console.log('Nuevo pedido creado:', order);
     
     setOrders(prev => [order, ...prev]);
     setNewOrder({
@@ -504,10 +465,10 @@ const OrdersPage: React.FC = () => {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'received': return <FaExclamationTriangle />;
-      case 'in-progress': return <FaClock />;
-      case 'completed': return <FaCheckCircle />;
-      default: return <FaTimesCircle />;
+      case 'received': return <AlertTriangle size={14} />;
+      case 'in-progress': return <Clock size={14} />;
+      case 'completed': return <CheckCircle2 size={14} />;
+      default: return <XCircle size={14} />;
     }
   };
 
@@ -538,31 +499,24 @@ const OrdersPage: React.FC = () => {
             <p>Solicitudes al departamento técnico</p>
           </HeaderLeft>
           <HeaderRight>
-            <BackButton onClick={() => navigate('/dashboard')} title="Volver al Dashboard">
-              <FaArrowLeft />
-              Dashboard
-            </BackButton>
+            <Button 
+              size="sm"
+              variant="secondary"
+              onClick={() => navigate('/dashboard')} 
+              title="Volver al Dashboard"
+              className="flex items-center gap-1.5"
+            >
+              <ArrowLeft size={14} /> Dashboard
+            </Button>
           </HeaderRight>
         </HeaderContent>
       </HeaderSection>
 
       <MainContent>
         <ControlsSection>
-          <div style={{ 
-            background: 'rgba(102, 126, 234, 0.1)', 
-            border: '1px solid rgba(102, 126, 234, 0.2)', 
-            borderRadius: '0.5rem', 
-            padding: '0.75rem', 
-            marginBottom: '1rem',
-            color: '#1e40af',
-            fontSize: '0.8rem'
-          }}>
-            <strong>ℹ️ Información:</strong> Los estados de los pedidos son gestionados exclusivamente por el área técnica. 
-            Los DJs pueden crear pedidos y hacer seguimiento de su estado, pero no pueden modificarlo.
-          </div>
           <ControlsGrid>
             <FormGroup>
-              <label>Salón</label>
+              <label>Filtrar por Salón</label>
               <select 
                 value={selectedSalon} 
                 onChange={(e) => setSelectedSalon(e.target.value)}
@@ -574,9 +528,9 @@ const OrdersPage: React.FC = () => {
                 <option value="Belgrano">Belgrano</option>
               </select>
             </FormGroup>
-            
+
             <FormGroup>
-              <label>Estado</label>
+              <label>Filtrar por Estado</label>
               <select 
                 value={selectedStatus} 
                 onChange={(e) => setSelectedStatus(e.target.value)}
@@ -587,9 +541,9 @@ const OrdersPage: React.FC = () => {
                 <option value="completed">Completado</option>
               </select>
             </FormGroup>
-            
+
             <FormGroup>
-              <label>Prioridad</label>
+              <label>Filtrar por Prioridad</label>
               <select 
                 value={selectedPriority} 
                 onChange={(e) => setSelectedPriority(e.target.value)}
@@ -600,12 +554,12 @@ const OrdersPage: React.FC = () => {
                 <option value="high">Alta</option>
               </select>
             </FormGroup>
-            
+
             <FormGroup>
               <label>Buscar</label>
-              <input
-                type="text"
-                placeholder="Buscar por item, DJ o salón..."
+              <input 
+                type="text" 
+                placeholder="Buscar por item, DJ..." 
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -613,23 +567,22 @@ const OrdersPage: React.FC = () => {
           </ControlsGrid>
           
           <ActionButtons>
-            <ActionButton variant="secondary">
-              <FaDownload />
-              Exportar
-            </ActionButton>
-            <ActionButton 
-              variant="primary" 
+            <Button variant="secondary" className="flex items-center gap-2">
+              <Download size={15} /> Exportar
+            </Button>
+            <Button 
+              variant="default" 
               onClick={() => setShowNewOrderForm(!showNewOrderForm)}
+              className="flex items-center gap-2"
             >
-              <FaPlus />
-              Nuevo Pedido
-            </ActionButton>
+              <Plus size={15} /> Nuevo Pedido
+            </Button>
           </ActionButtons>
         </ControlsSection>
 
         {showNewOrderForm && (
           <ControlsSection>
-            <h3 style={{ marginBottom: '0.75rem', color: '#1e293b', fontSize: '1.1rem' }}>Nuevo Pedido</h3>
+            <h3 style={{ marginBottom: '1rem', color: '#f8fafc', fontSize: '1.15rem', fontWeight: 700 }}>Nuevo Pedido</h3>
             <ControlsGrid>
               <FormGroup>
                 <label>Salón</label>
@@ -644,42 +597,42 @@ const OrdersPage: React.FC = () => {
                   <option value="Belgrano">Belgrano</option>
                 </select>
               </FormGroup>
-              
+
               <FormGroup>
-                <label>DJ</label>
-                <input
-                  type="text"
-                  placeholder="Nombre del DJ"
+                <label>DJ / Solicitante</label>
+                <input 
+                  type="text" 
+                  placeholder="Nombre del DJ" 
                   value={newOrder.dj}
                   onChange={(e) => setNewOrder(prev => ({ ...prev, dj: e.target.value }))}
                 />
               </FormGroup>
-              
+
               <FormGroup>
-                <label>Item</label>
-                <input
-                  type="text"
-                  placeholder="Ej: Líquido de humo, Chispas de backup..."
+                <label>Item / Material</label>
+                <input 
+                  type="text" 
+                  placeholder="Ej: Líquido de humo, cables..." 
                   value={newOrder.item}
                   onChange={(e) => setNewOrder(prev => ({ ...prev, item: e.target.value }))}
                 />
               </FormGroup>
-              
+
               <FormGroup>
                 <label>Cantidad</label>
-                <input
-                  type="number"
-                  min="1"
+                <input 
+                  type="number" 
+                  min="1" 
                   value={newOrder.quantity}
-                  onChange={(e) => setNewOrder(prev => ({ ...prev, quantity: parseInt(e.target.value) }))}
+                  onChange={(e) => setNewOrder(prev => ({ ...prev, quantity: parseInt(e.target.value) || 1 }))}
                 />
               </FormGroup>
-              
+
               <FormGroup>
                 <label>Prioridad</label>
                 <select 
                   value={newOrder.priority} 
-                  onChange={(e) => setNewOrder(prev => ({ ...prev, priority: e.target.value as 'low' | 'medium' | 'high' }))}
+                  onChange={(e) => setNewOrder(prev => ({ ...prev, priority: e.target.value as any }))}
                 >
                   <option value="low">Baja</option>
                   <option value="medium">Media</option>
@@ -687,35 +640,31 @@ const OrdersPage: React.FC = () => {
                 </select>
               </FormGroup>
             </ControlsGrid>
-            
-            <FormGroup>
-              <label>Descripción</label>
-              <textarea
-                placeholder="Descripción detallada del pedido..."
+
+            <FormGroup style={{ marginBottom: '1rem' }}>
+              <label>Descripción / Observaciones</label>
+              <input 
+                type="text" 
+                placeholder="Detalles adicionales del pedido..." 
                 value={newOrder.description}
                 onChange={(e) => setNewOrder(prev => ({ ...prev, description: e.target.value }))}
-                style={{
-                  padding: '0.625rem',
-                  border: '1px solid #d1d5db',
-                  borderRadius: '0.5rem',
-                  fontSize: '0.8rem',
-                  minHeight: '80px',
-                  resize: 'vertical'
-                }}
               />
             </FormGroup>
-            
+
             <ActionButtons>
-              <ActionButton variant="secondary" onClick={() => setShowNewOrderForm(false)}>
+              <Button 
+                variant="secondary" 
+                onClick={() => setShowNewOrderForm(false)}
+              >
                 Cancelar
-              </ActionButton>
-              <ActionButton 
-                variant="success" 
+              </Button>
+              <Button 
+                variant="default" 
                 onClick={handleCreateOrder}
                 disabled={!newOrder.salon || !newOrder.dj || !newOrder.item}
               >
-                Crear Pedido
-              </ActionButton>
+                Guardar Pedido
+              </Button>
             </ActionButtons>
           </ControlsSection>
         )}
@@ -726,11 +675,11 @@ const OrdersPage: React.FC = () => {
               <OrderCard key={order.id} status={order.status}>
                 <OrderHeader>
                   <OrderInfo>
-                    <div className="order-title">{order.item}</div>
+                    <div className="order-title">{order.item} ({order.quantity} un.)</div>
                     <div className="order-meta">
-                      <span><FaBuilding /> {order.salon}</span>
-                      <span><FaUser /> {order.dj}</span>
-                      <span><FaCalendarAlt /> {new Date(order.createdAt).toLocaleDateString()}</span>
+                      <span><Building2 size={13} /> {order.salon}</span>
+                      <span><User size={13} /> {order.dj}</span>
+                      <span><Calendar size={13} /> {new Date(order.createdAt).toLocaleDateString()}</span>
                       <span>Prioridad: {getPriorityLabel(order.priority)}</span>
                     </div>
                     <div className="order-description">
@@ -746,8 +695,8 @@ const OrdersPage: React.FC = () => {
                 <OrderActions>
                   <OrderMetaInfo>
                     <div className="last-updated">
-                      <FaCalendarAlt />
-                      Última actualización: {new Date(order.updatedAt).toLocaleDateString()} {new Date(order.updatedAt).toLocaleTimeString()}
+                      <Calendar size={12} />
+                      Última actualización: {new Date(order.updatedAt).toLocaleDateString()} {new Date(order.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </div>
                   </OrderMetaInfo>
                   <StatusBadge status={order.status}>
@@ -760,14 +709,13 @@ const OrdersPage: React.FC = () => {
           ) : (
             <EmptyState>
               <div className="empty-icon">
-                <FaClipboardList />
+                <ClipboardList size={40} className="mx-auto text-slate-500" />
               </div>
               <h3>No hay pedidos</h3>
               <p>No se encontraron pedidos con los filtros aplicados</p>
-              <ActionButton variant="primary" onClick={() => setShowNewOrderForm(true)}>
-                <FaPlus />
-                Crear Primer Pedido
-              </ActionButton>
+              <Button variant="default" onClick={() => setShowNewOrderForm(true)} className="flex items-center gap-2 mx-auto">
+                <Plus size={15} /> Crear Primer Pedido
+              </Button>
             </EmptyState>
           )}
         </OrdersGrid>

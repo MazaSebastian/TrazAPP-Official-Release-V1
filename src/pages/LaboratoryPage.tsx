@@ -8,7 +8,7 @@ import { ExtractionForm } from '../components/Extractions/ExtractionForm';
 import { ExtractionDetails } from '../components/Extractions/ExtractionDetails';
 import { ConfirmationModal } from '../components/ConfirmationModal';
 
-import { FaFlask, FaPlus, FaCalendarAlt, FaWeightHanging, FaTrash, FaEye, FaEdit, FaLeaf, FaBoxOpen } from 'react-icons/fa';
+import { FlaskConical, Plus, Calendar, Scale, Trash2, Eye, Edit3, Leaf, PackageCheck } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useOrganization } from '../context/OrganizationContext';
@@ -145,15 +145,15 @@ export const LaboratoryPage: React.FC = () => {
             <div style={{ filter: planLevel < 2 ? 'blur(4px)' : 'none', pointerEvents: planLevel < 2 ? 'none' : 'auto', userSelect: planLevel < 2 ? 'none' : 'auto', opacity: planLevel < 2 ? 0.5 : 1 }}>
                 <Header>
                     <Title>
-                        <FaFlask size={24} color="#805ad5" />
+                        <FlaskConical size={26} className="text-purple-400" />
                         Laboratorio
                     </Title>
                     <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }} className="mobile-center-tabs">
                         <TabButton $active={activeTab === 'raw'} onClick={() => setActiveTab('raw')}>
-                            <FaLeaf /> Materia Prima ({rawMaterials.length})
+                            <Leaf size={15} /> Materia Prima ({rawMaterials.length})
                         </TabButton>
                         <TabButton $active={activeTab === 'processed'} onClick={() => setActiveTab('processed')}>
-                            <FaBoxOpen /> Extracciones ({extractions.length})
+                            <PackageCheck size={15} /> Extracciones ({extractions.length})
                         </TabButton>
                     </div>
                 </Header>
@@ -168,13 +168,13 @@ export const LaboratoryPage: React.FC = () => {
                             <Grid>
                                 {rawMaterials.length === 0 ? (
                                     <EmptyState>
-                                        <FaLeaf size={48} color="#cbd5e0" />
+                                        <Leaf size={48} className="text-slate-500" strokeWidth={1.5} />
                                         <p>No hay materia prima en el laboratorio.</p>
                                         <small>Envía items desde la sección de Stock.</small>
                                     </EmptyState>
                                 ) : (
                                     rawMaterials.map(batch => (
-                                        <Card key={batch.id} style={{ borderColor: '#805ad5' }}>
+                                        <Card key={batch.id} style={{ borderColor: 'rgba(168, 85, 247, 0.4)' }}>
                                             <CardContent>
                                                 <CardHeader>
                                                     <Badge>{batch.quality_grade}</Badge>
@@ -186,7 +186,7 @@ export const LaboratoryPage: React.FC = () => {
                                                         <span>{batch.batch_code}</span>
                                                     </div>
                                                     <div className="yield">
-                                                        <YieldValue style={{ color: '#805ad5' }}>{Number(batch.current_weight).toFixed(2)}g</YieldValue>
+                                                        <YieldValue style={{ color: '#c084fc' }}>{Number(batch.current_weight).toFixed(2)}g</YieldValue>
                                                         <small>Disponible</small>
                                                     </div>
                                                 </MainInfo>
@@ -196,7 +196,7 @@ export const LaboratoryPage: React.FC = () => {
                                             </CardContent>
                                             <CardFooter>
                                                 <ActionButton onClick={() => handleProcess(batch)} className="process" style={{ width: '100%', justifyContent: 'center', background: '#805ad5', color: 'white', borderColor: 'transparent' }}>
-                                                    <FaFlask /> Procesar / Extraer
+                                                    <FlaskConical size={14} /> Procesar / Extraer
                                                 </ActionButton>
                                             </CardFooter>
                                         </Card>
@@ -209,7 +209,7 @@ export const LaboratoryPage: React.FC = () => {
                             <Grid>
                                 {extractions.length === 0 ? (
                                     <EmptyState>
-                                        <FaFlask size={48} color="#cbd5e0" />
+                                        <FlaskConical size={48} className="text-slate-500" strokeWidth={1.5} />
                                         <p>No hay extracciones registradas aún.</p>
                                         <NewButton onClick={handleCreateDirect}>Registrar Extracción Manual</NewButton>
                                     </EmptyState>
@@ -217,7 +217,7 @@ export const LaboratoryPage: React.FC = () => {
                                     <>
                                         <div style={{ gridColumn: '1 / -1', display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
                                             <NewButton onClick={handleCreateDirect} style={{ fontSize: '0.85rem', padding: '0.5rem 1rem' }}>
-                                                <FaPlus /> Nueva Extracción Manual
+                                                <Plus size={14} /> Nueva Extracción Manual
                                             </NewButton>
                                         </div>
                                         {extractions.map(ext => (
@@ -225,7 +225,7 @@ export const LaboratoryPage: React.FC = () => {
                                                 <CardContent>
                                                     <CardHeader>
                                                         <Badge $technique={ext.technique}>{ext.technique}</Badge>
-                                                        <DateText><FaCalendarAlt /> {format(new Date(ext.date), 'dd MMM', { locale: es })}</DateText>
+                                                        <DateText><Calendar size={12} /> {format(new Date(ext.date), 'dd MMM', { locale: es })}</DateText>
                                                     </CardHeader>
 
                                                     <MainInfo>
@@ -241,20 +241,20 @@ export const LaboratoryPage: React.FC = () => {
                                                     </MainInfo>
 
                                                     <StatsGrid>
-                                                        <div><FaWeightHanging size={10} /> IN: {Number(ext.input_weight).toFixed(2)}g</div>
-                                                        <div><FaFlask size={10} /> OUT: {Number(ext.output_weight).toFixed(2)}g</div>
+                                                        <div><Scale size={11} className="text-sky-400" /> IN: {Number(ext.input_weight).toFixed(2)}g</div>
+                                                        <div><FlaskConical size={11} className="text-purple-400" /> OUT: {Number(ext.output_weight).toFixed(2)}g</div>
                                                     </StatsGrid>
                                                 </CardContent>
 
                                                 <CardFooter>
-                                                    <ActionButton onClick={(e) => { e.stopPropagation(); setSelectedExtraction(ext); }} className="view">
-                                                        <FaEye />
+                                                    <ActionButton onClick={(e) => { e.stopPropagation(); setSelectedExtraction(ext); }} className="view" title="Ver detalle">
+                                                        <Eye size={13} />
                                                     </ActionButton>
-                                                    <ActionButton onClick={(e) => handleEdit(ext, e)} className="edit">
-                                                        <FaEdit />
+                                                    <ActionButton onClick={(e) => handleEdit(ext, e)} className="edit" title="Editar">
+                                                        <Edit3 size={13} />
                                                     </ActionButton>
-                                                    <ActionButton onClick={(e) => handleDeleteClick(ext.id, e)} className="delete">
-                                                        <FaTrash />
+                                                    <ActionButton onClick={(e) => handleDeleteClick(ext.id, e)} className="delete" title="Eliminar">
+                                                        <Trash2 size={13} />
                                                     </ActionButton>
                                                 </CardFooter>
                                             </Card>

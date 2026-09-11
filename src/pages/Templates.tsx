@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import styled, { keyframes } from 'styled-components';
-import { FaFileMedical, FaPlus, FaPen, FaTrash, FaSave, FaTimes, FaFilePdf, FaFileExport, FaFileImport, FaChevronUp, FaChevronDown } from 'react-icons/fa';
+import { FileText, Plus, Edit3, Trash2, Save, X, FileDown, FileUp, ChevronUp, ChevronDown } from 'lucide-react';
+import { Button } from '../components/ui';
 import { templatesService, ClinicalTemplate, FormField, FieldType } from '../services/templatesService';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ToastModal } from '../components/ToastModal';
@@ -82,11 +83,6 @@ const ActionButton = styled.button`
   }
 `;
 
-const FormRow = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 1rem;
-`;
 
 const StickyFieldHeader = styled.div`
   display: flex;
@@ -555,9 +551,9 @@ const Templates: React.FC = () => {
   return (
     <PageContainer>
       <Header>
-        <Title><FaFileMedical /> Mis Plantillas Médicas</Title>
+        <Title><FileText size={22} className="text-emerald-400" /> Mis Plantillas Médicas</Title>
         <ActionButton onClick={handleImportClick} title="Importar plantilla desde archivo .trazapp.json">
-          <FaFileImport /> Importar Plantilla
+          <FileUp size={15} /> Importar Plantilla
         </ActionButton>
         <input
           ref={fileInputRef}
@@ -573,7 +569,7 @@ const Templates: React.FC = () => {
       ) : (
         <CardGrid>
           <TemplateCard $isNew onClick={() => openModal()}>
-            <FaPlus size={32} style={{ marginBottom: '1rem', color: '#38bdf8' }} />
+            <Plus size={32} style={{ marginBottom: '1rem', color: '#38bdf8' }} />
             <h3>Crear Nueva Plantilla</h3>
             <p style={{ textAlign: 'center' }}>Diseña un nuevo formulario a la medida</p>
           </TemplateCard>
@@ -597,21 +593,21 @@ const Templates: React.FC = () => {
                       onClick={(e) => handlePdfExport(template, e)}
                       title="Descargar PDF"
                     >
-                      <FaFilePdf size={14} />
+                      <FileText size={14} />
                     </ActionButton>
                     <ActionButton
                       style={{ background: 'transparent', border: 'none', padding: '0.2rem', color: '#fb923c' }}
                       onClick={(e) => handleExportTemplate(template, e)}
                       title="Exportar plantilla (.trazapp.json)"
                     >
-                      <FaFileExport size={14} />
+                      <FileDown size={14} />
                     </ActionButton>
                     <ActionButton
                       style={{ background: 'transparent', border: 'none', padding: '0.2rem', color: '#f87171' }}
                       onClick={(e) => handleDelete(template.id, e)}
                       title="Eliminar plantilla"
                     >
-                      <FaTrash size={14} />
+                      <Trash2 size={14} />
                     </ActionButton>
                   </div>
                 </div>
@@ -642,21 +638,21 @@ const Templates: React.FC = () => {
                     onClick={(e) => handlePdfExport(template, e)}
                     title="PDF"
                   >
-                    <FaFilePdf size={14} />
+                    <FileText size={14} />
                   </ActionButton>
                   <ActionButton
                     style={{ background: 'transparent', border: 'none', padding: '0.2rem', color: '#fb923c' }}
                     onClick={(e) => handleExportTemplate(template, e)}
                     title="Exportar"
                   >
-                    <FaFileExport size={14} />
+                    <FileDown size={14} />
                   </ActionButton>
                   <ActionButton
                     style={{ background: 'transparent', border: 'none', padding: '0.2rem', color: '#f87171' }}
                     onClick={(e) => handleDelete(template.id, e)}
                     title="Eliminar plantilla"
                   >
-                    <FaTrash size={14} />
+                    <Trash2 size={14} />
                   </ActionButton>
                 </div>
               </div>
@@ -669,7 +665,7 @@ const Templates: React.FC = () => {
       <Modal isOpen={isModalOpen || isClosing} $isClosing={isClosing} onMouseDown={closeModal}>
         <ModalContent $isClosing={isClosing} onMouseDown={(e) => e.stopPropagation()}>
           <h2 style={{ marginBottom: '1.5rem', color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <FaPen size={20} /> {editingTemplateId ? 'Editar Plantilla' : 'Nueva Plantilla Clínica'}
+            <Edit3 size={20} className="text-sky-400" /> {editingTemplateId ? 'Editar Plantilla' : 'Nueva Plantilla Clínica'}
           </h2>
 
           <form onSubmit={handleSaveTemplate}>
@@ -698,7 +694,7 @@ const Templates: React.FC = () => {
               <StickyFieldHeader>
                 <h3 style={{ margin: 0, fontSize: '1.2rem' }}>Constructor de Campos</h3>
                 <ActionButton type="button" onClick={handleAddField} style={{ padding: '0.5rem 1rem', fontSize: '0.9rem', width: '100%', justifyContent: 'center', '@media (minWidth: 600px)': { width: 'auto' } } as any}>
-                  <FaPlus /> Agregar Variante
+                  <Plus size={14} /> Agregar Variante
                 </ActionButton>
               </StickyFieldHeader>
 
@@ -724,7 +720,7 @@ const Templates: React.FC = () => {
                         }}
                         title="Mover arriba"
                       >
-                        <FaChevronUp />
+                        <ChevronUp size={14} />
                       </button>
                       <button
                         type="button"
@@ -740,7 +736,7 @@ const Templates: React.FC = () => {
                         }}
                         title="Mover abajo"
                       >
-                        <FaChevronDown />
+                        <ChevronDown size={14} />
                       </button>
                     </div>
 
@@ -792,7 +788,7 @@ const Templates: React.FC = () => {
                       style={{ background: 'transparent', border: 'none', color: '#f87171', padding: '0.5rem', cursor: 'pointer', display: 'flex' }}
                       title="Eliminar campo"
                     >
-                      <FaTimes size={20} />
+                      <X size={18} />
                     </button>
                   </FieldBuilderRow>
                 ))
@@ -804,7 +800,7 @@ const Templates: React.FC = () => {
                 Cancelar
               </ActionButton>
               <ActionButton type="submit" disabled={isSubmitting} style={{ background: '#38bdf8', color: '#0f172a', borderColor: '#38bdf8' }}>
-                <FaSave /> {isSubmitting ? 'Guardando...' : 'Guardar Plantilla'}
+                <Save size={15} /> {isSubmitting ? 'Guardando...' : 'Guardar Plantilla'}
               </ActionButton>
             </div>
           </form>

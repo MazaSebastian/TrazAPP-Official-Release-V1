@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
-import { FaMoneyBillWave, FaTrash, FaExclamationCircle, FaFilter, FaTimes } from 'react-icons/fa';
+import { Wallet, Trash2, AlertCircle, Filter, X } from 'lucide-react';
 import { expensesService, CashMovement, getAreaFromRole } from '../services/expensesService';
 import { format, parseISO, startOfDay, endOfDay } from 'date-fns';
 import { CustomSelect } from '../components/CustomSelect';
@@ -602,7 +602,7 @@ const Expenses: React.FC = () => {
 
             <div style={{ filter: planLevel < 2 ? 'blur(4px)' : 'none', pointerEvents: planLevel < 2 ? 'none' : 'auto', userSelect: planLevel < 2 ? 'none' : 'auto', opacity: planLevel < 2 ? 0.5 : 1 }}>
                 <Header>
-                    <h1><FaMoneyBillWave color="#38b2ac" /> Control de Gastos</h1>
+                    <h1><Wallet className="text-emerald-400" size={28} /> Control de Gastos</h1>
                 </Header>
 
                 <Grid>
@@ -692,7 +692,7 @@ const Expenses: React.FC = () => {
                     {/* List */}
                     <TableContainer>
                         <h3 style={{ paddingLeft: '1rem', marginTop: '1rem', color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center' }}>
-                            <FaFilter size={14} color="#94a3b8" /> Filtros y Movimientos
+                            <Filter size={14} className="text-slate-400" /> Filtros y Movimientos
                         </h3>
 
                         <FilterContainer>
@@ -796,8 +796,9 @@ const Expenses: React.FC = () => {
                                                             <button onClick={(e) => m.id && handleDeleteClick(m.id, e)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: '1rem' }}
                                                                 onMouseOver={(e) => e.currentTarget.style.color = '#f87171'}
                                                                 onMouseOut={(e) => e.currentTarget.style.color = '#94a3b8'}
+                                                                title="Eliminar movimiento"
                                                             >
-                                                                <FaTrash />
+                                                                <Trash2 size={16} />
                                                             </button>
                                                         </td>
                                                     </tr>
@@ -844,7 +845,7 @@ const Expenses: React.FC = () => {
                                 onClick={() => setSelectedMovement(null)}
                                 style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer' }}
                             >
-                                <FaTimes size={20} />
+                                <X size={20} />
                             </button>
 
                             <div style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
@@ -909,14 +910,14 @@ const Expenses: React.FC = () => {
                                     gap: '0.5rem'
                                 }}
                             >
-                                <FaTrash /> Eliminar Movimiento
+                                <Trash2 size={16} /> Eliminar Movimiento
                             </button>
                         </ModalContentDetail>
                     </ModalOverlay>
                 )}
                 {toastMessage && (
                     <ToastContainer $isClosing={isToastClosing}>
-                        <FaExclamationCircle color="#c084fc" size={20} />
+                        <AlertCircle className="text-purple-400" size={20} />
                         {toastMessage}
                     </ToastContainer>
                 )}

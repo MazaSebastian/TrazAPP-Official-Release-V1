@@ -6,10 +6,11 @@ import { ExtractionForm } from '../components/Extractions/ExtractionForm';
 import { ExtractionDetails } from '../components/Extractions/ExtractionDetails';
 import { ConfirmationModal } from '../components/ConfirmationModal';
 
-import { FaFlask, FaPlus, FaCalendarAlt, FaWeightHanging, FaTrash, FaEye, FaEdit } from 'react-icons/fa';
+import { FlaskConical, Plus, Calendar, Scale, Trash2, Eye, Edit3 } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { LoadingSpinner } from '../components/LoadingSpinner';
+import { Button } from '../components/ui';
 
 export const ExtractionsPage: React.FC = () => {
     const [extractions, setExtractions] = useState<Extraction[]>([]);
@@ -33,7 +34,7 @@ export const ExtractionsPage: React.FC = () => {
     const handleDeleteClick = (id: string, e: React.MouseEvent) => {
         e.stopPropagation();
         setExtractionToDelete(id);
-    }
+    };
 
     const confirmDelete = async () => {
         if (extractionToDelete) {
@@ -58,12 +59,12 @@ export const ExtractionsPage: React.FC = () => {
         <Container>
             <Header>
                 <Title>
-                    <FaFlask size={24} color="#38a169" />
+                    <FlaskConical size={28} className="text-emerald-400" />
                     Laboratorio de Extracciones
                 </Title>
-                <NewButton onClick={handleCreate}>
-                    <FaPlus /> Nueva Extracción
-                </NewButton>
+                <Button onClick={handleCreate} className="flex items-center gap-2">
+                    <Plus size={16} /> Nueva Extracción
+                </Button>
             </Header>
 
             {loading ? (
@@ -72,9 +73,11 @@ export const ExtractionsPage: React.FC = () => {
                 </div>
             ) : extractions.length === 0 ? (
                 <EmptyState>
-                    <FaFlask size={48} color="#4a5568" />
+                    <FlaskConical size={48} className="text-slate-500" strokeWidth={1.5} />
                     <p>No hay extracciones registradas aún.</p>
-                    <NewButton onClick={handleCreate}>Comenzar Primera Extracción</NewButton>
+                    <Button onClick={handleCreate} className="flex items-center gap-2">
+                        <Plus size={16} /> Comenzar Primera Extracción
+                    </Button>
                 </EmptyState>
             ) : (
                 <Grid>
@@ -82,8 +85,8 @@ export const ExtractionsPage: React.FC = () => {
                         <Card key={ext.id} onClick={() => setSelectedExtraction(ext)}>
                             <CardContent>
                                 <CardHeader>
-                                    <Badge $technique={ext.technique}>{ext.technique}</Badge>
-                                    <DateText><FaCalendarAlt /> {format(new Date(ext.date), 'dd MMM', { locale: es })}</DateText>
+                                    <TechniqueBadge $technique={ext.technique}>{ext.technique}</TechniqueBadge>
+                                    <DateText><Calendar size={13} /> {format(new Date(ext.date), 'dd MMM', { locale: es })}</DateText>
                                 </CardHeader>
 
                                 <MainInfo>
@@ -99,8 +102,8 @@ export const ExtractionsPage: React.FC = () => {
                                 </MainInfo>
 
                                 <StatsGrid>
-                                    <div><FaWeightHanging size={10} /> IN: {ext.input_weight}g</div>
-                                    <div><FaFlask size={10} /> OUT: {ext.output_weight}g</div>
+                                    <div><Scale size={13} className="text-sky-400" /> IN: {ext.input_weight}g</div>
+                                    <div><FlaskConical size={13} className="text-emerald-400" /> OUT: {ext.output_weight}g</div>
                                 </StatsGrid>
 
                                 {ext.ratings && (
@@ -113,13 +116,13 @@ export const ExtractionsPage: React.FC = () => {
 
                             <CardFooter>
                                 <ActionButton onClick={(e) => { e.stopPropagation(); setSelectedExtraction(ext); }} className="view">
-                                    <FaEye /> Ver
+                                    <Eye size={13} /> Ver
                                 </ActionButton>
                                 <ActionButton onClick={(e) => handleEdit(ext, e)} className="edit">
-                                    <FaEdit /> Editar
+                                    <Edit3 size={13} /> Editar
                                 </ActionButton>
-                                <ActionButton onClick={(e) => handleDeleteClick(ext.id, e)} className="delete">
-                                    <FaTrash />
+                                <ActionButton onClick={(e) => handleDeleteClick(ext.id, e)} className="delete" title="Eliminar extracción">
+                                    <Trash2 size={13} />
                                 </ActionButton>
                             </CardFooter>
 
@@ -158,10 +161,11 @@ export const ExtractionsPage: React.FC = () => {
 
 // Styles
 const Container = styled.div`
-    padding: 2rem;
-    background: transparent;
+    padding: 2rem 2.5rem;
+    max-width: 1560px;
+    margin: 0 auto;
     min-height: 100vh;
-    color: #2d3748;
+    color: #f8fafc;
 `;
 
 const Header = styled.div`
@@ -169,31 +173,20 @@ const Header = styled.div`
     justify-content: space-between;
     align-items: center;
     margin-bottom: 2rem;
+    flex-wrap: wrap;
+    gap: 1rem;
 `;
 
 const Title = styled.h1`
     display: flex;
     align-items: center;
-    gap: 1rem;
-    font-size: 1.8rem;
-    color: #2d3748;
+    gap: 0.85rem;
+    font-size: clamp(1.5rem, 3vw, 2.25rem);
+    font-weight: 800;
+    background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
     margin: 0;
-`;
-
-const NewButton = styled.button`
-    background: #38a169;
-    color: white;
-    border: none;
-    padding: 0.75rem 1.5rem;
-    border-radius: 0.5rem;
-    font-weight: 700;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    transition: transform 0.1s;
-    box-shadow: 0 4px 6px rgba(56, 161, 105, 0.2);
-    &:hover { transform: translateY(-2px); background: #2f855a; }
 `;
 
 const EmptyState = styled.div`
@@ -201,31 +194,40 @@ const EmptyState = styled.div`
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 4rem;
-    background: white;
-    border-radius: 1rem;
-    border: 2px dashed #e2e8f0;
-    color: #a0aec0;
-    gap: 1rem;
+    padding: 4rem 2rem;
+    background: rgba(15, 23, 42, 0.6);
+    border-radius: 1.25rem;
+    border: 1px dashed rgba(255, 255, 255, 0.15);
+    color: #94a3b8;
+    gap: 1.25rem;
+    backdrop-filter: blur(12px);
+    text-align: center;
 `;
 
 const Grid = styled.div`
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
     gap: 1.5rem;
 `;
 
 const Card = styled.div`
-    background: white;
-    border-radius: 1rem;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.05); /* Lighter shadow */
-    border: 1px solid #e2e8f0;
-    transition: transform 0.2s, box-shadow 0.2s;
+    background: rgba(15, 23, 42, 0.75);
+    backdrop-filter: blur(16px);
+    border-radius: 1.25rem;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-top: 1px solid rgba(255, 255, 255, 0.15);
+    transition: all 0.2s ease;
     overflow: hidden;
     cursor: pointer;
     display: flex;
     flex-direction: column;
-    &:hover { transform: translateY(-4px); box-shadow: 0 10px 15px rgba(0,0,0,0.1); }
+
+    &:hover {
+        transform: translateY(-4px);
+        border-color: rgba(16, 185, 129, 0.35);
+        box-shadow: 0 14px 30px -4px rgba(16, 185, 129, 0.15);
+    }
 `;
 
 const CardContent = styled.div`
@@ -237,116 +239,128 @@ const CardHeader = styled.div`
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 1rem;
+    margin-bottom: 1.25rem;
 `;
 
-const Badge = styled.span<{ $technique: string }>`
-    padding: 0.25rem 0.75rem;
+const TechniqueBadge = styled.span<{ $technique: string }>`
+    padding: 0.3rem 0.75rem;
     border-radius: 9999px;
     font-size: 0.75rem;
     font-weight: 700;
     text-transform: uppercase;
-    background: ${props => props.$technique === 'Rosin' ? '#f6e05e' : props.$technique === 'Ice' ? '#bee3f8' : props.$technique === 'BHO' ? '#feb2b2' : '#edf2f7'};
-    color: ${props => props.$technique === 'Rosin' ? '#744210' : props.$technique === 'Ice' ? '#2c5282' : props.$technique === 'BHO' ? '#9b2c2c' : '#4a5568'};
+    letter-spacing: 0.05em;
+    background: ${props =>
+        props.$technique === 'Rosin' ? 'rgba(234, 179, 8, 0.15)' :
+        props.$technique === 'Ice' ? 'rgba(56, 189, 248, 0.15)' :
+        props.$technique === 'BHO' ? 'rgba(239, 68, 68, 0.15)' : 'rgba(148, 163, 184, 0.15)'};
+    color: ${props =>
+        props.$technique === 'Rosin' ? '#fbbf24' :
+        props.$technique === 'Ice' ? '#38bdf8' :
+        props.$technique === 'BHO' ? '#f87171' : '#cbd5e1'};
+    border: 1px solid ${props =>
+        props.$technique === 'Rosin' ? 'rgba(234, 179, 8, 0.3)' :
+        props.$technique === 'Ice' ? 'rgba(56, 189, 248, 0.3)' :
+        props.$technique === 'BHO' ? 'rgba(239, 68, 68, 0.3)' : 'rgba(148, 163, 184, 0.3)'};
 `;
 
 const DateText = styled.span`
-    color: #718096;
+    color: #94a3b8;
     font-size: 0.8rem;
     display: flex;
     align-items: center;
-    gap: 0.25rem;
+    gap: 0.35rem;
 `;
 
 const MainInfo = styled.div`
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 1rem;
+    margin-bottom: 1.25rem;
     
     .source {
         display: flex;
         flex-direction: column;
-        strong { color: #2d3748; font-size: 1.1rem; }
-        small { color: #718096; font-size: 0.75rem; text-transform: uppercase; }
-        span { color: #cbd5e0; font-size: 0.85rem; font-family: monospace; }
+        strong { color: #f8fafc; font-size: 1.15rem; font-weight: 700; }
+        small { color: #94a3b8; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
+        span { color: #64748b; font-size: 0.85rem; font-family: monospace; }
     }
 
     .yield {
         text-align: right;
-        small { display: block; color: #718096; font-size: 0.75rem; }
+        small { display: block; color: #94a3b8; font-size: 0.75rem; text-transform: uppercase; }
     }
 `;
 
 const YieldValue = styled.div`
     font-size: 1.5rem;
     font-weight: 800;
-    color: #38a169;
+    color: #34d399;
+    text-shadow: 0 0 12px rgba(16, 185, 129, 0.3);
 `;
 
 const StatsGrid = styled.div`
     display: grid;
     grid-template-columns: 1fr 1fr;
-    background: #f7fafc;
-    padding: 0.75rem;
-    border-radius: 0.5rem;
+    background: rgba(15, 23, 42, 0.5);
+    padding: 0.75rem 1rem;
+    border-radius: 0.75rem;
     font-size: 0.85rem;
-    color: #4a5568;
+    color: #cbd5e1;
     margin-bottom: 1rem;
-    border: 1px solid #edf2f7;
-    div { display: flex; alignItems: center; gap: 0.5rem; }
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    div { display: flex; align-items: center; gap: 0.5rem; }
 `;
 
 const RatingMini = styled.div`
-    background: linear-gradient(90deg, #f7fafc 0%, #edf2f7 100%);
+    background: rgba(234, 179, 8, 0.08);
     padding: 0.5rem;
-    border-radius: 0.5rem;
+    border-radius: 0.75rem;
     text-align: center;
-    border: 1px solid #e2e8f0;
-    .r-item { color: #d69e2e; font-weight: bold; }
-    small { color: #718096; font-size: 0.7rem; }
+    border: 1px solid rgba(234, 179, 8, 0.2);
+    .r-item { color: #fbbf24; font-weight: 700; font-size: 0.95rem; }
+    small { color: #94a3b8; font-size: 0.75rem; }
 `;
 
 const CardFooter = styled.div`
-    padding: 1rem 1.5rem;
-    background: #f8fafc;
-    border-top: 1px solid #e2e8f0;
+    padding: 0.85rem 1.25rem;
+    background: rgba(15, 23, 42, 0.85);
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
     display: flex;
     justify-content: flex-end;
     gap: 0.5rem;
 `;
 
 const ActionButton = styled.button`
-    background: white;
-    border: 1px solid #cbd5e0;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     padding: 0.4rem 0.75rem;
-    border-radius: 0.35rem;
+    border-radius: 0.5rem;
     font-size: 0.8rem;
     font-weight: 600;
-    color: #4a5568;
+    color: #cbd5e1;
     cursor: pointer;
     display: flex;
     align-items: center;
     gap: 0.35rem;
-    transition: all 0.2s;
+    transition: all 0.2s ease;
 
-    &:hover { background: #edf2f7; }
+    &:hover { background: rgba(255, 255, 255, 0.1); color: #f8fafc; }
 
     &.delete {
-        color: #e53e3e;
-        border-color: #feb2b2;
-        &:hover { background: #fff5f5; border-color: #fc8181; }
+        color: #f87171;
+        border-color: rgba(239, 68, 68, 0.3);
+        &:hover { background: rgba(239, 68, 68, 0.15); border-color: rgba(239, 68, 68, 0.5); }
     }
 
     &.view {
-        color: #3182ce;
-        border-color: #bee3f8;
-        &:hover { background: #ebf8ff; border-color: #63b3ed; }
+        color: #38bdf8;
+        border-color: rgba(56, 189, 248, 0.3);
+        &:hover { background: rgba(56, 189, 248, 0.15); border-color: rgba(56, 189, 248, 0.5); }
     }
     
     &.edit {
-        color: #d69e2e;
-        border-color: #f6e05e;
-        &:hover { background: #fffff0; border-color: #d69e2e; }
+        color: #fbbf24;
+        border-color: rgba(234, 179, 8, 0.3);
+        &:hover { background: rgba(234, 179, 8, 0.15); border-color: rgba(234, 179, 8, 0.5); }
     }
 `;
