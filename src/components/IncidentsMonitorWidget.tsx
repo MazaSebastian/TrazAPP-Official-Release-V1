@@ -13,11 +13,13 @@ const pulseGlow = keyframes`
 `;
 
 const WidgetContainer = styled.div`
-  background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.8));
-  border: 1px solid rgba(239, 68, 68, 0.2);
-  border-radius: 1.25rem;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
   padding: 1.5rem;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.45), inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
@@ -37,8 +39,9 @@ const WidgetHeader = styled.div`
 
     h2 {
       margin: 0;
-      font-size: 1.2rem;
-      font-weight: 800;
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: -0.015em;
       color: #f8fafc;
       display: flex;
       align-items: center;
@@ -49,36 +52,40 @@ const WidgetHeader = styled.div`
       display: flex;
       align-items: center;
       gap: 0.35rem;
-      background: rgba(239, 68, 68, 0.15);
-      border: 1px solid rgba(239, 68, 68, 0.3);
-      color: #ef4444;
+      background: rgba(239, 68, 68, 0.12);
+      border: 1px solid rgba(239, 68, 68, 0.25);
+      color: #fb7185;
       padding: 0.2rem 0.6rem;
-      border-radius: 20px;
+      border-radius: 9999px;
       font-size: 0.72rem;
-      font-weight: 800;
+      font-weight: 700;
       animation: ${pulseGlow} 2s infinite;
     }
   }
 `;
 
 const FilterGroup = styled.div`
-  display: flex;
-  gap: 0.5rem;
-  background: rgba(0, 0, 0, 0.2);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
   padding: 0.25rem;
-  border-radius: 8px;
 `;
 
 const FilterTab = styled.button<{ $active: boolean }>`
-  background: ${p => p.$active ? '#ef4444' : 'transparent'};
-  color: ${p => p.$active ? '#ffffff' : '#94a3b8'};
-  border: none;
-  padding: 0.35rem 0.75rem;
-  border-radius: 6px;
+  background: ${p => p.$active ? 'rgba(30, 41, 59, 0.95)' : 'transparent'};
+  color: ${p => p.$active ? '#f8fafc' : '#94a3b8'};
+  border: ${p => p.$active ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid transparent'};
+  box-shadow: ${p => p.$active ? '0 2px 8px rgba(0, 0, 0, 0.3)' : 'none'};
+  padding: 0.35rem 0.8rem;
+  border-radius: 8px;
   font-size: 0.78rem;
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
 
   &:hover {
     color: #ffffff;

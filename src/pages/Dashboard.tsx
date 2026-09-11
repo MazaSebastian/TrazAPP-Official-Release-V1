@@ -39,7 +39,9 @@ import { KYCBanner } from '../components/KYCBanner';
 import { useOrganization } from '../context/OrganizationContext';
 import { deviceService, TrazAppDevice } from '../services/deviceService';
 import { TrazAppDeviceDetailModal } from '../components/TrazAppDeviceDetailModal';
-
+import { DashboardKpiRibbon } from '../components/Dashboard/DashboardKpiRibbon';
+import { Badge } from '../components/ui/Badge';
+import { Button as ShadcnButton } from '../components/ui/Button';
 
 // --- Styled Components (Premium Eco-Tech Theme) ---
 
@@ -238,6 +240,71 @@ const Container = styled.div`
 
   @media (max-width: 768px) {
     padding: 1.5rem 1rem;
+  }
+`;
+
+const WelcomeCommandBar = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 2rem;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .greeting-col {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+
+    h1 {
+      font-size: clamp(1.6rem, 3.5vw, 2.35rem);
+      font-weight: 800;
+      letter-spacing: -0.025em;
+      color: #f8fafc;
+      margin: 0;
+      line-height: 1.15;
+      background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .meta-row {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      flex-wrap: wrap;
+      color: #94a3b8;
+      font-size: 0.85rem;
+      font-weight: 500;
+
+      .separator {
+        color: rgba(255, 255, 255, 0.2);
+      }
+
+      .time-pill {
+        color: #f8fafc;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+      }
+    }
+  }
+
+  .actions-col {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+
+    @media (max-width: 768px) {
+      width: 100%;
+      justify-content: flex-start;
+    }
   }
 `;
 
@@ -1267,6 +1334,41 @@ const Dashboard: React.FC = () => {
     });
   }, [activeEnvironmentalAlerts]);
 
+  // Dynamic live KPIs for DashboardKpiRibbon
+  const totalPlants = useMemo(() => {
+    return rooms.reduce((acc, r) => {
+      return acc + (r.batches || []).reduce((bAcc, b) => bAcc + (b.quantity || (b as any).total_plants || 0), 0);
+    }, 0);
+  }, [rooms]);
+
+  const activeBatchesCount = useMemo(() => {
+    return rooms.reduce((acc, r) => acc + (r.batches || []).length, 0);
+  }, [rooms]);
+
+  const { avgTemperature, avgHumidity, isClimateOptimal } = useMemo(() => {
+    const roomsWithTemp = rooms.filter(r => r.current_temperature !== undefined && r.current_temperature !== null);
+    const roomsWithHum = rooms.filter(r => r.current_humidity !== undefined && r.current_humidity !== null);
+
+    const avgT = roomsWithTemp.length > 0
+      ? parseFloat((roomsWithTemp.reduce((sum, r) => sum + (r.current_temperature || 0), 0) / roomsWithTemp.length).toFixed(1))
+      : null;
+    const avgH = roomsWithHum.length > 0
+      ? parseFloat((roomsWithHum.reduce((sum, r) => sum + (r.current_humidity || 0), 0) / roomsWithHum.length).toFixed(1))
+      : null;
+
+    const isOpt = (avgT === null || (avgT >= 20 && avgT <= 27)) && (avgH === null || (avgH >= 45 && avgH <= 70));
+    return { avgTemperature: avgT, avgHumidity: avgH, isClimateOptimal: isOpt };
+  }, [rooms]);
+
+  const pendingTasksCount = useMemo(() => {
+    return tasks.filter(t => t.status === 'pending').length;
+  }, [tasks]);
+
+  const urgentTasksCount = useMemo(() => {
+    const todayStr = new Date().toISOString().split('T')[0];
+    return tasks.filter(t => t.status === 'pending' && ((t as any).priority === 'urgent' || (t.due_date && t.due_date <= todayStr))).length;
+  }, [tasks]);
+
   // Redirect Super Admin (Placed after all hooks)
   if ((user?.role as string) === 'super_admin') {
     return <Navigate to="/admin" replace />;
@@ -1318,25 +1420,60 @@ const Dashboard: React.FC = () => {
 
   const activeCrops = crops.filter(c => c.status === 'active');
 
-  // Helper to calculate days since start (Stage mockup)
-
-
   if (isLoading) {
     return <LoadingSpinner fullScreen duration={3000} />;
   }
 
   return (
     <Container>
-      <WelcomeHeader className="tour-welcome">
-        <h1>Hola, {user?.name || 'Cultivador'}, ¿qué vamos a hacer hoy?</h1>
-        <DateDisplay>
-          <FaCalendarCheck />
-          {format(currentTime, "EEEE, d 'de' MMMM 'de' yyyy", { locale: es })}
-          <span className="separator">|</span>
-          <FaClock />
-          {format(currentTime, "HH:mm")}
-        </DateDisplay>
-      </WelcomeHeader>
+      <WelcomeCommandBar className="tour-welcome">
+        <div className="greeting-col">
+          <h1>Hola, {user?.name || 'Cultivador'} 👋</h1>
+          <div className="meta-row">
+            <Badge variant="emerald" ping>Sistema Operativo</Badge>
+            <span>{format(currentTime, "EEEE, d 'de' MMMM 'de' yyyy", { locale: es })}</span>
+            <span className="separator">•</span>
+            <span className="time-pill">{format(currentTime, "HH:mm")}</span>
+          </div>
+        </div>
+
+        <div className="actions-col">
+          <ShadcnButton
+            variant="secondary"
+            size="sm"
+            onClick={() => setIsStickyModalOpen(true)}
+            title="Pegar nueva nota rápida"
+          >
+            <FaStickyNote /> Nueva Nota
+          </ShadcnButton>
+          <ShadcnButton
+            variant="outline"
+            size="sm"
+            onClick={() => handlePrintChecklist()}
+            className="no-print"
+            title="Descargar Planilla de Operarios"
+          >
+            <FaPrint /> Imprimir Checklist
+          </ShadcnButton>
+          <Link to="/crops" style={{ textDecoration: 'none' }}>
+            <ShadcnButton size="sm">
+              <FaSeedling /> Ver Cultivos
+            </ShadcnButton>
+          </Link>
+        </div>
+      </WelcomeCommandBar>
+
+      <DashboardKpiRibbon
+        totalPlants={totalPlants}
+        activeBatchesCount={activeBatchesCount}
+        avgTemperature={avgTemperature}
+        avgHumidity={avgHumidity}
+        isClimateOptimal={isClimateOptimal}
+        pendingTasksCount={pendingTasksCount}
+        urgentTasksCount={urgentTasksCount}
+        criticalStockCount={activeEnvironmentalAlerts.length}
+        role={currentRole || user?.role || 'grower'}
+      />
 
       {currentOrganization?.plan === 'demo' && (
         <DemoBanner>

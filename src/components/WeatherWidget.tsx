@@ -27,13 +27,14 @@ import {
 import { FaChevronDown, FaTint, FaSun } from 'react-icons/fa';
 
 const WidgetContainer = styled.div`
-  background: rgba(15, 23, 42, 0.75);
-  backdrop-filter: blur(12px);
-  border-radius: 1.5rem;
-  padding: 1.5rem;
-  margin-bottom: 2rem;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-radius: 14px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.45), inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   color: #f8fafc;
   overflow: hidden;
   transition: all 0.3s ease;
