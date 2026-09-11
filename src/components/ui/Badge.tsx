@@ -114,19 +114,22 @@ const PingDot = styled.span<{ $color: string }>`
 export interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
   variant?: BadgeVariant;
   ping?: boolean;
+  dot?: boolean;
   children: React.ReactNode;
 }
 
 export const Badge: React.FC<BadgeProps> = ({
   variant = 'default',
   ping = false,
+  dot = false,
   children,
   className,
   ...props
 }) => {
+  const showDot = ping || dot;
   return (
     <BadgeWrapper $variant={variant} className={className} {...props}>
-      {ping && <PingDot $color={getPingColor(variant)} />}
+      {showDot && <PingDot $color={getPingColor(variant)} />}
       {children}
     </BadgeWrapper>
   );

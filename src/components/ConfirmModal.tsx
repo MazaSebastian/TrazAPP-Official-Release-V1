@@ -1,70 +1,75 @@
 import React, { useEffect, useState } from 'react';
-import styled from 'styled-components';
-import { FaExclamationTriangle } from 'react-icons/fa';
+import styled, { keyframes } from 'styled-components';
+import { AlertTriangle, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Button as ShadcnButton } from './ui/Button';
+
+const fadeIn = keyframes`
+  from { opacity: 0; }
+  to { opacity: 1; }
+`;
 
 const Overlay = styled.div<{ $visible: boolean }>`
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  inset: 0;
+  background: rgba(3, 7, 18, 0.82);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 2000;
-  backdrop-filter: blur(8px);
-  opacity: ${p => p.$visible ? 1 : 0};
-  transition: opacity 0.3s ease-in-out;
-  pointer-events: ${p => p.$visible ? 'auto' : 'none'};
+  backdrop-filter: blur(12px);
+  opacity: ${p => (p.$visible ? 1 : 0)};
+  transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: ${p => (p.$visible ? 'auto' : 'none')};
+  padding: 1rem;
 `;
 
 const Content = styled.div<{ $visible: boolean; $maxWidth?: string }>`
-  background: rgba(15, 23, 42, 0.95);
+  background: rgba(15, 23, 42, 0.96);
+  backdrop-filter: blur(24px);
   padding: 2rem;
-  border-radius: 1rem;
-  width: 90%;
-  max-width: ${p => p.$maxWidth || '400px'};
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  border-radius: 1.25rem;
+  width: 100%;
+  max-width: ${p => p.$maxWidth || '440px'};
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 25px 60px -12px rgba(0, 0, 0, 0.7);
   text-align: center;
-  transform: ${p => p.$visible ? 'scale(1)' : 'scale(0.95)'};
-  opacity: ${p => p.$visible ? 1 : 0};
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: ${p => (p.$visible ? 'scale(1) translateY(0)' : 'scale(0.96) translateY(8px)')};
+  opacity: ${p => (p.$visible ? 1 : 0)};
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 
   @media (max-width: 768px) {
     padding: 1.5rem;
-    width: 95%;
   }
 
   h3 {
-    margin-top: 1rem;
+    margin-top: 1.25rem;
     color: #f8fafc;
     margin-bottom: 0.5rem;
     font-size: 1.25rem;
     font-weight: 700;
+    letter-spacing: -0.01em;
   }
 
   p {
     color: #94a3b8;
-    margin-bottom: 1.5rem;
-    line-height: 1.5;
+    margin-bottom: 1.75rem;
+    line-height: 1.55;
+    font-size: 0.95rem;
   }
 `;
 
-const IconWrapper = styled.div`
-  width: 56px;
-  height: 56px;
-  background: rgba(229, 62, 62, 0.15);
-  color: #fc8181;
-  border: 1px solid rgba(229, 62, 62, 0.3);
+const IconWrapper = styled.div<{ $isDanger?: boolean }>`
+  width: 58px;
+  height: 58px;
+  background: ${p => (p.$isDanger ? 'rgba(239, 68, 68, 0.15)' : 'rgba(74, 222, 128, 0.15)')};
+  color: ${p => (p.$isDanger ? '#f87171' : '#4ade80')};
+  border: 1px solid ${p => (p.$isDanger ? 'rgba(239, 68, 68, 0.3)' : 'rgba(74, 222, 128, 0.3)')};
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.75rem;
   margin: 0 auto;
-  box-shadow: 0 0 20px rgba(229, 62, 62, 0.2);
+  box-shadow: 0 0 24px ${p => (p.$isDanger ? 'rgba(239, 68, 68, 0.2)' : 'rgba(74, 222, 128, 0.2)')};
 `;
 
 const ButtonGroup = styled.div`
@@ -77,66 +82,6 @@ const ButtonGroup = styled.div`
     button {
       width: 100%;
     }
-  }
-`;
-
-const Button = styled.button<{ variant?: 'primary' | 'danger' | 'secondary' }>`
-  padding: 0.75rem 1.5rem;
-  border-radius: 0.5rem;
-  border: 1px solid ${p =>
-    p.variant === 'secondary' ? 'rgba(255, 255, 255, 0.1)' :
-      p.variant === 'danger' ? 'rgba(229, 62, 62, 0.3)' :
-        'rgba(74, 222, 128, 0.3)'
-  };
-  background: ${p =>
-    p.variant === 'secondary' ? 'rgba(255, 255, 255, 0.05)' :
-      p.variant === 'danger' ? 'rgba(155, 44, 44, 0.3)' :
-        'rgba(20, 83, 45, 0.3)'
-  };
-  color: ${p =>
-    p.variant === 'secondary' ? '#94a3b8' :
-      p.variant === 'danger' ? '#fc8181' :
-        '#4ade80'
-  };
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  min-width: 120px;
-  backdrop-filter: blur(4px);
-  position: relative;
-  overflow: hidden;
-
-  /* Subtle top highlight for glass effect */
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0) 100%);
-    pointer-events: none;
-  }
-
-  &:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 16px ${p =>
-    p.variant === 'secondary' ? 'rgba(0,0,0,0.4)' :
-      p.variant === 'danger' ? 'rgba(229, 62, 62, 0.15)' :
-        'rgba(74, 222, 128, 0.15)'
-  };
-    background: ${p =>
-    p.variant === 'secondary' ? 'rgba(255, 255, 255, 0.1)' :
-      p.variant === 'danger' ? 'rgba(155, 44, 44, 0.5)' :
-        'rgba(20, 83, 45, 0.5)'
-  };
-    border-color: ${p =>
-    p.variant === 'secondary' ? 'rgba(255, 255, 255, 0.2)' :
-      p.variant === 'danger' ? '#fc8181' :
-        '#4ade80'
-  };
-  }
-  
-  &:active:not(:disabled) {
-    transform: translateY(0);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
   }
 `;
 
@@ -171,12 +116,11 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
   useEffect(() => {
     if (isOpen) {
       setShouldRender(true);
-      // Small delay to allow render before transition
-      setTimeout(() => setIsVisible(true), 50);
+      const timer = setTimeout(() => setIsVisible(true), 30);
+      return () => clearTimeout(timer);
     } else {
       setIsVisible(false);
-      // Wait for transition to finish before unmounting
-      const timer = setTimeout(() => setShouldRender(false), 300);
+      const timer = setTimeout(() => setShouldRender(false), 250);
       return () => clearTimeout(timer);
     }
   }, [isOpen]);
@@ -195,25 +139,30 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
   return (
     <Overlay $visible={isVisible} onClick={onClose}>
       <Content $visible={isVisible} $maxWidth={maxWidth} onClick={e => e.stopPropagation()}>
-        <IconWrapper>
-          <FaExclamationTriangle />
+        <IconWrapper $isDanger={isDanger}>
+          {isDanger ? <AlertTriangle size={28} /> : <CheckCircle2 size={28} />}
         </IconWrapper>
         <h3>{title}</h3>
         <p>{message}</p>
         <ButtonGroup>
           {cancelText && (
-            <Button onClick={onClose} variant="secondary" disabled={isLoading}>
+            <ShadcnButton
+              variant="secondary"
+              onClick={onClose}
+              disabled={isLoading}
+              style={{ minWidth: '110px' }}
+            >
               {cancelText}
-            </Button>
+            </ShadcnButton>
           )}
-          <Button
+          <ShadcnButton
+            variant={isDanger ? 'destructive' : 'default'}
             onClick={onConfirm}
-            variant={isDanger ? 'danger' : 'primary'}
-            disabled={isLoading}
-            style={{ opacity: isLoading ? 0.7 : 1, cursor: isLoading ? 'wait' : 'pointer' }}
+            isLoading={isLoading}
+            style={{ minWidth: '120px' }}
           >
-            {isLoading ? 'Procesando...' : confirmText}
-          </Button>
+            {confirmText}
+          </ShadcnButton>
         </ButtonGroup>
       </Content>
     </Overlay>

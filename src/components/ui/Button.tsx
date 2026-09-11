@@ -1,5 +1,6 @@
 import React from 'react';
 import styled, { css } from 'styled-components';
+import { Loader2 } from 'lucide-react';
 
 export type ButtonVariant = 'default' | 'secondary' | 'outline' | 'ghost' | 'destructive';
 export type ButtonSize = 'sm' | 'md' | 'lg' | 'icon';
@@ -156,20 +157,25 @@ const StyledButton = styled.button<{ $variant: ButtonVariant; $size: ButtonSize 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
   size?: ButtonSize;
+  isLoading?: boolean;
   children: React.ReactNode;
 }
 
 export const Button: React.FC<ButtonProps> = ({
   variant = 'default',
   size = 'md',
+  isLoading = false,
+  disabled,
   children,
   ...props
 }) => {
   return (
-    <StyledButton $variant={variant} $size={size} {...props}>
+    <StyledButton $variant={variant} $size={size} disabled={disabled || isLoading} {...props}>
+      {isLoading && <Loader2 size={16} className="animate-spin" style={{ animation: 'spin 1s linear infinite', marginRight: '0.4rem' }} />}
       {children}
     </StyledButton>
   );
 };
 
 export default Button;
+

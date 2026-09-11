@@ -1,15 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
-import { 
-  FaTimes, FaTh, FaHistory, FaBolt, FaSeedling, FaThermometerHalf, 
-  FaTint, FaCheckCircle, FaExclamationTriangle, FaPlus, FaClipboardList, 
-  FaQrcode, FaDna, FaInfoCircle, FaCalendarAlt, FaFlask, FaRegClock, FaSync,
-  FaVolumeUp, FaPlay, FaMicrophone
-} from 'react-icons/fa';
+import {
+  X as LucideX,
+  LayoutGrid,
+  History,
+  Zap,
+  Sprout,
+  Dna,
+  ClipboardList,
+  Plus,
+  AlertTriangle,
+  Volume2,
+  RefreshCw,
+  Thermometer,
+  Droplets,
+  Activity,
+  CheckCircle2
+} from 'lucide-react';
 import { supabase } from '../services/supabaseClient';
 import { TrazAppDevice } from '../services/deviceService';
 import { Batch } from '../types/rooms';
 import toast from 'react-hot-toast';
+import { Button as ShadcnButton } from './ui/Button';
+import { Badge as ShadcnBadge } from './ui/Badge';
 
 // ─── Animations ──────────────────────────────────────────────────────────────
 const fadeIn = keyframes`
@@ -18,20 +31,15 @@ const fadeIn = keyframes`
 `;
 
 const slideUp = keyframes`
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
-`;
-
-const pulseRed = keyframes`
-  0%, 100% { box-shadow: 0 0 10px rgba(239, 68, 68, 0.3); }
-  50% { box-shadow: 0 0 20px rgba(239, 68, 68, 0.7); }
+  from { opacity: 0; transform: translateY(14px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 `;
 
 // ─── Styled Components ───────────────────────────────────────────────────────
 const ModalOverlay = styled.div`
   position: fixed;
   inset: 0;
-  background: rgba(3, 7, 18, 0.88);
+  background: rgba(3, 7, 18, 0.84);
   backdrop-filter: blur(14px);
   display: flex;
   justify-content: center;
@@ -42,29 +50,30 @@ const ModalOverlay = styled.div`
 `;
 
 const ModalCard = styled.div`
-  background: rgba(15, 23, 42, 0.98);
+  background: rgba(15, 23, 42, 0.96);
+  backdrop-filter: blur(24px);
   border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 20px;
+  border-radius: 1.25rem;
   width: 100%;
   max-width: 1100px;
   height: 88vh;
   max-height: 820px;
   overflow: hidden;
-  box-shadow: 0 35px 70px rgba(0, 0, 0, 0.8);
+  box-shadow: 0 35px 70px rgba(0, 0, 0, 0.75);
   display: flex;
   flex-direction: column;
-  animation: ${slideUp} 0.25s ease-out;
+  animation: ${slideUp} 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 
   @media (max-width: 768px) {
     height: 96vh;
     max-height: 96vh;
-    border-radius: 14px;
+    border-radius: 1rem;
   }
 `;
 
 const Header = styled.div`
   padding: 1.25rem 1.5rem;
-  background: rgba(30, 41, 59, 0.6);
+  background: rgba(30, 41, 59, 0.4);
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   display: flex;
   justify-content: space-between;
@@ -76,78 +85,87 @@ const Header = styled.div`
     gap: 0.85rem;
 
     .icon-badge {
-      width: 44px;
-      height: 44px;
-      border-radius: 12px;
-      background: rgba(16, 185, 129, 0.15);
-      border: 1px solid rgba(16, 185, 129, 0.3);
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.25);
       color: #34d399;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.3rem;
     }
 
     h2 {
-      font-size: 1.3rem;
-      font-weight: 800;
+      font-size: 1.2rem;
+      font-weight: 700;
       color: #f8fafc;
       margin: 0;
+      letter-spacing: -0.01em;
     }
 
     .subtitle {
       font-size: 0.8rem;
-      color: #64748b;
+      color: #94a3b8;
       margin-top: 2px;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
     }
   }
 `;
 
+const HeaderActions = styled.div`
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+`;
+
 const CloseBtn = styled.button`
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   color: #94a3b8;
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  font-size: 1.1rem;
-  transition: all 0.2s;
+  transition: all 0.15s ease;
 
   &:hover {
-    background: rgba(239, 68, 68, 0.2);
-    color: #f87171;
-    border-color: rgba(239, 68, 68, 0.4);
+    background: rgba(255, 255, 255, 0.1);
+    color: #f8fafc;
+    border-color: rgba(255, 255, 255, 0.2);
   }
 `;
 
 const NavTabs = styled.div`
   display: flex;
-  background: rgba(15, 23, 42, 0.9);
+  background: rgba(15, 23, 42, 0.85);
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  padding: 0 1.5rem;
-  gap: 0.5rem;
+  padding: 0.5rem 1.5rem;
+  gap: 0.4rem;
 `;
 
 const TabButton = styled.button<{ $active: boolean }>`
-  background: transparent;
-  border: none;
-  border-bottom: 3px solid ${props => props.$active ? '#10b981' : 'transparent'};
-  color: ${props => props.$active ? '#10b981' : '#94a3b8'};
-  padding: 0.9rem 1.2rem;
-  font-size: 0.9rem;
-  font-weight: 700;
+  background: ${props => (props.$active ? 'rgba(16, 185, 129, 0.12)' : 'transparent')};
+  border: 1px solid ${props => (props.$active ? 'rgba(16, 185, 129, 0.3)' : 'transparent')};
+  border-radius: 8px;
+  color: ${props => (props.$active ? '#34d399' : '#94a3b8')};
+  padding: 0.55rem 0.95rem;
+  font-size: 0.85rem;
+  font-weight: 600;
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  transition: all 0.2s;
+  transition: all 0.15s ease;
 
   &:hover {
     color: #f8fafc;
+    background: ${props => (props.$active ? 'rgba(16, 185, 129, 0.15)' : 'rgba(255, 255, 255, 0.04)')};
   }
 `;
 
@@ -491,32 +509,38 @@ export const WorkbenchDetailModal: React.FC<WorkbenchDetailModalProps> = ({
         {/* Header */}
         <Header>
           <div className="left">
-            <div className="icon-badge"><FaSeedling /></div>
+            <div className="icon-badge">
+              <Sprout size={22} />
+            </div>
             <div>
-              <h2>Mesa de Trabajo — {bunkerName || 'Fancy (Floración)'}</h2>
+              <h2>Mesa de Trabajo — {bunkerName || 'Mesa Principal'}</h2>
               <div className="subtitle">
-                ID Dispositivo: {device?.device_id || 'TrazApp_A3F2'} | Real Database Link
+                <span>Dispositivo: <code>{device?.device_id || 'TrazApp_A3F2'}</code></span>
+                <span>•</span>
+                <span>Conexión en vivo con Base de Datos</span>
               </div>
             </div>
           </div>
-          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-            <CloseBtn onClick={fetchRealData} title="Refrescar datos de la Base de Datos">
-              <FaSync />
+          <HeaderActions>
+            <CloseBtn onClick={fetchRealData} title="Refrescar datos">
+              <RefreshCw size={16} />
             </CloseBtn>
-            <CloseBtn onClick={onClose}><FaTimes /></CloseBtn>
-          </div>
+            <CloseBtn onClick={onClose} title="Cerrar">
+              <LucideX size={18} />
+            </CloseBtn>
+          </HeaderActions>
         </Header>
 
         {/* Navigation Tabs */}
         <NavTabs>
           <TabButton $active={activeTab === 'grid'} onClick={() => setActiveTab('grid')}>
-            <FaTh /> Matriz 2D de Plantas ({batches.length} en DB)
+            <LayoutGrid size={16} /> Matriz 2D ({batches.length} lotes)
           </TabButton>
           <TabButton $active={activeTab === 'batch'} onClick={() => setActiveTab('batch')}>
-            <FaHistory /> Historial e Incidencias ({tasks.length})
+            <History size={16} /> Historial e Incidencias ({tasks.length})
           </TabButton>
           <TabButton $active={activeTab === 'sensors'} onClick={() => setActiveTab('sensors')}>
-            <FaBolt /> Telemetría & Sensores
+            <Zap size={16} /> Telemetría & Sensores
           </TabButton>
         </NavTabs>
 
@@ -527,36 +551,41 @@ export const WorkbenchDetailModal: React.FC<WorkbenchDetailModalProps> = ({
             <>
               <GridControls>
                 <div className="info">
-                  📐 Dimensiones de Mesa: <strong>4 x 4 (16 Posiciones)</strong> | Plantas en DB: <strong>{batches.length} Lotes Activos</strong>
+                  📐 Dimensiones: <strong>4 x 4 (16 posiciones)</strong> | Plantas en DB:{' '}
+                  <strong>{batches.length} Lotes Activos</strong>
                 </div>
-                <div style={{ fontSize: '0.75rem', color: '#10b981', fontWeight: 800 }}>
-                  🟢 Toca una posición para inspeccionar la planta en la Base de Datos
+                <div style={{ fontSize: '0.8rem', color: '#34d399', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <CheckCircle2 size={14} /> Selecciona una posición para inspeccionar
                 </div>
               </GridControls>
 
               <PlantGrid $rows={4} $cols={4}>
-                {rows.map(r => cols.map(c => {
-                  const posKey = `${r}${c}`;
-                  const b = plantMap[posKey];
-                  const isOccupied = !!b;
-                  const isSelected = selectedPos === posKey;
+                {rows.map(r =>
+                  cols.map(c => {
+                    const posKey = `${r}${c}`;
+                    const b = plantMap[posKey];
+                    const isOccupied = !!b;
+                    const isSelected = selectedPos === posKey;
 
-                  return (
-                    <PlantCell 
-                      key={posKey} 
-                      $occupied={isOccupied} 
-                      $selected={isSelected}
-                      onClick={() => setSelectedPos(posKey)}
-                    >
-                      <span className="pos-tag">{posKey}</span>
-                      <div className="icon"><FaSeedling /></div>
-                      <div className="plant-name">
-                        {isOccupied ? (b.genetic?.name || b.name || 'Planta') : 'Vacío'}
-                      </div>
-                      {isOccupied && <div className="code">{b.tracking_code || b.name}</div>}
-                    </PlantCell>
-                  );
-                }))}
+                    return (
+                      <PlantCell
+                        key={posKey}
+                        $occupied={isOccupied}
+                        $selected={isSelected}
+                        onClick={() => setSelectedPos(posKey)}
+                      >
+                        <span className="pos-tag">{posKey}</span>
+                        <div className="icon">
+                          <Sprout size={20} color={isOccupied ? '#34d399' : '#475569'} />
+                        </div>
+                        <div className="plant-name">
+                          {isOccupied ? (b.genetic?.name || b.name || 'Planta') : 'Vacío'}
+                        </div>
+                        {isOccupied && <div className="code">{b.tracking_code || b.name}</div>}
+                      </PlantCell>
+                    );
+                  })
+                )}
               </PlantGrid>
 
               {/* Plant Inspector */}
@@ -564,13 +593,18 @@ export const WorkbenchDetailModal: React.FC<WorkbenchDetailModalProps> = ({
                 <PlantInspector>
                   <div className="header">
                     <h4>
-                      <FaDna color="#38bdf8" /> Planta en Posición {selectedPos}
-                      {selectedBatch ? ` — ${selectedBatch.genetic?.name || selectedBatch.name}` : ' (Espacio Disponible)'}
+                      <Dna size={18} color="#38bdf8" /> Planta en Posición {selectedPos}
+                      {selectedBatch
+                        ? ` — ${selectedBatch.genetic?.name || selectedBatch.name}`
+                        : ' (Espacio Disponible)'}
                     </h4>
                     {selectedBatch && (
-                      <span className="badge" style={{ background: selectedBatch.stage === 'flowering' ? 'rgba(234, 179, 8, 0.2)' : 'rgba(16, 185, 129, 0.2)', color: selectedBatch.stage === 'flowering' ? '#facc15' : '#34d399' }}>
+                      <ShadcnBadge
+                        variant={selectedBatch.stage === 'flowering' ? 'amber' : 'emerald'}
+                        dot
+                      >
                         {selectedBatch.stage ? selectedBatch.stage.toUpperCase() : 'FLORACIÓN'}
-                      </span>
+                      </ShadcnBadge>
                     )}
                   </div>
 
@@ -588,7 +622,7 @@ export const WorkbenchDetailModal: React.FC<WorkbenchDetailModalProps> = ({
                       </div>
                       <div className="detail-card">
                         <div className="lbl">Genética</div>
-                        <div className="val">{selectedBatch.genetic?.name || 'Fancy'}</div>
+                        <div className="val">{selectedBatch.genetic?.name || 'Genética'}</div>
                       </div>
                       <div className="detail-card">
                         <div className="lbl">Fecha de Inicio</div>
@@ -596,7 +630,7 @@ export const WorkbenchDetailModal: React.FC<WorkbenchDetailModalProps> = ({
                       </div>
                     </div>
                   ) : (
-                    <p style={{ color: '#64748b', fontSize: '0.85rem', margin: 0 }}>
+                    <p style={{ color: '#94a3b8', fontSize: '0.85rem', margin: 0 }}>
                       Posición {selectedPos} sin lote asignado en la Base de Datos. Puedes asignar un nuevo esqueje o lote desde el módulo de Cultivos.
                     </p>
                   )}
@@ -609,51 +643,90 @@ export const WorkbenchDetailModal: React.FC<WorkbenchDetailModalProps> = ({
           {activeTab === 'batch' && (
             <>
               {/* Batch Summary */}
-              <div style={{ background: 'rgba(30, 41, 59, 0.6)', borderRadius: '12px', padding: '1.25rem', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
-                <h3 style={{ margin: '0 0 0.85rem 0', fontSize: '1.1rem', color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <FaClipboardList color="#10b981" /> Informe de Lote e Incidencias — Mesa {bunkerName}
+              <div
+                style={{
+                  background: 'rgba(30, 41, 59, 0.45)',
+                  borderRadius: '14px',
+                  padding: '1.25rem',
+                  border: '1px solid rgba(255, 255, 255, 0.08)'
+                }}
+              >
+                <h3
+                  style={{
+                    margin: '0 0 1rem 0',
+                    fontSize: '1.05rem',
+                    color: '#f8fafc',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    fontWeight: 700
+                  }}
+                >
+                  <ClipboardList size={20} color="#34d399" /> Informe de Lote e Incidencias — Mesa {bunkerName}
                 </h3>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '0.85rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '1rem' }}>
                   <div>
-                    <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 700 }}>PLANTAS TOTALES EN SALA</div>
-                    <div style={{ fontSize: '1rem', fontWeight: 800, color: '#34d399', fontFamily: 'monospace' }}>{batches.length} Unidades</div>
+                    <div style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase' }}>
+                      Plantas Totales
+                    </div>
+                    <div style={{ fontSize: '1.15rem', fontWeight: 800, color: '#34d399', fontFamily: 'monospace', marginTop: 3 }}>
+                      {batches.length} Unidades
+                    </div>
                   </div>
                   <div>
-                    <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 700 }}>GENÉTICA PRINCIPAL</div>
-                    <div style={{ fontSize: '1rem', fontWeight: 800, color: '#38bdf8' }}>{batches[0]?.genetic?.name || 'Fancy (Floración)'}</div>
+                    <div style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase' }}>
+                      Genética Principal
+                    </div>
+                    <div style={{ fontSize: '1.15rem', fontWeight: 800, color: '#38bdf8', marginTop: 3 }}>
+                      {batches[0]?.genetic?.name || 'Variedad de Sala'}
+                    </div>
                   </div>
                   <div>
-                    <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 700 }}>ETAPA EN DB</div>
-                    <div style={{ fontSize: '1rem', fontWeight: 800, color: '#facc15' }}>{batches[0]?.stage || 'Floración'}</div>
+                    <div style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase' }}>
+                      Etapa en DB
+                    </div>
+                    <div style={{ fontSize: '1.15rem', fontWeight: 800, color: '#facc15', marginTop: 3 }}>
+                      {batches[0]?.stage || 'Floración'}
+                    </div>
                   </div>
                 </div>
               </div>
 
               {/* Add Log Entry */}
-              <form onSubmit={handleAddLog} style={{ display: 'flex', gap: '0.6rem' }}>
-                <input 
-                  type="text" 
+              <form onSubmit={handleAddLog} style={{ display: 'flex', gap: '0.65rem' }}>
+                <input
+                  type="text"
                   value={newLogText}
                   onChange={e => setNewLogText(e.target.value)}
                   placeholder="Escribir una nota de riego, mediciones pH/EC o evento del lote..."
-                  style={{ flex: 1, padding: '0.75rem 1rem', borderRadius: '10px', background: '#0f172a', border: '1px solid #334155', color: '#fff', fontSize: '0.85rem' }}
+                  style={{
+                    flex: 1,
+                    padding: '0.75rem 1rem',
+                    borderRadius: '10px',
+                    background: 'rgba(15, 23, 42, 0.7)',
+                    border: '1px solid rgba(255, 255, 255, 0.12)',
+                    color: '#f8fafc',
+                    fontSize: '0.875rem',
+                    outline: 'none'
+                  }}
                 />
-                <button type="submit" style={{ background: '#10b981', color: '#fff', border: 'none', padding: '0.75rem 1.25rem', borderRadius: '10px', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                  <FaPlus /> Guardar Nota
-                </button>
+                <ShadcnButton type="submit" variant="default" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <Plus size={16} /> Guardar Nota
+                </ShadcnButton>
               </form>
 
               {/* Log Timeline with Audio Note Player */}
               <TimelineList>
                 {tasks.map((task, idx) => {
-                  const isIncident = task.title?.includes('INCIDENCIA') || task.description?.includes('INCIDENCIA');
+                  const isIncident =
+                    task.title?.includes('INCIDENCIA') || task.description?.includes('INCIDENCIA');
                   const audioUrl = audioUrls[task.id];
 
                   return (
                     <TimelineItem key={task.id || idx} $isIncident={isIncident}>
                       <div style={{ flex: 1 }}>
                         <div className="title">
-                          {isIncident && <FaExclamationTriangle style={{ color: '#ef4444' }} />}
+                          {isIncident && <AlertTriangle size={18} color="#ef4444" />}
                           {task.title}
                         </div>
                         <div className="desc">{task.description}</div>
@@ -662,7 +735,7 @@ export const WorkbenchDetailModal: React.FC<WorkbenchDetailModalProps> = ({
                         {audioUrl && (
                           <AudioPlayerBox>
                             <div className="audio-label">
-                              <FaVolumeUp /> <span>Nota de Voz de Incidencia</span>
+                              <Volume2 size={16} /> <span>Nota de Voz de Incidencia</span>
                             </div>
                             <audio controls src={audioUrl} preload="metadata" />
                           </AudioPlayerBox>
@@ -670,14 +743,16 @@ export const WorkbenchDetailModal: React.FC<WorkbenchDetailModalProps> = ({
                       </div>
 
                       <div className="time">
-                        {task.created_at ? new Date(task.created_at).toLocaleDateString('es-AR') : 'Reciente'}
+                        {task.created_at
+                          ? new Date(task.created_at).toLocaleDateString('es-AR')
+                          : 'Reciente'}
                       </div>
                     </TimelineItem>
                   );
                 })}
 
                 {tasks.length === 0 && (
-                  <p style={{ color: '#64748b', fontSize: '0.85rem', textAlign: 'center', margin: '1rem 0' }}>
+                  <p style={{ color: '#64748b', fontSize: '0.85rem', textAlign: 'center', margin: '1.5rem 0' }}>
                     No hay tareas registradas para esta sala en la Base de Datos.
                   </p>
                 )}
@@ -688,18 +763,62 @@ export const WorkbenchDetailModal: React.FC<WorkbenchDetailModalProps> = ({
           {/* TAB 3: SENSORS & RELAYS */}
           {activeTab === 'sensors' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem' }}>
-                <div style={{ background: 'rgba(30, 41, 59, 0.6)', padding: '1rem', borderRadius: '12px', borderLeft: '4px solid #ef4444' }}>
-                  <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 700 }}>TEMP SENSOR EN VIVO</div>
-                  <div style={{ fontSize: '1.8rem', fontWeight: 900, color: '#fff' }}>{reading ? `${reading.temp_c}°C` : '24.6°C'}</div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+                <div
+                  style={{
+                    background: 'rgba(30, 41, 59, 0.5)',
+                    padding: '1.25rem',
+                    borderRadius: '14px',
+                    borderLeft: '4px solid #ef4444',
+                    borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+                    borderRight: '1px solid rgba(255, 255, 255, 0.08)',
+                    borderBottom: '1px solid rgba(255, 255, 255, 0.08)'
+                  }}
+                >
+                  <div style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                    <Thermometer size={16} color="#ef4444" /> TEMPERATURA EN VIVO
+                  </div>
+                  <div style={{ fontSize: '1.8rem', fontWeight: 800, color: '#f8fafc', marginTop: '0.35rem' }}>
+                    {reading ? `${reading.temp_c}°C` : '24.6°C'}
+                  </div>
                 </div>
-                <div style={{ background: 'rgba(30, 41, 59, 0.6)', padding: '1rem', borderRadius: '12px', borderLeft: '4px solid #38bdf8' }}>
-                  <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 700 }}>HUMEDAD SENSOR EN VIVO</div>
-                  <div style={{ fontSize: '1.8rem', fontWeight: 900, color: '#fff' }}>{reading ? `${reading.hum_pct}%` : '56.7%'}</div>
+
+                <div
+                  style={{
+                    background: 'rgba(30, 41, 59, 0.5)',
+                    padding: '1.25rem',
+                    borderRadius: '14px',
+                    borderLeft: '4px solid #38bdf8',
+                    borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+                    borderRight: '1px solid rgba(255, 255, 255, 0.08)',
+                    borderBottom: '1px solid rgba(255, 255, 255, 0.08)'
+                  }}
+                >
+                  <div style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                    <Droplets size={16} color="#38bdf8" /> HUMEDAD EN VIVO
+                  </div>
+                  <div style={{ fontSize: '1.8rem', fontWeight: 800, color: '#f8fafc', marginTop: '0.35rem' }}>
+                    {reading ? `${reading.hum_pct}%` : '56.7%'}
+                  </div>
                 </div>
-                <div style={{ background: 'rgba(30, 41, 59, 0.6)', padding: '1rem', borderRadius: '12px', borderLeft: '4px solid #10b981' }}>
-                  <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 700 }}>VPD CALCULADO</div>
-                  <div style={{ fontSize: '1.8rem', fontWeight: 900, color: '#fff' }}>{reading ? `${reading.vpd_kpa} kPa` : '0.98 kPa'}</div>
+
+                <div
+                  style={{
+                    background: 'rgba(30, 41, 59, 0.5)',
+                    padding: '1.25rem',
+                    borderRadius: '14px',
+                    borderLeft: '4px solid #10b981',
+                    borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+                    borderRight: '1px solid rgba(255, 255, 255, 0.08)',
+                    borderBottom: '1px solid rgba(255, 255, 255, 0.08)'
+                  }}
+                >
+                  <div style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                    <Activity size={16} color="#10b981" /> VPD CALCULADO
+                  </div>
+                  <div style={{ fontSize: '1.8rem', fontWeight: 800, color: '#f8fafc', marginTop: '0.35rem' }}>
+                    {reading ? `${reading.vpd_kpa} kPa` : '0.98 kPa'}
+                  </div>
                 </div>
               </div>
             </div>

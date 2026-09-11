@@ -1,8 +1,10 @@
 
 import React from 'react';
-import styled from 'styled-components';
-import { FaTimes, FaTrash, FaExclamationTriangle } from 'react-icons/fa';
+import styled, { keyframes } from 'styled-components';
+import { X as LucideX, Trash2, AlertTriangle, Layers, Sprout } from 'lucide-react';
 import { Batch } from '../types/rooms';
+import { Button as ShadcnButton } from './ui/Button';
+import { Badge as ShadcnBadge } from './ui/Badge';
 
 interface GroupDetailModalProps {
   isOpen: boolean;
@@ -12,124 +14,270 @@ interface GroupDetailModalProps {
   onDeleteBatch: (batch: Batch, quantityToDiscard: number) => void;
 }
 
+const fadeIn = keyframes`
+  from { opacity: 0; }
+  to { opacity: 1; }
+`;
+
+const slideUp = keyframes`
+  from { opacity: 0; transform: translateY(12px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+`;
+
 const Overlay = styled.div`
-  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.5); z-index: 1000;
-  display: flex; align-items: center; justify-content: center;
-  backdrop-filter: blur(2px);
+  position: fixed;
+  inset: 0;
+  background: rgba(3, 7, 18, 0.82);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(12px);
+  padding: 1rem;
+  animation: ${fadeIn} 0.2s ease-out;
 `;
 
 const Content = styled.div`
-  background: white; padding: 2rem; border-radius: 1rem;
-  width: 90%; max-width: 600px; max-height: 80vh;
-  display: flex; flex-direction: column;
-  box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+  background: rgba(15, 23, 42, 0.96);
+  backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 1.25rem;
+  padding: 1.5rem;
+  width: 100%;
+  max-width: 580px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 25px 60px -12px rgba(0, 0, 0, 0.7);
   position: relative;
+  animation: ${slideUp} 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 `;
 
 const Header = styled.div`
-  display: flex; justify-content: space-between; align-items: center;
-  margin-bottom: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
   padding-bottom: 1rem;
-  border-bottom: 1px solid #e2e8f0;
-`;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 
-const Title = styled.h2`
-  font-size: 1.5rem; color: #2d3748; margin: 0;
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+
+    .icon-badge {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      color: #34d399;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .title-col {
+      display: flex;
+      flex-direction: column;
+
+      h2 {
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: #f8fafc;
+        margin: 0;
+        letter-spacing: -0.01em;
+      }
+
+      span {
+        font-size: 0.8rem;
+        color: #94a3b8;
+      }
+    }
+  }
 `;
 
 const CloseButton = styled.button`
-  background: none; border: none; font-size: 1.5rem; color: #a0aec0; cursor: pointer;
-  &:hover { color: #4a5568; }
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #f8fafc;
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+`;
+
+const SummaryBar = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: rgba(30, 41, 59, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 0.75rem;
+  margin-bottom: 1.25rem;
 `;
 
 const List = styled.div`
-  flex: 1; overflow-y: auto;
-  display: flex; flex-direction: column; gap: 0.5rem;
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  padding-right: 0.25rem;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+  }
 `;
 
 const BatchItem = styled.div`
-  display: flex; justify-content: space-between; align-items: center;
-  padding: 1rem;
-  background: #f7fafc;
-  border: 1px solid #edf2f7;
-  border-radius: 0.5rem;
-  transition: all 0.2s;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.85rem 1rem;
+  background: rgba(30, 41, 59, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0.75rem;
+  transition: all 0.2s ease;
 
   &:hover {
-    background: #edf2f7;
-    border-color: #e2e8f0;
+    background: rgba(30, 41, 59, 0.8);
+    border-color: rgba(74, 222, 128, 0.25);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   }
 `;
 
 const BatchInfo = styled.div`
-  display: flex; flex-direction: column;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
 `;
 
 const BatchName = styled.span`
-  font-weight: bold; color: #2d3748; font-size: 1rem;
+  font-weight: 600;
+  color: #f1f5f9;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
 `;
 
 const BatchMeta = styled.span`
-  color: #718096; font-size: 0.85rem;
-`;
+  color: #94a3b8;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 
-const DeleteButton = styled.button`
-  background: white; border: 1px solid #feb2b2; color: #e53e3e;
-  padding: 0.5rem; border-radius: 0.25rem; cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  transition: all 0.2s;
-  
-  &:hover {
-    background: #fff5f5;
-    border-color: #fc8181;
+  code {
+    background: rgba(255, 255, 255, 0.06);
+    padding: 0.1rem 0.35rem;
+    border-radius: 4px;
+    font-family: ui-monospace, monospace;
+    color: #cbd5e1;
+    font-size: 0.75rem;
   }
 `;
 
-export const GroupDetailModal: React.FC<GroupDetailModalProps> = ({ isOpen, onClose, groupName, batches, onDeleteBatch }) => {
+export const GroupDetailModal: React.FC<GroupDetailModalProps> = ({
+  isOpen,
+  onClose,
+  groupName,
+  batches,
+  onDeleteBatch
+}) => {
   if (!isOpen) return null;
+
+  const totalPlants = batches.reduce((sum, b) => sum + b.quantity, 0);
 
   return (
     <Overlay onClick={onClose}>
       <Content onClick={e => e.stopPropagation()}>
         <Header>
-          <Title>Detalle del Grupo: {groupName}</Title>
-          <CloseButton onClick={onClose}><FaTimes /></CloseButton>
+          <div className="header-left">
+            <div className="icon-badge">
+              <Layers size={20} />
+            </div>
+            <div className="title-col">
+              <h2>Detalle del Grupo: {groupName}</h2>
+              <span>Información de los lotes agrupados en la mesa</span>
+            </div>
+          </div>
+          <CloseButton onClick={onClose} title="Cerrar">
+            <LucideX size={18} />
+          </CloseButton>
         </Header>
 
-        <div style={{ marginBottom: '1rem', color: '#718096' }}>
-          Total de plantas: <strong>{batches.reduce((sum, b) => sum + b.quantity, 0)}</strong> en {batches.length} lotes.
-        </div>
+        <SummaryBar>
+          <ShadcnBadge variant="emerald" dot>
+            {totalPlants} {totalPlants === 1 ? 'planta' : 'plantas'}
+          </ShadcnBadge>
+          <ShadcnBadge variant="outline">
+            {batches.length} {batches.length === 1 ? 'lote' : 'lotes'}
+          </ShadcnBadge>
+        </SummaryBar>
 
         <List>
           {batches.map(batch => (
             <BatchItem key={batch.id}>
               <BatchInfo>
-                <BatchName>{batch.quantity}x {batch.genetic?.name || 'Desconocida'}</BatchName>
-                <BatchMeta>Código: {batch.tracking_code || 'N/A'} • {batch.current_room_id ? 'En sala' : 'Sin sala'}</BatchMeta>
+                <BatchName>
+                  <Sprout size={15} color="#4ade80" />
+                  {batch.quantity}x {batch.genetic?.name || 'Desconocida'}
+                </BatchName>
+                <BatchMeta>
+                  <span>Código: <code>{batch.tracking_code || 'S/C'}</code></span>
+                  <span>•</span>
+                  <span>{batch.current_room_id ? 'En sala' : 'Sin sala'}</span>
+                </BatchMeta>
               </BatchInfo>
-              <DeleteButton onClick={() => {
-                if (batch.quantity > 1) {
-                  const qtyStr = window.prompt(`¿Cuántas unidades deseas descartar de ${batch.genetic?.name || 'este lote'}? (Máx: ${batch.quantity})`, String(batch.quantity));
-                  if (qtyStr === null) return; // Cancelled
-                  const qty = parseInt(qtyStr, 10);
-                  if (isNaN(qty) || qty <= 0 || qty > batch.quantity) {
-                    alert("Cantidad inválida");
-                    return;
+              <ShadcnButton
+                variant="destructive"
+                size="icon"
+                onClick={() => {
+                  if (batch.quantity > 1) {
+                    const qtyStr = window.prompt(
+                      `¿Cuántas unidades deseas descartar de ${batch.genetic?.name || 'este lote'}? (Máx: ${batch.quantity})`,
+                      String(batch.quantity)
+                    );
+                    if (qtyStr === null) return;
+                    const qty = parseInt(qtyStr, 10);
+                    if (isNaN(qty) || qty <= 0 || qty > batch.quantity) {
+                      alert('Cantidad inválida');
+                      return;
+                    }
+                    onDeleteBatch(batch, qty);
+                  } else {
+                    onDeleteBatch(batch, 1);
                   }
-                  onDeleteBatch(batch, qty);
-                } else {
-                  onDeleteBatch(batch, 1);
-                }
-              }} title="Descartar Lote">
-                <FaTrash />
-              </DeleteButton>
+                }}
+                title="Descartar Lote"
+                style={{ height: '34px', width: '34px' }}
+              >
+                <Trash2 size={16} />
+              </ShadcnButton>
             </BatchItem>
           ))}
           {batches.length === 0 && (
-            <div style={{ textAlign: 'center', padding: '2rem', color: '#a0aec0' }}>
-              <FaExclamationTriangle style={{ fontSize: '2rem', marginBottom: '0.5rem' }} />
-              <p>No hay lotes en este grupo.</p>
+            <div style={{ textAlign: 'center', padding: '2.5rem 1rem', color: '#64748b' }}>
+              <AlertTriangle size={32} style={{ margin: '0 auto 0.75rem', color: '#eab308' }} />
+              <p style={{ margin: 0, fontSize: '0.9rem', color: '#94a3b8' }}>No hay lotes en este grupo.</p>
             </div>
           )}
         </List>
