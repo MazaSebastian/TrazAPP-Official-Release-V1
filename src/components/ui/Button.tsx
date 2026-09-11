@@ -177,5 +177,6 @@ export const Button: React.FC<ButtonProps> = ({
   );
 };
 
+export const ShadcnButton = Button;
 export default Button;
 

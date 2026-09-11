@@ -5,139 +5,264 @@ import { roomsService } from '../services/roomsService';
 import {
     LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts';
-import { FaTimes, FaThermometerHalf, FaTint, FaHistory, FaArrowUp, FaArrowDown, FaMinus, FaCog, FaSave } from 'react-icons/fa';
+import { 
+    X as LucideX, 
+    Thermometer, 
+    Droplets, 
+    History, 
+    ArrowUp, 
+    ArrowDown, 
+    Minus, 
+    Settings, 
+    Save, 
+    MapPin, 
+    Sliders,
+    Cpu
+} from 'lucide-react';
+import { ShadcnButton } from './ui/Button';
+import { ShadcnBadge } from './ui/Badge';
 import { LoadingSpinner } from './LoadingSpinner';
 import { ToastModal } from './ToastModal';
 
 const ModalOverlay = styled.div`
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.75);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 1000;
-  backdrop-filter: blur(4px);
+  backdrop-filter: blur(12px);
   padding: 1rem;
+  animation: fadeIn 0.2s ease-out;
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
 `;
 
 const ModalContent = styled.div`
-  background: white;
-  border-radius: 1rem;
+  background: rgba(15, 23, 42, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 1.25rem;
   width: 100%;
   max-width: 900px;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05);
   display: flex;
   flex-direction: column;
+  animation: slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+
+  @keyframes slideUp {
+    from { transform: translateY(16px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 3px;
+  }
 `;
 
 const ModalHeader = styled.div`
   padding: 1.5rem;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #f8fafc;
-  border-radius: 1rem 1rem 0 0;
+  background: rgba(30, 41, 59, 0.4);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  backdrop-filter: blur(8px);
 `;
 
 const Title = styled.h2`
   margin: 0;
   font-size: 1.25rem;
-  color: #2d3748;
+  font-weight: 700;
+  color: #f8fafc;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.65rem;
 `;
 
 const CloseButton = styled.button`
   background: none;
   border: none;
-  color: #a0aec0;
+  color: #94a3b8;
   cursor: pointer;
-  font-size: 1.25rem;
-  transition: color 0.2s;
-  &:hover { color: #e53e3e; }
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  &:hover { 
+    color: #f1f5f9; 
+    background: rgba(255, 255, 255, 0.08);
+  }
 `;
 
 const ModalBody = styled.div`
-  padding: 1.5rem;
+  padding: 1.75rem;
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: 1.75rem;
 `;
 
 const StatsGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 1rem;
 `;
 
 const StatCard = styled.div`
-  background: white;
-  border: 1px solid #e2e8f0;
-  border-radius: 0.5rem;
-  padding: 1rem;
+  background: rgba(30, 41, 59, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0.85rem;
+  padding: 1.15rem;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+  gap: 0.4rem;
+  transition: border-color 0.2s, background 0.2s;
+  &:hover {
+    border-color: rgba(255, 255, 255, 0.15);
+    background: rgba(30, 41, 59, 0.7);
+  }
 `;
 
 const StatLabel = styled.div`
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: #718096;
+  letter-spacing: 0.06em;
+  color: #94a3b8;
   font-weight: 600;
 `;
 
 const StatValue = styled.div<{ color?: string }>`
   font-size: 1.5rem;
   font-weight: 700;
-  color: ${p => p.color || '#2d3748'};
+  color: ${p => p.color || '#f8fafc'};
   display: flex;
   align-items: center;
   gap: 0.5rem;
 `;
 
 const ChartContainer = styled.div`
-  background: white;
-  border: 1px solid #e2e8f0;
-  border-radius: 0.75rem;
-  padding: 1.5rem 1rem 1rem 0; /* padding right for YAxis */
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1rem;
+  padding: 1.5rem 1rem 1rem 0;
   height: 350px;
   position: relative;
 `;
 
 const ChartTitle = styled.h4`
-    margin: 0 0 1rem 1.5rem;
-    color: #4a5568;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-`;
-
-
-
-const TabButton = styled.button<{ $active: boolean }>`
-  padding: 0.5rem 1rem;
-  border: none;
-  background: ${p => p.$active ? '#e2e8f0' : 'transparent'};
-  color: ${p => p.$active ? '#2d3748' : '#718096'};
-  border-radius: 0.5rem;
+  margin: 0 0 1rem 1.5rem;
+  color: #f1f5f9;
+  font-size: 0.95rem;
   font-weight: 600;
-  cursor: pointer;
   display: flex;
   align-items: center;
   gap: 0.5rem;
+`;
+
+const TabSwitcher = styled.div`
+  display: flex;
+  background: rgba(15, 23, 42, 0.6);
+  padding: 0.25rem;
+  border-radius: 0.65rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  gap: 0.25rem;
+`;
+
+const TabButton = styled.button<{ $active: boolean }>`
+  padding: 0.4rem 0.85rem;
+  border: none;
+  background: ${p => p.$active ? 'rgba(59, 130, 246, 0.2)' : 'transparent'};
+  color: ${p => p.$active ? '#60a5fa' : '#94a3b8'};
+  border-radius: 0.5rem;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
   transition: all 0.2s;
-  &:hover { background: #edf2f7; }
+  ${p => p.$active && 'border: 1px solid rgba(59, 130, 246, 0.3);'}
+  &:hover {
+    color: #f1f5f9;
+    background: ${p => p.$active ? 'rgba(59, 130, 246, 0.25)' : 'rgba(255, 255, 255, 0.04)'};
+  }
+`;
+
+const TimeRangeSelector = styled.div`
+  display: flex;
+  background: rgba(15, 23, 42, 0.6);
+  padding: 0.25rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  gap: 0.25rem;
+`;
+
+const TimeButton = styled.button<{ $active: boolean }>`
+  padding: 0.35rem 0.65rem;
+  border-radius: 0.35rem;
+  border: none;
+  background: ${p => p.$active ? '#3b82f6' : 'transparent'};
+  color: ${p => p.$active ? '#ffffff' : '#94a3b8'};
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 600;
+  transition: all 0.2s;
+  &:hover {
+    color: #ffffff;
+  }
+`;
+
+const StyledInput = styled.input`
+  width: 100%;
+  padding: 0.65rem 0.85rem;
+  border-radius: 0.65rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(15, 23, 42, 0.6);
+  color: #f8fafc;
+  font-size: 0.95rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  &:focus {
+    outline: none;
+    border-color: rgba(59, 130, 246, 0.5);
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+  }
+`;
+
+const StyledSelect = styled.select`
+  width: 100%;
+  padding: 0.65rem 0.85rem;
+  border-radius: 0.65rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(15, 23, 42, 0.6);
+  color: #f8fafc;
+  font-size: 0.95rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  &:focus {
+    outline: none;
+    border-color: rgba(59, 130, 246, 0.5);
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+  }
+  option {
+    background: #0f172a;
+    color: #f8fafc;
+  }
 `;
 
 interface DeviceDetailModalProps {
@@ -165,7 +290,6 @@ export const DeviceDetailModal: React.FC<DeviceDetailModalProps> = ({ device, on
 
     useEffect(() => {
         if (view === 'history') {
-            // ... (existing fetchLogs logic - keep unchanged)
             const fetchLogs = async () => {
                 setLoading(true);
                 try {
@@ -200,11 +324,9 @@ export const DeviceDetailModal: React.FC<DeviceDetailModalProps> = ({ device, on
             };
             fetchLogs();
         } else {
-            // Fetch Settings AND Rooms
             const loadSettings = async () => {
                 setLoading(true);
                 try {
-                    // Parallel fetch
                     const [settingsData, roomsData] = await Promise.all([
                         tuyaService.getDeviceSettings(device.id),
                         roomsService.getRooms()
@@ -239,7 +361,6 @@ export const DeviceDetailModal: React.FC<DeviceDetailModalProps> = ({ device, on
             }));
     }, [logs, timeRange]);
 
-    // ... (rest of separate data logic relies on chartData, so it updates automatically)
     const tempData = chartData.filter(d => d.type === 'temp');
     const humData = chartData.filter(d => d.type === 'hum');
 
@@ -262,7 +383,7 @@ export const DeviceDetailModal: React.FC<DeviceDetailModalProps> = ({ device, on
         try {
             await tuyaService.saveDeviceSettings({ ...settings, device_id: device.id });
             setToast({ open: true, message: 'Configuración guardada correctamente', type: 'success' });
-            setTimeout(() => setView('history'), 1500); // Wait a bit before closing config
+            setTimeout(() => setView('history'), 1500);
         } catch (e) {
             setToast({ open: true, message: 'Error al guardar configuración.', type: 'error' });
         } finally {
@@ -273,196 +394,246 @@ export const DeviceDetailModal: React.FC<DeviceDetailModalProps> = ({ device, on
     return (
         <React.Fragment>
             <ModalOverlay onClick={onClose}>
-                {/* ... Modal Content ... */}
                 <ModalContent onClick={e => e.stopPropagation()}>
                     <ModalHeader>
-                        {/* ... Header ... */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                            <Title>{device.name}</Title>
-                            <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', flexWrap: 'wrap' }}>
+                            <Title>
+                                <div style={{
+                                    width: '36px',
+                                    height: '36px',
+                                    borderRadius: '0.5rem',
+                                    background: 'rgba(59, 130, 246, 0.15)',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    border: '1px solid rgba(59, 130, 246, 0.3)'
+                                }}>
+                                    <Cpu size={20} color="#60a5fa" />
+                                </div>
+                                {device.name}
+                            </Title>
+                            <TabSwitcher>
                                 <TabButton
                                     $active={view === 'history'}
                                     onClick={() => setView('history')}
                                     title="Ver Historial"
                                 >
-                                    <FaHistory /> Historial
+                                    <History size={16} /> Historial
                                 </TabButton>
                                 <TabButton
                                     $active={view === 'config'}
                                     onClick={() => setView('config')}
                                     title="Configuración de Alertas"
                                 >
-                                    <FaCog /> Configuración
+                                    <Settings size={16} /> Configuración
                                 </TabButton>
-                            </div>
+                            </TabSwitcher>
                         </div>
 
-                        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                            {view === 'history' && (['24h', '7d', '30d'] as const).map(range => (
-                                <button
-                                    key={range}
-                                    onClick={() => setTimeRange(range)}
-                                    style={{
-                                        padding: '0.25rem 0.5rem',
-                                        borderRadius: '0.25rem',
-                                        border: '1px solid #cbd5e0',
-                                        background: timeRange === range ? '#3182ce' : 'white',
-                                        color: timeRange === range ? 'white' : '#4a5568',
-                                        cursor: 'pointer',
-                                        fontSize: '0.8rem'
-                                    }}
-                                >
-                                    {range === '24h' ? '24hs' : range === '7d' ? '7 Días' : '30 Días'}
-                                </button>
-                            ))}
-                            <CloseButton onClick={onClose}><FaTimes /></CloseButton>
+                        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                            {view === 'history' && (
+                                <TimeRangeSelector>
+                                    {(['24h', '7d', '30d'] as const).map(range => (
+                                        <TimeButton
+                                            key={range}
+                                            $active={timeRange === range}
+                                            onClick={() => setTimeRange(range)}
+                                        >
+                                            {range === '24h' ? '24hs' : range === '7d' ? '7 Días' : '30 Días'}
+                                        </TimeButton>
+                                    ))}
+                                </TimeRangeSelector>
+                            )}
+                            <CloseButton onClick={onClose} aria-label="Cerrar">
+                                <LucideX size={20} />
+                            </CloseButton>
                         </div>
                     </ModalHeader>
 
                     <ModalBody>
                         {view === 'config' ? (
-                            <div style={{ padding: '1rem' }}>
-                                <h4 style={{ color: '#2d3748', marginBottom: '1rem' }}>Configuración General</h4>
-
-                                {/* Room Assignment */}
-                                <div style={{ marginBottom: '2rem', background: '#f7fafc', padding: '1rem', borderRadius: '0.5rem', border: '1px solid #edf2f7' }}>
-                                    <label style={{ display: 'block', fontSize: '0.9rem', color: '#4a5568', marginBottom: '0.5rem', fontWeight: 'bold' }}>📍 Asignar a Sala / Cultivo</label>
-                                    <select
-                                        value={settings.room_id || ''}
-                                        onChange={(e) => setSettings({ ...settings, room_id: e.target.value || undefined })}
-                                        style={{ width: '100%', padding: '0.75rem', borderRadius: '0.25rem', border: '1px solid #cbd5e0', background: 'white', fontSize: '1rem' }}
-                                    >
-                                        <option value="">-- Sin asignar --</option>
-                                        {rooms.map((room: any) => (
-                                            <option key={room.id} value={room.id}>
-                                                {room.name} ({room.type === 'vegetation' ? 'Vegetación' : room.type === 'flowering' ? 'Floración' : room.type === 'drying' ? 'Secado' : room.type === 'clones' ? 'Esquejes' : 'Otro'})
-                                            </option>
-                                        ))}
-                                    </select>
-                                    <p style={{ fontSize: '0.8rem', color: '#718096', marginTop: '0.5rem' }}>
-                                        Asignar este sensor a una sala te permitirá filtrar y ver sus datos directamente en la vista de detalle de esa sala.
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                                <div>
+                                    <h4 style={{ color: '#f8fafc', fontSize: '1.05rem', fontWeight: 600, marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                        <MapPin size={18} color="#38bdf8" /> Ubicación y Asignación
+                                    </h4>
+                                    <p style={{ fontSize: '0.85rem', color: '#94a3b8', margin: 0, marginBottom: '1rem' }}>
+                                        Asigna este sensor a una sala para vincular automáticamente su telemetría a ese cultivo.
                                     </p>
-                                </div>
 
-                                <h4 style={{ color: '#2d3748', marginBottom: '1rem' }}>Umbrales de Alerta</h4>
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-                                    {/* Temperature Settings */}
-                                    <div style={{ background: '#fff5f5', padding: '1.5rem', borderRadius: '0.5rem', border: '1px solid #feb2b2' }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#c53030', fontWeight: 'bold', marginBottom: '1rem' }}>
-                                            <FaThermometerHalf /> Alertas de Temperatura
-                                        </div>
-                                        <div style={{ marginBottom: '1rem' }}>
-                                            <label style={{ display: 'block', fontSize: '0.85rem', color: '#4a5568', marginBottom: '0.5rem' }}>Mínima (°C)</label>
-                                            <input
-                                                type="number"
-                                                value={settings.min_temp ?? ''}
-                                                onChange={e => setSettings({ ...settings, min_temp: Number(e.target.value) })}
-                                                style={{ width: '100%', padding: '0.5rem', borderRadius: '0.25rem', border: '1px solid #e2e8f0' }}
-                                            />
-                                        </div>
-                                        <div>
-                                            <label style={{ display: 'block', fontSize: '0.85rem', color: '#4a5568', marginBottom: '0.5rem' }}>Máxima (°C)</label>
-                                            <input
-                                                type="number"
-                                                value={settings.max_temp ?? ''}
-                                                onChange={e => setSettings({ ...settings, max_temp: Number(e.target.value) })}
-                                                style={{ width: '100%', padding: '0.5rem', borderRadius: '0.25rem', border: '1px solid #e2e8f0' }}
-                                            />
-                                        </div>
-                                    </div>
-
-                                    {/* Humidity Settings */}
-                                    <div style={{ background: '#ebf8ff', padding: '1.5rem', borderRadius: '0.5rem', border: '1px solid #bee3f8' }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#2b6cb0', fontWeight: 'bold', marginBottom: '1rem' }}>
-                                            <FaTint /> Alertas de Humedad
-                                        </div>
-                                        <div style={{ marginBottom: '1rem' }}>
-                                            <label style={{ display: 'block', fontSize: '0.85rem', color: '#4a5568', marginBottom: '0.5rem' }}>Mínima (%)</label>
-                                            <input
-                                                type="number"
-                                                value={settings.min_hum ?? ''}
-                                                onChange={e => setSettings({ ...settings, min_hum: Number(e.target.value) })}
-                                                style={{ width: '100%', padding: '0.5rem', borderRadius: '0.25rem', border: '1px solid #e2e8f0' }}
-                                            />
-                                        </div>
-                                        <div>
-                                            <label style={{ display: 'block', fontSize: '0.85rem', color: '#4a5568', marginBottom: '0.5rem' }}>Máxima (%)</label>
-                                            <input
-                                                type="number"
-                                                value={settings.max_hum ?? ''}
-                                                onChange={e => setSettings({ ...settings, max_hum: Number(e.target.value) })}
-                                                style={{ width: '100%', padding: '0.5rem', borderRadius: '0.25rem', border: '1px solid #e2e8f0' }}
-                                            />
-                                        </div>
+                                    <div style={{
+                                        background: 'rgba(30, 41, 59, 0.4)',
+                                        padding: '1.25rem',
+                                        borderRadius: '0.85rem',
+                                        border: '1px solid rgba(255, 255, 255, 0.08)'
+                                    }}>
+                                        <label style={{ display: 'block', fontSize: '0.85rem', color: '#cbd5e1', marginBottom: '0.5rem', fontWeight: 600 }}>
+                                            Sala / Cultivo Asignado
+                                        </label>
+                                        <StyledSelect
+                                            value={settings.room_id || ''}
+                                            onChange={(e) => setSettings({ ...settings, room_id: e.target.value || undefined })}
+                                        >
+                                            <option value="">-- Sin asignar --</option>
+                                            {rooms.map((room: any) => (
+                                                <option key={room.id} value={room.id}>
+                                                    {room.name} ({room.type === 'vegetation' ? 'Vegetación' : room.type === 'flowering' ? 'Floración' : room.type === 'drying' ? 'Secado' : room.type === 'clones' ? 'Esquejes' : 'Otro'})
+                                                </option>
+                                            ))}
+                                        </StyledSelect>
                                     </div>
                                 </div>
 
-                                <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'flex-end' }}>
-                                    <button
-                                        onClick={handleSaveSettings}
-                                        disabled={saving}
-                                        style={{
-                                            background: '#48bb78',
-                                            color: 'white',
-                                            border: 'none',
-                                            padding: '0.75rem 1.5rem',
-                                            borderRadius: '0.5rem',
-                                            fontWeight: 'bold',
-                                            cursor: 'pointer',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: '0.5rem',
-                                            opacity: saving ? 0.7 : 1
-                                        }}
+                                <div>
+                                    <h4 style={{ color: '#f8fafc', fontSize: '1.05rem', fontWeight: 600, marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                        <Sliders size={18} color="#a855f7" /> Umbrales y Alertas
+                                    </h4>
+                                    <p style={{ fontSize: '0.85rem', color: '#94a3b8', margin: 0, marginBottom: '1rem' }}>
+                                        Define los límites operativos óptimos para disparar alertas preventivas.
+                                    </p>
+
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.25rem' }}>
+                                        {/* Temperature Settings */}
+                                        <div style={{
+                                            background: 'rgba(239, 68, 68, 0.06)',
+                                            padding: '1.25rem',
+                                            borderRadius: '0.85rem',
+                                            border: '1px solid rgba(239, 68, 68, 0.2)'
+                                        }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#f87171', fontWeight: 600, marginBottom: '1rem' }}>
+                                                <Thermometer size={18} /> Alertas de Temperatura
+                                            </div>
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                                <div>
+                                                    <label style={{ display: 'block', fontSize: '0.8rem', color: '#cbd5e1', marginBottom: '0.35rem' }}>Mínima (°C)</label>
+                                                    <StyledInput
+                                                        type="number"
+                                                        value={settings.min_temp ?? ''}
+                                                        onChange={e => setSettings({ ...settings, min_temp: Number(e.target.value) })}
+                                                        placeholder="Ej: 18"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label style={{ display: 'block', fontSize: '0.8rem', color: '#cbd5e1', marginBottom: '0.35rem' }}>Máxima (°C)</label>
+                                                    <StyledInput
+                                                        type="number"
+                                                        value={settings.max_temp ?? ''}
+                                                        onChange={e => setSettings({ ...settings, max_temp: Number(e.target.value) })}
+                                                        placeholder="Ej: 28"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Humidity Settings */}
+                                        <div style={{
+                                            background: 'rgba(59, 130, 246, 0.06)',
+                                            padding: '1.25rem',
+                                            borderRadius: '0.85rem',
+                                            border: '1px solid rgba(59, 130, 246, 0.2)'
+                                        }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#60a5fa', fontWeight: 600, marginBottom: '1rem' }}>
+                                                <Droplets size={18} /> Alertas de Humedad
+                                            </div>
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                                <div>
+                                                    <label style={{ display: 'block', fontSize: '0.8rem', color: '#cbd5e1', marginBottom: '0.35rem' }}>Mínima (%)</label>
+                                                    <StyledInput
+                                                        type="number"
+                                                        value={settings.min_hum ?? ''}
+                                                        onChange={e => setSettings({ ...settings, min_hum: Number(e.target.value) })}
+                                                        placeholder="Ej: 40"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label style={{ display: 'block', fontSize: '0.8rem', color: '#cbd5e1', marginBottom: '0.35rem' }}>Máxima (%)</label>
+                                                    <StyledInput
+                                                        type="number"
+                                                        value={settings.max_hum ?? ''}
+                                                        onChange={e => setSettings({ ...settings, max_hum: Number(e.target.value) })}
+                                                        placeholder="Ej: 65"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '0.5rem' }}>
+                                    <ShadcnButton
+                                        variant="secondary"
+                                        onClick={() => setView('history')}
                                     >
-                                        <FaSave /> {saving ? 'Guardando...' : 'Guardar Configuración'}
-                                    </button>
+                                        Cancelar
+                                    </ShadcnButton>
+                                    <ShadcnButton
+                                        variant="default"
+                                        onClick={handleSaveSettings}
+                                        isLoading={saving}
+                                    >
+                                        <Save size={16} /> Guardar Configuración
+                                    </ShadcnButton>
                                 </div>
                             </div>
                         ) : (
-                            // ... history view (restored or kept)
                             loading ? <LoadingSpinner /> : !hasData ? (
-                                <div style={{ textAlign: 'center', color: '#a0aec0', padding: '3rem' }}>
-                                    <FaHistory style={{ fontSize: '3rem', marginBottom: '1rem', display: 'block', margin: '0 auto 1rem' }} />
-                                    No hay datos históricos disponibles para este periodo.
+                                <div style={{ textAlign: 'center', color: '#94a3b8', padding: '3.5rem 1rem' }}>
+                                    <History size={48} style={{ opacity: 0.35, marginBottom: '1rem', display: 'block', margin: '0 auto 1rem' }} />
+                                    <p style={{ margin: 0, fontSize: '1rem', fontWeight: 500 }}>No hay datos históricos disponibles para este periodo.</p>
                                 </div>
                             ) : (
                                 <>
                                     {/* Temperature Section */}
                                     {tempData.length > 0 && (
                                         <div>
-                                            <StatsGrid style={{ marginBottom: '1rem' }}>
+                                            <StatsGrid style={{ marginBottom: '1.25rem' }}>
                                                 <StatCard>
                                                     <StatLabel>Temperatura Actual</StatLabel>
-                                                    <StatValue color="#e53e3e"><FaThermometerHalf /> {tempStats.current.toFixed(1)}°C</StatValue>
+                                                    <StatValue color="#f87171">
+                                                        <Thermometer size={22} /> {tempStats.current.toFixed(1)}°C
+                                                    </StatValue>
                                                 </StatCard>
                                                 <StatCard>
                                                     <StatLabel>Máxima ({timeRange})</StatLabel>
-                                                    <StatValue color="#d53f8c"><FaArrowUp size={16} /> {tempStats.max.toFixed(1)}°C</StatValue>
+                                                    <StatValue color="#f472b6">
+                                                        <ArrowUp size={20} /> {tempStats.max.toFixed(1)}°C
+                                                    </StatValue>
                                                 </StatCard>
                                                 <StatCard>
                                                     <StatLabel>Mínima ({timeRange})</StatLabel>
-                                                    <StatValue color="#3182ce"><FaArrowDown size={16} /> {tempStats.min.toFixed(1)}°C</StatValue>
+                                                    <StatValue color="#60a5fa">
+                                                        <ArrowDown size={20} /> {tempStats.min.toFixed(1)}°C
+                                                    </StatValue>
                                                 </StatCard>
                                                 <StatCard>
                                                     <StatLabel>Promedio</StatLabel>
-                                                    <StatValue color="#805ad5"><FaMinus size={16} /> {tempStats.avg.toFixed(1)}°C</StatValue>
+                                                    <StatValue color="#c084fc">
+                                                        <Minus size={20} /> {tempStats.avg.toFixed(1)}°C
+                                                    </StatValue>
                                                 </StatCard>
                                             </StatsGrid>
 
                                             <ChartContainer>
-                                                <ChartTitle><FaThermometerHalf color="#e53e3e" /> Historial de Temperatura</ChartTitle>
-                                                <ResponsiveContainer width="100%" height={300}>
+                                                <ChartTitle>
+                                                    <Thermometer size={18} color="#f87171" /> Historial de Temperatura
+                                                </ChartTitle>
+                                                <ResponsiveContainer width="100%" height={280}>
                                                     <LineChart data={tempData}>
-                                                        <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
-                                                        <XAxis dataKey="time" minTickGap={30} fontSize={12} stroke="#a0aec0" />
-                                                        <YAxis domain={['auto', 'auto']} fontSize={12} stroke="#a0aec0" unit="°C" />
+                                                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.07)" />
+                                                        <XAxis dataKey="time" minTickGap={30} fontSize={11} stroke="#64748b" tick={{ fill: '#94a3b8' }} />
+                                                        <YAxis domain={['auto', 'auto']} fontSize={11} stroke="#64748b" tick={{ fill: '#94a3b8' }} unit="°C" />
                                                         <Tooltip
-                                                            contentStyle={{ borderRadius: '0.5rem', border: 'none', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}
+                                                            contentStyle={{ 
+                                                                background: 'rgba(15, 23, 42, 0.95)', 
+                                                                borderRadius: '0.65rem', 
+                                                                border: '1px solid rgba(255, 255, 255, 0.1)',
+                                                                boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
+                                                                color: '#f8fafc'
+                                                            }}
                                                             formatter={(value: any) => [`${Number(value).toFixed(1)} °C`, 'Temperatura']}
-                                                            labelStyle={{ color: '#718096' }}
+                                                            labelStyle={{ color: '#94a3b8' }}
                                                         />
-                                                        <Line type="monotone" dataKey="value" stroke="#e53e3e" strokeWidth={2} dot={false} activeDot={{ r: 6 }} />
+                                                        <Line type="monotone" dataKey="value" stroke="#f87171" strokeWidth={2.5} dot={false} activeDot={{ r: 5, fill: '#f87171' }} />
                                                     </LineChart>
                                                 </ResponsiveContainer>
                                             </ChartContainer>
@@ -471,39 +642,55 @@ export const DeviceDetailModal: React.FC<DeviceDetailModalProps> = ({ device, on
 
                                     {/* Humidity Section */}
                                     {humData.length > 0 && (
-                                        <div style={{ marginTop: '2rem' }}>
-                                            <StatsGrid style={{ marginBottom: '1rem' }}>
+                                        <div>
+                                            <StatsGrid style={{ marginBottom: '1.25rem' }}>
                                                 <StatCard>
                                                     <StatLabel>Humedad Actual</StatLabel>
-                                                    <StatValue color="#3182ce"><FaTint /> {humStats.current.toFixed(0)}%</StatValue>
+                                                    <StatValue color="#60a5fa">
+                                                        <Droplets size={22} /> {humStats.current.toFixed(0)}%
+                                                    </StatValue>
                                                 </StatCard>
                                                 <StatCard>
                                                     <StatLabel>Máxima ({timeRange})</StatLabel>
-                                                    <StatValue color="#d53f8c"><FaArrowUp size={16} /> {humStats.max.toFixed(0)}%</StatValue>
+                                                    <StatValue color="#f472b6">
+                                                        <ArrowUp size={20} /> {humStats.max.toFixed(0)}%
+                                                    </StatValue>
                                                 </StatCard>
                                                 <StatCard>
                                                     <StatLabel>Mínima ({timeRange})</StatLabel>
-                                                    <StatValue color="#3182ce"><FaArrowDown size={16} /> {humStats.min.toFixed(0)}%</StatValue>
+                                                    <StatValue color="#60a5fa">
+                                                        <ArrowDown size={20} /> {humStats.min.toFixed(0)}%
+                                                    </StatValue>
                                                 </StatCard>
                                                 <StatCard>
                                                     <StatLabel>Promedio</StatLabel>
-                                                    <StatValue color="#805ad5"><FaMinus size={16} /> {humStats.avg.toFixed(0)}%</StatValue>
+                                                    <StatValue color="#c084fc">
+                                                        <Minus size={20} /> {humStats.avg.toFixed(0)}%
+                                                    </StatValue>
                                                 </StatCard>
                                             </StatsGrid>
 
                                             <ChartContainer>
-                                                <ChartTitle><FaTint color="#3182ce" /> Historial de Humedad</ChartTitle>
-                                                <ResponsiveContainer width="100%" height={300}>
+                                                <ChartTitle>
+                                                    <Droplets size={18} color="#60a5fa" /> Historial de Humedad
+                                                </ChartTitle>
+                                                <ResponsiveContainer width="100%" height={280}>
                                                     <LineChart data={humData}>
-                                                        <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
-                                                        <XAxis dataKey="time" minTickGap={30} fontSize={12} stroke="#a0aec0" />
-                                                        <YAxis domain={[0, 100]} fontSize={12} stroke="#a0aec0" unit="%" />
+                                                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.07)" />
+                                                        <XAxis dataKey="time" minTickGap={30} fontSize={11} stroke="#64748b" tick={{ fill: '#94a3b8' }} />
+                                                        <YAxis domain={[0, 100]} fontSize={11} stroke="#64748b" tick={{ fill: '#94a3b8' }} unit="%" />
                                                         <Tooltip
-                                                            contentStyle={{ borderRadius: '0.5rem', border: 'none', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}
+                                                            contentStyle={{ 
+                                                                background: 'rgba(15, 23, 42, 0.95)', 
+                                                                borderRadius: '0.65rem', 
+                                                                border: '1px solid rgba(255, 255, 255, 0.1)',
+                                                                boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
+                                                                color: '#f8fafc'
+                                                            }}
                                                             formatter={(value: any) => [`${Number(value).toFixed(0)} %`, 'Humedad']}
-                                                            labelStyle={{ color: '#718096' }}
+                                                            labelStyle={{ color: '#94a3b8' }}
                                                         />
-                                                        <Line type="monotone" dataKey="value" stroke="#3182ce" strokeWidth={2} dot={false} activeDot={{ r: 6 }} />
+                                                        <Line type="monotone" dataKey="value" stroke="#38bdf8" strokeWidth={2.5} dot={false} activeDot={{ r: 5, fill: '#38bdf8' }} />
                                                     </LineChart>
                                                 </ResponsiveContainer>
                                             </ChartContainer>

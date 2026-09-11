@@ -2,10 +2,22 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { 
-  FaTimes, FaThermometerHalf, FaTint, FaLeaf, FaChartArea, FaCog, FaSave, 
-  FaWifi, FaTimesCircle, FaPlus, FaTrash, FaPen, FaBell, FaExclamationTriangle, 
-  FaDesktop, FaGlobe, FaMobileAlt 
-} from 'react-icons/fa';
+  X as LucideX, 
+  Thermometer, 
+  Droplets, 
+  Leaf, 
+  Activity, 
+  Settings, 
+  Save, 
+  Wifi, 
+  Bell, 
+  Monitor, 
+  Globe, 
+  Smartphone,
+  Sliders,
+  MapPin,
+  Layers
+} from 'lucide-react';
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts';
@@ -13,6 +25,7 @@ import { deviceService, TrazAppDevice } from '../services/deviceService';
 import { roomsService } from '../services/roomsService';
 import { LoadingSpinner } from './LoadingSpinner';
 import { ToastModal } from './ToastModal';
+import { ShadcnButton } from './ui/Button';
 
 const fadeIn = keyframes`
   from { opacity: 0; }
@@ -20,7 +33,7 @@ const fadeIn = keyframes`
 `;
 
 const slideUp = keyframes`
-  from { opacity: 0; transform: translateY(20px); }
+  from { opacity: 0; transform: translateY(16px); }
   to { opacity: 1; transform: translateY(0); }
 `;
 
@@ -28,32 +41,32 @@ const ModalOverlay = styled.div`
   position: fixed;
   inset: 0;
   background-color: rgba(0, 0, 0, 0.75);
-  backdrop-filter: blur(8px);
+  backdrop-filter: blur(12px);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 10000;
   padding: 1.5rem;
-  animation: ${fadeIn} 0.25s ease-out;
+  animation: ${fadeIn} 0.2s ease-out;
 `;
 
 const ModalContent = styled.div`
-  background: rgba(15, 23, 42, 0.95);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(15, 23, 42, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 1.25rem;
   width: 100%;
-  max-width: 850px;
+  max-width: 880px;
   max-height: 90vh;
   overflow: hidden;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05);
   display: flex;
   flex-direction: column;
-  animation: ${slideUp} 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: ${slideUp} 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 `;
 
 const ModalHeader = styled.div`
   padding: 1.5rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -62,59 +75,86 @@ const ModalHeader = styled.div`
 
 const HeaderTitle = styled.div`
   display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
+  align-items: center;
+  gap: 0.85rem;
 
-  h2 {
-    margin: 0;
-    font-size: 1.25rem;
-    font-weight: 800;
-    color: #f8fafc;
+  .icon-wrapper {
+    width: 40px;
+    height: 40px;
+    border-radius: 0.65rem;
+    background: rgba(16, 185, 129, 0.15);
+    border: 1px solid rgba(16, 185, 129, 0.3);
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    justify-content: center;
   }
 
-  span {
-    font-size: 0.78rem;
-    color: #64748b;
-    font-family: monospace;
-    letter-spacing: 0.05em;
+  .text-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+
+    h2 {
+      margin: 0;
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #f8fafc;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    span {
+      font-size: 0.8rem;
+      color: #94a3b8;
+      font-family: monospace;
+      letter-spacing: 0.03em;
+    }
   }
 `;
 
 const CloseButton = styled.button`
   background: none;
   border: none;
-  color: #64748b;
+  color: #94a3b8;
   cursor: pointer;
-  font-size: 1.2rem;
-  transition: color 0.2s;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  transition: all 0.2s;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0.5rem;
-  border-radius: 50%;
   &:hover {
-    color: #ef4444;
-    background: rgba(255, 255, 255, 0.05);
+    color: #f1f5f9;
+    background: rgba(255, 255, 255, 0.08);
   }
 `;
 
 const ModalBody = styled.div`
-  padding: 1.5rem;
+  padding: 1.75rem;
   overflow-y: auto;
   flex: 1;
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 3px;
+  }
 `;
 
 const NavRow = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   padding-bottom: 1rem;
   flex-wrap: wrap;
   gap: 1rem;
@@ -122,56 +162,56 @@ const NavRow = styled.div`
 
 const TabGroup = styled.div`
   display: flex;
-  gap: 0.5rem;
-  background: rgba(255, 255, 255, 0.03);
+  gap: 0.25rem;
+  background: rgba(15, 23, 42, 0.6);
   padding: 0.25rem;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 0.65rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
 `;
 
 const TabButton = styled.button<{ $active: boolean }>`
-  padding: 0.5rem 1rem;
+  padding: 0.45rem 0.9rem;
   border: none;
   background: ${p => p.$active ? 'rgba(16, 185, 129, 0.15)' : 'transparent'};
-  color: ${p => p.$active ? '#10b981' : '#94a3b8'};
-  border-radius: 6px;
-  font-weight: 700;
+  color: ${p => p.$active ? '#34d399' : '#94a3b8'};
+  border-radius: 0.5rem;
+  font-weight: 600;
   font-size: 0.85rem;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.45rem;
   transition: all 0.2s;
-  border: 1px solid ${p => p.$active ? 'rgba(16, 185, 129, 0.2)' : 'transparent'};
+  ${p => p.$active && 'border: 1px solid rgba(16, 185, 129, 0.25);'}
 
   &:hover {
-    color: ${p => p.$active ? '#10b981' : '#f8fafc'};
-    background: ${p => p.$active ? 'rgba(16, 185, 129, 0.15)' : 'rgba(255, 255, 255, 0.05)'};
+    color: ${p => p.$active ? '#34d399' : '#f8fafc'};
+    background: ${p => p.$active ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255, 255, 255, 0.04)'};
   }
 `;
 
 const RangeGroup = styled.div`
   display: flex;
-  gap: 0.35rem;
-  background: rgba(255, 255, 255, 0.03);
+  gap: 0.25rem;
+  background: rgba(15, 23, 42, 0.6);
   padding: 0.25rem;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
 `;
 
 const RangeButton = styled.button<{ $active: boolean }>`
-  padding: 0.35rem 0.75rem;
+  padding: 0.35rem 0.7rem;
   border: none;
-  background: ${p => p.$active ? '#1e293b' : 'transparent'};
-  color: ${p => p.$active ? '#f8fafc' : '#64748b'};
-  border-radius: 6px;
-  font-weight: 700;
+  background: ${p => p.$active ? '#3b82f6' : 'transparent'};
+  color: ${p => p.$active ? '#ffffff' : '#94a3b8'};
+  border-radius: 0.35rem;
+  font-weight: 600;
   font-size: 0.78rem;
   cursor: pointer;
   transition: all 0.2s;
 
   &:hover {
-    color: #f8fafc;
+    color: #ffffff;
   }
 `;
 
@@ -182,76 +222,74 @@ const StatsGrid = styled.div`
 `;
 
 const StatCard = styled.div<{ $color: string }>`
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.04);
-  border-radius: 12px;
-  padding: 1rem;
+  background: rgba(30, 41, 59, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0.85rem;
+  padding: 1.15rem;
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.35rem;
 
   .label {
     font-size: 0.72rem;
     font-weight: 700;
     text-transform: uppercase;
-    color: #64748b;
-    letter-spacing: 0.05em;
+    color: #94a3b8;
+    letter-spacing: 0.06em;
   }
 
   .value {
-    font-size: 1.4rem;
-    font-weight: 800;
+    font-size: 1.45rem;
+    font-weight: 700;
     color: ${p => p.$color};
   }
 `;
 
 const MetricSelectorRow = styled.div`
-  display: flex;
-  gap: 0.75rem;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.85rem;
 `;
 
 const MetricOptionCard = styled.button<{ $active: boolean; $color: string }>`
-  flex: 1;
-  min-width: 130px;
-  background: ${p => p.$active ? `rgba(${p.$color === '#ef4444' ? '239,68,68' : p.$color === '#3b82f6' ? '59,130,246' : p.$color === '#14b8a6' ? '20,184,166' : '168,85,247'}, 0.08)` : 'rgba(255,255,255,0.02)'};
-  border: 1px solid ${p => p.$active ? `${p.$color}4d` : 'rgba(255,255,255,0.04)'};
-  border-radius: 12px;
-  padding: 0.875rem;
+  background: ${p => p.$active ? `rgba(${p.$color === '#ef4444' ? '239,68,68' : p.$color === '#3b82f6' ? '59,130,246' : p.$color === '#14b8a6' ? '20,184,166' : '168,85,247'}, 0.12)` : 'rgba(30, 41, 59, 0.35)'};
+  border: 1px solid ${p => p.$active ? `${p.$color}55` : 'rgba(255, 255, 255, 0.08)'};
+  border-radius: 0.85rem;
+  padding: 1rem;
   text-align: left;
   cursor: pointer;
   transition: all 0.2s;
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.35rem;
 
   .header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    color: ${p => p.$active ? p.$color : '#64748b'};
+    color: ${p => p.$active ? p.$color : '#94a3b8'};
     font-size: 0.85rem;
-    font-weight: 700;
+    font-weight: 600;
   }
 
   .value {
-    font-size: 1.25rem;
-    font-weight: 800;
-    color: ${p => p.$active ? p.$color : '#94a3b8'};
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: ${p => p.$active ? p.$color : '#cbd5e1'};
   }
 
   &:hover {
     border-color: ${p => p.$color}66;
-    background: rgba(255,255,255,0.04);
+    background: rgba(255, 255, 255, 0.05);
   }
 `;
 
 const ChartWrapper = styled.div`
-  background: rgba(255, 255, 255, 0.01);
-  border: 1px solid rgba(255, 255, 255, 0.03);
-  border-radius: 16px;
-  padding: 1.5rem;
-  height: 330px;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1rem;
+  padding: 1.5rem 1rem 1rem 0;
+  height: 340px;
 `;
 
 const ChartHeader = styled.div`
@@ -259,11 +297,12 @@ const ChartHeader = styled.div`
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1rem;
+  padding-left: 1.5rem;
 
   h3 {
     margin: 0;
     font-size: 0.95rem;
-    font-weight: 800;
+    font-weight: 600;
     color: #f8fafc;
     display: flex;
     align-items: center;
@@ -276,35 +315,34 @@ const ConfigForm = styled.div`
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
-  padding: 0.5rem 0;
 `;
 
 const FormGroup = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.45rem;
 
   label {
     font-size: 0.8rem;
     font-weight: 700;
-    color: #94a3b8;
+    color: #cbd5e1;
     text-transform: uppercase;
     letter-spacing: 0.05em;
   }
 
   input, select {
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 10px;
-    padding: 0.75rem 1rem;
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0.65rem;
+    padding: 0.7rem 0.9rem;
     color: #f8fafc;
     font-size: 0.95rem;
     outline: none;
     transition: all 0.2s;
 
     &:focus {
-      border-color: #10b981;
-      background: rgba(255, 255, 255, 0.06);
+      border-color: rgba(16, 185, 129, 0.5);
+      box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
     }
   }
 
@@ -317,47 +355,16 @@ const FormGroup = styled.div`
   }
 
   .hint {
-    font-size: 0.75rem;
+    font-size: 0.78rem;
     color: #64748b;
     line-height: 1.4;
   }
 `;
 
-const ButtonRow = styled.div`
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 1rem;
-`;
-
-const SaveButton = styled.button`
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  background: linear-gradient(135deg, #10b981, #059669);
-  color: white;
-  border: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: 10px;
-  font-weight: 700;
-  font-size: 0.95rem;
-  cursor: pointer;
-  transition: all 0.2s;
-
-  &:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
-  }
-  &:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-    transform: none;
-  }
-`;
-
 const AlertSectionCard = styled.div`
-  background: rgba(255, 255, 255, 0.02);
+  background: rgba(30, 41, 59, 0.35);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 12px;
+  border-radius: 1rem;
   padding: 1.25rem;
   display: flex;
   flex-direction: column;
@@ -376,7 +383,7 @@ const AlertHeader = styled.div`
 
     h4 {
       margin: 0;
-      font-size: 0.95rem;
+      font-size: 0.98rem;
       font-weight: 700;
       color: #f8fafc;
       display: flex;
@@ -385,7 +392,7 @@ const AlertHeader = styled.div`
     }
     p {
       margin: 0;
-      font-size: 0.78rem;
+      font-size: 0.8rem;
       color: #94a3b8;
     }
   }
@@ -406,12 +413,9 @@ const SwitchLabel = styled.label`
   span {
     position: absolute;
     cursor: pointer;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    inset: 0;
     background-color: #334155;
-    transition: .3s;
+    transition: .25s;
     border-radius: 24px;
 
     &:before {
@@ -422,7 +426,7 @@ const SwitchLabel = styled.label`
       left: 3px;
       bottom: 3px;
       background-color: white;
-      transition: .3s;
+      transition: .25s;
       border-radius: 50%;
     }
   }
@@ -446,12 +450,12 @@ const ChannelCheckbox = styled.label<{ $checked: boolean }>`
   display: flex;
   align-items: center;
   gap: 0.6rem;
-  padding: 0.6rem 0.85rem;
-  background: ${props => props.$checked ? 'rgba(16, 185, 129, 0.1)' : 'rgba(255, 255, 255, 0.03)'};
-  border: 1px solid ${props => props.$checked ? '#10b981' : 'rgba(255, 255, 255, 0.08)'};
-  border-radius: 8px;
+  padding: 0.65rem 0.85rem;
+  background: ${props => props.$checked ? 'rgba(16, 185, 129, 0.12)' : 'rgba(15, 23, 42, 0.6)'};
+  border: 1px solid ${props => props.$checked ? 'rgba(16, 185, 129, 0.4)' : 'rgba(255, 255, 255, 0.08)'};
+  border-radius: 0.65rem;
   cursor: pointer;
-  font-size: 0.82rem;
+  font-size: 0.85rem;
   font-weight: 600;
   color: ${props => props.$checked ? '#34d399' : '#94a3b8'};
   transition: all 0.2s;
@@ -471,19 +475,19 @@ const ThresholdCard = styled.div<{ $color: string }>`
   background: rgba(15, 23, 42, 0.6);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-top: 3px solid ${props => props.$color};
-  border-radius: 8px;
-  padding: 0.85rem;
+  border-radius: 0.65rem;
+  padding: 0.95rem;
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
+  gap: 0.65rem;
 
   .metric-label {
-    font-size: 0.78rem;
+    font-size: 0.8rem;
     font-weight: 700;
     color: #f8fafc;
     display: flex;
     align-items: center;
-    gap: 0.4rem;
+    gap: 0.45rem;
   }
 
   .inputs-row {
@@ -495,11 +499,11 @@ const ThresholdCard = styled.div<{ $color: string }>`
       flex: 1;
       display: flex;
       flex-direction: column;
-      gap: 0.2rem;
+      gap: 0.25rem;
 
       span {
-        font-size: 0.68rem;
-        color: #64748b;
+        font-size: 0.7rem;
+        color: #94a3b8;
         font-weight: 600;
         text-transform: uppercase;
       }
@@ -508,8 +512,8 @@ const ThresholdCard = styled.div<{ $color: string }>`
         width: 100%;
         background: rgba(255, 255, 255, 0.05);
         border: 1px solid rgba(255, 255, 255, 0.12);
-        border-radius: 6px;
-        padding: 0.4rem 0.5rem;
+        border-radius: 0.5rem;
+        padding: 0.45rem 0.5rem;
         color: #f8fafc;
         font-size: 0.88rem;
         font-weight: 600;
@@ -621,7 +625,6 @@ export const TrazAppDeviceDetailModal: React.FC<TrazAppDeviceDetailModalProps> =
     })).filter(d => d.value !== null && d.value !== undefined);
   }, [logs, activeMetric, timeRange]);
 
-  // Smooth data points to create natural curved lines without sharp discrete steps
   const smoothedData = useMemo(() => {
     if (chartData.length <= 2) return chartData;
     return chartData.map((d, i, arr) => {
@@ -638,7 +641,6 @@ export const TrazAppDeviceDetailModal: React.FC<TrazAppDeviceDetailModalProps> =
     });
   }, [chartData, activeMetric]);
 
-  // Calculate statistics for the active metric
   const stats = useMemo(() => {
     if (chartData.length === 0) return { current: null, min: null, max: null, avg: null };
     const values = chartData.map(d => Number(d.value));
@@ -649,7 +651,6 @@ export const TrazAppDeviceDetailModal: React.FC<TrazAppDeviceDetailModalProps> =
     return { current, min, max, avg };
   }, [chartData]);
 
-  // Dynamic Y-axis domain with natural padding to avoid strange decimal intervals
   const yDomain = useMemo(() => {
     if (stats.min === null || stats.max === null) return ['auto', 'auto'];
     if (activeMetric === 'temp') {
@@ -675,21 +676,19 @@ export const TrazAppDeviceDetailModal: React.FC<TrazAppDeviceDetailModalProps> =
     return ['auto', 'auto'];
   }, [stats, activeMetric]);
 
-  // Active Metric Config Helper
   const metricConfig = useMemo(() => {
     switch (activeMetric) {
       case 'temp':
-        return { label: 'Temperatura', unit: '°C', color: '#ef4444', icon: <FaThermometerHalf /> };
+        return { label: 'Temperatura', unit: '°C', color: '#ef4444', icon: <Thermometer size={18} /> };
       case 'hum':
-        return { label: 'Humedad Ambiente', unit: '%', color: '#3b82f6', icon: <FaTint /> };
+        return { label: 'Humedad Ambiente', unit: '%', color: '#3b82f6', icon: <Droplets size={18} /> };
       case 'soil':
-        return { label: 'Humedad del Suelo', unit: '%', color: '#14b8a6', icon: <FaLeaf /> };
+        return { label: 'Humedad del Suelo', unit: '%', color: '#14b8a6', icon: <Leaf size={18} /> };
       case 'vpd':
-        return { label: 'Déficit de Presión de Vapor (VPD)', unit: ' kPa', color: '#a855f7', icon: <FaChartArea /> };
+        return { label: 'Déficit de Presión de Vapor (VPD)', unit: ' kPa', color: '#a855f7', icon: <Activity size={18} /> };
     }
   }, [activeMetric]);
 
-  // Dynamic workbenches for the selected room (filters out plant tags like FCY-003)
   const availableWorkbenches = useMemo(() => {
     if (!roomId) return [];
     const selectedRoom = rooms.find(r => r.id === roomId);
@@ -710,7 +709,6 @@ export const TrazAppDeviceDetailModal: React.FC<TrazAppDeviceDetailModalProps> =
     return Array.from(names);
   }, [roomId, rooms]);
 
-  // Save Settings
   const handleSaveConfig = async () => {
     setSaving(true);
     try {
@@ -764,7 +762,6 @@ export const TrazAppDeviceDetailModal: React.FC<TrazAppDeviceDetailModalProps> =
   };
 
   const hasSoilData = useMemo(() => {
-    // Check if there is any soil_pct in recent logs or if the last_reading has it
     if (device.last_reading?.sensors?.soil_pct !== undefined && device.last_reading?.sensors?.soil_pct !== null) return true;
     return logs.some(l => l.soil_pct !== null && l.soil_pct !== undefined);
   }, [logs, device.last_reading]);
@@ -774,20 +771,25 @@ export const TrazAppDeviceDetailModal: React.FC<TrazAppDeviceDetailModalProps> =
       <ModalContent onClick={e => e.stopPropagation()}>
         <ModalHeader>
           <HeaderTitle>
-            <h2><FaWifi style={{ color: '#10b981' }} /> {device.alias || device.device_id}</h2>
-            <span>Dispositivo IoT TrazAPP • ID: {device.device_id}</span>
+            <div className="icon-wrapper">
+              <Wifi size={20} color="#34d399" />
+            </div>
+            <div className="text-wrapper">
+              <h2>{device.alias || device.device_id}</h2>
+              <span>Dispositivo IoT TrazAPP • ID: {device.device_id}</span>
+            </div>
           </HeaderTitle>
-          <CloseButton onClick={onClose} title="Cerrar"><FaTimes /></CloseButton>
+          <CloseButton onClick={onClose} aria-label="Cerrar"><LucideX size={20} /></CloseButton>
         </ModalHeader>
 
         <ModalBody>
           <NavRow>
             <TabGroup>
               <TabButton $active={view === 'history'} onClick={() => setView('history')}>
-                <FaChartArea /> Historial
+                <Activity size={16} /> Historial
               </TabButton>
               <TabButton $active={view === 'config'} onClick={() => setView('config')}>
-                <FaCog /> Configuración
+                <Settings size={16} /> Configuración
               </TabButton>
             </TabGroup>
 
@@ -857,7 +859,7 @@ export const TrazAppDeviceDetailModal: React.FC<TrazAppDeviceDetailModalProps> =
               <AlertSectionCard>
                 <AlertHeader>
                   <div className="title-col">
-                    <h4><FaBell style={{ color: '#f59e0b' }} /> Umbrales y Alertas Ambientales</h4>
+                    <h4><Bell size={18} color="#f59e0b" /> Umbrales y Alertas Ambientales</h4>
                     <p>Configura los límites para avisar inmediatamente si los parámetros se desvían de los rangos ideales.</p>
                   </div>
                   <SwitchLabel>
@@ -883,7 +885,7 @@ export const TrazAppDeviceDetailModal: React.FC<TrazAppDeviceDetailModalProps> =
                             checked={notifyScreen}
                             onChange={e => setNotifyScreen(e.target.checked)}
                           />
-                          <FaDesktop /> Pantalla Bunker (Hardware)
+                          <Monitor size={16} /> Pantalla Bunker (Hardware)
                         </ChannelCheckbox>
                         <ChannelCheckbox $checked={notifyWeb}>
                           <input
@@ -891,7 +893,7 @@ export const TrazAppDeviceDetailModal: React.FC<TrazAppDeviceDetailModalProps> =
                             checked={notifyWeb}
                             onChange={e => setNotifyWeb(e.target.checked)}
                           />
-                          <FaGlobe /> Dashboard Web
+                          <Globe size={16} /> Dashboard Web
                         </ChannelCheckbox>
                         <ChannelCheckbox $checked={notifyPush}>
                           <input
@@ -905,7 +907,7 @@ export const TrazAppDeviceDetailModal: React.FC<TrazAppDeviceDetailModalProps> =
                               }
                             }}
                           />
-                          <FaMobileAlt /> Notificaciones Push
+                          <Smartphone size={16} /> Notificaciones Push
                         </ChannelCheckbox>
                       </ChannelsRow>
                     </div>
@@ -916,7 +918,7 @@ export const TrazAppDeviceDetailModal: React.FC<TrazAppDeviceDetailModalProps> =
                       </span>
                       <ThresholdsGrid>
                         <ThresholdCard $color="#ef4444">
-                          <div className="metric-label"><FaThermometerHalf style={{ color: '#ef4444' }} /> Temperatura (°C)</div>
+                          <div className="metric-label"><Thermometer size={16} color="#ef4444" /> Temperatura (°C)</div>
                           <div className="inputs-row">
                             <div className="input-box">
                               <span>Mínimo</span>
@@ -940,7 +942,7 @@ export const TrazAppDeviceDetailModal: React.FC<TrazAppDeviceDetailModalProps> =
                         </ThresholdCard>
 
                         <ThresholdCard $color="#3b82f6">
-                          <div className="metric-label"><FaTint style={{ color: '#3b82f6' }} /> Humedad Aire (%)</div>
+                          <div className="metric-label"><Droplets size={16} color="#3b82f6" /> Humedad Aire (%)</div>
                           <div className="inputs-row">
                             <div className="input-box">
                               <span>Mínimo</span>
@@ -964,7 +966,7 @@ export const TrazAppDeviceDetailModal: React.FC<TrazAppDeviceDetailModalProps> =
                         </ThresholdCard>
 
                         <ThresholdCard $color="#14b8a6">
-                          <div className="metric-label"><FaLeaf style={{ color: '#14b8a6' }} /> Humedad Suelo (%)</div>
+                          <div className="metric-label"><Leaf size={16} color="#14b8a6" /> Humedad Suelo (%)</div>
                           <div className="inputs-row">
                             <div className="input-box">
                               <span>Mínimo</span>
@@ -988,7 +990,7 @@ export const TrazAppDeviceDetailModal: React.FC<TrazAppDeviceDetailModalProps> =
                         </ThresholdCard>
 
                         <ThresholdCard $color="#a855f7">
-                          <div className="metric-label"><FaChartArea style={{ color: '#a855f7' }} /> VPD (kPa)</div>
+                          <div className="metric-label"><Activity size={16} color="#a855f7" /> VPD (kPa)</div>
                           <div className="inputs-row">
                             <div className="input-box">
                               <span>Mínimo</span>
@@ -1016,11 +1018,21 @@ export const TrazAppDeviceDetailModal: React.FC<TrazAppDeviceDetailModalProps> =
                 )}
               </AlertSectionCard>
 
-              <ButtonRow>
-                <SaveButton onClick={handleSaveConfig} disabled={saving}>
-                  <FaSave /> {saving ? 'Guardando...' : 'Guardar Configuración'}
-                </SaveButton>
-              </ButtonRow>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '0.5rem' }}>
+                <ShadcnButton
+                  variant="secondary"
+                  onClick={() => setView('history')}
+                >
+                  Cancelar
+                </ShadcnButton>
+                <ShadcnButton
+                  variant="default"
+                  onClick={handleSaveConfig}
+                  isLoading={saving}
+                >
+                  <Save size={16} /> Guardar Configuración
+                </ShadcnButton>
+              </div>
             </ConfigForm>
           ) : (
             <>
@@ -1030,7 +1042,7 @@ export const TrazAppDeviceDetailModal: React.FC<TrazAppDeviceDetailModalProps> =
                   $color="#ef4444"
                   onClick={() => setActiveMetric('temp')}
                 >
-                  <div className="header">Temperatura <FaThermometerHalf /></div>
+                  <div className="header">Temperatura <Thermometer size={16} /></div>
                   <div className="value">
                     {device.last_reading?.sensors?.temp_c !== undefined
                       ? `${device.last_reading.sensors.temp_c.toFixed(1)} °C`
@@ -1044,7 +1056,7 @@ export const TrazAppDeviceDetailModal: React.FC<TrazAppDeviceDetailModalProps> =
                   $color="#3b82f6"
                   onClick={() => setActiveMetric('hum')}
                 >
-                  <div className="header">Humedad Amb. <FaTint /></div>
+                  <div className="header">Humedad Amb. <Droplets size={16} /></div>
                   <div className="value">
                     {device.last_reading?.sensors?.hum_pct !== undefined
                       ? `${device.last_reading.sensors.hum_pct.toFixed(1)} %`
@@ -1059,7 +1071,7 @@ export const TrazAppDeviceDetailModal: React.FC<TrazAppDeviceDetailModalProps> =
                     $color="#14b8a6"
                     onClick={() => setActiveMetric('soil')}
                   >
-                    <div className="header">Humedad Suelo <FaLeaf /></div>
+                    <div className="header">Humedad Suelo <Leaf size={16} /></div>
                     <div className="value">
                       {device.last_reading?.sensors?.soil_pct !== undefined
                         ? `${device.last_reading.sensors.soil_pct.toFixed(1)} %`
@@ -1074,7 +1086,7 @@ export const TrazAppDeviceDetailModal: React.FC<TrazAppDeviceDetailModalProps> =
                   $color="#a855f7"
                   onClick={() => setActiveMetric('vpd')}
                 >
-                  <div className="header">VPD <FaChartArea /></div>
+                  <div className="header">VPD <Activity size={16} /></div>
                   <div className="value">
                     {device.last_reading?.sensors?.vpd_kpa !== undefined
                       ? `${device.last_reading.sensors.vpd_kpa.toFixed(3)} kPa`
@@ -1089,9 +1101,9 @@ export const TrazAppDeviceDetailModal: React.FC<TrazAppDeviceDetailModalProps> =
                   <LoadingSpinner />
                 </div>
               ) : chartData.length === 0 ? (
-                <div style={{ height: 330, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', color: '#64748b', gap: '0.5rem', background: 'rgba(255,255,255,0.01)', borderRadius: 16 }}>
-                  <FaChartArea size={32} />
-                  <span>No hay lecturas históricas para este rango de tiempo.</span>
+                <div style={{ height: 330, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', color: '#64748b', gap: '0.75rem', background: 'rgba(15,23,42,0.6)', borderRadius: '1rem', border: '1px solid rgba(255,255,255,0.06)' }}>
+                  <Activity size={36} style={{ opacity: 0.4 }} />
+                  <span style={{ fontSize: '0.95rem' }}>No hay lecturas históricas para este rango de tiempo.</span>
                 </div>
               ) : (
                 <>
@@ -1134,21 +1146,23 @@ export const TrazAppDeviceDetailModal: React.FC<TrazAppDeviceDetailModalProps> =
                             <stop offset="95%" stopColor={metricConfig.color} stopOpacity={0.0} />
                           </linearGradient>
                         </defs>
-                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
+                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" vertical={false} />
                         <XAxis 
                           dataKey="time" 
                           minTickGap={45} 
-                          fontSize={10} 
+                          fontSize={11} 
                           stroke="#64748b" 
                           tickLine={false} 
                           axisLine={false} 
+                          tick={{ fill: '#94a3b8' }}
                         />
                         <YAxis 
                           domain={yDomain} 
-                          fontSize={10} 
+                          fontSize={11} 
                           stroke="#64748b" 
                           tickLine={false}
                           axisLine={false}
+                          tick={{ fill: '#94a3b8' }}
                           tickFormatter={(val) => {
                             if (activeMetric === 'vpd') return `${Number(val).toFixed(2)}`;
                             return `${Math.round(val)}${metricConfig.unit.trim()}`;
@@ -1156,10 +1170,11 @@ export const TrazAppDeviceDetailModal: React.FC<TrazAppDeviceDetailModalProps> =
                         />
                         <Tooltip
                           contentStyle={{ 
-                            background: '#0f172a', 
+                            background: 'rgba(15, 23, 42, 0.95)', 
                             border: '1px solid rgba(255,255,255,0.1)', 
                             borderRadius: 10,
-                            boxShadow: '0 10px 25px rgba(0,0,0,0.5)'
+                            boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
+                            color: '#f8fafc'
                           }}
                           labelStyle={{ color: '#94a3b8', fontSize: 11, fontWeight: 'bold' }}
                           itemStyle={{ color: metricConfig.color, fontSize: 12, fontWeight: 700 }}

@@ -135,4 +135,5 @@ export const Badge: React.FC<BadgeProps> = ({
   );
 };
 
+export const ShadcnBadge = Badge;
 export default Badge;

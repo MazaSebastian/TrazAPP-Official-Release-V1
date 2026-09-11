@@ -1,10 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import styled, { keyframes, css } from 'styled-components';
+import styled, { keyframes } from 'styled-components';
 import { supabase } from '../../services/supabaseClient';
 import { Organization } from '../../types';
-import { FaTimes, FaUserSecret, FaServer, FaFileInvoiceDollar, FaCheckCircle, FaExclamationTriangle } from 'react-icons/fa';
+import { 
+    X as LucideX, 
+    UserCheck, 
+    Server, 
+    Receipt, 
+    CheckCircle2, 
+    Building2, 
+    ShieldAlert
+} from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { ConfirmModal } from '../../components/ConfirmModal';
+import { ShadcnButton } from '../../components/ui/Button';
 
 const fadeIn = keyframes`
   from { opacity: 0; }
@@ -12,15 +21,15 @@ const fadeIn = keyframes`
 `;
 
 const slideUp = keyframes`
-  from { opacity: 0; transform: translateY(20px); }
+  from { opacity: 0; transform: translateY(16px); }
   to { opacity: 1; transform: translateY(0); }
 `;
 
 const Overlay = styled.div`
   position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(15, 23, 42, 0.8);
-  backdrop-filter: blur(8px);
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(12px);
   z-index: 9999;
   display: flex;
   align-items: center;
@@ -30,53 +39,84 @@ const Overlay = styled.div`
 `;
 
 const ModalPanel = styled.div`
-  background: rgba(30, 41, 59, 0.95);
+  background: rgba(15, 23, 42, 0.96);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
+  border-radius: 1.25rem;
   width: 100%;
   max-width: 800px;
   max-height: 90vh;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05);
   display: flex;
   flex-direction: column;
-  animation: ${slideUp} 0.3s ease-out;
+  animation: ${slideUp} 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   overflow: hidden;
 `;
 
 const Header = styled.div`
   padding: 1.5rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: rgba(15, 23, 42, 0.5);
+  background: rgba(30, 41, 59, 0.4);
 
-  h2 { margin: 0; font-size: 1.5rem; color: #f8fafc; display: flex; align-items: center; gap: 0.5rem; }
-  button {
-    background: transparent;
-    border: none;
-    color: #94a3b8;
-    font-size: 1.25rem;
-    cursor: pointer;
-    transition: color 0.2s;
-    &:hover { color: #f87171; }
+  .title-group {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+
+    .icon-box {
+      width: 40px;
+      height: 40px;
+      border-radius: 0.65rem;
+      background: rgba(168, 85, 247, 0.15);
+      border: 1px solid rgba(168, 85, 247, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    h2 { 
+      margin: 0; 
+      font-size: 1.25rem; 
+      font-weight: 700;
+      color: #f8fafc; 
+    }
+  }
+`;
+
+const CloseButton = styled.button`
+  background: none;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  &:hover {
+    color: #f1f5f9;
+    background: rgba(255, 255, 255, 0.08);
   }
 `;
 
 const Tabs = styled.div`
   display: flex;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(15, 23, 42, 0.3);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(15, 23, 42, 0.5);
 `;
 
 const Tab = styled.button<{ $active: boolean }>`
   flex: 1;
-  background: ${props => props.$active ? 'rgba(255, 255, 255, 0.05)' : 'transparent'};
+  background: ${props => props.$active ? 'rgba(168, 85, 247, 0.1)' : 'transparent'};
   border: none;
   border-bottom: 2px solid ${props => props.$active ? '#c084fc' : 'transparent'};
-  color: ${props => props.$active ? '#c084fc' : '#94a3b8'};
-  padding: 1rem;
+  color: ${props => props.$active ? '#d8b4fe' : '#94a3b8'};
+  padding: 0.85rem 1rem;
   font-weight: 600;
+  font-size: 0.88rem;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -85,127 +125,90 @@ const Tab = styled.button<{ $active: boolean }>`
   transition: all 0.2s;
   
   &:hover {
-    color: ${props => props.$active ? '#c084fc' : '#f8fafc'};
-    background: rgba(255, 255, 255, 0.02);
+    color: ${props => props.$active ? '#d8b4fe' : '#f8fafc'};
+    background: ${props => props.$active ? 'rgba(168, 85, 247, 0.12)' : 'rgba(255, 255, 255, 0.03)'};
   }
 `;
 
 const Content = styled.div`
-  padding: 1.5rem;
+  padding: 1.75rem;
   overflow-y: auto;
   flex: 1;
   color: #e2e8f0;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 3px;
+  }
 `;
 
 const SectionTitle = styled.h3`
-  font-size: 1.1rem;
+  font-size: 1.05rem;
+  font-weight: 700;
   color: #f8fafc;
   margin-top: 0;
   margin-bottom: 1rem;
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   padding-bottom: 0.5rem;
 `;
 
 const ActionCard = styled.div`
-  background: rgba(15, 23, 42, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 8px;
-  padding: 1.5rem;
-  margin-bottom: 1rem;
+  background: rgba(30, 41, 59, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0.85rem;
+  padding: 1.35rem;
+  margin-bottom: 1.25rem;
   display: flex;
   flex-direction: column;
   gap: 1rem;
 `;
 
-const Button = styled.button<{ $variant?: 'primary' | 'danger' | 'warning' }>`
-  background: ${props =>
-        props.$variant === 'primary' ? 'rgba(var(--primary-color-rgb, 168, 85, 247), 0.2)' :
-            props.$variant === 'danger' ? 'rgba(239, 68, 68, 0.2)' :
-                props.$variant === 'warning' ? 'rgba(245, 158, 11, 0.2)' :
-                    'rgba(255, 255, 255, 0.05)'};
-  color: ${props =>
-        props.$variant === 'primary' ? '#d8b4fe' :
-            props.$variant === 'danger' ? '#fca5a5' :
-                props.$variant === 'warning' ? '#fcd34d' :
-                    '#f8fafc'};
-  border: 1px solid ${props =>
-        props.$variant === 'primary' ? 'rgba(var(--primary-color-rgb, 168, 85, 247), 0.5)' :
-            props.$variant === 'danger' ? 'rgba(239, 68, 68, 0.5)' :
-                props.$variant === 'warning' ? 'rgba(245, 158, 11, 0.5)' :
-                    'rgba(255, 255, 255, 0.1)'};
-  padding: 0.75rem 1rem;
-  border-radius: 6px;
-  font-weight: 600;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  transition: all 0.2s;
-  
-  &:hover:not(:disabled) {
-    background: ${props =>
-        props.$variant === 'primary' ? 'rgba(var(--primary-color-rgb, 168, 85, 247), 0.4)' :
-            props.$variant === 'danger' ? 'rgba(239, 68, 68, 0.4)' :
-                props.$variant === 'warning' ? 'rgba(245, 158, 11, 0.4)' :
-                    'rgba(255, 255, 255, 0.1)'};
-  }
-  
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-`;
-
 const StyledSelect = styled.select`
   width: 100%;
-  padding: 0.875rem 1rem;
+  padding: 0.75rem 1rem;
   background: rgba(15, 23, 42, 0.6);
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: #f8fafc;
-  border-radius: 0.5rem;
+  border-radius: 0.65rem;
   font-size: 0.95rem;
-  font-family: inherit;
-  font-weight: 500;
   outline: none;
   transition: all 0.2s ease;
-  backdrop-filter: blur(8px);
-  appearance: none; /* Removes native dropdown arrow for custom styling if needed, though default works on Mac */
 
   &:focus {
-    border-color: #c084fc;
-    box-shadow: 0 0 0 2px rgba(192, 132, 252, 0.2);
-    background: rgba(15, 23, 42, 0.8);
+    border-color: rgba(168, 85, 247, 0.5);
+    box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.2);
   }
 
   option {
-    background: #0f172a; /* Solid dark background for options to be readable */
+    background: #0f172a;
     color: #f8fafc;
-    padding: 0.5rem;
   }
 `;
 
 const StyledInput = styled.input`
   width: 100%;
-  padding: 0.875rem 1rem;
+  padding: 0.75rem 1rem;
   background: rgba(15, 23, 42, 0.6);
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: #f8fafc;
-  border-radius: 0.5rem;
+  border-radius: 0.65rem;
   font-size: 0.95rem;
-  font-family: inherit;
-  font-weight: 500;
   outline: none;
+  box-sizing: border-box;
   transition: all 0.2s ease;
-  backdrop-filter: blur(8px);
 
   &:focus {
-    border-color: #c084fc;
-    box-shadow: 0 0 0 2px rgba(192, 132, 252, 0.2);
-    background: rgba(15, 23, 42, 0.8);
+    border-color: rgba(168, 85, 247, 0.5);
+    box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.2);
   }
 
   &::-webkit-calendar-picker-indicator {
@@ -217,10 +220,10 @@ const StyledInput = styled.input`
 `;
 
 const ProgressBarContainer = styled.div`
-  background: rgba(15, 23, 42, 0.4);
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  padding: 1.5rem;
+  background: rgba(30, 41, 59, 0.35);
+  border-radius: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 1.25rem;
   margin-bottom: 1rem;
 `;
 
@@ -228,14 +231,14 @@ const ProgressInfo = styled.div`
   display: flex;
   justify-content: space-between;
   margin-bottom: 0.5rem;
-  font-size: 0.875rem;
+  font-size: 0.85rem;
   color: #f8fafc;
 `;
 
 const ProgressTrack = styled.div`
   width: 100%;
   height: 8px;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.08);
   border-radius: 4px;
   overflow: hidden;
 `;
@@ -258,8 +261,8 @@ const PLAN_LIMITS: Record<string, ResourceStats> = {
     demo: { users: 1, crops: 1, batches: 15 },
     individual: { users: 1, crops: 1, batches: 25 },
     equipo: { users: 3, crops: 3, batches: 50 },
-    ong: { users: 6, crops: 4, batches: 500 },
-    trazapp: { users: 10, crops: 8, batches: Infinity } // Growy + Ilimitado en Lotes
+    ong: { users: 10, crops: 10, batches: 200 },
+    trazapp: { users: Infinity, crops: Infinity, batches: Infinity }
 };
 
 interface ManageOrgModalProps {
@@ -269,34 +272,25 @@ interface ManageOrgModalProps {
 }
 
 export const ManageOrgModal: React.FC<ManageOrgModalProps> = ({ organization, onClose, onUpdate }) => {
-    const [activeTab, setActiveTab] = useState<'general' | 'recursos' | 'facturacion'>('general');
     const { user } = useAuth();
+    const [activeTab, setActiveTab] = useState<'general' | 'recursos' | 'facturacion'>('general');
+
+    // Impersonate state
+    const [confirmImpersonate, setConfirmImpersonate] = useState(false);
     const [isImpersonating, setIsImpersonating] = useState(false);
+
+    // Resources state
     const [stats, setStats] = useState<ResourceStats>({ users: 0, crops: 0, batches: 0 });
     const [isStatsLoading, setIsStatsLoading] = useState(false);
-    const [confirmImpersonate, setConfirmImpersonate] = useState(false);
 
-    // Billing Edit State
-    const [billingForm, setBillingForm] = useState(() => {
-        let defaultValidUntil = '';
-        if (organization.valid_until) {
-            defaultValidUntil = organization.valid_until.split('T')[0];
-        } else if (organization.created_at) {
-            // Calculate 30 days from creation date if valid_until is missing
-            const created = new Date(organization.created_at);
-            created.setDate(created.getDate() + (organization.plan === 'demo' ? 15 : 30));
-            defaultValidUntil = created.toISOString().split('T')[0];
-        }
-
-        return {
-            plan: organization.plan || 'demo',
-            valid_until: defaultValidUntil,
-            is_revenue_exempt: organization.is_revenue_exempt || false
-        };
+    // Billing override state
+    const [billingForm, setBillingForm] = useState({
+        plan: organization.plan || 'demo',
+        valid_until: organization.valid_until ? organization.valid_until.split('T')[0] : '',
+        is_revenue_exempt: organization.is_revenue_exempt || false
     });
     const [isSavingBilling, setIsSavingBilling] = useState(false);
 
-    // Impersonation feature: Super Admin enters the Org as 'owner' temporarily.
     const handleImpersonateClick = () => {
         if (!user?.id) return;
         setConfirmImpersonate(true);
@@ -305,7 +299,6 @@ export const ManageOrgModal: React.FC<ManageOrgModalProps> = ({ organization, on
     const executeImpersonate = async () => {
         setIsImpersonating(true);
         try {
-            // 1. Check if we already have a record
             const { data: existing } = await supabase
                 .from('organization_members')
                 .select('id')
@@ -314,7 +307,6 @@ export const ManageOrgModal: React.FC<ManageOrgModalProps> = ({ organization, on
                 .single();
 
             if (!existing) {
-                // Add super admin as owner temporarily
                 await supabase.from('organization_members').insert({
                     organization_id: organization.id,
                     user_id: user!.id,
@@ -322,10 +314,7 @@ export const ManageOrgModal: React.FC<ManageOrgModalProps> = ({ organization, on
                 });
             }
 
-            // 2. Set the client org as active in local storage
             localStorage.setItem('selectedOrganizationId', organization.id);
-
-            // 3. Force page reload to route to dashboard under new context
             window.location.href = '/dashboard';
 
         } catch (e: any) {
@@ -356,7 +345,7 @@ export const ManageOrgModal: React.FC<ManageOrgModalProps> = ({ organization, on
             if (error) throw error;
 
             alert("Configuración de facturación guardada exitosamente.");
-            onUpdate(); // Trigger refresh in parent
+            onUpdate();
         } catch (e: any) {
             alert("Error al guardar facturación: " + e.message);
         } finally {
@@ -364,25 +353,21 @@ export const ManageOrgModal: React.FC<ManageOrgModalProps> = ({ organization, on
         }
     };
 
-    // Fetch actual resource limits
     useEffect(() => {
         if (activeTab === 'recursos') {
             const fetchStats = async () => {
                 setIsStatsLoading(true);
                 try {
-                    // Count Users
                     const { count: usersCount } = await supabase
                         .from('organization_members')
                         .select('*', { count: 'exact', head: true })
                         .eq('organization_id', organization.id);
 
-                    // Count Crops
                     const { count: cropsCount } = await supabase
                         .from('crops')
                         .select('*', { count: 'exact', head: true })
                         .eq('organization_id', organization.id);
 
-                    // Count Active Batches
                     const { count: batchesCount } = await supabase
                         .from('batches')
                         .select('*', { count: 'exact', head: true })
@@ -410,53 +395,62 @@ export const ManageOrgModal: React.FC<ManageOrgModalProps> = ({ organization, on
         <Overlay>
             <ModalPanel>
                 <Header>
-                    <h2>Gestión de Cliente: {organization.name}</h2>
-                    <button onClick={onClose}><FaTimes /></button>
+                    <div className="title-group">
+                        <div className="icon-box">
+                            <Building2 size={20} color="#c084fc" />
+                        </div>
+                        <h2>Gestión de Cliente: {organization.name}</h2>
+                    </div>
+                    <CloseButton onClick={onClose} aria-label="Cerrar">
+                        <LucideX size={20} />
+                    </CloseButton>
                 </Header>
 
                 <Tabs>
                     <Tab $active={activeTab === 'general'} onClick={() => setActiveTab('general')}>
-                        <FaUserSecret /> General y Soporte
+                        <UserCheck size={16} /> General y Soporte
                     </Tab>
                     <Tab $active={activeTab === 'recursos'} onClick={() => setActiveTab('recursos')}>
-                        <FaServer /> Uso de Límites
+                        <Server size={16} /> Uso de Límites
                     </Tab>
                     <Tab $active={activeTab === 'facturacion'} onClick={() => setActiveTab('facturacion')}>
-                        <FaFileInvoiceDollar /> Plan y Vencimientos
+                        <Receipt size={16} /> Plan y Vencimientos
                     </Tab>
                 </Tabs>
 
                 <Content>
                     {activeTab === 'general' && (
                         <div>
-                            <SectionTitle><FaUserSecret /> Impersonation & Soporte TrazAPP</SectionTitle>
+                            <SectionTitle><ShieldAlert size={18} color="#c084fc" /> Impersonation & Soporte TrazAPP</SectionTitle>
                             <ActionCard>
-                                <p style={{ margin: 0, color: '#94a3b8', lineHeight: 1.5 }}>
+                                <p style={{ margin: 0, color: '#94a3b8', lineHeight: 1.5, fontSize: '0.9rem' }}>
                                     Utiliza la herramienta de "Impersonation" para iniciar sesión en la cuenta de <strong style={{ color: '#f8fafc' }}>{organization.name}</strong>.
                                     Esto te permitirá ver su Dashboard, agregar lotes o visualizar problemas como si fueras el administrador de esa organización.
                                 </p>
-                                <Button
-                                    $variant="primary"
-                                    onClick={handleImpersonateClick}
-                                    disabled={isImpersonating}
-                                >
-                                    <FaUserSecret /> {isImpersonating ? "Entrando..." : "Entrar como este Cliente"}
-                                </Button>
+                                <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
+                                    <ShadcnButton
+                                        variant="default"
+                                        onClick={handleImpersonateClick}
+                                        isLoading={isImpersonating}
+                                    >
+                                        <UserCheck size={16} /> {isImpersonating ? "Entrando..." : "Entrar como este Cliente"}
+                                    </ShadcnButton>
+                                </div>
                             </ActionCard>
 
                             <SectionTitle style={{ marginTop: '2rem' }}>Información Base</SectionTitle>
-                            <ActionCard style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                            <ActionCard style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
                                 <div>
-                                    <small style={{ color: '#64748b' }}>Dueño Original</small>
-                                    <div style={{ fontWeight: 600 }}>{organization.owner_email || 'No asignado'}</div>
+                                    <small style={{ color: '#64748b', fontSize: '0.75rem', textTransform: 'uppercase', fontWeight: 600 }}>Dueño Original</small>
+                                    <div style={{ fontWeight: 600, color: '#f8fafc', marginTop: '0.2rem' }}>{organization.owner_email || 'No asignado'}</div>
                                 </div>
                                 <div>
-                                    <small style={{ color: '#64748b' }}>Creado el</small>
-                                    <div style={{ fontWeight: 600 }}>{new Date(organization.created_at).toLocaleDateString()}</div>
+                                    <small style={{ color: '#64748b', fontSize: '0.75rem', textTransform: 'uppercase', fontWeight: 600 }}>Creado el</small>
+                                    <div style={{ fontWeight: 600, color: '#f8fafc', marginTop: '0.2rem' }}>{new Date(organization.created_at).toLocaleDateString()}</div>
                                 </div>
                                 <div>
-                                    <small style={{ color: '#64748b' }}>ID Interno</small>
-                                    <div style={{ fontWeight: 600, fontSize: '0.8rem', opacity: 0.8 }}>{organization.id}</div>
+                                    <small style={{ color: '#64748b', fontSize: '0.75rem', textTransform: 'uppercase', fontWeight: 600 }}>ID Interno</small>
+                                    <div style={{ fontWeight: 600, fontSize: '0.8rem', color: '#94a3b8', fontFamily: 'monospace', marginTop: '0.2rem' }}>{organization.id}</div>
                                 </div>
                             </ActionCard>
                         </div>
@@ -464,14 +458,14 @@ export const ManageOrgModal: React.FC<ManageOrgModalProps> = ({ organization, on
 
                     {activeTab === 'recursos' && (
                         <div>
-                            <SectionTitle><FaServer /> Consumo de Límites del Plan ({organization.plan?.toUpperCase() || 'FREE'})</SectionTitle>
+                            <SectionTitle><Server size={18} color="#60a5fa" /> Consumo de Límites del Plan ({organization.plan?.toUpperCase() || 'FREE'})</SectionTitle>
 
                             {isStatsLoading ? (
                                 <div style={{ textAlign: 'center', padding: '2rem', color: '#94a3b8' }}>Analizando consumo de datos en tiempo real...</div>
                             ) : (
                                 <>
                                     <p style={{ color: '#94a3b8', fontSize: '0.875rem', marginBottom: '1.5rem' }}>
-                                        Si una organización supera enormemente estos límites, contactalos para ofrecerles un {organization.plan !== 'trazapp' ? 'Upgrade' : 'Plan Especial'}.
+                                        Si una organización supera ampliamente estos límites, puedes contactarla para ofrecerle un {organization.plan !== 'trazapp' ? 'Upgrade' : 'Plan Especial'}.
                                     </p>
 
                                     {(() => {
@@ -479,11 +473,11 @@ export const ManageOrgModal: React.FC<ManageOrgModalProps> = ({ organization, on
                                         const limits = PLAN_LIMITS[planType] || PLAN_LIMITS['demo'];
 
                                         const calculateCol = (current: number, limit: number) => {
-                                            if (limit === Infinity) return '#4ade80'; // Siempre verde si es ilimitado
+                                            if (limit === Infinity) return '#34d399';
                                             const pct = (current / limit) * 100;
-                                            if (pct >= 95) return '#ef4444'; // Red
-                                            if (pct >= 80) return '#eab308'; // Yellow
-                                            return '#4299e1'; // Blue
+                                            if (pct >= 95) return '#ef4444';
+                                            if (pct >= 80) return '#f59e0b';
+                                            return '#3b82f6';
                                         };
 
                                         const renderBar = (label: string, current: number, limit: number) => {
@@ -492,10 +486,12 @@ export const ManageOrgModal: React.FC<ManageOrgModalProps> = ({ organization, on
                                             let pct = isUnlimited ? 100 : Math.min(100, Math.max(0, (current / limit) * 100));
 
                                             return (
-                                                <ProgressBarContainer>
+                                                <ProgressBarContainer key={label}>
                                                     <ProgressInfo>
                                                         <strong>{label}</strong>
-                                                        <span>{current.toLocaleString()} / {displayLimit} {isUnlimited ? '' : `(${(current / limit * 100).toFixed(0)}%)`}</span>
+                                                        <span style={{ color: '#94a3b8' }}>
+                                                            {current.toLocaleString()} / {displayLimit} {isUnlimited ? '' : `(${(current / limit * 100).toFixed(0)}%)`}
+                                                        </span>
                                                     </ProgressInfo>
                                                     <ProgressTrack>
                                                         <ProgressFill $percent={pct} $color={calculateCol(current, limit)} />
@@ -519,33 +515,28 @@ export const ManageOrgModal: React.FC<ManageOrgModalProps> = ({ organization, on
 
                     {activeTab === 'facturacion' && (
                         <div>
-                            <SectionTitle><FaFileInvoiceDollar /> Sobreescritura de Plan y Facturación</SectionTitle>
+                            <SectionTitle><Receipt size={18} color="#f59e0b" /> Sobreescritura de Plan y Facturación</SectionTitle>
                             <ActionCard>
                                 <p style={{ margin: 0, color: '#94a3b8', fontSize: '0.875rem' }}>
-                                    Ajusta manualmente el nivel de suscripción y su fecha de corte. Útil para pagos en efectivo, transferencias directas, o cortesías comerciales.
+                                    Ajusta manualmente el nivel de suscripción y su fecha de corte. Útil para pagos en efectivo, transferencias directas o cortesías comerciales.
                                 </p>
 
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '1rem' }}>
-                                    <label style={{ color: '#cbd5e1', fontSize: '0.875rem', fontWeight: 600 }}>Plan de la Cuenta</label>
-                                    <div style={{ position: 'relative' }}>
-                                        <StyledSelect
-                                            value={billingForm.plan}
-                                            onChange={(e) => setBillingForm({ ...billingForm, plan: e.target.value })}
-                                        >
-                                            <option value="demo">Demo (15 Días)</option>
-                                            <option value="individual">Individual</option>
-                                            <option value="equipo">Equipo (3 Usuarios)</option>
-                                            <option value="ong">ONG/Club (ONG de la Salud)</option>
-                                            <option value="trazapp">TrazAPP (Full)</option>
-                                        </StyledSelect>
-                                        <div style={{ position: 'absolute', right: '1rem', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#94a3b8' }}>
-                                            ▼
-                                        </div>
-                                    </div>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem', marginTop: '0.5rem' }}>
+                                    <label style={{ color: '#cbd5e1', fontSize: '0.85rem', fontWeight: 600 }}>Plan de la Cuenta</label>
+                                    <StyledSelect
+                                        value={billingForm.plan}
+                                        onChange={(e) => setBillingForm({ ...billingForm, plan: e.target.value })}
+                                    >
+                                        <option value="demo">Demo (15 Días)</option>
+                                        <option value="individual">Individual</option>
+                                        <option value="equipo">Equipo (3 Usuarios)</option>
+                                        <option value="ong">ONG/Club (ONG de la Salud)</option>
+                                        <option value="trazapp">TrazAPP (Full)</option>
+                                    </StyledSelect>
                                 </div>
 
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                                    <label style={{ color: '#cbd5e1', fontSize: '0.875rem', fontWeight: 600 }}>Fecha de Corte / Vencimiento</label>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
+                                    <label style={{ color: '#cbd5e1', fontSize: '0.85rem', fontWeight: 600 }}>Fecha de Corte / Vencimiento</label>
                                     <StyledInput
                                         type="date"
                                         value={billingForm.valid_until}
@@ -554,7 +545,16 @@ export const ManageOrgModal: React.FC<ManageOrgModalProps> = ({ organization, on
                                     <small style={{ color: '#64748b' }}>Dejar en blanco para acceso vitalicio sin cortes.</small>
                                 </div>
 
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginTop: '1rem', background: 'rgba(15, 23, 42, 0.4)', padding: '1rem', borderRadius: '8px', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                                <div style={{ 
+                                    display: 'flex', 
+                                    alignItems: 'center', 
+                                    gap: '0.75rem', 
+                                    marginTop: '0.5rem', 
+                                    background: 'rgba(15, 23, 42, 0.4)', 
+                                    padding: '1rem', 
+                                    borderRadius: '0.65rem', 
+                                    border: '1px solid rgba(255, 255, 255, 0.05)' 
+                                }}>
                                     <input 
                                         type="checkbox" 
                                         id="exempt_revenue"
@@ -568,14 +568,15 @@ export const ManageOrgModal: React.FC<ManageOrgModalProps> = ({ organization, on
                                     </label>
                                 </div>
 
-                                <Button
-                                    $variant="warning"
-                                    onClick={handleUpdateBilling}
-                                    disabled={isSavingBilling}
-                                    style={{ marginTop: '1rem', alignSelf: 'flex-end' }}
-                                >
-                                    <FaCheckCircle /> {isSavingBilling ? 'Guardando...' : 'Aplicar Cambios Manuales'}
-                                </Button>
+                                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
+                                    <ShadcnButton
+                                        variant="default"
+                                        onClick={handleUpdateBilling}
+                                        isLoading={isSavingBilling}
+                                    >
+                                        <CheckCircle2 size={16} /> {isSavingBilling ? 'Guardando...' : 'Aplicar Cambios Manuales'}
+                                    </ShadcnButton>
+                                </div>
                             </ActionCard>
                         </div>
                     )}
