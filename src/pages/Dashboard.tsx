@@ -1109,16 +1109,9 @@ const Dashboard: React.FC = () => {
 
   // Sticky Modal State
   const [isStickyModalOpen, setIsStickyModalOpen] = useState(false);
-  const [isClosingStickyModal, setIsClosingStickyModal] = useState(false);
-  const [newStickyContent, setNewStickyContent] = useState('');
-  const [newStickyColor, setNewStickyColor] = useState<'yellow' | 'blue' | 'pink' | 'green'>('yellow');
 
   const handleCloseStickyModal = () => {
-    setIsClosingStickyModal(true);
-    setTimeout(() => {
-      setIsStickyModalOpen(false);
-      setIsClosingStickyModal(false);
-    }, 240); // Wait for CSS animation to nearly finish before unmounting
+    setIsStickyModalOpen(false);
   };
 
   const getIconForType = (type: string) => {
@@ -1383,16 +1376,7 @@ const Dashboard: React.FC = () => {
     );
   }
 
-  const handleCreateSticky = async () => {
-    if (!newStickyContent.trim()) return;
-    const note = await stickiesService.createSticky(newStickyContent, newStickyColor);
-    if (note) {
-      updateStickies();
-      handleCloseStickyModal();
-      setNewStickyContent('');
-      setNewStickyColor('yellow');
-    }
-  };
+
 
   const handleDeleteSticky = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();

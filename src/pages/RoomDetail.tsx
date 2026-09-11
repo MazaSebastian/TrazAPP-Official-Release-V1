@@ -1824,14 +1824,9 @@ const RoomDetail: React.FC = () => {
 
     // Sticky Modal State
     const [isStickyModalOpen, setIsStickyModalOpen] = useState(false);
-    const [isStickyModalClosing, setIsStickyModalClosing] = useState(false);
 
     const handleCloseStickyModal = () => {
-        setIsStickyModalClosing(true);
-        setTimeout(() => {
-            setIsStickyModalOpen(false);
-            setIsStickyModalClosing(false);
-        }, 200);
+        setIsStickyModalOpen(false);
     };
     const [isProjectionAlertOpen, setIsProjectionAlertOpen] = useState(false);
 

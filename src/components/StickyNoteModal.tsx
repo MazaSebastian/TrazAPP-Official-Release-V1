@@ -92,6 +92,7 @@ export const StickyNoteModal: React.FC<StickyNoteModalProps> = ({
 }) => {
   const [content, setContent] = useState(initialContent);
   const [color, setColor] = useState<StickyColor>(initialColor);
+  const [isVisible, setIsVisible] = useState(isOpen);
   const [isClosing, setIsClosing] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -99,21 +100,30 @@ export const StickyNoteModal: React.FC<StickyNoteModalProps> = ({
     if (isOpen) {
       setContent(initialContent);
       setColor(initialColor);
+      setIsVisible(true);
       setIsClosing(false);
       const timer = setTimeout(() => {
         textareaRef.current?.focus();
       }, 50);
       return () => clearTimeout(timer);
+    } else if (isVisible && !isClosing) {
+      setIsClosing(true);
+      const timer = setTimeout(() => {
+        setIsVisible(false);
+        setIsClosing(false);
+      }, 190);
+      return () => clearTimeout(timer);
     }
-  }, [isOpen, initialContent, initialColor]);
+  }, [isOpen, initialContent, initialColor, isVisible, isClosing]);
 
   const handleClose = () => {
-    if (isSaving) return;
+    if (isSaving || isClosing) return;
     setIsClosing(true);
     setTimeout(() => {
+      setIsVisible(false);
       setIsClosing(false);
       onClose();
-    }, 180);
+    }, 190);
   };
 
   const handleSubmit = async () => {
@@ -130,7 +140,7 @@ export const StickyNoteModal: React.FC<StickyNoteModalProps> = ({
     }
   };
 
-  if (!isOpen && !isClosing) return null;
+  if (!isOpen && !isVisible && !isClosing) return null;
 
   const currentTheme = COLOR_CONFIG[color];
 
