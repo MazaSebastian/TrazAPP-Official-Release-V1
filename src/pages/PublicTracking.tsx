@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import styled from 'styled-components';
 import { supabase } from '../services/supabaseClient';
-import { FaLeaf, FaCalendarAlt, FaStar, FaTags, FaInfoCircle, FaCheckCircle, FaSpinner } from 'react-icons/fa';
+import { Leaf, Calendar, Star, Tag, Info, CheckCircle2, Loader2 } from 'lucide-react';
 import { Batch } from '../types/rooms';
 
 // --- Styled Components ---
@@ -58,8 +58,9 @@ const HeaderImage = styled.div<{ $bgImage?: string | null }>`
   }
 `;
 
-const FallbackIcon = styled(FaLeaf)`
-  font-size: 5rem;
+const FallbackIcon = styled(Leaf)`
+  width: 5rem;
+  height: 5rem;
   color: rgba(255, 255, 255, 0.1);
 `;
 
@@ -299,7 +300,7 @@ export const PublicTracking: React.FC = () => {
     if (loading) {
         return (
             <CenteredLoading>
-                <FaSpinner />
+                <Loader2 size={32} />
                 <span>Verificando origen del Lote...</span>
             </CenteredLoading>
         );
@@ -338,7 +339,7 @@ export const PublicTracking: React.FC = () => {
                 <HeaderImage $bgImage={genetic.photo_url}>
                     <LogoOverlay src="/trazapphorizontal.png" alt="TrazApp" />
                     <StatusBadge>
-                        <FaCheckCircle /> Verificado
+                        <CheckCircle2 size={14} /> Verificado
                     </StatusBadge>
                     {!genetic.photo_url && <FallbackIcon />}
                 </HeaderImage>
@@ -346,13 +347,13 @@ export const PublicTracking: React.FC = () => {
                 <Body>
                     <Title>{genetic.name || batchData.name}</Title>
                     <Subtitle>
-                        <FaTags /> Lote: {batchData.tracking_code || 'N/A'}
+                        <Tag size={14} /> Lote: {batchData.tracking_code || 'N/A'}
                     </Subtitle>
 
                     <Divider />
 
                     <Section>
-                        <SectionTitle><FaInfoCircle /> Perfil de Genética</SectionTitle>
+                        <SectionTitle><Info size={16} /> Perfil de Genética</SectionTitle>
                         {hasNotes ? (
                             <NoteBox>{genetic.description}</NoteBox>
                         ) : (
@@ -363,7 +364,7 @@ export const PublicTracking: React.FC = () => {
                     </Section>
 
                     <Section>
-                        <SectionTitle><FaStar /> Información Técnica</SectionTitle>
+                        <SectionTitle><Star size={16} /> Información Técnica</SectionTitle>
                         <StatsGrid>
                             <StatCard>
                                 <StatLabel>THC Estimado</StatLabel>

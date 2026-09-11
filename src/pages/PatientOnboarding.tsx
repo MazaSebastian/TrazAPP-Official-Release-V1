@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { supabase } from '../services/supabaseClient';
-import { FaUserPlus, FaCheckCircle, FaSpinner, FaTimesCircle, FaLock, FaIdCard, FaFileSignature } from 'react-icons/fa';
+import { CheckCircle2, Loader2, XCircle, Lock, CreditCard, Signature } from 'lucide-react';
 import { SignaturePad } from '../components/SignaturePad';
 
 const PageWrapper = styled.div`
@@ -284,7 +284,7 @@ export default function PatientOnboarding() {
             <PageWrapper>
                 <GlassCard>
                     <MessagePane>
-                        <FaTimesCircle color="#ef4444" />
+                        <XCircle size={48} color="#ef4444" />
                         <Title style={{ background: '#ef4444', WebkitTextFillColor: 'initial' }}>Invitación Inválida</Title>
                         <Subtitle>{errorMsg}</Subtitle>
                     </MessagePane>
@@ -298,7 +298,7 @@ export default function PatientOnboarding() {
             <PageWrapper>
                 <GlassCard style={{ borderColor: 'rgba(16, 185, 129, 0.5)' }}>
                     <MessagePane>
-                        <FaCheckCircle color="#10b981" />
+                        <CheckCircle2 size={48} color="#10b981" />
                         <Title style={{ background: '#10b981', WebkitTextFillColor: 'initial' }}>¡Registro Exitoso!</Title>
                         <Subtitle style={{ color: '#f8fafc', fontSize: '1.1rem' }}>
                             Tus datos han sido enviados a <strong>{invitation?.organization_name}</strong> de manera encriptada y segura.
@@ -324,15 +324,15 @@ export default function PatientOnboarding() {
 
                 <StepIndicator>
                     <div className={`step ${step >= 1 ? 'completed' : ''}`}>
-                        <FaLock size={12} />
+                        <Lock size={12} />
                     </div>
                     <div className={`line ${step >= 2 ? 'filled' : ''}`} />
                     <div className={`step ${step === 2 ? 'active' : step > 2 ? 'completed' : ''}`}>
-                        <FaIdCard size={12} />
+                        <CreditCard size={12} />
                     </div>
                     <div className={`line ${step >= 3 ? 'filled' : ''}`} />
                     <div className={`step ${step === 3 ? 'active' : ''}`}>
-                        <FaFileSignature size={12} />
+                        <Signature size={12} />
                     </div>
                 </StepIndicator>
 
@@ -424,7 +424,7 @@ export default function PatientOnboarding() {
 
 const LoadingSpinner: React.FC<{ text?: string }> = ({ text }) => (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', color: '#3b82f6' }}>
-        <FaSpinner className="fa-spin" size={32} />
+        <Loader2 style={{ animation: 'spin 1s linear infinite' }} size={32} />
         <span style={{ fontSize: '0.875rem', fontWeight: 600 }}>{text}</span>
     </div>
 );
