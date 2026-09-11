@@ -2,25 +2,27 @@ import React, { useState, useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import {
-  FaWarehouse,
-  FaPlus,
-  FaThermometerHalf,
-  FaTint,
-  FaEdit,
-  FaTrash,
-  FaMapMarkedAlt,
-  FaSearch,
-  FaArrowRight,
-  FaLayerGroup,
-  FaSeedling,
-  FaLeaf,
-  FaClock
-} from 'react-icons/fa';
+  Warehouse,
+  Plus,
+  Thermometer,
+  Droplets,
+  Edit3,
+  Trash2,
+  Map,
+  Search,
+  ArrowRight,
+  Sprout,
+  Leaf,
+  Clock,
+  X as LucideX
+} from 'lucide-react';
 import { roomsService } from '../services/roomsService';
 import { Room } from '../types/rooms';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ConfirmModal } from '../components/ConfirmModal';
 import { ToastModal } from '../components/ToastModal';
+import { ShadcnButton } from '../components/ui/Button';
+import { ShadcnBadge } from '../components/ui/Badge';
 
 const floatIn = keyframes`
   from { opacity: 0; transform: translateY(16px); }
@@ -32,19 +34,9 @@ const fadeIn = keyframes`
   to { opacity: 1; }
 `;
 
-const fadeOut = keyframes`
-  from { opacity: 1; }
-  to { opacity: 0; }
-`;
-
 const scaleIn = keyframes`
-  from { transform: scale(0.95); opacity: 0; }
+  from { transform: scale(0.96); opacity: 0; }
   to { transform: scale(1); opacity: 1; }
-`;
-
-const scaleOut = keyframes`
-  from { transform: scale(1); opacity: 1; }
-  to { transform: scale(0.95); opacity: 0; }
 `;
 
 const Container = styled.div`
@@ -55,7 +47,7 @@ const Container = styled.div`
   background: #090d16;
   color: #f8fafc;
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  animation: ${floatIn} 0.4s ease-out;
+  animation: ${floatIn} 0.35s ease-out;
 
   @media (max-width: 768px) {
     padding: 1.25rem 1rem;
@@ -100,50 +92,6 @@ const ButtonGroup = styled.div`
   flex-wrap: wrap;
 `;
 
-const SecondaryButton = styled.button`
-  background: rgba(255, 255, 255, 0.05);
-  color: #e2e8f0;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  font-weight: 700;
-  font-size: 0.9rem;
-  padding: 0.75rem 1.3rem;
-  border-radius: 0.875rem;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.55rem;
-  backdrop-filter: blur(12px);
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-
-  &:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: #ffffff;
-    border-color: rgba(255, 255, 255, 0.25);
-    transform: translateY(-2px);
-  }
-`;
-
-const PrimaryButton = styled.button`
-  background: linear-gradient(135deg, #10b981, #059669);
-  color: #ffffff;
-  border: none;
-  font-weight: 700;
-  font-size: 0.925rem;
-  padding: 0.75rem 1.4rem;
-  border-radius: 0.875rem;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.6rem;
-  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.35);
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(16, 185, 129, 0.5);
-  }
-`;
-
 const KPIGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr));
@@ -152,7 +100,7 @@ const KPIGrid = styled.div`
 `;
 
 const KPICard = styled.div<{ $glowColor?: string }>`
-  background: rgba(17, 24, 39, 0.7);
+  background: rgba(15, 23, 42, 0.75);
   backdrop-filter: blur(16px);
   border-radius: 1.25rem;
   padding: 1.5rem;
@@ -161,9 +109,9 @@ const KPICard = styled.div<{ $glowColor?: string }>`
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
   &:hover {
-    transform: translateY(-4px);
+    transform: translateY(-3px);
     border-color: ${props => props.$glowColor || 'rgba(16, 185, 129, 0.4)'};
-    box-shadow: 0 20px 35px -5px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 18px 35px -5px rgba(0, 0, 0, 0.5);
   }
 
   .kpi-header {
@@ -177,14 +125,21 @@ const KPICard = styled.div<{ $glowColor?: string }>`
     text-transform: uppercase;
     margin-bottom: 0.75rem;
 
-    .icon {
+    .icon-box {
+      width: 28px;
+      height: 28px;
+      border-radius: 0.45rem;
+      background: ${props => (props.$glowColor ? props.$glowColor + '18' : 'rgba(16, 185, 129, 0.15)')};
+      border: 1px solid ${props => (props.$glowColor ? props.$glowColor + '33' : 'rgba(16, 185, 129, 0.3)')};
       color: ${props => props.$glowColor || '#34d399'};
-      font-size: 0.95rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
   }
 
   .value {
-    font-size: 2rem;
+    font-size: 1.95rem;
     font-weight: 800;
     color: #ffffff;
     margin-bottom: 0.3rem;
@@ -206,7 +161,7 @@ const FilterRow = styled.div`
   flex-wrap: wrap;
 
   .search-box {
-    background: rgba(17, 24, 39, 0.6);
+    background: rgba(15, 23, 42, 0.75);
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 0.875rem;
     padding: 0.6rem 1rem;
@@ -215,6 +170,12 @@ const FilterRow = styled.div`
     gap: 0.65rem;
     width: 320px;
     backdrop-filter: blur(12px);
+    transition: border-color 0.2s, box-shadow 0.2s;
+
+    &:focus-within {
+      border-color: rgba(16, 185, 129, 0.5);
+      box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+    }
 
     input {
       background: transparent;
@@ -242,9 +203,9 @@ const FilterRow = styled.div`
 `;
 
 const FilterChip = styled.button<{ $active?: boolean }>`
-  background: ${props => props.$active ? 'rgba(16, 185, 129, 0.15)' : 'rgba(31, 41, 55, 0.5)'};
+  background: ${props => props.$active ? 'rgba(16, 185, 129, 0.15)' : 'rgba(30, 41, 59, 0.5)'};
   color: ${props => props.$active ? '#34d399' : '#94a3b8'};
-  border: 1px solid ${props => props.$active ? 'rgba(16, 185, 129, 0.35)' : 'rgba(255, 255, 255, 0.07)'};
+  border: 1px solid ${props => props.$active ? 'rgba(16, 185, 129, 0.35)' : 'rgba(255, 255, 255, 0.08)'};
   font-size: 0.8rem;
   font-weight: 700;
   padding: 0.5rem 1rem;
@@ -265,7 +226,7 @@ const Grid = styled.div`
 `;
 
 const RoomCard = styled.div<{ $stageColor?: string }>`
-  background: rgba(17, 24, 39, 0.7);
+  background: rgba(15, 23, 42, 0.8);
   backdrop-filter: blur(16px);
   border-radius: 1.5rem;
   padding: 1.75rem;
@@ -281,7 +242,7 @@ const RoomCard = styled.div<{ $stageColor?: string }>`
   cursor: pointer;
 
   &:hover {
-    transform: translateY(-5px);
+    transform: translateY(-4px);
     border-color: ${props => props.$stageColor || 'rgba(16, 185, 129, 0.4)'};
     box-shadow: 0 20px 40px -5px rgba(0, 0, 0, 0.5);
   }
@@ -309,16 +270,15 @@ const RoomCard = styled.div<{ $stageColor?: string }>`
     gap: 0.85rem;
 
     .icon-wrapper {
-      width: 46px;
-      height: 46px;
+      width: 44px;
+      height: 44px;
       border-radius: 0.875rem;
-      background: ${props => props.$stageColor ? props.$stageColor + '22' : 'rgba(16, 185, 129, 0.15)'};
-      border: 1px solid ${props => props.$stageColor ? props.$stageColor + '44' : 'rgba(16, 185, 129, 0.3)'};
+      background: ${props => props.$stageColor ? props.$stageColor + '18' : 'rgba(16, 185, 129, 0.15)'};
+      border: 1px solid ${props => props.$stageColor ? props.$stageColor + '33' : 'rgba(16, 185, 129, 0.3)'};
       color: ${props => props.$stageColor || '#34d399'};
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.25rem;
     }
 
     .room-info {
@@ -330,12 +290,7 @@ const RoomCard = styled.div<{ $stageColor?: string }>`
       }
 
       .room-stage-tag {
-        font-size: 0.725rem;
-        font-weight: 800;
-        letter-spacing: 0.05em;
-        text-transform: uppercase;
-        color: ${props => props.$stageColor || '#34d399'};
-        margin-top: 0.15rem;
+        margin-top: 0.25rem;
       }
     }
   }
@@ -343,7 +298,7 @@ const RoomCard = styled.div<{ $stageColor?: string }>`
   .room-actions {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.4rem;
 
     .action-icon {
       background: rgba(255, 255, 255, 0.05);
@@ -352,6 +307,9 @@ const RoomCard = styled.div<{ $stageColor?: string }>`
       padding: 0.45rem;
       cursor: pointer;
       color: #94a3b8;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       transition: all 0.2s ease;
 
       &:hover {
@@ -369,14 +327,14 @@ const RoomCard = styled.div<{ $stageColor?: string }>`
   }
 
   .telemetry-block {
-    background: rgba(31, 41, 55, 0.4);
+    background: rgba(30, 41, 59, 0.45);
     border: 1px solid rgba(255, 255, 255, 0.06);
     border-radius: 0.875rem;
     padding: 0.85rem 1rem;
     display: flex;
     justify-content: space-around;
     align-items: center;
-    margin-top: 0.5rem;
+    margin-top: 0.75rem;
     margin-bottom: 0.5rem;
 
     .telemetry-item {
@@ -387,15 +345,11 @@ const RoomCard = styled.div<{ $stageColor?: string }>`
 
       .t-label {
         font-size: 0.725rem;
-        color: #64748b;
+        color: #94a3b8;
         display: flex;
         align-items: center;
         gap: 0.35rem;
         font-weight: 600;
-
-        svg {
-          font-size: 0.8rem;
-        }
       }
 
       .t-value {
@@ -438,7 +392,7 @@ const RoomCard = styled.div<{ $stageColor?: string }>`
 `;
 
 const CreateCard = styled.div`
-  background: rgba(17, 24, 39, 0.4);
+  background: rgba(15, 23, 42, 0.45);
   border: 2px dashed rgba(16, 185, 129, 0.35);
   backdrop-filter: blur(12px);
   border-radius: 1.5rem;
@@ -458,7 +412,7 @@ const CreateCard = styled.div`
     box-shadow: 0 15px 30px -5px rgba(16, 185, 129, 0.2);
 
     .plus-circle {
-      transform: scale(1.1);
+      transform: scale(1.08);
       background: #10b981;
       color: #042f2e;
       box-shadow: 0 0 20px rgba(16, 185, 129, 0.5);
@@ -470,8 +424,8 @@ const CreateCard = styled.div`
   }
 
   .plus-circle {
-    width: 54px;
-    height: 54px;
+    width: 52px;
+    height: 52px;
     border-radius: 50%;
     background: rgba(16, 185, 129, 0.15);
     border: 1px solid rgba(16, 185, 129, 0.3);
@@ -479,7 +433,6 @@ const CreateCard = styled.div`
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.4rem;
     margin-bottom: 1rem;
     transition: all 0.3s ease;
   }
@@ -502,33 +455,74 @@ const CreateCard = styled.div`
 
 const ModalOverlay = styled.div`
   position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0, 0, 0, 0.6);
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 9999;
-  backdrop-filter: blur(8px);
+  backdrop-filter: blur(12px);
+  padding: 1rem;
   animation: ${fadeIn} 0.2s ease-in-out forwards;
 `;
 
 const ModalContent = styled.div`
-  background: rgba(17, 24, 39, 0.95);
-  backdrop-filter: blur(16px);
-  padding: 2rem;
-  border-radius: 1.5rem;
+  background: rgba(15, 23, 42, 0.96);
+  backdrop-filter: blur(24px);
+  padding: 2.25rem;
+  border-radius: 1.25rem;
   width: 90%;
   max-width: 500px;
-  box-shadow: 0 20px 40px -5px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  animation: ${scaleIn} 0.2s ease-in-out forwards;
+  animation: ${scaleIn} 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+`;
 
-  h2 {
-    margin-top: 0;
-    color: #f8fafc;
-    margin-bottom: 1.5rem;
-    font-size: 1.35rem;
-    font-weight: 700;
+const ModalHeaderRow = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.75rem;
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+
+    .icon-badge {
+      width: 40px;
+      height: 40px;
+      border-radius: 0.65rem;
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    h2 {
+      margin: 0;
+      color: #f8fafc;
+      font-size: 1.3rem;
+      font-weight: 700;
+    }
+  }
+`;
+
+const CloseButton = styled.button`
+  background: none;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 0.45rem;
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  &:hover {
+    color: #f1f5f9;
+    background: rgba(255, 255, 255, 0.08);
   }
 `;
 
@@ -537,30 +531,32 @@ const FormGroup = styled.div`
 
   label {
     display: block;
-    margin-bottom: 0.5rem;
-    color: #94a3b8;
-    font-size: 0.875rem;
+    margin-bottom: 0.45rem;
+    color: #cbd5e1;
+    font-size: 0.85rem;
     font-weight: 600;
   }
 
   input, select {
     width: 100%;
     padding: 0.75rem 1rem;
-    background: rgba(31, 41, 55, 0.6);
+    background: rgba(30, 41, 59, 0.5);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 0.75rem;
+    border-radius: 0.65rem;
     color: #f8fafc;
     font-size: 0.95rem;
     outline: none;
+    box-sizing: border-box;
+    transition: border-color 0.2s, box-shadow 0.2s;
 
     &:focus {
-      border-color: #10b981;
+      border-color: rgba(16, 185, 129, 0.5);
       box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
     }
   }
 
   select option {
-    background: #111827;
+    background: #0f172a;
     color: #f8fafc;
   }
 `;
@@ -568,32 +564,8 @@ const FormGroup = styled.div`
 const ModalActions = styled.div`
   display: flex;
   justify-content: flex-end;
-  gap: 1rem;
+  gap: 0.75rem;
   margin-top: 2rem;
-
-  button {
-    padding: 0.65rem 1.25rem;
-    border-radius: 0.75rem;
-    font-weight: 700;
-    font-size: 0.875rem;
-    cursor: pointer;
-    border: none;
-    transition: all 0.2s ease;
-
-    &.cancel {
-      background: rgba(255, 255, 255, 0.05);
-      color: #94a3b8;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      &:hover { background: rgba(255, 255, 255, 0.1); color: #f1f5f9; }
-    }
-
-    &.save {
-      background: linear-gradient(135deg, #10b981, #059669);
-      color: #ffffff;
-      box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
-      &:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5); }
-    }
-  }
 `;
 
 export const Rooms: React.FC = () => {
@@ -727,18 +699,35 @@ export const Rooms: React.FC = () => {
     setNewRoom({ name: '', type: 'vegetation', capacity: 0 });
   };
 
+  const getStageBadgeVariant = (type: string): 'sky' | 'amber' | 'purple' | 'emerald' | 'default' => {
+    switch (type) {
+      case 'vegetation':
+      case 'clones':
+        return 'sky';
+      case 'flowering':
+        return 'amber';
+      case 'drying':
+      case 'curing':
+        return 'purple';
+      case 'living_soil':
+        return 'emerald';
+      default:
+        return 'default';
+    }
+  };
+
   const getStageColor = (type: string) => {
     switch (type) {
       case 'vegetation':
       case 'clones':
-        return '#38bdf8'; // Sky Blue
+        return '#38bdf8';
       case 'flowering':
-        return '#f59e0b'; // Amber
+        return '#f59e0b';
       case 'drying':
       case 'curing':
-        return '#a855f7'; // Purple
+        return '#a855f7';
       case 'living_soil':
-        return '#10b981'; // Emerald
+        return '#10b981';
       default:
         return '#34d399';
     }
@@ -764,13 +753,13 @@ export const Rooms: React.FC = () => {
         </TitleBlock>
 
         <ButtonGroup>
-          <SecondaryButton onClick={() => navigate('/rooms/map')}>
-            <FaMapMarkedAlt /> Mapa Interactivo
-          </SecondaryButton>
+          <ShadcnButton variant="secondary" onClick={() => navigate('/rooms/map')}>
+            <Map size={16} /> Mapa Interactivo
+          </ShadcnButton>
 
-          <PrimaryButton onClick={() => setIsModalOpen(true)}>
-            <FaPlus /> Nueva Sala
-          </PrimaryButton>
+          <ShadcnButton variant="default" onClick={() => setIsModalOpen(true)}>
+            <Plus size={16} /> Nueva Sala
+          </ShadcnButton>
         </ButtonGroup>
       </HeaderRow>
 
@@ -778,7 +767,10 @@ export const Rooms: React.FC = () => {
       <KPIGrid>
         <KPICard $glowColor="#10b981">
           <div className="kpi-header">
-            <FaWarehouse className="icon" /> SALAS TOTALES
+            <div className="icon-box">
+              <Warehouse size={16} />
+            </div>
+            SALAS TOTALES
           </div>
           <div className="value">{rooms.length} Salas</div>
           <div className="sub">Espacios de producción habilitados</div>
@@ -786,7 +778,10 @@ export const Rooms: React.FC = () => {
 
         <KPICard $glowColor="#38bdf8">
           <div className="kpi-header">
-            <FaSeedling className="icon" /> VEGETATIVO & CLONES
+            <div className="icon-box">
+              <Sprout size={16} />
+            </div>
+            VEGETATIVO & CLONES
           </div>
           <div className="value">{countByType('vegetation') + countByType('clones')} Salas</div>
           <div className="sub">Desarrollo radicular y crecimiento</div>
@@ -794,7 +789,10 @@ export const Rooms: React.FC = () => {
 
         <KPICard $glowColor="#f59e0b">
           <div className="kpi-header">
-            <FaLeaf className="icon" /> FLORACIÓN
+            <div className="icon-box">
+              <Leaf size={16} />
+            </div>
+            FLORACIÓN
           </div>
           <div className="value">{countByType('flowering')} Salas</div>
           <div className="sub">Generación de resina y desarrollo de flor</div>
@@ -802,7 +800,10 @@ export const Rooms: React.FC = () => {
 
         <KPICard $glowColor="#a855f7">
           <div className="kpi-header">
-            <FaClock className="icon" /> SECADO & CURADO
+            <div className="icon-box">
+              <Clock size={16} />
+            </div>
+            SECADO & CURADO
           </div>
           <div className="value">{countByType('drying')} Salas</div>
           <div className="sub">Procesamiento post-cosecha controlado</div>
@@ -812,7 +813,7 @@ export const Rooms: React.FC = () => {
       {/* FILTER & SEARCH ROW */}
       <FilterRow>
         <div className="search-box">
-          <FaSearch />
+          <Search size={18} />
           <input
             type="text"
             placeholder="Buscar sala por nombre..."
@@ -841,41 +842,48 @@ export const Rooms: React.FC = () => {
       <Grid>
         {filteredRooms.map(room => {
           const stageColor = getStageColor(room.type);
+          const badgeVariant = getStageBadgeVariant(room.type);
           return (
             <RoomCard key={room.id} $stageColor={stageColor} onClick={() => navigate(`/rooms/${room.id}`)}>
               <div>
                 <div className="room-top">
                   <div className="room-header-left">
                     <div className="icon-wrapper">
-                      <FaWarehouse />
+                      <Warehouse size={22} />
                     </div>
                     <div className="room-info">
                       <div className="room-name">{room.name}</div>
                       <div className="room-stage-tag">
-                        {room.type === 'living_soil' ? 'AGRO/LIVING SOIL' : room.type === 'curing' ? 'SECADO' : room.type.toUpperCase()}
+                        <ShadcnBadge variant={badgeVariant} dot>
+                          {room.type === 'living_soil' ? 'AGRO/LIVING SOIL' : room.type === 'curing' ? 'SECADO' : room.type.toUpperCase()}
+                        </ShadcnBadge>
                       </div>
                     </div>
                   </div>
 
                   <div className="room-actions">
-                    <div className="action-icon" title="Editar" onClick={(e) => handleEdit(e, room)}><FaEdit /></div>
-                    <div className="action-icon delete" title="Eliminar" onClick={(e) => handleDeleteClick(e, room.id)}><FaTrash /></div>
+                    <div className="action-icon" title="Editar" onClick={(e) => handleEdit(e, room)}>
+                      <Edit3 size={15} />
+                    </div>
+                    <div className="action-icon delete" title="Eliminar" onClick={(e) => handleDeleteClick(e, room.id)}>
+                      <Trash2 size={15} />
+                    </div>
                   </div>
                 </div>
 
                 <div className="telemetry-block">
                   <div className="telemetry-item">
-                    <span className="t-label"><FaThermometerHalf style={{ color: '#f43f5e' }} /> TEMP</span>
+                    <span className="t-label"><Thermometer size={14} style={{ color: '#f43f5e' }} /> TEMP</span>
                     <span className="t-value">24.5 °C</span>
                   </div>
                   <div className="divider" />
                   <div className="telemetry-item">
-                    <span className="t-label"><FaTint style={{ color: '#38bdf8' }} /> HUMEDAD</span>
+                    <span className="t-label"><Droplets size={14} style={{ color: '#38bdf8' }} /> HUMEDAD</span>
                     <span className="t-value">62 %</span>
                   </div>
                   <div className="divider" />
                   <div className="telemetry-item">
-                    <span className="t-label"><FaLeaf style={{ color: '#10b981' }} /> CAPACIDAD</span>
+                    <span className="t-label"><Leaf size={14} style={{ color: '#10b981' }} /> CAPACIDAD</span>
                     <span className="t-value">{room.capacity || '--'} Plantas</span>
                   </div>
                 </div>
@@ -884,7 +892,7 @@ export const Rooms: React.FC = () => {
               <div className="card-footer">
                 <span style={{ fontSize: '0.8rem', color: '#64748b' }}>Ver mapa y mesas</span>
                 <span className="enter-link">
-                  Ver Detalle de Sala <FaArrowRight />
+                  Ver Detalle de Sala <ArrowRight size={15} />
                 </span>
               </div>
             </RoomCard>
@@ -894,7 +902,7 @@ export const Rooms: React.FC = () => {
         {/* CREATE NEW ROOM CARD */}
         <CreateCard onClick={() => setIsModalOpen(true)}>
           <div className="plus-circle">
-            <FaPlus />
+            <Plus size={26} />
           </div>
           <div className="create-text">Haz click aquí para crear una nueva sala</div>
           <div className="create-sub">Asigná tipo de sala, capacidad y distribución</div>
@@ -905,7 +913,18 @@ export const Rooms: React.FC = () => {
       {isModalOpen && (
         <ModalOverlay onClick={closeModal}>
           <ModalContent onClick={(e) => e.stopPropagation()}>
-            <h2>{editingRoomId ? 'Editar Sala' : 'Nueva Sala de Cultivo'}</h2>
+            <ModalHeaderRow>
+              <div className="header-left">
+                <div className="icon-badge">
+                  <Warehouse size={20} color="#34d399" />
+                </div>
+                <h2>{editingRoomId ? 'Editar Sala' : 'Nueva Sala de Cultivo'}</h2>
+              </div>
+              <CloseButton onClick={closeModal} aria-label="Cerrar">
+                <LucideX size={20} />
+              </CloseButton>
+            </ModalHeaderRow>
+
             <FormGroup>
               <label>Nombre de la Sala</label>
               <input
@@ -941,10 +960,12 @@ export const Rooms: React.FC = () => {
             </FormGroup>
 
             <ModalActions>
-              <button className="cancel" onClick={closeModal}>Cancelar</button>
-              <button className="save" onClick={handleCreateOrUpdateRoom}>
+              <ShadcnButton variant="secondary" onClick={closeModal}>
+                Cancelar
+              </ShadcnButton>
+              <ShadcnButton variant="default" onClick={handleCreateOrUpdateRoom}>
                 {editingRoomId ? 'Guardar Cambios' : 'Crear Sala'}
-              </button>
+              </ShadcnButton>
             </ModalActions>
           </ModalContent>
         </ModalOverlay>
