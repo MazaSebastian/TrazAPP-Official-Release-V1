@@ -53,6 +53,7 @@ import { CustomSelect } from '../components/CustomSelect';
 import { Button as ShadcnButton } from '../components/ui/Button';
 import { Badge as ShadcnBadge } from '../components/ui/Badge';
 import { StickyNoteModal } from '../components/StickyNoteModal';
+import { DaySummaryModal } from '../components/DaySummaryModal';
 import {
   ArrowLeft as LucideArrowLeft,
   Sprout as LucideSprout,
@@ -6430,117 +6431,29 @@ const RoomDetail: React.FC = () => {
                     )
                 }
 
-                {/* Day Summary Modal */}
-                {
-                    isDaySummaryOpen && selectedDayForSummary && (
-                        <PortalModalOverlay>
-                            <TaskModalContent style={{ maxWidth: '600px' }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                                    <h3 style={{ margin: 0, color: '#f8fafc' }}>Resumen del {format(selectedDayForSummary, 'd MMMM yyyy', { locale: es })}</h3>
-                                    <button onClick={() => setIsDaySummaryOpen(false)} style={{ border: 'none', background: 'none', cursor: 'pointer', fontSize: '1.2rem', color: '#a0aec0' }}>×</button>
-                                </div>
+                {/* Modern Shadcn Day Summary Modal */}
+                <DaySummaryModal
+                    isOpen={isDaySummaryOpen}
+                    onClose={() => setIsDaySummaryOpen(false)}
+                    date={selectedDayForSummary}
+                    tasks={selectedDayForSummary
+                        ? allTasksForView.filter(t => t.due_date && t.due_date.split('T')[0] === format(selectedDayForSummary, 'yyyy-MM-dd'))
+                        : []
+                    }
+                    onToggleTaskStatus={handleToggleTaskStatus}
+                    onEditTask={(task) => {
+                        setIsDaySummaryOpen(false);
+                        const parentTaskOption = task.id.toString().startsWith('virtual')
+                            ? tasks.find(pt => pt.id === task.id.toString().split(' -')[1].trim())
+                            : task;
 
-                                <div style={{ marginBottom: '1.5rem' }}>
-                                    <h4 style={{ fontSize: '1rem', color: '#94a3b8', marginBottom: '0.5rem' }}>Tareas Asignadas</h4>
-                                    {allTasksForView.filter(t => t.due_date && t.due_date.split('T')[0] === format(selectedDayForSummary, 'yyyy-MM-dd')).length > 0 ? (
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                                            {allTasksForView.filter(t => t.due_date && t.due_date.split('T')[0] === format(selectedDayForSummary, 'yyyy-MM-dd')).map(t => (
-                                                <div key={t.id.toString()} style={{
-                                                    border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '0.5rem', padding: '0.75rem',
-                                                    background: t.status === 'done' ? 'rgba(72, 187, 120, 0.2)' : 'rgba(30, 41, 59, 0.5)',
-                                                    display: 'flex', justifyContent: 'space-between', alignItems: 'center'
-                                                }}>
-                                                    <div>
-                                                        <div style={{ fontWeight: 'bold', color: '#f8fafc' }}>{t.title}</div>
-                                                        <div style={{ fontSize: '0.85rem', color: '#94a3b8', display: 'flex', flexWrap: 'wrap', gap: '0.5rem', alignItems: 'center', marginTop: '0.25rem' }}>
-                                                            <Badge taskType={t.type} style={{ fontSize: '0.65rem' }}>{t.type?.replace(/_/g, ' ')}</Badge>
-                                                            {t.crop_id && (
-                                                                <span style={{
-                                                                    background: 'rgba(56, 189, 248, 0.15)',
-                                                                    color: '#38bdf8',
-                                                                    padding: '0.15rem 0.5rem',
-                                                                    borderRadius: '0.25rem',
-                                                                    fontSize: '0.65rem',
-                                                                    fontWeight: 600,
-                                                                    border: '1px solid rgba(56, 189, 248, 0.3)'
-                                                                }}>
-                                                                    {room?.clone_maps?.find(m => m.id === t.crop_id)?.name || room?.batches?.find(b => b.id === t.crop_id)?.name || 'Mapa Eliminado'}
-                                                                </span>
-                                                            )}
-                                                            <span>Asignado a: {users.find(u => u.id === t.assigned_to)?.full_name || 'Nadie'}</span>
-                                                        </div>
-                                                    </div>
-                                                    <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                                        <button
-                                                            title={t.status === 'done' ? "Marcar como pendiente" : "Marcar como completada"}
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                handleToggleTaskStatus(t);
-                                                            }}
-                                                            style={{
-                                                                background: t.status === 'done' ? '#48bb78' : 'rgba(255, 255, 255, 0.05)',
-                                                                border: `1px solid ${t.status === 'done' ? '#48bb78' : 'rgba(255, 255, 255, 0.1)'} `,
-                                                                color: t.status === 'done' ? 'white' : '#94a3b8',
-                                                                borderRadius: '0.375rem',
-                                                                padding: '0.4rem',
-                                                                cursor: 'pointer',
-                                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                                transition: 'all 0.2s',
-                                                                minWidth: '32px'
-                                                            }}
-                                                        >
-                                                            <LucideCheck />
-                                                        </button>
-                                                        <button
-                                                            onClick={() => {
-                                                                setIsDaySummaryOpen(false);
-                                                                // Extract the parent task if it's virtual to allow correct editing
-                                                                const parentTaskOption = t.id.toString().startsWith('virtual')
-                                                                    ? tasks.find(pt => pt.id === t.id.toString().split(' -')[1].trim())
-                                                                    : t;
-
-                                                                if (parentTaskOption) {
-                                                                    handleTaskClick({ stopPropagation: () => { } } as any, parentTaskOption);
-                                                                }
-                                                            }}
-                                                            style={{
-                                                                fontSize: '0.75rem',
-                                                                color: 'white',
-                                                                background: '#3b82f6',
-                                                                border: 'none',
-                                                                borderRadius: '0.375rem',
-                                                                padding: '0.4rem 0.8rem',
-                                                                cursor: 'pointer',
-                                                                fontWeight: '600',
-                                                                boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
-                                                                transition: 'all 0.2s'
-                                                            }}
-                                                        >
-                                                            Ver / Editar
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    ) : (
-                                        <p style={{ color: '#94a3b8', fontStyle: 'italic' }}>No hay tareas para este día.</p>
-                                    )}
-                                </div>
-
-                                <div>
-                                    <h4 style={{ fontSize: '1rem', color: '#94a3b8', marginBottom: '0.5rem' }}>Registro Diario</h4>
-                                    <div style={{
-                                        border: '2px dashed rgba(255, 255, 255, 0.1)', borderRadius: '0.5rem', padding: '2rem',
-                                        textAlign: 'center', color: '#94a3b8'
-                                    }}>
-                                        <LucideCalendar style={{ fontSize: '2rem', marginBottom: '0.5rem', opacity: 0.5 }} />
-                                        <p>No se cargaron fotos ni reportes diarios.</p>
-                                    </div>
-                                </div>
-                            </TaskModalContent>
-                        </PortalModalOverlay>
-                    )
-                }
+                        if (parentTaskOption) {
+                            handleTaskClick({ stopPropagation: () => { } } as any, parentTaskOption);
+                        }
+                    }}
+                    room={room}
+                    users={users}
+                />
 
                 {/* Modern Shadcn Sticky Note Modal */}
                 <StickyNoteModal
