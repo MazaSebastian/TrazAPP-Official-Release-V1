@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import styled, { keyframes, css } from 'styled-components';
+import styled, { keyframes } from 'styled-components';
 import { Warehouse, X, Layers, Hash, Type } from 'lucide-react';
 import { ShadcnButton } from './ui/Button';
 import { CustomSelect, Option } from './CustomSelect';

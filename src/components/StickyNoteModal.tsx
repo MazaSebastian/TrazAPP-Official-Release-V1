@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import styled, { keyframes, css } from 'styled-components';
-import { StickyNote, X, Check, Plus, Sparkles } from 'lucide-react';
+import { StickyNote, X, Check, Plus } from 'lucide-react';
 import { Button as ShadcnButton } from './ui/Button';
 
 export type StickyColor = 'yellow' | 'blue' | 'pink' | 'green';
