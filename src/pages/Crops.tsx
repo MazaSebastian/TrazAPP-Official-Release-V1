@@ -26,6 +26,8 @@ import { PromptModal } from '../components/PromptModal';
 import { DeleteProtectionModal } from '../components/DeleteProtectionModal';
 import { ColorPickerModal } from '../components/ColorPickerModal';
 import { ToastModal } from '../components/ToastModal';
+import { Button as ShadcnButton } from '../components/ui/Button';
+import { X, Sprout } from 'lucide-react';
 
 const floatIn = keyframes`
   from { opacity: 0; transform: translateY(16px); }
@@ -946,9 +948,38 @@ export const Crops: React.FC = () => {
 
       {/* CREATE MODAL */}
       {isModalOpen && (
-        <ModalOverlay $isClosing={isClosingCreate}>
-          <ModalContent $isClosing={isClosingCreate}>
-            <h2>Crear Nuevo Cultivo</h2>
+        <ModalOverlay $isClosing={isClosingCreate} onClick={() => setIsModalOpen(false)}>
+          <ModalContent $isClosing={isClosingCreate} onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                <div style={{
+                  width: '34px', height: '34px', borderRadius: '9px',
+                  background: 'rgba(16, 185, 129, 0.12)', border: '1px solid rgba(16, 185, 129, 0.25)',
+                  color: '#34d399', display: 'flex', alignItems: 'center', justifyContent: 'center'
+                }}>
+                  <Sprout size={18} />
+                </div>
+                <h2 style={{ margin: 0, color: '#f8fafc', fontSize: '1.2rem', fontWeight: 700, letterSpacing: '-0.02em' }}>
+                  Crear Nuevo Cultivo
+                </h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsModalOpen(false)}
+                title="Cerrar"
+                style={{
+                  background: 'none', border: 'none', color: '#94a3b8',
+                  cursor: 'pointer', padding: '6px', borderRadius: '8px',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  transition: 'all 0.15s ease'
+                }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; e.currentTarget.style.color = '#f8fafc'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = '#94a3b8'; }}
+              >
+                <X size={17} />
+              </button>
+            </div>
+
             <FormGroup>
               <label>Nombre del Cultivo</label>
               <input
@@ -961,10 +992,24 @@ export const Crops: React.FC = () => {
             </FormGroup>
 
             <ModalActions>
-              <button className="cancel" onClick={() => setIsModalOpen(false)}>Cancelar</button>
-              <button className="save" onClick={handleCreate} disabled={isCreating}>
+              <ShadcnButton
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={() => setIsModalOpen(false)}
+                disabled={isCreating}
+              >
+                Cancelar
+              </ShadcnButton>
+              <ShadcnButton
+                type="button"
+                variant="default"
+                size="sm"
+                onClick={handleCreate}
+                disabled={isCreating || !formData.name.trim()}
+              >
                 {isCreating ? 'Guardando...' : 'Crear Cultivo'}
-              </button>
+              </ShadcnButton>
             </ModalActions>
           </ModalContent>
         </ModalOverlay>

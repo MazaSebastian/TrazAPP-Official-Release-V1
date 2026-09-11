@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import styled, { keyframes } from 'styled-components';
+import styled, { keyframes, css } from 'styled-components';
+import { Edit3, X } from 'lucide-react';
+import { Button as ShadcnButton } from './ui/Button';
 
 const fadeIn = keyframes`
   from { opacity: 0; }
@@ -12,67 +14,115 @@ const fadeOut = keyframes`
 `;
 
 const scaleIn = keyframes`
-  from { transform: scale(0.95); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
+  from { transform: scale(0.96) translateY(6px); opacity: 0; }
+  to { transform: scale(1) translateY(0); opacity: 1; }
 `;
 
 const scaleOut = keyframes`
-  from { transform: scale(1); opacity: 1; }
-  to { transform: scale(0.95); opacity: 0; }
+  from { transform: scale(1) translateY(0); opacity: 1; }
+  to { transform: scale(0.96) translateY(6px); opacity: 0; }
 `;
 
-const Overlay = styled.div<{ isClosing: boolean }>`
+const Overlay = styled.div<{ $isClosing: boolean }>`
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.75);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 2000;
-  backdrop-filter: blur(4px);
-  animation: ${p => p.isClosing ? fadeOut : fadeIn} 0.2s ease-in-out forwards;
+  backdrop-filter: blur(8px);
+  animation: ${p => p.$isClosing ? css`${fadeOut} 0.18s ease-in forwards` : css`${fadeIn} 0.2s ease-out forwards`};
 `;
 
-const Content = styled.div<{ isClosing: boolean }>`
-  background: rgba(15, 23, 42, 0.95);
-  backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 2rem;
-  border-radius: 1rem;
+const DialogContent = styled.div<{ $isClosing: boolean }>`
+  background: rgba(15, 23, 42, 0.92);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 1.5rem 1.75rem;
+  border-radius: 1.25rem;
   width: 90%;
-  max-width: 400px;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
-  animation: ${p => p.isClosing ? scaleOut : scaleIn} 0.2s ease-in-out forwards;
+  max-width: 440px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  animation: ${p => p.$isClosing ? css`${scaleOut} 0.18s ease-in forwards` : css`${scaleIn} 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards`};
+`;
 
-  h3 {
-    margin-top: 0;
-    color: #f8fafc;
-    margin-bottom: 1rem;
-    font-size: 1.25rem;
+const HeaderRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+
+  .title-group {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+
+    .icon-wrapper {
+      width: 34px;
+      height: 34px;
+      border-radius: 9px;
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      color: #34d399;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    h3 {
+      margin: 0;
+      color: #f8fafc;
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+  }
+
+  .close-btn {
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: #f8fafc;
+    }
   }
 `;
 
-const Input = styled.input`
+const StyledInput = styled.input`
   width: 100%;
-  padding: 0.75rem;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 0.5rem;
-  font-size: 1rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 0.75rem;
+  font-size: 0.95rem;
+  font-weight: 500;
   margin-bottom: 1.5rem;
-  background: rgba(15, 23, 42, 0.6);
+  background: rgba(2, 6, 23, 0.55);
   color: #f8fafc;
-  transition: all 0.2s;
+  box-sizing: border-box;
+  transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
 
   &:focus {
     outline: none;
-    border-color: rgba(56, 189, 248, 0.5);
-    box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.1);
+    background: rgba(2, 6, 23, 0.75);
+    border-color: rgba(16, 185, 129, 0.6);
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.18);
   }
+
   &::placeholder {
-    color: #cbd5e1;
+    color: #64748b;
   }
 `;
 
@@ -82,42 +132,7 @@ const ButtonGroup = styled.div`
   gap: 0.75rem;
 `;
 
-const Button = styled.button<{ variant?: 'primary' | 'secondary' | 'green' }>`
-  padding: 0.5rem 1rem;
-  border-radius: 0.5rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-
-  border: ${p => {
-    if (p.variant === 'secondary') return '1px solid rgba(255, 255, 255, 0.1)';
-    if (p.variant === 'green') return '1px solid rgba(74, 222, 128, 0.5)';
-    return '1px solid rgba(56, 189, 248, 0.5)'; // primary
-  }};
-  
-  background: ${p => {
-    if (p.variant === 'secondary') return 'rgba(30, 41, 59, 0.6)';
-    if (p.variant === 'green') return 'rgba(74, 222, 128, 0.2)';
-    return 'rgba(56, 189, 248, 0.2)'; // primary
-  }};
-  
-  color: ${p => {
-    if (p.variant === 'secondary') return '#cbd5e1';
-    if (p.variant === 'green') return '#4ade80';
-    return '#38bdf8'; // primary
-  }};
-
-  &:hover {
-    background: ${p => {
-    if (p.variant === 'secondary') return 'rgba(255, 255, 255, 0.1)';
-    if (p.variant === 'green') return 'rgba(74, 222, 128, 0.3)';
-    return 'rgba(56, 189, 248, 0.3)';
-  }};
-  color: ${p => p.variant === 'secondary' ? '#f8fafc' : undefined};
-  }
-`;
-
-interface PromptModalProps {
+export interface PromptModalProps {
   isOpen: boolean;
   title: string;
   initialValue?: string;
@@ -133,8 +148,7 @@ export const PromptModal: React.FC<PromptModalProps> = ({
   initialValue = '',
   placeholder = '',
   onClose,
-  onConfirm,
-  confirmButtonColor = 'primary'
+  onConfirm
 }) => {
   const [value, setValue] = useState(initialValue);
   const [isVisible, setIsVisible] = useState(false);
@@ -150,7 +164,7 @@ export const PromptModal: React.FC<PromptModalProps> = ({
       const timer = setTimeout(() => {
         setIsVisible(false);
         setIsClosing(false);
-      }, 200);
+      }, 180);
       return () => clearTimeout(timer);
     }
   }, [isOpen, initialValue]);
@@ -159,21 +173,33 @@ export const PromptModal: React.FC<PromptModalProps> = ({
 
   const handleClose = () => {
     setIsClosing(true);
-    setTimeout(onClose, 200);
+    setTimeout(onClose, 180);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onConfirm(value);
-    handleClose(); // Close with animation on confirm too
+    if (!value.trim()) return;
+    onConfirm(value.trim());
+    handleClose();
   };
 
   return (
-    <Overlay isClosing={isClosing}>
-      <Content isClosing={isClosing}>
-        <h3>{title}</h3>
+    <Overlay $isClosing={isClosing} onClick={handleClose}>
+      <DialogContent $isClosing={isClosing} onClick={(e) => e.stopPropagation()}>
+        <HeaderRow>
+          <div className="title-group">
+            <div className="icon-wrapper">
+              <Edit3 size={16} />
+            </div>
+            <h3>{title}</h3>
+          </div>
+          <button type="button" className="close-btn" onClick={handleClose} title="Cerrar">
+            <X size={17} />
+          </button>
+        </HeaderRow>
+
         <form onSubmit={handleSubmit}>
-          <Input
+          <StyledInput
             autoFocus
             type="text"
             value={value}
@@ -181,11 +207,17 @@ export const PromptModal: React.FC<PromptModalProps> = ({
             placeholder={placeholder}
           />
           <ButtonGroup>
-            <Button type="button" variant="secondary" onClick={handleClose}>Cancelar</Button>
-            <Button type="submit" variant={confirmButtonColor}>Guardar</Button>
+            <ShadcnButton type="button" variant="secondary" size="sm" onClick={handleClose}>
+              Cancelar
+            </ShadcnButton>
+            <ShadcnButton type="submit" variant="default" size="sm" disabled={!value.trim()}>
+              Guardar
+            </ShadcnButton>
           </ButtonGroup>
         </form>
-      </Content>
+      </DialogContent>
     </Overlay>
   );
 };
+
+export default PromptModal;

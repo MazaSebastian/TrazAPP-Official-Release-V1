@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import styled, { keyframes } from 'styled-components';
-import { FaExclamationTriangle } from 'react-icons/fa';
+import styled, { keyframes, css } from 'styled-components';
+import { AlertTriangle, Loader2 } from 'lucide-react';
+import { Button as ShadcnButton } from './ui/Button';
 
 const fadeIn = keyframes`
   from { opacity: 0; }
@@ -13,40 +14,40 @@ const fadeOut = keyframes`
 `;
 
 const scaleIn = keyframes`
-  from { transform: scale(0.95); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
+  from { transform: scale(0.96) translateY(6px); opacity: 0; }
+  to { transform: scale(1) translateY(0); opacity: 1; }
 `;
 
 const scaleOut = keyframes`
-  from { transform: scale(1); opacity: 1; }
-  to { transform: scale(0.95); opacity: 0; }
+  from { transform: scale(1) translateY(0); opacity: 1; }
+  to { transform: scale(0.96) translateY(6px); opacity: 0; }
 `;
 
-const Overlay = styled.div<{ isClosing: boolean }>`
+const Overlay = styled.div<{ $isClosing: boolean }>`
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.75);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 2000;
-  backdrop-filter: blur(4px);
-  animation: ${p => p.isClosing ? fadeOut : fadeIn} 0.2s ease-in-out forwards;
+  backdrop-filter: blur(8px);
+  animation: ${p => p.$isClosing ? css`${fadeOut} 0.18s ease-in forwards` : css`${fadeIn} 0.2s ease-out forwards`};
 `;
 
-const Content = styled.div<{ isClosing: boolean }>`
-  background: rgba(15, 23, 42, 0.95);
-  backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+const Content = styled.div<{ $isClosing: boolean }>`
+  background: rgba(15, 23, 42, 0.92);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   padding: 2rem;
-  border-radius: 1rem;
+  border-radius: 1.25rem;
   width: 90%;
-  max-width: 450px;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
-  animation: ${p => p.isClosing ? scaleOut : scaleIn} 0.2s ease-in-out forwards;
+  max-width: 440px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  animation: ${p => p.$isClosing ? css`${scaleOut} 0.18s ease-in forwards` : css`${scaleIn} 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards`};
   text-align: center;
 
   h3 {
@@ -55,44 +56,48 @@ const Content = styled.div<{ isClosing: boolean }>`
     margin-bottom: 0.5rem;
     font-size: 1.25rem;
     font-weight: 700;
+    letter-spacing: -0.02em;
   }
 
   p {
-    color: #cbd5e1;
-    margin-bottom: 1.5rem;
+    color: #94a3b8;
+    margin-bottom: 1.25rem;
+    font-size: 0.925rem;
     line-height: 1.5;
   }
 `;
 
 const IconWrapper = styled.div`
-  width: 60px;
-  height: 60px;
-  background: rgba(239, 68, 68, 0.2);
-  color: #ef4444;
-  border-radius: 50%;
+  width: 52px;
+  height: 52px;
+  background: rgba(239, 68, 68, 0.12);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-radius: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.75rem;
   margin: 0 auto;
 `;
 
 const Input = styled.input`
   width: 100%;
-  padding: 0.75rem;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(15, 23, 42, 0.6);
+  padding: 0.75rem 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(2, 6, 23, 0.55);
   color: #f8fafc;
-  border-radius: 0.5rem;
-  font-size: 1rem;
+  border-radius: 0.75rem;
+  font-size: 0.95rem;
   margin-bottom: 0.5rem;
   text-align: center;
+  box-sizing: border-box;
   transition: all 0.2s;
 
   &:focus {
     outline: none;
-    border-color: rgba(239, 68, 68, 0.5);
-    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+    background: rgba(2, 6, 23, 0.75);
+    border-color: rgba(239, 68, 68, 0.6);
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.18);
   }
 
   &::placeholder {
@@ -101,15 +106,16 @@ const Input = styled.input`
 `;
 
 const VerificationText = styled.div`
-  background: rgba(30, 41, 59, 0.6);
+  background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 0.5rem;
+  padding: 0.5rem 0.75rem;
   border-radius: 0.5rem;
-  font-family: monospace;
-  font-weight: bold;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-weight: 700;
   color: #f8fafc;
   margin-bottom: 1rem;
   user-select: all;
+  letter-spacing: 0.02em;
 `;
 
 const ButtonGroup = styled.div`
@@ -119,34 +125,10 @@ const ButtonGroup = styled.div`
   margin-top: 1.5rem;
 `;
 
-const Button = styled.button<{ variant?: 'danger' | 'secondary' }>`
-  padding: 0.75rem 1.5rem;
-  border-radius: 0.5rem;
-  border: ${p => p.variant === 'secondary' ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(239, 68, 68, 0.5)'};
-  background: ${p => p.variant === 'secondary' ? 'rgba(30, 41, 59, 0.6)' : 'rgba(239, 68, 68, 0.2)'};
-  color: ${p => p.variant === 'secondary' ? '#cbd5e1' : '#f87171'};
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  min-width: 120px;
-
-  &:hover {
-    background: ${p => p.variant === 'secondary' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(239, 68, 68, 0.3)'};
-    color: ${p => p.variant === 'secondary' ? '#f8fafc' : '#f87171'};
-    transform: translateY(-1px);
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    transform: none;
-  }
-`;
-
-interface DeleteProtectionModalProps {
+export interface DeleteProtectionModalProps {
   isOpen: boolean;
-  itemType: string; // e.g., "Cultivo", "Sala"
-  itemName: string; // e.g., "Aurora"
+  itemType: string;
+  itemName: string;
   onClose: () => void;
   onConfirm: () => void;
   isLoading?: boolean;
@@ -174,7 +156,7 @@ export const DeleteProtectionModal: React.FC<DeleteProtectionModalProps> = ({
       const timer = setTimeout(() => {
         setIsVisible(false);
         setIsClosing(false);
-      }, 200);
+      }, 180);
       return () => clearTimeout(timer);
     }
   }, [isOpen]);
@@ -182,92 +164,69 @@ export const DeleteProtectionModal: React.FC<DeleteProtectionModalProps> = ({
   if (!isVisible && !isOpen) return null;
 
   const handleClose = () => {
-    if (!isLoading) {
-      setIsClosing(true);
-      setTimeout(onClose, 200);
-    }
+    setIsClosing(true);
+    setTimeout(onClose, 180);
   };
 
-  const handleConfirm = () => {
-    if (inputValue === itemName) {
+  const isMatch = inputValue.trim().toLowerCase() === itemName.trim().toLowerCase();
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (isMatch && !isLoading) {
       onConfirm();
-      // Don't animate close here on success as we normally wait for parent update or switch to Toast
-      // However, if we want to smooth transition to Toast, we might want to just let parent handle unmount
-      // But based on previous tasks, we want seamless transition to Toast.
-      // If we animate out here, we might introduce a gap before Toast.
-      // The implementation in Crops.tsx sets isLoading then eventually closes.
-      // If we animate out, it fades.
-      // Let's stick to standard behavior. If user cancels, it fades out.
-      // If confirmed, parent closes it.
-      // Since parent just sets isOpen=false, the useEffect above will handle the fade out!
-      // WAIT. If parent sets isOpen=false immediately on success, the useEffect triggers fade out.
-      // But we previously wanted seamless transition to Toast.
-      // If it fades out, we see the background, then Toast fades in (or pops).
-      // The user wanted " seamless transition".
-      // Previous task: "Update Crops.tsx to disable toast animation on delete success".
-      // If this modal fades out, that seamless transition might be broken.
-      // Actually, if isOpen becomes false, it fades out.
-      // We might need a prop to skip animation?
-      // Or maybe the user WANTS the fade out now?
-      // "When closing with X, it should fade out".
-      // The user didn't specify behavior on Confirm.
-      // However, on Confirm success, the component is unmounted or isOpen set to false.
-      // If I use the useEffect logic, it WILL fade out.
-      // This implies a 200ms delay before unmounting.
-      // This might introduce a brief flash of the underlying content before the Toast appears,
-      // OR if the Toast appears immediately, they might overlap.
-      // But Toast covers the screen.
-      // Let's implement the generic close animation requested.
-    }
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && inputValue === itemName) {
-      handleConfirm();
-    } else if (e.key === 'Escape') {
-      handleClose();
     }
   };
 
   return (
-    <Overlay isClosing={isClosing}>
-      <Content isClosing={isClosing}>
+    <Overlay $isClosing={isClosing} onClick={handleClose}>
+      <Content $isClosing={isClosing} onClick={(e) => e.stopPropagation()}>
         <IconWrapper>
-          <FaExclamationTriangle />
+          <AlertTriangle size={24} />
         </IconWrapper>
-        <h3>Zona de Peligro</h3>
+
+        <h3>Eliminar {itemType}</h3>
         <p>
-          Estás a punto de eliminar el {itemType} <strong>"{itemName}"</strong>.<br />
-          Esta acción es permanente y no se puede deshacer.
+          Esta acción es destructiva e irreversible. Para confirmar, escribe el nombre del {itemType.toLowerCase()}:
         </p>
 
-        <p style={{ fontSize: '0.9rem', marginBottom: '0.5rem' }}>Escribe el nombre para confirmar:</p>
         <VerificationText>{itemName}</VerificationText>
 
-        <Input
-          autoFocus
-          type="text"
-          value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder="Escribe el nombre aquí..."
-          disabled={isLoading}
-        />
+        <form onSubmit={handleSubmit}>
+          <Input
+            autoFocus
+            type="text"
+            placeholder="Escribe el nombre aquí..."
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            disabled={isLoading}
+          />
 
-        <ButtonGroup>
-          <Button onClick={handleClose} variant="secondary" disabled={isLoading}>
-            Cancelar
-          </Button>
-          <Button
-            onClick={handleConfirm}
-            variant="danger"
-            disabled={inputValue !== itemName || isLoading}
-            style={{ opacity: isLoading ? 0.7 : 1, cursor: isLoading ? 'wait' : 'pointer' }}
-          >
-            {isLoading ? 'Eliminando...' : 'Eliminar'}
-          </Button>
-        </ButtonGroup>
+          <ButtonGroup>
+            <ShadcnButton
+              type="button"
+              variant="secondary"
+              size="md"
+              onClick={handleClose}
+              disabled={isLoading}
+              style={{ flex: 1 }}
+            >
+              Cancelar
+            </ShadcnButton>
+            <ShadcnButton
+              type="submit"
+              variant="destructive"
+              size="md"
+              disabled={!isMatch || isLoading}
+              style={{ flex: 1 }}
+            >
+              {isLoading && <Loader2 size={16} className="animate-spin" style={{ animation: 'spin 1s linear infinite' }} />}
+              Eliminar
+            </ShadcnButton>
+          </ButtonGroup>
+        </form>
       </Content>
     </Overlay>
   );
 };
+
+export default DeleteProtectionModal;

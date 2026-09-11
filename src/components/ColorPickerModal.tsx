@@ -1,5 +1,6 @@
 import React from 'react';
-import styled, { keyframes } from 'styled-components';
+import styled, { keyframes, css } from 'styled-components';
+import { Palette, X } from 'lucide-react';
 
 const fadeIn = keyframes`
   from { opacity: 0; }
@@ -12,89 +13,119 @@ const fadeOut = keyframes`
 `;
 
 const scaleIn = keyframes`
-  from { transform: scale(0.95); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
+  from { transform: scale(0.96) translateY(6px); opacity: 0; }
+  to { transform: scale(1) translateY(0); opacity: 1; }
 `;
 
 const scaleOut = keyframes`
-  from { transform: scale(1); opacity: 1; }
-  to { transform: scale(0.95); opacity: 0; }
+  from { transform: scale(1) translateY(0); opacity: 1; }
+  to { transform: scale(0.96) translateY(6px); opacity: 0; }
 `;
 
-const Overlay = styled.div<{ isClosing: boolean }>`
+const Overlay = styled.div<{ $isClosing: boolean }>`
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.75);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 2000;
-  backdrop-filter: blur(4px);
-  animation: ${p => p.isClosing ? fadeOut : fadeIn} 0.2s ease-in-out forwards;
+  backdrop-filter: blur(8px);
+  animation: ${p => p.$isClosing ? css`${fadeOut} 0.18s ease-in forwards` : css`${fadeIn} 0.2s ease-out forwards`};
 `;
 
-const Content = styled.div<{ isClosing: boolean }>`
-  background: rgba(15, 23, 42, 0.95);
-  backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 1.5rem;
-  border-radius: 1rem;
+const Content = styled.div<{ $isClosing: boolean }>`
+  background: rgba(15, 23, 42, 0.92);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 1.5rem 1.75rem;
+  border-radius: 1.25rem;
   width: 90%;
-  max-width: 320px;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
-  animation: ${p => p.isClosing ? scaleOut : scaleIn} 0.2s ease-in-out forwards;
+  max-width: 360px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  animation: ${p => p.$isClosing ? css`${scaleOut} 0.18s ease-in forwards` : css`${scaleIn} 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards`};
 `;
 
 const Header = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1rem;
+  margin-bottom: 1.25rem;
 
-  h3 {
-    margin: 0;
-    color: #f8fafc;
-    font-size: 1.1rem;
+  .title-group {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+
+    .icon-wrapper {
+      width: 32px;
+      height: 32px;
+      border-radius: 9px;
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      color: #34d399;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    h3 {
+      margin: 0;
+      color: #f8fafc;
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
   }
 
-  button {
+  .close-btn {
     background: none;
     border: none;
-    font-size: 1.5rem;
-    color: #cbd5e1;
+    color: #94a3b8;
     cursor: pointer;
-    padding: 0;
-    line-height: 1;
-    &:hover { color: #f8fafc; }
+    padding: 6px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: #f8fafc;
+    }
   }
 `;
 
 const ColorGrid = styled.div`
   display: flex;
-  gap: 0.75rem;
+  gap: 0.85rem;
   justify-content: center;
   flex-wrap: wrap;
+  padding: 0.5rem 0;
 `;
 
-const ColorButton = styled.button<{ color: string; isSelected: boolean }>`
-  width: 40px;
-  height: 40px;
+const ColorButton = styled.button<{ $color: string; $isSelected: boolean }>`
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
-  border: ${p => p.isSelected ? '3px solid #f8fafc' : '2px solid transparent'};
-  background-color: ${p => p.color};
+  border: ${p => p.$isSelected ? '3px solid #ffffff' : '2px solid rgba(255, 255, 255, 0.15)'};
+  background-color: ${p => p.$color};
   cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
-  box-shadow: ${p => p.isSelected ? '0 0 10px rgba(255,255,255,0.3)' : '0 4px 6px rgba(0,0,0,0.3)'};
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: ${p => p.$isSelected ? `0 0 16px ${p.$color}99, 0 4px 10px rgba(0,0,0,0.4)` : '0 4px 10px rgba(0,0,0,0.3)'};
+  transform: ${p => p.$isSelected ? 'scale(1.12)' : 'scale(1)'};
 
   &:hover {
-    transform: scale(1.1);
+    transform: scale(1.15);
+    box-shadow: 0 0 16px ${p => p.$color}88, 0 4px 12px rgba(0,0,0,0.4);
   }
 `;
 
-interface ColorPickerModalProps {
+export interface ColorPickerModalProps {
   isOpen: boolean;
   title?: string;
   colors: string[];
@@ -138,7 +169,7 @@ export const ColorPickerModal: React.FC<ColorPickerModalProps> = ({
       const timer = setTimeout(() => {
         setIsVisible(false);
         setIsClosing(false);
-      }, 200); // Match animation duration
+      }, 180);
       return () => clearTimeout(timer);
     }
   }, [isOpen]);
@@ -147,22 +178,29 @@ export const ColorPickerModal: React.FC<ColorPickerModalProps> = ({
 
   const handleClose = () => {
     setIsClosing(true);
-    setTimeout(onClose, 200);
+    setTimeout(onClose, 180);
   };
 
   return (
-    <Overlay isClosing={isClosing}>
-      <Content isClosing={isClosing}>
+    <Overlay $isClosing={isClosing} onClick={handleClose}>
+      <Content $isClosing={isClosing} onClick={(e) => e.stopPropagation()}>
         <Header>
-          <h3>{title}</h3>
-          <button onClick={handleClose}>&times;</button>
+          <div className="title-group">
+            <div className="icon-wrapper">
+              <Palette size={16} />
+            </div>
+            <h3>{title}</h3>
+          </div>
+          <button className="close-btn" onClick={handleClose} title="Cerrar">
+            <X size={17} />
+          </button>
         </Header>
         <ColorGrid>
           {colors.map(color => (
             <ColorButton
               key={color}
-              color={getColorHex(color)}
-              isSelected={selectedColor === color}
+              $color={getColorHex(color)}
+              $isSelected={selectedColor === color}
               onClick={() => {
                 onSelectColor(color);
                 handleClose();
@@ -175,3 +213,5 @@ export const ColorPickerModal: React.FC<ColorPickerModalProps> = ({
     </Overlay>
   );
 };
+
+export default ColorPickerModal;
