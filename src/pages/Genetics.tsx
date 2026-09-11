@@ -1,7 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';
-import { FaDna, FaPlus, FaClock, FaCalendarAlt, FaLeaf, FaEdit, FaTrash, FaTag, FaTimes, FaPrint } from 'react-icons/fa';
+import { 
+  Dna, 
+  Plus, 
+  Clock, 
+  Calendar, 
+  Leaf, 
+  Edit3, 
+  Trash2, 
+  Tag, 
+  X as LucideX, 
+  Printer, 
+  Sparkles, 
+  AlertTriangle 
+} from 'lucide-react';
+import { ShadcnButton } from '../components/ui/Button';
 import { geneticsService } from '../services/geneticsService';
 import { Genetic, GeneticType } from '../types/genetics';
 import { generateUniqueColor } from '../utils/geneticColors';
@@ -431,7 +445,7 @@ const ExpandableLocationList: React.FC<{
         <ul style={{ textAlign: 'left', background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: '0.5rem', marginTop: '1rem', marginBottom: '1rem', listStyle: 'none', maxHeight: isExpanded ? '300px' : 'auto', overflowY: isExpanded ? 'auto' : 'visible' }}>
             {locationEntries.slice(0, visibleCount).map((loc, idx) => (
                 <li key={idx} style={{ marginBottom: '0.5rem', fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                    <FaLeaf color="#4ade80" size={14} style={{ minWidth: '14px' }} />
+                    <Leaf color="#4ade80" size={14} style={{ minWidth: '14px' }} />
                     <span><strong>{loc.qty}</strong> plantas en </span>
                     {loc.spotId && loc.spotName !== 'Sin Cultivo Asignado' ? (
                         <button
@@ -527,7 +541,7 @@ const OrphanedBatchesCleaner: React.FC<{
                     </>
                 ) : (
                     <>
-                        <FaTrash /> Desechar {orphanQty} Plantas Huérfanas
+                        <Trash2 size={16} /> Desechar {orphanQty} Plantas Huérfanas
                     </>
                 )}
             </button>
@@ -849,41 +863,21 @@ const Genetics: React.FC = () => {
 
             <div style={{ filter: planLevel < 2 ? 'blur(4px)' : 'none', pointerEvents: planLevel < 2 ? 'none' : 'auto', userSelect: planLevel < 2 ? 'none' : 'auto', opacity: planLevel < 2 ? 0.5 : 1 }}>
                 <Header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <h1><FaDna /> Gestión de Madres</h1>
-                    <button
+                    <h1><Dna /> Gestión de Madres</h1>
+                    <ShadcnButton
+                        variant="secondary"
                         onClick={handlePrintCatalog}
                         className="no-print"
                         title="Imprimir Catálogo"
-                        style={{
-                            background: 'rgba(15, 23, 42, 0.4)',
-                            backdropFilter: 'blur(8px)',
-                            border: '1px solid rgba(255, 255, 255, 0.1)',
-                            borderRadius: '0.5rem',
-                            padding: '0.5rem 1rem',
-                            fontSize: '0.9rem',
-                            color: '#cbd5e1',
-                            fontWeight: 600,
-                            display: 'flex', alignItems: 'center', gap: '0.5rem',
-                            cursor: 'pointer',
-                            transition: 'all 0.2s'
-                        }}
-                        onMouseEnter={e => {
-                            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
-                            e.currentTarget.style.color = '#f8fafc';
-                        }}
-                        onMouseLeave={e => {
-                            e.currentTarget.style.background = 'rgba(15, 23, 42, 0.4)';
-                            e.currentTarget.style.color = '#cbd5e1';
-                        }}
                     >
-                        <FaPrint /> Imprimir Catálogo
-                    </button>
+                        <Printer size={16} /> Imprimir Catálogo
+                    </ShadcnButton>
                 </Header>
 
                 <StatsGrid>
                     <StatCard>
                         <div className="icon-wrapper">
-                            <FaDna size={20} />
+                            <Dna size={20} />
                             <h3>Total de Genéticas</h3>
                         </div>
                         <div className="value">{genetics.length}</div>
@@ -914,7 +908,7 @@ const Genetics: React.FC = () => {
                                             onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(var(--primary-color-rgb, 168, 85, 247), 0.2)'; }}
                                             onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(var(--primary-color-rgb, 168, 85, 247), 0.1)'; }}
                                         >
-                                            <FaPrint />
+                                            <Printer size={15} />
                                         </button>
                                         <button
                                             onClick={(e) => { e.stopPropagation(); handleEdit(gen); }}
@@ -923,7 +917,7 @@ const Genetics: React.FC = () => {
                                             onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(56, 189, 248, 0.2)'; }}
                                             onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(56, 189, 248, 0.1)'; }}
                                         >
-                                            <FaEdit />
+                                            <Edit3 size={15} />
                                         </button>
                                         <button
                                             onClick={(e) => { e.stopPropagation(); handleDeleteClick(gen); }}
@@ -932,19 +926,19 @@ const Genetics: React.FC = () => {
                                             onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(239, 68, 68, 0.2)'; }}
                                             onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)'; }}
                                         >
-                                            <FaTrash />
+                                            <Trash2 size={15} />
                                         </button>
                                     </div>
                                 </CardHeader>
                                 <CardBody>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: '#cbd5e1', fontSize: '0.95rem' }}>
-                                        <FaLeaf color="var(--primary-color, #a855f7)" /> <strong>Vege:</strong> {gen.vegetative_weeks} semanas
+                                        <Leaf size={16} color="var(--primary-color, #a855f7)" /> <strong>Vege:</strong> {gen.vegetative_weeks} semanas
                                     </div>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: '#cbd5e1', fontSize: '0.95rem' }}>
-                                        <FaClock color="var(--primary-color, #a855f7)" /> <strong>Flora:</strong> {gen.flowering_weeks} semanas
+                                        <Clock size={16} color="var(--primary-color, #a855f7)" /> <strong>Flora:</strong> {gen.flowering_weeks} semanas
                                     </div>
                                     <div style={{ marginTop: '0.5rem', paddingTop: '0.5rem', borderTop: '1px solid rgba(255, 255, 255, 0.1)', fontSize: '0.85rem', color: '#94a3b8' }}>
-                                        <FaCalendarAlt style={{ marginRight: '0.5rem', color: '#64748b' }} />
+                                        <Calendar style={{ marginRight: '0.5rem', color: '#64748b' }} size={15} />
                                         Ciclo Total Est.: {gen.vegetative_weeks + gen.flowering_weeks} semanas
                                     </div>
                                     {gen.description && (
@@ -973,7 +967,7 @@ const Genetics: React.FC = () => {
                                         )}
                                         {gen.default_price_per_gram && (
                                             <span style={{ fontSize: '0.7rem', background: 'rgba(250, 204, 21, 0.1)', color: '#facc15', border: '1px solid rgba(250, 204, 21, 0.3)', padding: '0.1rem 0.4rem', borderRadius: '4px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
-                                                <FaTag size={10} /> ${gen.default_price_per_gram}/g
+                                                <Tag size={12} /> ${gen.default_price_per_gram}/g
                                             </span>
                                         )}
                                     </div>
@@ -1009,7 +1003,7 @@ const Genetics: React.FC = () => {
                     ))}
                     <CreateCard onClick={handleOpenCreateModal}>
                         <DashedCircle>
-                            <FaPlus />
+                            <Plus size={26} />
                         </DashedCircle>
                         <span style={{ fontWeight: 600, fontSize: '1rem', color: 'inherit', textAlign: 'center', padding: '0 1rem' }}>Nueva Madre</span>
                     </CreateCard>
@@ -1182,42 +1176,20 @@ const Genetics: React.FC = () => {
                                 )}
 
                                 <ModalActions>
-                                    <button
+                                    <ShadcnButton
+                                        type="button"
+                                        variant="secondary"
                                         onClick={closeModal}
-                                        style={{
-                                            padding: '0.75rem 1.5rem',
-                                            background: 'rgba(30, 41, 59, 0.6)',
-                                            color: '#cbd5e1',
-                                            border: '1px solid rgba(255, 255, 255, 0.1)',
-                                            borderRadius: '0.5rem',
-                                            cursor: 'pointer',
-                                            fontWeight: '600',
-                                            transition: 'all 0.2s',
-                                            backdropFilter: 'blur(8px)'
-                                        }}
-                                        onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'; e.currentTarget.style.color = '#f8fafc'; }}
-                                        onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(30, 41, 59, 0.6)'; e.currentTarget.style.color = '#cbd5e1'; }}
                                     >
                                         Cancelar
-                                    </button>
-                                    <button
+                                    </ShadcnButton>
+                                    <ShadcnButton
+                                        type="button"
+                                        variant="default"
                                         onClick={handleSave}
-                                        style={{
-                                            padding: '0.75rem 1.5rem',
-                                            background: 'rgba(var(--primary-color-rgb, 168, 85, 247), 0.2)',
-                                            color: '#c084fc',
-                                            border: '1px solid rgba(var(--primary-color-rgb, 168, 85, 247), 0.5)',
-                                            borderRadius: '0.5rem',
-                                            cursor: 'pointer',
-                                            fontWeight: 'bold',
-                                            transition: 'all 0.2s',
-                                            backdropFilter: 'blur(8px)'
-                                        }}
-                                        onMouseOver={(e) => e.currentTarget.style.background = 'rgba(var(--primary-color-rgb, 168, 85, 247), 0.3)'}
-                                        onMouseOut={(e) => e.currentTarget.style.background = 'rgba(var(--primary-color-rgb, 168, 85, 247), 0.2)'}
                                     >
                                         {editingId ? 'Actualizar' : 'Guardar Madre'}
-                                    </button>
+                                    </ShadcnButton>
                                 </ModalActions>
                             </ModalContent>
                         </ModalOverlay>
@@ -1254,9 +1226,9 @@ const Genetics: React.FC = () => {
                         <GlassToastContent onClick={e => e.stopPropagation()} style={{ padding: '1.5rem', width: '90%', maxWidth: '400px' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.75rem' }}>
                                 <h2 style={{ margin: 0, color: '#f8fafc', fontSize: '1.15rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                    <FaDna style={{ color: '#38bdf8' }} /> Detalle de Madre
+                                    <Dna style={{ color: '#38bdf8' }} size={18} /> Detalle de Madre
                                 </h2>
-                                <button onClick={() => setMobileDetailGenetic(null)} style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: '1.25rem' }}><FaTimes /></button>
+                                <button onClick={() => setMobileDetailGenetic(null)} style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: '1.25rem' }}><LucideX size={18} /></button>
                             </div>
 
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1.5rem' }}>
@@ -1264,7 +1236,7 @@ const Genetics: React.FC = () => {
                                     <span style={{ color: '#94a3b8', fontSize: '0.85rem' }}>Genética</span>
                                     <strong style={{ color: '#e2e8f0', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                         {mobileDetailGenetic.color && (
-                                            <div style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: mobileDetailGenetic.color, border: '1px solid rgba(255,255,255,0.2)' }} />
+                                             <div style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: mobileDetailGenetic.color, border: '1px solid rgba(255,255,255,0.2)' }} />
                                         )}
                                         {mobileDetailGenetic.name}
                                     </strong>
@@ -1313,19 +1285,19 @@ const Genetics: React.FC = () => {
                                     onClick={(e) => { e.stopPropagation(); triggerPrint(mobileDetailGenetic); setMobileDetailGenetic(null); }}
                                     style={{ background: 'rgba(var(--primary-color-rgb, 168, 85, 247), 0.1)', border: '1px solid rgba(var(--primary-color-rgb, 168, 85, 247), 0.2)', cursor: 'pointer', color: '#c084fc', padding: '0.6rem 1rem', borderRadius: '0.5rem', transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', fontWeight: 600 }}
                                 >
-                                    <FaPrint /> Imprimir Etiqueta
+                                    <Printer size={15} /> Imprimir Etiqueta
                                 </button>
                                 <button
                                     onClick={(e) => { e.stopPropagation(); handleEdit(mobileDetailGenetic); setMobileDetailGenetic(null); }}
                                     style={{ background: 'rgba(56, 189, 248, 0.1)', border: '1px solid rgba(56, 189, 248, 0.2)', cursor: 'pointer', color: '#38bdf8', padding: '0.6rem 1rem', borderRadius: '0.5rem', transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', fontWeight: 600 }}
                                 >
-                                    <FaEdit /> Editar Madre
+                                    <Edit3 size={15} /> Editar Madre
                                 </button>
                                 <button
                                     onClick={(e) => { e.stopPropagation(); handleDeleteClick(mobileDetailGenetic); setMobileDetailGenetic(null); }}
                                     style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)', cursor: 'pointer', color: '#f87171', padding: '0.6rem 1rem', borderRadius: '0.5rem', transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', fontWeight: 600 }}
                                 >
-                                    <FaTrash /> Eliminar
+                                    <Trash2 size={15} /> Eliminar
                                 </button>
                             </div>
                         </GlassToastContent>
