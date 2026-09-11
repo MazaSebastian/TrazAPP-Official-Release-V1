@@ -3,19 +3,20 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import styled, { keyframes } from 'styled-components';
 import {
-  FaSeedling,
-  FaPlus,
-  FaCalendarAlt,
-  FaClock,
-  FaEdit,
-  FaTrash,
-  FaPalette,
-  FaBorderAll,
-  FaSearch,
-  FaArrowRight,
-  FaLeaf,
-  FaLayerGroup
-} from 'react-icons/fa';
+  Sprout,
+  Plus,
+  Calendar,
+  Clock,
+  Edit3,
+  Trash2,
+  Palette,
+  Grid,
+  Search,
+  ArrowRight,
+  Leaf,
+  Layers,
+  X as LucideX
+} from 'lucide-react';
 import { dailyLogsService } from '../services/dailyLogsService';
 import { cropsService } from '../services/cropsService';
 import { tasksService } from '../services/tasksService';
@@ -27,7 +28,7 @@ import { DeleteProtectionModal } from '../components/DeleteProtectionModal';
 import { ColorPickerModal } from '../components/ColorPickerModal';
 import { ToastModal } from '../components/ToastModal';
 import { Button as ShadcnButton } from '../components/ui/Button';
-import { X, Sprout } from 'lucide-react';
+import { ShadcnBadge } from '../components/ui/Badge';
 
 const floatIn = keyframes`
   from { opacity: 0; transform: translateY(16px); }
@@ -807,16 +808,19 @@ export const Crops: React.FC = () => {
           <p>Supervisión centralizada de salas de vegetativo, floración, secado y trazabilidad digital</p>
         </TitleBlock>
 
-        <CreateCropButton onClick={() => setIsModalOpen(true)}>
-          <FaPlus /> Crear Nuevo Cultivo
-        </CreateCropButton>
+        <ShadcnButton
+          variant="default"
+          onClick={() => setIsModalOpen(true)}
+        >
+          <Plus size={16} /> Crear Nuevo Cultivo
+        </ShadcnButton>
       </HeaderRow>
 
       {/* KPI OVERVIEW GRID */}
       <KPIGrid>
         <KPICard $glowColor="#10b981">
           <div className="kpi-header">
-            <FaSeedling className="icon" /> CULTIVOS ACTIVOS
+            <Sprout className="icon" size={16} /> CULTIVOS ACTIVOS
           </div>
           <div className="value">{crops.length} {crops.length === 1 ? 'Cultivo' : 'Cultivos'}</div>
           <div className="sub">100% Operativos y trazados</div>
@@ -824,7 +828,7 @@ export const Crops: React.FC = () => {
 
         <KPICard $glowColor="#38bdf8">
           <div className="kpi-header">
-            <FaBorderAll className="icon" /> SALAS HABILITADAS
+            <Grid className="icon" size={16} /> SALAS HABILITADAS
           </div>
           <div className="value">
             {crops.reduce((acc, c) => acc + (c.rooms?.length || 0), 0) || '6'} Salas
@@ -834,7 +838,7 @@ export const Crops: React.FC = () => {
 
         <KPICard $glowColor="#f59e0b">
           <div className="kpi-header">
-            <FaLeaf className="icon" /> SEGUIMIENTO TOTAL
+            <Leaf className="icon" size={16} /> SEGUIMIENTO TOTAL
           </div>
           <div className="value">Trazabilidad</div>
           <div className="sub">Lotes y plantas en tiempo real</div>
@@ -842,7 +846,7 @@ export const Crops: React.FC = () => {
 
         <KPICard $glowColor="#a855f7">
           <div className="kpi-header">
-            <FaClock className="icon" /> ÚLTIMA ACTIVIDAD
+            <Clock className="icon" size={16} /> ÚLTIMA ACTIVIDAD
           </div>
           <div className="value" style={{ fontSize: '1.5rem' }}>
             {Object.values(lastActivityMap)[0] || 'Hoy'}
@@ -854,7 +858,7 @@ export const Crops: React.FC = () => {
       {/* FILTER & SEARCH ROW */}
       <FilterRow>
         <div className="search-box">
-          <FaSearch />
+          <Search size={16} />
           <input
             type="text"
             placeholder="Buscar cultivo por nombre..."
@@ -894,34 +898,40 @@ export const Crops: React.FC = () => {
                 <div className="crop-top">
                   <div className="crop-header-left">
                     <div className="icon-wrapper">
-                      <FaSeedling />
+                      <Sprout size={20} />
                     </div>
                     <div className="crop-name">{crop.name}</div>
                   </div>
 
                   <div className="crop-actions" onClick={(e) => e.stopPropagation()}>
-                    <div className="action-icon" title="Editar" onClick={(e) => { e.stopPropagation(); setEditingCrop(crop); setIsPromptOpen(true); }}><FaEdit /></div>
-                    <div className="action-icon" title="Color" onClick={(e) => handleOpenColorPicker(e, crop)}><FaPalette /></div>
-                    <div className="action-icon delete" title="Eliminar" onClick={(e) => handleDeleteCrop(e, crop.id, crop.name)}><FaTrash /></div>
+                    <div className="action-icon" title="Editar" onClick={(e) => { e.stopPropagation(); setEditingCrop(crop); setIsPromptOpen(true); }}><Edit3 size={15} /></div>
+                    <div className="action-icon" title="Color" onClick={(e) => handleOpenColorPicker(e, crop)}><Palette size={15} /></div>
+                    <div className="action-icon delete" title="Eliminar" onClick={(e) => handleDeleteCrop(e, crop.id, crop.name)}><Trash2 size={15} /></div>
                   </div>
                 </div>
 
                 <div className="status-row">
-                  <span className="active-badge">{crop.status ? crop.status.toUpperCase() : 'ACTIVE'}</span>
+                  <ShadcnBadge variant="emerald" dot>{crop.status ? crop.status.toUpperCase() : 'ACTIVE'}</ShadcnBadge>
                   <span className="last-activity">
-                    <FaClock /> Última actividad: {lastActivityMap[crop.id] || 'Sin registros'}
+                    <Clock size={13} /> Última actividad: {lastActivityMap[crop.id] || 'Sin registros'}
                   </span>
                 </div>
 
                 <div className="rooms-badges">
                   {Object.keys(roomCounts).length > 0 ? (
                     Object.entries(roomCounts).map(([type, count]) => (
-                      <span key={type} className={`room-chip ${type.includes('vege') ? 'vege' : type.includes('flor') ? 'flora' : 'secado'}`}>
-                        <FaLayerGroup /> {count} {type.toUpperCase()}
-                      </span>
+                      <ShadcnBadge
+                        key={type}
+                        variant={type.includes('vege') ? 'emerald' : type.includes('flor') ? 'purple' : 'amber'}
+                        className="gap-1 text-[11px] py-0.5"
+                      >
+                        <Layers size={12} /> {count} {type.toUpperCase()}
+                      </ShadcnBadge>
                     ))
                   ) : (
-                    <span className="room-chip vege"><FaLayerGroup /> 1 VEGE</span>
+                    <ShadcnBadge variant="emerald" className="gap-1 text-[11px] py-0.5">
+                      <Layers size={12} /> 1 VEGE
+                    </ShadcnBadge>
                   )}
                 </div>
               </div>
@@ -929,7 +939,7 @@ export const Crops: React.FC = () => {
               <div className="card-footer">
                 <span style={{ fontSize: '0.8rem', color: '#64748b' }}>Ver salas y lotes</span>
                 <span className="enter-link">
-                  Ingresar a Cultivo <FaArrowRight />
+                  Ingresar a Cultivo <ArrowRight size={14} />
                 </span>
               </div>
             </CropCard>
@@ -939,7 +949,7 @@ export const Crops: React.FC = () => {
         {/* CREATE NEW CROP CARD */}
         <CreateNewCard onClick={() => setIsModalOpen(true)}>
           <div className="plus-circle">
-            <FaPlus />
+            <Plus size={24} />
           </div>
           <div className="create-text">Haz click aquí para crear un nuevo cultivo</div>
           <div className="create-sub">Asigná salas, mapas de esquejera y lotes</div>
@@ -976,7 +986,7 @@ export const Crops: React.FC = () => {
                 onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; e.currentTarget.style.color = '#f8fafc'; }}
                 onMouseLeave={e => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = '#94a3b8'; }}
               >
-                <X size={17} />
+                <LucideX size={17} />
               </button>
             </div>
 
