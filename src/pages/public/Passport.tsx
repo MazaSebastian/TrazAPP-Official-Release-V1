@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import styled from 'styled-components';
 import { supabase } from '../../services/supabaseClient';
-import { FaLeaf, FaCalendarCheck, FaWeightHanging, FaCheckCircle, FaCannabis } from 'react-icons/fa';
+import { Leaf, CalendarCheck, Weight, CheckCircle2, Cannabis } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 
@@ -185,7 +185,7 @@ const Passport: React.FC = () => {
 
             <Card>
                 <CoverImage>
-                    <FaCannabis />
+                    <Cannabis size={64} />
                 </CoverImage>
                 <Content>
                     <StrainTitle>{batch.strain_name}</StrainTitle>
@@ -194,24 +194,24 @@ const Passport: React.FC = () => {
                     </div>
 
                     <InfoRow>
-                        <div className="label"><FaCheckCircle style={{ color: '#319795' }} /> Estado</div>
+                        <div className="label"><CheckCircle2 size={16} style={{ color: '#319795' }} /> Estado</div>
                         <div className="value" style={{ textTransform: 'uppercase', color: batch.status === 'available' ? '#38a169' : '#d69e2e' }}>
                             {batch.status === 'available' ? 'Disponible' : batch.status}
                         </div>
                     </InfoRow>
 
                     <InfoRow>
-                        <div className="label"><FaCalendarCheck style={{ color: '#805ad5' }} /> Cosecha</div>
+                        <div className="label"><CalendarCheck size={16} style={{ color: '#805ad5' }} /> Cosecha</div>
                         <div className="value">{format(harvestDate, 'dd MMM yyyy', { locale: es })}</div>
                     </InfoRow>
 
                     <InfoRow>
-                        <div className="label"><FaWeightHanging style={{ color: '#dd6b20' }} /> Curado</div>
+                        <div className="label"><Weight size={16} style={{ color: '#dd6b20' }} /> Curado</div>
                         <div className="value">{cureDays} días</div>
                     </InfoRow>
 
                     <InfoRow>
-                        <div className="label"><FaLeaf style={{ color: '#38a169' }} /> Calidad</div>
+                        <div className="label"><Leaf size={16} style={{ color: '#38a169' }} /> Calidad</div>
                         <div className="value">{batch.quality_grade}</div>
                     </InfoRow>
                 </Content>

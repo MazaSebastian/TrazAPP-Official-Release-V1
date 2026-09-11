@@ -5,7 +5,7 @@ import styled, { createGlobalStyle } from 'styled-components';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTenantResolver } from '../../hooks/useTenantResolver';
 import { motion, useMotionValue, useSpring, Variants, useMotionTemplate, useTransform } from 'framer-motion';
-import { FaArrowRight, FaLock, FaUsers, FaLeaf, FaShoppingBag } from 'react-icons/fa';
+import { ArrowRight, Lock, Users } from 'lucide-react';
 
 // --- Inyectamos Fuentes Brutalistas y Globales ---
 const GlobalBrutalistStyle = createGlobalStyle`
@@ -428,18 +428,18 @@ export const TenantLanding: React.FC = () => {
                 </BrandBlock>
 
                 <NavMenu>
-                    <a href="#intro">Intro <FaArrowRight /></a>
-                    <a href="#game-plan">Game Plan <FaArrowRight /></a>
-                    <a href="#catalog">Catálogo <FaArrowRight /></a>
-                    <a href="#contact">Contact <FaArrowRight /></a>
+                    <a href="#intro">Intro <ArrowRight size={14} /></a>
+                    <a href="#game-plan">Game Plan <ArrowRight size={14} /></a>
+                    <a href="#catalog">Catálogo <ArrowRight size={14} /></a>
+                    <a href="#contact">Contact <ArrowRight size={14} /></a>
                 </NavMenu>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '2rem' }}>
                     <MagneticButton dark onClick={handleLoginClick}>
-                        <FaLock /> Ingresar
+                        <Lock size={16} /> Ingresar
                     </MagneticButton>
                     <MagneticButton onClick={() => navigate(`/${tenant.slug}/apply`)}>
-                        <FaUsers /> Ser Socio
+                        <Users size={16} /> Ser Socio
                     </MagneticButton>
                 </div>
             </Sidebar>
@@ -541,7 +541,7 @@ export const TenantLanding: React.FC = () => {
                                     </div>
                                     <h3 style={{ fontFamily: 'Bebas Neue', fontSize: '2rem', margin: 0 }}>{article.title}</h3>
                                     <HandText>{article.description}</HandText>
-                                    <MagneticButton dark style={{ width: '100%', marginTop: 'auto' }} onClick={() => alert('Ver más detalles o reservar')}>Ver Más <FaArrowRight /></MagneticButton>
+                                    <MagneticButton dark style={{ width: '100%', marginTop: 'auto' }} onClick={() => alert('Ver más detalles o reservar')}>Ver Más <ArrowRight size={14} /></MagneticButton>
                                 </motion.div>
                             ))
                         ) : (

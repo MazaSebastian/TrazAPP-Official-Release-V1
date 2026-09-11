@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import styled from 'styled-components';
 import { supabase } from '../services/supabaseClient';
-import { Leaf, Calendar, Star, Tag, Info, CheckCircle2, Loader2 } from 'lucide-react';
+import { Leaf, Star, Tag, Info, CheckCircle2, Loader2 } from 'lucide-react';
 import { Batch } from '../types/rooms';
 
 // --- Styled Components ---

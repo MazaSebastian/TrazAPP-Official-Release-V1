@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import styled, { createGlobalStyle } from 'styled-components';
 import { supabase } from '../../services/supabaseClient';
-import { FaUserPlus, FaCheckCircle, FaSpinner, FaTimesCircle, FaLock, FaIdCard, FaFileSignature } from 'react-icons/fa';
+import { UserPlus, CheckCircle2, Loader2, XCircle, Lock, Signature } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { SignaturePad } from '../../components/SignaturePad';
 import { useTenantResolver } from '../../hooks/useTenantResolver';
@@ -281,7 +281,7 @@ export default function TenantApply() {
     if (resolvingTenant || (step === 0 && !errorMsg)) {
         return (
             <PageWrapper $primaryColor={primaryColor}>
-                <FaSpinner className="fa-spin" style={{ fontSize: '3rem', color: primaryColor }} />
+                <Loader2 style={{ width: '3rem', height: '3rem', color: primaryColor, animation: 'spin 1s linear infinite' }} />
             </PageWrapper>
         );
     }
@@ -291,7 +291,7 @@ export default function TenantApply() {
             <PageWrapper $primaryColor={primaryColor}>
                 <BrutalCard $primaryColor={primaryColor}>
                     <MessagePane>
-                        <FaTimesCircle style={{ color: '#ef4444' }} />
+                        <XCircle size={48} style={{ color: '#ef4444' }} />
                         <h2 style={{ fontFamily: 'Bebas Neue', fontSize: '2rem' }}>Error</h2>
                         <p>{errorMsg}</p>
                     </MessagePane>
@@ -336,7 +336,7 @@ export default function TenantApply() {
                 {step === 1 && (
                     <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
                         <FormGroup>
-                            <Label><FaUserPlus style={{ marginRight: '8px' }} /> CORREO ELECTRÓNICO</Label>
+                            <Label><UserPlus size={16} style={{ marginRight: '8px' }} /> CORREO ELECTRÓNICO</Label>
                             <Input
                                 type="email"
                                 placeholder="tu@email.com"
@@ -345,7 +345,7 @@ export default function TenantApply() {
                             />
                         </FormGroup>
                         <FormGroup>
-                            <Label><FaLock style={{ marginRight: '8px' }} /> CREA UNA CONTRASEÑA</Label>
+                            <Label><Lock size={16} style={{ marginRight: '8px' }} /> CREA UNA CONTRASEÑA</Label>
                             <Input
                                 type="password"
                                 placeholder="Mínimo 6 caracteres"
@@ -424,8 +424,8 @@ export default function TenantApply() {
                 {/* Paso 3: Firma */}
                 {step === 3 && (
                     <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
-                        <Label style={{ textAlign: 'center', marginBottom: '1rem' }}>
-                            <FaFileSignature style={{ marginRight: '8px' }} /> FIRMA DE CONSENTIMIENTO
+                        <Label style={{ textAlign: 'center', marginBottom: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <Signature size={16} style={{ marginRight: '8px' }} /> FIRMA DE CONSENTIMIENTO
                         </Label>
                         <p style={{ fontSize: '0.875rem', color: '#94a3b8', textAlign: 'center', marginBottom: '1rem', fontFamily: 'monospace' }}>
                             Declaro que los datos ingresados son reales y solicito la admisión como socio de {tenant?.name}.
@@ -445,7 +445,7 @@ export default function TenantApply() {
                 {step === 4 && (
                     <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}>
                         <MessagePane>
-                            <FaCheckCircle style={{ color: primaryColor }} />
+                            <CheckCircle2 size={48} style={{ color: primaryColor }} />
                             <Title $primaryColor={primaryColor}>¡SOLICITUD ENVIADA!</Title>
                             <p style={{ fontFamily: 'monospace', color: '#A0A0A0', lineHeight: '1.6' }}>
                                 Tu solicitud ha sido enviada exitosamente al club. <br/><br/>
