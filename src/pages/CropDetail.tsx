@@ -3121,18 +3121,19 @@ const CropDetail: React.FC = () => {
 
               <FormGroup>
                 <label>Tipo de Sala / Etapa</label>
-                <select
+                <CustomSelect
+                  options={[
+                    { value: 'mother', label: 'Madres' },
+                    { value: 'clones', label: 'Esquejera' },
+                    { value: 'vegetation', label: 'Vegetación' },
+                    { value: 'flowering', label: 'Floración' },
+                    { value: 'drying', label: 'Secado' },
+                    { value: 'curing', label: 'Curado' },
+                    { value: 'living_soil', label: 'Living Soil (Ciclo Completo)' },
+                  ]}
                   value={roomEditForm.type}
-                  onChange={(e) => setRoomEditForm({ ...roomEditForm, type: e.target.value as any })}
-                >
-                  <option value="mother">Madres</option>
-                  <option value="clones">Esquejera</option>
-                  <option value="vegetation">Vegetación</option>
-                  <option value="flowering">Floración</option>
-                  <option value="drying">Secado</option>
-                  <option value="curing">Curado</option>
-                  <option value="living_soil">Living Soil (Ciclo Completo)</option>
-                </select>
+                  onChange={(val) => setRoomEditForm({ ...roomEditForm, type: val as any })}
+                />
               </FormGroup>
 
               <FormGroup>

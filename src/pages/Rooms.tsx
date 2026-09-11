@@ -13,8 +13,7 @@ import {
   ArrowRight,
   Sprout,
   Leaf,
-  Clock,
-  X as LucideX
+  Clock
 } from 'lucide-react';
 import { roomsService } from '../services/roomsService';
 import { Room } from '../types/rooms';
@@ -23,20 +22,11 @@ import { ConfirmModal } from '../components/ConfirmModal';
 import { ToastModal } from '../components/ToastModal';
 import { ShadcnButton } from '../components/ui/Button';
 import { ShadcnBadge } from '../components/ui/Badge';
+import { RoomModal, RoomFormData } from '../components/RoomModal';
 
 const floatIn = keyframes`
   from { opacity: 0; transform: translateY(16px); }
   to { opacity: 1; transform: translateY(0); }
-`;
-
-const fadeIn = keyframes`
-  from { opacity: 0; }
-  to { opacity: 1; }
-`;
-
-const scaleIn = keyframes`
-  from { transform: scale(0.96); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
 `;
 
 const Container = styled.div`
@@ -453,121 +443,6 @@ const CreateCard = styled.div`
   }
 `;
 
-const ModalOverlay = styled.div`
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.75);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
-  backdrop-filter: blur(12px);
-  padding: 1rem;
-  animation: ${fadeIn} 0.2s ease-in-out forwards;
-`;
-
-const ModalContent = styled.div`
-  background: rgba(15, 23, 42, 0.96);
-  backdrop-filter: blur(24px);
-  padding: 2.25rem;
-  border-radius: 1.25rem;
-  width: 90%;
-  max-width: 500px;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  animation: ${scaleIn} 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-`;
-
-const ModalHeaderRow = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.75rem;
-
-  .header-left {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-
-    .icon-badge {
-      width: 40px;
-      height: 40px;
-      border-radius: 0.65rem;
-      background: rgba(16, 185, 129, 0.15);
-      border: 1px solid rgba(16, 185, 129, 0.3);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    h2 {
-      margin: 0;
-      color: #f8fafc;
-      font-size: 1.3rem;
-      font-weight: 700;
-    }
-  }
-`;
-
-const CloseButton = styled.button`
-  background: none;
-  border: none;
-  color: #94a3b8;
-  cursor: pointer;
-  padding: 0.45rem;
-  border-radius: 0.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s;
-  &:hover {
-    color: #f1f5f9;
-    background: rgba(255, 255, 255, 0.08);
-  }
-`;
-
-const FormGroup = styled.div`
-  margin-bottom: 1.25rem;
-
-  label {
-    display: block;
-    margin-bottom: 0.45rem;
-    color: #cbd5e1;
-    font-size: 0.85rem;
-    font-weight: 600;
-  }
-
-  input, select {
-    width: 100%;
-    padding: 0.75rem 1rem;
-    background: rgba(30, 41, 59, 0.5);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 0.65rem;
-    color: #f8fafc;
-    font-size: 0.95rem;
-    outline: none;
-    box-sizing: border-box;
-    transition: border-color 0.2s, box-shadow 0.2s;
-
-    &:focus {
-      border-color: rgba(16, 185, 129, 0.5);
-      box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
-    }
-  }
-
-  select option {
-    background: #0f172a;
-    color: #f8fafc;
-  }
-`;
-
-const ModalActions = styled.div`
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.75rem;
-  margin-top: 2rem;
-`;
-
 export const Rooms: React.FC = () => {
   const navigate = useNavigate();
   const [rooms, setRooms] = useState<Room[]>([]);
@@ -606,32 +481,36 @@ export const Rooms: React.FC = () => {
     }
   };
 
-  const handleCreateOrUpdateRoom = async () => {
-    if (!newRoom.name) return;
+  const openCreateModal = () => {
+    setEditingRoomId(null);
+    setNewRoom({ name: '', type: 'vegetation', capacity: 0 });
+    setIsModalOpen(true);
+  };
+
+  const handleCreateOrUpdateRoom = async (roomData: RoomFormData) => {
+    if (!roomData.name) return;
 
     if (editingRoomId) {
       const success = await roomsService.updateRoom(editingRoomId, {
-        name: newRoom.name,
-        type: newRoom.type as any,
-        capacity: newRoom.capacity
+        name: roomData.name,
+        type: roomData.type as any,
+        capacity: roomData.capacity
       });
       if (success) {
-        setRooms(rooms.map(r => r.id === editingRoomId ? { ...r, ...newRoom, type: newRoom.type as any } : r));
-        closeModal();
+        setRooms(rooms.map(r => r.id === editingRoomId ? { ...r, ...roomData, type: roomData.type as any } : r));
         setToastMessage("Sala actualizada correctamente.");
         setToastType('success');
         setToastOpen(true);
       }
     } else {
       const created = await roomsService.createRoom({
-        name: newRoom.name,
-        type: newRoom.type as any,
-        capacity: newRoom.capacity
+        name: roomData.name,
+        type: roomData.type as any,
+        capacity: roomData.capacity
       });
 
       if (created) {
         setRooms([...rooms, created]);
-        closeModal();
         setToastMessage("Sala creada correctamente.");
         setToastType('success');
         setToastOpen(true);
@@ -757,7 +636,7 @@ export const Rooms: React.FC = () => {
             <Map size={16} /> Mapa Interactivo
           </ShadcnButton>
 
-          <ShadcnButton variant="default" onClick={() => setIsModalOpen(true)}>
+          <ShadcnButton variant="default" onClick={openCreateModal}>
             <Plus size={16} /> Nueva Sala
           </ShadcnButton>
         </ButtonGroup>
@@ -900,7 +779,7 @@ export const Rooms: React.FC = () => {
         })}
 
         {/* CREATE NEW ROOM CARD */}
-        <CreateCard onClick={() => setIsModalOpen(true)}>
+        <CreateCard onClick={openCreateModal}>
           <div className="plus-circle">
             <Plus size={26} />
           </div>
@@ -910,66 +789,13 @@ export const Rooms: React.FC = () => {
       </Grid>
 
       {/* CREATE / EDIT MODAL */}
-      {isModalOpen && (
-        <ModalOverlay onClick={closeModal}>
-          <ModalContent onClick={(e) => e.stopPropagation()}>
-            <ModalHeaderRow>
-              <div className="header-left">
-                <div className="icon-badge">
-                  <Warehouse size={20} color="#34d399" />
-                </div>
-                <h2>{editingRoomId ? 'Editar Sala' : 'Nueva Sala de Cultivo'}</h2>
-              </div>
-              <CloseButton onClick={closeModal} aria-label="Cerrar">
-                <LucideX size={20} />
-              </CloseButton>
-            </ModalHeaderRow>
-
-            <FormGroup>
-              <label>Nombre de la Sala</label>
-              <input
-                type="text"
-                placeholder="Ej: Sala Vegetativo A / Floración 1"
-                value={newRoom.name}
-                onChange={(e) => setNewRoom({ ...newRoom, name: e.target.value })}
-                autoFocus
-              />
-            </FormGroup>
-
-            <FormGroup>
-              <label>Etapa / Tipo de Sala</label>
-              <select
-                value={newRoom.type}
-                onChange={(e) => setNewRoom({ ...newRoom, type: e.target.value })}
-              >
-                <option value="vegetation">Vegetativo (Vegetation)</option>
-                <option value="flowering">Floración (Flowering)</option>
-                <option value="drying">Secado / Curado (Drying)</option>
-                <option value="living_soil">Living Soil / Orgánico</option>
-              </select>
-            </FormGroup>
-
-            <FormGroup>
-              <label>Capacidad Estimada (Plantas)</label>
-              <input
-                type="number"
-                placeholder="Ej: 100"
-                value={newRoom.capacity || ''}
-                onChange={(e) => setNewRoom({ ...newRoom, capacity: parseInt(e.target.value) || 0 })}
-              />
-            </FormGroup>
-
-            <ModalActions>
-              <ShadcnButton variant="secondary" onClick={closeModal}>
-                Cancelar
-              </ShadcnButton>
-              <ShadcnButton variant="default" onClick={handleCreateOrUpdateRoom}>
-                {editingRoomId ? 'Guardar Cambios' : 'Crear Sala'}
-              </ShadcnButton>
-            </ModalActions>
-          </ModalContent>
-        </ModalOverlay>
-      )}
+      <RoomModal
+        isOpen={isModalOpen}
+        onClose={closeModal}
+        onSave={handleCreateOrUpdateRoom}
+        initialData={newRoom}
+        isEditing={Boolean(editingRoomId)}
+      />
 
       {/* CONFIRM DELETE MODAL */}
       <ConfirmModal
