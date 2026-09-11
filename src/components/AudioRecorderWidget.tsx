@@ -1,5 +1,12 @@
 import React, { useState, useRef, useEffect } from "react";
-import { FaMicrophone, FaStop, FaPlay, FaTrash, FaCheck } from "react-icons/fa";
+import { 
+  Mic, 
+  Square, 
+  Trash2, 
+  Check, 
+  CheckCircle2, 
+  Radio 
+} from "lucide-react";
 import { supabase } from "../services/supabaseClient";
 import { convertBlobTo16kHzWav } from "../utils/audioConverter";
 
@@ -7,12 +14,16 @@ interface AudioRecorderWidgetProps {
     onAudioRecorded: (url: string | null) => void;
     orgId?: string;
     patientId?: string;
+    title?: string;
+    description?: string;
 }
 
 const AudioRecorderWidget: React.FC<AudioRecorderWidgetProps> = ({
     onAudioRecorded,
     orgId = "default",
     patientId = "task",
+    title = "Nota de Audio",
+    description = "Graba una nota de voz para adjuntar a este registro."
 }) => {
     const [isRecording, setIsRecording] = useState(false);
     const [audioUrl, setAudioUrl] = useState<string | null>(null);
@@ -163,11 +174,11 @@ const AudioRecorderWidget: React.FC<AudioRecorderWidgetProps> = ({
         <div
             style={{
                 background: "rgba(15, 23, 42, 0.4)",
-                border: "1px solid rgba(255, 255, 255, 0.1)",
+                border: "1px solid rgba(255, 255, 255, 0.08)",
+                borderRadius: "0.75rem",
                 padding: "1rem",
-                borderRadius: "0.5rem",
                 marginTop: "1rem",
-                marginBottom: "1rem",
+                marginBottom: "1rem"
             }}
         >
             <div
@@ -185,27 +196,30 @@ const AudioRecorderWidget: React.FC<AudioRecorderWidgetProps> = ({
                         display: "flex",
                         alignItems: "center",
                         gap: "0.5rem",
-                        fontSize: "1rem",
+                        fontSize: "0.95rem",
+                        fontWeight: 600
                     }}
                 >
-                    <FaMicrophone color={isRecording ? "#ef4444" : "#94a3b8"} />
-                    Audio Clínico
+                    <Mic size={16} color={isRecording ? "#ef4444" : "#38bdf8"} />
+                    {title}
                 </h4>
                 <span
                     style={{
                         color: isRecording ? "#ef4444" : "#94a3b8",
-                        fontWeight: "bold",
+                        fontWeight: "700",
                         fontFamily: "monospace",
-                        fontSize: "1.1rem",
+                        fontSize: "1rem",
+                        background: "rgba(0,0,0,0.25)",
+                        padding: "0.15rem 0.5rem",
+                        borderRadius: "0.375rem"
                     }}
                 >
                     {formatTime(recordingTime)}
                 </span>
             </div>
 
-            <p style={{ color: "#94a3b8", fontSize: "0.85rem", marginBottom: "1rem" }}>
-                Graba la entrevista médica. Luego podrás transcribirla y extraer
-                información automáticamente con Inteligencia Artificial.
+            <p style={{ color: "#94a3b8", fontSize: "0.85rem", marginBottom: "1rem", lineHeight: "1.4" }}>
+                {description}
             </p>
 
             {!audioUrl && !isRecording && (
@@ -214,12 +228,12 @@ const AudioRecorderWidget: React.FC<AudioRecorderWidgetProps> = ({
                     onClick={startRecording}
                     style={{
                         width: "100%",
-                        background: "rgba(239, 68, 68, 0.1)",
-                        border: "1px solid rgba(239, 68, 68, 0.3)",
-                        color: "#ef4444",
+                        background: "rgba(56, 189, 248, 0.1)",
+                        border: "1px solid rgba(56, 189, 248, 0.3)",
+                        color: "#38bdf8",
                         padding: "0.75rem",
                         borderRadius: "0.5rem",
-                        fontWeight: "bold",
+                        fontWeight: 600,
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
@@ -227,18 +241,20 @@ const AudioRecorderWidget: React.FC<AudioRecorderWidgetProps> = ({
                         cursor: "pointer",
                         transition: "all 0.2s ease",
                     }}
-                    onMouseOver={(e) => (e.currentTarget.style.background = "rgba(239, 68, 68, 0.2)")}
-                    onMouseOut={(e) => (e.currentTarget.style.background = "rgba(239, 68, 68, 0.1)")}
+                    onMouseOver={(e) => (e.currentTarget.style.background = "rgba(56, 189, 248, 0.2)")}
+                    onMouseOut={(e) => (e.currentTarget.style.background = "rgba(56, 189, 248, 0.1)")}
                 >
-                    <FaMicrophone /> Iniciar Grabación
+                    <Mic size={15} /> Iniciar Grabación
                 </button>
             )}
 
             {isRecording && (
                 <div style={{ display: "flex", gap: "0.5rem" }}>
-                    {/* Fake waveform animation when recording */}
-                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.2)', borderRadius: '0.5rem' }}>
-                        <span style={{ color: '#ef4444', animation: 'pulse 1.5s infinite', fontSize: '0.8rem', fontWeight: 'bold' }}>● Grabando...</span>
+                    {/* Recording indicator */}
+                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)', borderRadius: '0.5rem' }}>
+                        <span style={{ color: '#ef4444', animation: 'pulse 1.5s infinite', fontSize: '0.8rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                            <Radio size={14} /> Grabando...
+                        </span>
                     </div>
 
                     <button
@@ -250,16 +266,16 @@ const AudioRecorderWidget: React.FC<AudioRecorderWidgetProps> = ({
                             color: "white",
                             padding: "0.75rem 1.5rem",
                             borderRadius: "0.5rem",
-                            fontWeight: "bold",
+                            fontWeight: 600,
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
                             gap: "0.5rem",
                             cursor: "pointer",
-                            boxShadow: "0 0 10px rgba(239, 68, 68, 0.5)",
+                            boxShadow: "0 0 15px rgba(239, 68, 68, 0.4)",
                         }}
                     >
-                        <FaStop /> Detener
+                        <Square size={14} /> Detener
                     </button>
                 </div>
             )}
@@ -280,18 +296,19 @@ const AudioRecorderWidget: React.FC<AudioRecorderWidgetProps> = ({
                                 style={{
                                     flex: 1,
                                     background: "rgba(148, 163, 184, 0.1)",
-                                    border: "1px solid rgba(148, 163, 184, 0.3)",
+                                    border: "1px solid rgba(148, 163, 184, 0.2)",
                                     color: "#cbd5e1",
-                                    padding: "0.75rem",
+                                    padding: "0.65rem",
                                     borderRadius: "0.5rem",
                                     display: "flex",
                                     alignItems: "center",
                                     justifyContent: "center",
                                     gap: "0.5rem",
+                                    fontWeight: 500,
                                     cursor: "pointer",
                                 }}
                             >
-                                <FaTrash /> Descartar
+                                <Trash2 size={14} /> Descartar
                             </button>
 
                             <button
@@ -300,42 +317,44 @@ const AudioRecorderWidget: React.FC<AudioRecorderWidgetProps> = ({
                                 disabled={isUploading}
                                 style={{
                                     flex: 2,
-                                    background: isUploading ? "#475569" : "#3b82f6",
+                                    background: isUploading ? "#475569" : "#10b981",
                                     border: "none",
                                     color: "white",
-                                    padding: "0.75rem",
+                                    padding: "0.65rem",
                                     borderRadius: "0.5rem",
-                                    fontWeight: "bold",
+                                    fontWeight: 600,
                                     display: "flex",
                                     alignItems: "center",
                                     justifyContent: "center",
                                     gap: "0.5rem",
                                     cursor: isUploading ? "not-allowed" : "pointer",
+                                    boxShadow: isUploading ? "none" : "0 0 15px rgba(16, 185, 129, 0.3)",
                                 }}
                             >
                                 {isUploading ? (
                                     "Subiendo Audio..."
                                 ) : (
                                     <>
-                                        <FaCheck /> Confirmar Audio
+                                        <CheckCircle2 size={15} /> Confirmar Audio
                                     </>
                                 )}
                             </button>
                         </div>
                     ) : (
                         <div style={{
-                            background: "rgba(34, 197, 94, 0.1)",
-                            border: "1px solid rgba(34, 197, 94, 0.3)",
-                            color: "#4ade80",
-                            padding: "0.75rem",
+                            background: "rgba(16, 185, 129, 0.12)",
+                            border: "1px solid rgba(16, 185, 129, 0.3)",
+                            color: "#34d399",
+                            padding: "0.65rem",
                             borderRadius: "0.5rem",
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
                             gap: "0.5rem",
-                            fontWeight: "bold",
+                            fontWeight: 600,
+                            fontSize: "0.9rem"
                         }}>
-                            <FaCheck /> Audio Confirmado y Adjunto
+                            <CheckCircle2 size={15} /> Audio Confirmado y Adjunto
                         </div>
                     )}
                 </div>

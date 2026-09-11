@@ -108,7 +108,17 @@ import {
   Scissors as LucideScissors,
   Settings as LucideSettings,
   StickyNote as LucideStickyNote,
-  RefreshCw as LucideRefreshCw
+  RefreshCw as LucideRefreshCw,
+  X as LucideX,
+  Plus as LucidePlus,
+  Trash2 as LucideTrash2,
+  ClipboardList as LucideClipboardList,
+  UploadCloud as LucideUploadCloud,
+  User as LucideUser,
+  Package as LucidePackage,
+  FileText as LucideFileText,
+  Check as LucideCheck,
+  Tag as LucideTag
 } from 'lucide-react';
 
 import { createGlobalStyle } from 'styled-components';
@@ -702,24 +712,39 @@ const ModalContent = styled.div<{ isClosing?: boolean }>`
 `;
 
 const TaskModalContent = styled.div<{ isClosing?: boolean }>`
-  animation: ${p => p.isClosing ? scaleOut : scaleIn} 0.2s ease-in-out forwards;
-  background: rgba(15, 23, 42, 0.95);
-  backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 2rem;
-  border-radius: 1.5rem;
+  animation: ${p => p.isClosing ? scaleOut : scaleIn} 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  background: rgba(15, 23, 42, 0.96);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 2.25rem;
+  border-radius: 1.25rem;
   width: 95%;
-  max-width: 1000px;
+  max-width: 980px;
   max-height: 90vh;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.05);
   color: #f8fafc;
 
-@media(max-width: 768px) {
-    padding: 1rem;
-}
+  /* Custom scrollbar for high-end feel */
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  &::-webkit-scrollbar-track {
+    background: rgba(15, 23, 42, 0.5);
+  }
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 9999px;
+  }
+
+  @media(max-width: 768px) {
+    padding: 1.25rem;
+    width: 95%;
+    border-radius: 1rem;
+  }
 `;
 
 // New Styled Components for Interactive Elements
@@ -5929,15 +5954,55 @@ const RoomDetail: React.FC = () => {
                     (isTaskModalOpen || isClosingTaskModal) && (
                         <PortalModalOverlay isClosing={isClosingTaskModal}>
                             <TaskModalContent isClosing={isClosingTaskModal}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-                                    <h3 style={{ fontSize: '1.5rem', margin: 0 }}>
-                                        {selectedTask ? 'Detalle de Tarea' : 'Nueva Tarea'}
-                                    </h3>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', paddingBottom: '1.25rem', borderBottom: '1px solid rgba(255, 255, 255, 0.08)' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+                                        <div style={{
+                                            width: '42px',
+                                            height: '42px',
+                                            borderRadius: '0.75rem',
+                                            background: 'rgba(74, 222, 128, 0.12)',
+                                            border: '1px solid rgba(74, 222, 128, 0.25)',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            color: '#4ade80'
+                                        }}>
+                                            <LucideClipboardList size={20} />
+                                        </div>
+                                        <div>
+                                            <h3 style={{ fontSize: '1.35rem', fontWeight: 700, margin: 0, color: '#f8fafc', letterSpacing: '-0.02em' }}>
+                                                {selectedTask ? 'Detalle de Tarea' : 'Nueva Tarea'}
+                                            </h3>
+                                            <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.85rem', color: '#94a3b8' }}>
+                                                {selectedTask ? 'Consulta o actualiza la información de la tarea asignada' : `Planifica y asigna actividades operativas en ${room?.name || 'la sala'}`}
+                                            </p>
+                                        </div>
+                                    </div>
                                     <button
                                         onClick={closeTaskModal}
-                                        style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.5rem', color: '#a0aec0', padding: '0.5rem' }}
+                                        style={{
+                                            background: 'rgba(255, 255, 255, 0.05)',
+                                            border: '1px solid rgba(255, 255, 255, 0.1)',
+                                            cursor: 'pointer',
+                                            color: '#94a3b8',
+                                            width: '36px',
+                                            height: '36px',
+                                            borderRadius: '0.5rem',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            transition: 'all 0.2s'
+                                        }}
+                                        onMouseEnter={e => {
+                                            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                                            e.currentTarget.style.color = '#f8fafc';
+                                        }}
+                                        onMouseLeave={e => {
+                                            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                                            e.currentTarget.style.color = '#94a3b8';
+                                        }}
                                     >
-                                        ✕
+                                        <LucideX size={18} />
                                     </button>
                                 </div>
 
@@ -5947,7 +6012,9 @@ const RoomDetail: React.FC = () => {
                                             {/* Left Column: Primary Info */}
                                             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', flex: '1 1 300px' }}>
                                                 <FormGroup>
-                                                    <label style={{ color: '#94a3b8', fontWeight: 600, fontSize: '0.9rem', marginBottom: '0.5rem', display: 'block' }}>Tipo de Tarea</label>
+                                                    <label style={{ color: '#cbd5e1', fontWeight: 600, fontSize: '0.88rem', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                                                        <LucideTag size={13} style={{ color: '#38bdf8' }} /> Tipo de Tarea
+                                                    </label>
                                                     <CustomSelect
                                                         value={taskForm.type}
                                                         onChange={(value) => {
@@ -5964,7 +6031,9 @@ const RoomDetail: React.FC = () => {
 
                                                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem' }}>
                                                     <FormGroup style={{ flex: '1 1 150px' }}>
-                                                        <label style={{ color: '#94a3b8', fontWeight: 600, fontSize: '0.9rem', marginBottom: '0.5rem', display: 'block' }}>Fecha</label>
+                                                        <label style={{ color: '#cbd5e1', fontWeight: 600, fontSize: '0.88rem', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                                                            <LucideCalendar size={13} style={{ color: '#c084fc' }} /> Fecha
+                                                        </label>
                                                         <CustomDatePicker
                                                             selected={taskForm.due_date ? new Date(taskForm.due_date.replace(/-/g, '/') + ' 12:00:00') : new Date()}
                                                             onChange={(date) => {
@@ -5975,7 +6044,9 @@ const RoomDetail: React.FC = () => {
                                                         />
                                                     </FormGroup>
                                                     <FormGroup style={{ flex: '1 1 150px' }}>
-                                                        <label style={{ color: '#94a3b8', fontWeight: 600, fontSize: '0.9rem', marginBottom: '0.5rem', display: 'block' }}>Asignar a Mapa de la Sala</label>
+                                                        <label style={{ color: '#cbd5e1', fontWeight: 600, fontSize: '0.88rem', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                                                            <LucideLayers size={13} style={{ color: '#38bdf8' }} /> Asignar a Mapa
+                                                        </label>
                                                         <CustomSelect
                                                             value={taskForm.crop_id || ""}
                                                             onChange={(value) => setTaskForm({ ...taskForm, crop_id: value || null })}
@@ -5989,7 +6060,9 @@ const RoomDetail: React.FC = () => {
                                                 </div>
                                                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem' }}>
                                                     <FormGroup style={{ flex: '1 1 150px' }}>
-                                                        <label style={{ color: '#94a3b8', fontWeight: 600, fontSize: '0.9rem', marginBottom: '0.5rem', display: 'block' }}>Asignar Insumo (Opcional)</label>
+                                                        <label style={{ color: '#cbd5e1', fontWeight: 600, fontSize: '0.88rem', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                                                            <LucidePackage size={13} style={{ color: '#fbbf24' }} /> Insumo (Opcional)
+                                                        </label>
                                                         <CustomSelect
                                                             value={taskForm.insumo_id || ""}
                                                             onChange={(value) => setTaskForm({ ...taskForm, insumo_id: value })}
@@ -6001,7 +6074,7 @@ const RoomDetail: React.FC = () => {
                                                         />
                                                     </FormGroup>
                                                     <FormGroup style={{ flex: '1 1 150px' }}>
-                                                        <label style={{ color: '#94a3b8', fontWeight: 600, fontSize: '0.9rem', marginBottom: '0.5rem', display: 'block' }}>Volumen Estimado</label>
+                                                        <label style={{ color: '#cbd5e1', fontWeight: 600, fontSize: '0.88rem', marginBottom: '0.5rem', display: 'block' }}>Volumen Estimado</label>
                                                         <input
                                                             type="number"
                                                             step="0.01"
@@ -6012,15 +6085,20 @@ const RoomDetail: React.FC = () => {
                                                             style={{
                                                                 padding: '0.75rem',
                                                                 borderRadius: '0.5rem',
-                                                                border: '1px solid rgba(255, 255, 255, 0.1)',
+                                                                border: '1px solid rgba(255, 255, 255, 0.12)',
                                                                 background: 'rgba(15, 23, 42, 0.6)',
                                                                 color: '#f8fafc',
-                                                                width: '100%'
+                                                                width: '100%',
+                                                                boxSizing: 'border-box',
+                                                                outline: 'none',
+                                                                opacity: !taskForm.insumo_id ? 0.6 : 1
                                                             }}
                                                         />
                                                     </FormGroup>
                                                     <FormGroup style={{ flex: '1 1 150px' }}>
-                                                        <label style={{ color: '#94a3b8', fontWeight: 600, fontSize: '0.9rem', marginBottom: '0.5rem', display: 'block' }}>Asignar a Usuario</label>
+                                                        <label style={{ color: '#cbd5e1', fontWeight: 600, fontSize: '0.88rem', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                                                            <LucideUser size={13} style={{ color: '#4ade80' }} /> Asignar a Usuario
+                                                        </label>
                                                         <CustomSelect
                                                             value={taskForm.assigned_to}
                                                             onChange={(value) => setTaskForm({ ...taskForm, assigned_to: value })}
@@ -6034,13 +6112,13 @@ const RoomDetail: React.FC = () => {
                                                 </div>
 
                                                 {/* Recurrence Section */}
-                                                <div style={{ padding: '1rem', background: 'rgba(15, 23, 42, 0.4)', borderRadius: '0.75rem', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
-                                                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 600, color: '#f8fafc', cursor: 'pointer', marginBottom: recurrenceEnabled ? '1rem' : 0, fontSize: '0.95rem', transition: 'margin-bottom 0.3s ease-out' }}>
+                                                <div style={{ padding: '1.1rem', background: 'rgba(15, 23, 42, 0.5)', borderRadius: '0.75rem', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
+                                                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 600, color: '#f8fafc', cursor: 'pointer', marginBottom: recurrenceEnabled ? '1rem' : 0, fontSize: '0.92rem', transition: 'margin-bottom 0.3s ease-out' }}>
                                                         <input
                                                             type="checkbox"
                                                             checked={recurrenceEnabled}
                                                             onChange={e => setRecurrenceEnabled(e.target.checked)}
-                                                            style={{ width: '1.25rem', height: '1.25rem', accentColor: '#48bb78' }}
+                                                            style={{ width: '1.2rem', height: '1.2rem', accentColor: '#10b981', cursor: 'pointer' }}
                                                         />
                                                         Repetir Tarea (Periodicidad)
                                                     </label>
@@ -6066,7 +6144,7 @@ const RoomDetail: React.FC = () => {
                                                                                     interval: val === '' ? '' : Math.max(1, parseInt(val))
                                                                                 }));
                                                                             }}
-                                                                            style={{ width: '70px', padding: '0.5rem', borderRadius: '0.375rem', border: '1px solid rgba(255, 255, 255, 0.1)', fontSize: '0.9rem', background: 'rgba(15, 23, 42, 0.6)', color: '#f8fafc', colorScheme: 'dark' }}
+                                                                            style={{ width: '75px', padding: '0.55rem', borderRadius: '0.375rem', border: '1px solid rgba(255, 255, 255, 0.12)', fontSize: '0.9rem', background: 'rgba(15, 23, 42, 0.6)', color: '#f8fafc', colorScheme: 'dark', outline: 'none' }}
                                                                         />
                                                                         <div style={{ flex: 1 }}>
                                                                             <CustomSelect
@@ -6093,6 +6171,7 @@ const RoomDetail: React.FC = () => {
                                                                             return (
                                                                                 <button
                                                                                     key={idx}
+                                                                                    type="button"
                                                                                     onClick={() => {
                                                                                         setRecurrenceConfig(prev => {
                                                                                             const days = prev.daysOfWeek || [];
@@ -6101,12 +6180,12 @@ const RoomDetail: React.FC = () => {
                                                                                         });
                                                                                     }}
                                                                                     style={{
-                                                                                        width: '32px', height: '32px', borderRadius: '50%', border: '1px solid',
-                                                                                        borderColor: isSelected ? 'rgba(74, 222, 128, 0.5)' : 'rgba(255, 255, 255, 0.1)',
+                                                                                        width: '34px', height: '34px', borderRadius: '50%', border: '1px solid',
+                                                                                        borderColor: isSelected ? 'rgba(74, 222, 128, 0.5)' : 'rgba(255, 255, 255, 0.12)',
                                                                                         background: isSelected ? 'rgba(74, 222, 128, 0.2)' : 'rgba(255, 255, 255, 0.05)',
                                                                                         color: isSelected ? '#4ade80' : '#94a3b8',
-                                                                                        fontWeight: 'bold', cursor: 'pointer', fontSize: '0.8rem',
-                                                                                        boxShadow: isSelected ? '0 0 10px rgba(74, 222, 128, 0.2)' : 'none',
+                                                                                        fontWeight: 700, cursor: 'pointer', fontSize: '0.82rem',
+                                                                                        boxShadow: isSelected ? '0 0 12px rgba(74, 222, 128, 0.25)' : 'none',
                                                                                         transition: 'all 0.2s'
                                                                                     }}
                                                                                 >
@@ -6125,52 +6204,70 @@ const RoomDetail: React.FC = () => {
                                             {/* Right Column: Instructions & Files */}
                                             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', flex: '1 1 300px' }}>
                                                 <FormGroup style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-                                                    <label style={{ color: '#94a3b8', fontWeight: 600, fontSize: '0.9rem', marginBottom: '0.5rem', display: 'block' }}>Instrucciones</label>
+                                                    <label style={{ color: '#cbd5e1', fontWeight: 600, fontSize: '0.88rem', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                                                        <LucideFileText size={13} style={{ color: '#38bdf8' }} /> Instrucciones
+                                                    </label>
                                                     <textarea
                                                         value={taskForm.description}
                                                         onChange={e => setTaskForm({ ...taskForm, description: e.target.value })}
-                                                        placeholder="Escribe aquí los detalles precisos (ej: '5ml/L de CalMag')..."
+                                                        placeholder="Escribe aquí los detalles precisos (ej: '5ml/L de CalMag', 'Limpieza de bandejas', etc.)..."
                                                         style={{
                                                             flex: 1,
                                                             padding: '1rem',
                                                             borderRadius: '0.5rem',
-                                                            border: '1px solid rgba(255, 255, 255, 0.1)',
-                                                            fontSize: '0.95rem',
+                                                            border: '1px solid rgba(255, 255, 255, 0.12)',
+                                                            fontSize: '0.92rem',
                                                             resize: 'none',
-                                                            minHeight: '200px',
+                                                            minHeight: '190px',
                                                             background: 'rgba(15, 23, 42, 0.6)',
                                                             color: '#f8fafc',
-                                                            lineHeight: '1.5'
+                                                            lineHeight: '1.5',
+                                                            outline: 'none',
+                                                            boxSizing: 'border-box'
                                                         }}
                                                     />
                                                 </FormGroup>
 
                                                 <div>
-                                                    <label style={{ display: 'block', fontWeight: 600, color: '#94a3b8', fontSize: '0.9rem', marginBottom: '0.5rem' }}>Gestor de archivos / Adjuntar Archivo</label>
+                                                    <label style={{ display: 'block', fontWeight: 600, color: '#cbd5e1', fontSize: '0.88rem', marginBottom: '0.5rem' }}>Adjuntar Evidencia o Archivo</label>
                                                     <button
+                                                        type="button"
                                                         onClick={() => alert("Funcionalidad de subida de fotos en desarrollo. Podés grabar notas de voz a continuación.")}
                                                         style={{
-                                                            background: 'rgba(255, 255, 255, 0.05)',
-                                                            border: '1px dashed rgba(255, 255, 255, 0.2)',
-                                                            padding: '1rem',
+                                                            background: 'rgba(255, 255, 255, 0.03)',
+                                                            border: '1px dashed rgba(255, 255, 255, 0.18)',
+                                                            padding: '0.85rem',
                                                             width: '100%',
-                                                            borderRadius: '0.5rem',
+                                                            borderRadius: '0.65rem',
                                                             cursor: 'pointer',
-                                                            color: '#94a3b8',
+                                                            color: '#cbd5e1',
                                                             display: 'flex',
                                                             alignItems: 'center',
                                                             justifyContent: 'center',
                                                             gap: '0.5rem',
                                                             transition: 'all 0.2s',
                                                             fontWeight: 500,
+                                                            fontSize: '0.88rem',
                                                             marginBottom: '1rem'
                                                         }}
+                                                        onMouseEnter={e => {
+                                                            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)';
+                                                            e.currentTarget.style.borderColor = 'rgba(74, 222, 128, 0.4)';
+                                                            e.currentTarget.style.color = '#f8fafc';
+                                                        }}
+                                                        onMouseLeave={e => {
+                                                            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.03)';
+                                                            e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.18)';
+                                                            e.currentTarget.style.color = '#cbd5e1';
+                                                        }}
                                                     >
-                                                        <FaPlus /> Subir Foto / Archivo
+                                                        <LucideUploadCloud size={16} style={{ color: '#38bdf8' }} /> Adjuntar Foto / Archivo
                                                     </button>
 
-                                                    <label style={{ display: 'block', fontWeight: 600, color: '#94a3b8', fontSize: '0.9rem', marginBottom: '0.5rem' }}>Nota de Voz (Grabar Audio para la Tarea)</label>
+                                                    <label style={{ display: 'block', fontWeight: 600, color: '#cbd5e1', fontSize: '0.88rem', marginBottom: '0.5rem' }}>Nota de Voz (Instrucción de Audio)</label>
                                                     <AudioRecorderWidget
+                                                        title="Nota de Voz de Cultivo"
+                                                        description="Graba instrucciones operativas rápidas para el equipo de sala (riego, nutrientes, poda)."
                                                         onAudioRecorded={(url) => {
                                                             if (url) {
                                                                 setTaskForm(prev => ({
@@ -6187,78 +6284,98 @@ const RoomDetail: React.FC = () => {
                                         </div>
 
                                         {/* Footer Actions */}
-                                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '2rem', paddingTop: '1.5rem', borderTop: '1px solid rgba(255, 255, 255, 0.1)' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '0.75rem', marginTop: '2rem', paddingTop: '1.25rem', borderTop: '1px solid rgba(255, 255, 255, 0.08)' }}>
                                             {selectedTask && (
-                                                <ModalActionButton variant="danger" onClick={handleDeleteTask}>
-                                                    Eliminar
-                                                </ModalActionButton>
+                                                <ShadcnButton
+                                                    variant="destructive"
+                                                    onClick={handleDeleteTask}
+                                                >
+                                                    <LucideTrash2 size={15} /> Eliminar
+                                                </ShadcnButton>
                                             )}
-                                            <ModalActionButton
+                                            <ShadcnButton
                                                 variant="secondary"
                                                 onClick={closeTaskModal}
                                             >
                                                 Cancelar
-                                            </ModalActionButton>
-                                            <ModalActionButton
-                                                variant="primary"
+                                            </ShadcnButton>
+                                            <ShadcnButton
+                                                variant="default"
                                                 onClick={handleSaveTask}
                                                 disabled={isSavingTask}
                                             >
-                                                {isSavingTask ? (
-                                                    <>
-                                                        <SpinningIcon /> {selectedTask ? 'Guardando...' : 'Creando...'}
-                                                    </>
-                                                ) : (
-                                                    selectedTask ? 'Guardar Cambios' : 'Crear Tarea'
-                                                )}
-                                            </ModalActionButton>
+                                                {isSavingTask ? <FaCircleNotch className="spin" /> : <LucideCheck size={16} />}
+                                                {selectedTask ? 'Guardar Cambios' : 'Crear Tarea'}
+                                            </ShadcnButton>
                                         </div>
                                     </>
                                 ) : (
                                     // Read Only View for Employees (Execution Mode)
                                     <div>
-                                        <div style={{ marginBottom: '1rem' }}>
-                                            <strong>{selectedTask?.title}</strong> <br />
-                                            <Badge taskType={selectedTask?.type}>{selectedTask?.type?.replace(/_/g, ' ')}</Badge>
+                                        <div style={{
+                                            background: 'rgba(255, 255, 255, 0.03)',
+                                            border: '1px solid rgba(255, 255, 255, 0.08)',
+                                            borderRadius: '0.75rem',
+                                            padding: '1.25rem',
+                                            marginBottom: '1.5rem'
+                                        }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                                                <h4 style={{ margin: 0, color: '#f8fafc', fontSize: '1.1rem', fontWeight: 700 }}>
+                                                    {selectedTask?.title}
+                                                </h4>
+                                                <ShadcnBadge variant={selectedTask?.status === 'done' ? 'emerald' : 'amber'}>
+                                                    {selectedTask?.status === 'done' ? 'Completada' : 'Pendiente'}
+                                                </ShadcnBadge>
+                                            </div>
+                                            <p style={{ color: '#94a3b8', fontSize: '0.92rem', margin: '0 0 1rem 0', lineHeight: 1.5 }}>
+                                                {selectedTask?.description || 'Sin instrucciones adicionales.'}
+                                            </p>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', color: '#64748b' }}>
+                                                <LucideUser size={14} style={{ color: '#4ade80' }} />
+                                                <span>Asignado a: <strong style={{ color: '#cbd5e1' }}>{users.find(u => u.id === selectedTask?.assigned_to)?.full_name || 'Nadie'}</strong></span>
+                                            </div>
                                         </div>
-                                        <p style={{ color: '#94a3b8', marginBottom: '1rem' }}>{selectedTask?.description || 'Sin descripción'}</p>
-                                        <p style={{ fontSize: '0.9rem', color: '#94a3b8' }}>Asignado a: {users.find(u => u.id === selectedTask?.assigned_to)?.full_name || 'Nadie'}</p>
 
                                         {/* Observations Field for Execution */}
                                         <FormGroup>
-                                            <label style={{ color: '#94a3b8', fontWeight: 600, fontSize: '0.9rem', marginBottom: '0.5rem', display: 'block' }}>Observaciones</label>
+                                            <label style={{ color: '#cbd5e1', fontWeight: 600, fontSize: '0.88rem', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                                                <LucideFileText size={13} style={{ color: '#38bdf8' }} /> Observaciones al completar
+                                            </label>
                                             <textarea
-                                                placeholder="Registra observaciones puntuales al completar..."
-                                                value={taskForm.description} // Re-using state for simplicity, ideally separate 'observations' state
+                                                placeholder="Registra observaciones puntuales al completar (ej: pH medido, plaga controlada)..."
+                                                value={taskForm.description}
                                                 onChange={e => setTaskForm({ ...taskForm, description: e.target.value })}
                                                 style={{
                                                     width: '100%',
                                                     padding: '1rem',
                                                     borderRadius: '0.5rem',
-                                                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                                                    fontSize: '0.95rem',
+                                                    border: '1px solid rgba(255, 255, 255, 0.12)',
+                                                    fontSize: '0.92rem',
                                                     resize: 'none',
                                                     minHeight: '100px',
                                                     background: 'rgba(15, 23, 42, 0.6)',
                                                     color: '#f8fafc',
                                                     lineHeight: '1.5',
+                                                    outline: 'none',
+                                                    boxSizing: 'border-box',
                                                     marginBottom: '1rem'
                                                 }}
                                             />
                                         </FormGroup>
 
-                                        <div style={{ marginBottom: '1rem' }}>
+                                        <div style={{ marginBottom: '1.5rem' }}>
                                             <button
+                                                type="button"
                                                 onClick={() => alert("Subir foto de evidencia (En desarrollo)")}
                                                 style={{
-                                                    background: 'rgba(255, 255, 255, 0.05)',
-                                                    border: '1px dashed rgba(255, 255, 255, 0.2)',
-                                                    padding: '0.75rem',
+                                                    background: 'rgba(255, 255, 255, 0.03)',
+                                                    border: '1px dashed rgba(255, 255, 255, 0.18)',
+                                                    padding: '0.85rem',
                                                     width: '100%',
-                                                    borderRadius: '0.5rem',
+                                                    borderRadius: '0.65rem',
                                                     cursor: 'pointer',
-                                                    color: '#94a3b8',
-                                                    fontSize: '0.9rem',
+                                                    color: '#cbd5e1',
+                                                    fontSize: '0.88rem',
                                                     display: 'flex',
                                                     alignItems: 'center',
                                                     justifyContent: 'center',
@@ -6266,15 +6383,15 @@ const RoomDetail: React.FC = () => {
                                                     transition: 'all 0.2s',
                                                     fontWeight: 500
                                                 }}
-                                                onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(74, 222, 128, 0.5)'; e.currentTarget.style.color = '#4ade80'; e.currentTarget.style.background = 'rgba(74, 222, 128, 0.1)'; }}
-                                                onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)'; e.currentTarget.style.color = '#94a3b8'; e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'; }}
+                                                onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(74, 222, 128, 0.4)'; e.currentTarget.style.color = '#f8fafc'; e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)'; }}
+                                                onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.18)'; e.currentTarget.style.color = '#cbd5e1'; e.currentTarget.style.background = 'rgba(255, 255, 255, 0.03)'; }}
                                             >
-                                                <FaPlus /> Subir Foto Evidencia
+                                                <LucideUploadCloud size={16} style={{ color: '#38bdf8' }} /> Subir Foto de Evidencia
                                             </button>
                                         </div>
 
-                                        <ModalActionButton
-                                            variant="primary"
+                                        <ShadcnButton
+                                            variant={selectedTask?.status === 'done' ? 'secondary' : 'default'}
                                             onClick={async () => {
                                                 if (selectedTask) {
                                                     const isCurrentlyDone = selectedTask.status === 'done';
@@ -6310,10 +6427,11 @@ const RoomDetail: React.FC = () => {
                                                 }
                                             }}
                                             disabled={isSavingTask}
-                                            style={{ width: '100%', marginTop: '0.5rem', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem' }}
+                                            style={{ width: '100%' }}
                                         >
-                                            {isSavingTask ? <div style={{ border: '2px solid rgba(255,255,255,0.3)', borderTop: '2px solid white', borderRadius: '50%', width: '1rem', height: '1rem', animation: 'spin 1s linear infinite' }} /> : (selectedTask?.status === 'done' ? 'Marcar como Pendiente' : 'Completa y Guardar')}
-                                        </ModalActionButton>
+                                            {isSavingTask ? <FaCircleNotch className="spin" /> : <LucideCheck size={16} />}
+                                            {selectedTask?.status === 'done' ? 'Marcar como Pendiente' : 'Completar y Guardar Tarea'}
+                                        </ShadcnButton>
                                     </div>
                                 )}
                             </TaskModalContent>
