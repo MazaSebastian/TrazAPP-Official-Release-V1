@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import { FaHandHoldingMedical, FaBoxOpen, FaQrcode, FaEdit, FaTrash, FaPrint } from 'react-icons/fa';
+import { PackageCheck, Package, QrCode, Edit3, Trash2, Printer, Plus, AlertCircle } from 'lucide-react';
 import QRCode from 'react-qr-code';
 import { dispensaryService, DispensaryBatch } from '../services/dispensaryService';
 import { patientsService } from '../services/patientsService';
@@ -8,8 +8,6 @@ import { geneticsService } from '../services/geneticsService';
 import { Genetic } from '../types/genetics';
 import { Tooltip } from '../components/Tooltip';
 import { CustomSelect } from '../components/CustomSelect';
-// Wait, Stock.tsx defined its own Button. I should redefine it here or import a shared one.
-// Looking at Stock.tsx, Button was defined locally. I will copy the definition.
 import { ConfirmModal } from '../components/ConfirmModal';
 import { EditDispensaryModal } from '../components/EditDispensaryModal';
 import { CreateDispensaryProductModal } from '../components/CreateDispensaryProductModal';
@@ -17,31 +15,33 @@ import { useOrganization } from '../context/OrganizationContext';
 import { StockLabel } from '../components/StockLabel';
 import { useReactToPrint } from 'react-to-print';
 import { useAuth } from '../context/AuthContext';
+import { ShadcnButton } from '../components/ui/Button';
+import { ShadcnBadge } from '../components/ui/Badge';
 
-// --- Styled Components (Copied from Stock.tsx) ---
+// --- Styled Components ---
 
 const TabsContainer = styled.div`
   display: flex;
-  gap: 1rem;
+  gap: 0.5rem;
   margin-bottom: 2rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  padding-bottom: 1px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 0.75rem;
   overflow-x: auto;
   
-  ::-webkit-scrollbar {
+  &::-webkit-scrollbar {
     height: 4px;
   }
 `;
 
 const TabButton = styled.button<{ $isActive: boolean }>`
-  background: none;
-  border: none;
-  padding: 0.75rem 1.5rem;
-  font-size: 1rem;
+  background: ${props => props.$isActive ? 'rgba(16, 185, 129, 0.12)' : 'rgba(255, 255, 255, 0.03)'};
+  border: 1px solid ${props => props.$isActive ? 'rgba(16, 185, 129, 0.3)' : 'rgba(255, 255, 255, 0.06)'};
+  padding: 0.6rem 1.25rem;
+  font-size: 0.9rem;
   font-weight: 600;
-  color: ${props => props.$isActive ? '#3b82f6' : '#94a3b8'};
+  color: ${props => props.$isActive ? '#10b981' : '#94a3b8'};
   cursor: pointer;
-  position: relative;
+  border-radius: 0.75rem;
   transition: all 0.2s;
   display: flex;
   align-items: center;
@@ -49,18 +49,8 @@ const TabButton = styled.button<{ $isActive: boolean }>`
   white-space: nowrap;
 
   &:hover {
-    color: ${props => props.$isActive ? '#3b82f6' : '#f8fafc'};
-  }
-
-  &::after {
-    content: '';
-    position: absolute;
-    bottom: -1px;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background: ${props => props.$isActive ? '#3b82f6' : 'transparent'};
-    transition: all 0.2s;
+    color: ${props => props.$isActive ? '#10b981' : '#f8fafc'};
+    background: ${props => props.$isActive ? 'rgba(16, 185, 129, 0.16)' : 'rgba(255, 255, 255, 0.06)'};
   }
 `;
 
@@ -97,41 +87,6 @@ const Header = styled.div`
     gap: 0.85rem;
   }
 `;
-
-const ButtonStyled = styled.button<{ variant?: 'primary' | 'secondary' | 'danger' }>`
-  background: ${props =>
-        props.variant === 'danger' ? 'linear-gradient(135deg, rgba(244, 63, 94, 0.25), rgba(225, 29, 72, 0.35))' :
-            props.variant === 'secondary' ? 'rgba(255, 255, 255, 0.05)' :
-                'linear-gradient(135deg, #10b981, #059669)'};
-  color: ${props => props.variant === 'secondary' ? '#e2e8f0' : '#ffffff'};
-  border: ${props => props.variant === 'secondary' ? '1px solid rgba(255, 255, 255, 0.12)' : 'none'};
-  font-weight: 700;
-  font-size: 0.925rem;
-  padding: 0.75rem 1.4rem;
-  border-radius: 0.875rem;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.6rem;
-  backdrop-filter: blur(12px);
-  box-shadow: ${props => props.variant === 'secondary' ? 'none' : '0 4px 16px rgba(16, 185, 129, 0.35)'};
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: ${props => props.variant === 'secondary' ? 'none' : '0 8px 24px rgba(16, 185, 129, 0.5)'};
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    transform: none;
-    box-shadow: none;
-  }
-`;
-
-// Re-using the locally defined ButtonStyled as Button for this file to match Stock.tsx usage
-const ButtonComp = ButtonStyled;
 
 const EmptyState = styled.div`
 text-align: center;
@@ -416,10 +371,15 @@ const Dispensary: React.FC = () => {
     return (
         <PageContainer>
             <Header>
-                <h1><FaHandHoldingMedical style={{ marginRight: '10px' }} />Dispensario</h1>
-                <ButtonComp variant="primary" onClick={() => setCreateModalOpen(true)}>
-                    + Nuevo Producto
-                </ButtonComp>
+                <div>
+                    <h1><PackageCheck size={32} style={{ color: '#10b981' }} />Dispensario</h1>
+                    <p style={{ color: '#94a3b8', fontSize: '0.95rem', margin: '0.35rem 0 0 0' }}>
+                        Gestión de inventario final, pasaportes digitales y dispensación a pacientes
+                    </p>
+                </div>
+                <ShadcnButton onClick={() => setCreateModalOpen(true)}>
+                    <Plus size={16} /> Nuevo Producto
+                </ShadcnButton>
             </Header>
 
             <TabsContainer>
@@ -436,20 +396,22 @@ const Dispensary: React.FC = () => {
 
             {filteredBatches.length === 0 ? (
                 <EmptyState>
-                    <div className="empty-icon">🏥</div>
+                    <div className="empty-icon">
+                        <PackageCheck size={56} style={{ color: '#10b981', opacity: 0.8 }} />
+                    </div>
                     <h3>El Dispensario está vacío</h3>
-                    <p>No hay productos de esta categoría disponibles.</p>
+                    <p>No hay productos de esta categoría disponibles en stock.</p>
                 </EmptyState>
             ) : (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.5rem' }}>
                     {filteredBatches.map(batch => (
                         <div key={batch.id} style={{
-                            background: 'rgba(30, 41, 59, 0.5)',
-                            backdropFilter: 'blur(12px)',
+                            background: 'rgba(15, 23, 42, 0.75)',
+                            backdropFilter: 'blur(16px)',
                             borderRadius: '16px',
-                            border: '1px solid rgba(255, 255, 255, 0.05)',
+                            border: '1px solid rgba(255, 255, 255, 0.08)',
                             padding: '1.5rem',
-                            boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3)',
+                            boxShadow: '0 10px 30px -5px rgba(0, 0, 0, 0.4)',
                             position: 'relative',
                             overflow: 'hidden',
                             display: 'flex',
@@ -463,41 +425,39 @@ const Dispensary: React.FC = () => {
                                 left: 0,
                                 right: 0,
                                 height: '2px',
-                                background: batch.status === 'available' ? 'linear-gradient(90deg, #4ade80, #38bdf8)' : '#f59e0b',
-                                opacity: 0.8
+                                background: batch.status === 'available' ? 'linear-gradient(90deg, #10b981, #06b6d4)' : '#f59e0b',
+                                opacity: 0.9
                             }} />
 
                             {/* Status Badge */}
                             <div style={{
                                 position: 'absolute',
-                                top: '1rem',
-                                right: '1rem',
-                                background: batch.status === 'available' ? 'rgba(74, 222, 128, 0.1)' : 'rgba(245, 158, 11, 0.1)',
-                                color: batch.status === 'available' ? '#4ade80' : '#fbbf24',
-                                border: `1px solid ${batch.status === 'available' ? 'rgba(74, 222, 128, 0.2)' : 'rgba(245, 158, 11, 0.2)'} `,
-                                padding: '0.25rem 0.75rem',
-                                borderRadius: '999px',
-                                fontSize: '0.75rem',
-                                fontWeight: 'bold',
-                                textTransform: 'uppercase',
-                                letterSpacing: '0.05em'
+                                top: '1.25rem',
+                                right: '1.25rem'
                             }}>
-                                {batch.status === 'available' ? 'Disponible' : batch.status === 'curing' ? 'Curándose' : batch.status}
+                                <ShadcnBadge
+                                    variant={batch.status === 'available' ? 'emerald' : batch.status === 'curing' ? 'amber' : 'secondary'}
+                                    dot
+                                >
+                                    {batch.status === 'available' ? 'Disponible' : batch.status === 'curing' ? 'Curándose' : batch.status}
+                                </ShadcnBadge>
                             </div>
 
-                            <h3 style={{ margin: '0 0 0.5rem 0', color: '#f8fafc', fontSize: '1.5rem', fontWeight: '700' }}>{batch.product_name || batch.strain_name}</h3>
-                            <div style={{ color: '#94a3b8', fontSize: '0.9rem', marginBottom: batch.notes ? '0.75rem' : '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontFamily: 'monospace' }}>
-                                <FaBoxOpen style={{ color: '#38bdf8' }} /> {batch.batch_code} {batch.product_name ? `(${batch.strain_name})` : ''}
+                            <h3 style={{ margin: '0 0 0.5rem 0', color: '#f8fafc', fontSize: '1.35rem', fontWeight: '700', paddingRight: '5.5rem' }}>
+                                {batch.product_name || batch.strain_name}
+                            </h3>
+                            <div style={{ color: '#94a3b8', fontSize: '0.875rem', marginBottom: batch.notes ? '0.75rem' : '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontFamily: 'monospace' }}>
+                                <Package size={14} style={{ color: '#38bdf8' }} /> {batch.batch_code} {batch.product_name ? `(${batch.strain_name})` : ''}
                             </div>
 
                             {batch.notes && (
-                                <div style={{ color: '#cbd5e1', fontSize: '0.85rem', marginBottom: '1.5rem', fontStyle: 'italic', lineHeight: '1.4' }}>
+                                <div style={{ color: '#cbd5e1', fontSize: '0.85rem', marginBottom: '1.25rem', fontStyle: 'italic', lineHeight: '1.4' }}>
                                     "{batch.notes}"
                                 </div>
                             )}
 
                             {/* Weight Visualization */}
-                            <div style={{ padding: '1rem', background: 'rgba(15, 23, 42, 0.5)', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.02)', marginBottom: '1.5rem' }}>
+                            <div style={{ padding: '1rem', background: 'rgba(15, 23, 42, 0.6)', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.05)', marginBottom: '1.25rem' }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '0.75rem', color: '#cbd5e1' }}>
                                     <span style={{ fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: '600' }}>Stock Actual</span>
                                     <span style={{ fontSize: '1.25rem', fontWeight: '800', color: '#f8fafc' }}>
@@ -508,58 +468,57 @@ const Dispensary: React.FC = () => {
                                         </span>
                                     </span>
                                 </div>
-                                <div style={{ width: '100%', height: '6px', background: 'rgba(255, 255, 255, 0.05)', borderRadius: '3px', overflow: 'hidden' }}>
+                                <div style={{ width: '100%', height: '6px', background: 'rgba(255, 255, 255, 0.08)', borderRadius: '3px', overflow: 'hidden' }}>
                                     <div style={{
-                                        width: `${(batch.current_weight / batch.initial_weight) * 100}% `,
+                                        width: `${Math.min((batch.current_weight / batch.initial_weight) * 100, 100)}%`,
                                         height: '100%',
-                                        background: `linear-gradient(90deg, #4ade80 0%, #38bdf8 100%)`,
+                                        background: `linear-gradient(90deg, #10b981 0%, #06b6d4 100%)`,
                                         borderRadius: '3px',
-                                        boxShadow: '0 0 10px rgba(74, 222, 128, 0.5)'
+                                        boxShadow: '0 0 10px rgba(16, 185, 129, 0.5)'
                                     }} />
                                 </div>
                             </div>
 
                             {/* Actions */}
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '0.75rem', marginTop: 'auto' }}>
-                                <ButtonComp
-                                    variant="primary"
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: 'auto' }}>
+                                <ShadcnButton
                                     onClick={() => handleOpenDispense(batch)}
-                                    style={{ padding: '0.875rem' }}
+                                    className="w-full"
                                 >
-                                    <FaHandHoldingMedical size={18} /> Entregar
-                                </ButtonComp>
-                                <div style={{ display: 'grid', gridTemplateColumns: user?.role === 'medico' ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)', gap: '0.75rem' }}>
-                                    <div style={{ display: 'flex', justifyContent: 'center' }}>
-                                        <Tooltip text="Ver Código QR">
-                                            <ButtonComp
-                                                variant="secondary"
-                                                onClick={() => { setQrBatch(batch); setQrModalOpen(true); }}
-                                            >
-                                                <FaQrcode size={16} />
-                                            </ButtonComp>
-                                        </Tooltip>
-                                    </div>
-                                    <div style={{ display: 'flex', justifyContent: 'center' }}>
-                                        <Tooltip text="Editar Lote">
-                                            <ButtonComp
-                                                variant="secondary"
-                                                onClick={() => handleEditDispensary(batch)}
-                                            >
-                                                <FaEdit size={16} />
-                                            </ButtonComp>
-                                        </Tooltip>
-                                    </div>
+                                    <PackageCheck size={16} /> Entregar
+                                </ShadcnButton>
+                                <div style={{ display: 'grid', gridTemplateColumns: user?.role === 'medico' ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)', gap: '0.6rem' }}>
+                                    <Tooltip text="Ver Código QR">
+                                        <ShadcnButton
+                                            variant="secondary"
+                                            size="icon"
+                                            className="w-full"
+                                            onClick={() => { setQrBatch(batch); setQrModalOpen(true); }}
+                                        >
+                                            <QrCode size={15} />
+                                        </ShadcnButton>
+                                    </Tooltip>
+                                    <Tooltip text="Editar Lote">
+                                        <ShadcnButton
+                                            variant="secondary"
+                                            size="icon"
+                                            className="w-full"
+                                            onClick={() => handleEditDispensary(batch)}
+                                        >
+                                            <Edit3 size={15} />
+                                        </ShadcnButton>
+                                    </Tooltip>
                                     {user?.role !== 'medico' && (
-                                        <div style={{ display: 'flex', justifyContent: 'center' }}>
-                                            <Tooltip text="Eliminar Lote">
-                                                <ButtonComp
-                                                    variant="danger"
-                                                    onClick={() => handleDeleteDispensary(batch)}
-                                                >
-                                                    <FaTrash size={16} />
-                                                </ButtonComp>
-                                            </Tooltip>
-                                        </div>
+                                        <Tooltip text="Eliminar Lote">
+                                            <ShadcnButton
+                                                variant="destructive"
+                                                size="icon"
+                                                className="w-full"
+                                                onClick={() => handleDeleteDispensary(batch)}
+                                            >
+                                                <Trash2 size={15} />
+                                            </ShadcnButton>
+                                        </Tooltip>
                                     )}
                                 </div>
                             </div>
@@ -576,8 +535,8 @@ const Dispensary: React.FC = () => {
                     <div style={{
                         margin: '0 0 1.5rem 0',
                         padding: '1rem',
-                        background: 'rgba(15, 23, 42, 0.4)',
-                        border: '1px solid rgba(255, 255, 255, 0.05)',
+                        background: 'rgba(15, 23, 42, 0.6)',
+                        border: '1px solid rgba(255, 255, 255, 0.08)',
                         borderRadius: '0.75rem'
                     }}>
                         <div style={{ marginBottom: '0.5rem', color: '#94a3b8', fontSize: '0.85rem' }}>PRODUCTO SELECCIONADO</div>
@@ -610,9 +569,9 @@ const Dispensary: React.FC = () => {
                         <div style={{
                             marginTop: '1rem',
                             padding: '1rem',
-                            background: 'rgba(74, 222, 128, 0.1)',
+                            background: 'rgba(16, 185, 129, 0.1)',
                             borderRadius: '0.75rem',
-                            border: '1px solid rgba(74, 222, 128, 0.2)',
+                            border: '1px solid rgba(16, 185, 129, 0.2)',
                             display: 'flex',
                             justifyContent: 'space-between',
                             alignItems: 'center'
@@ -672,9 +631,9 @@ const Dispensary: React.FC = () => {
                                 <div style={{
                                     marginTop: '0.75rem',
                                     padding: '1rem',
-                                    background: 'rgba(15, 23, 42, 0.4)',
+                                    background: 'rgba(15, 23, 42, 0.6)',
                                     borderRadius: '0.75rem',
-                                    border: '1px solid rgba(255, 255, 255, 0.05)'
+                                    border: '1px solid rgba(255, 255, 255, 0.08)'
                                 }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', fontSize: '0.85rem', fontWeight: '600', color: '#cbd5e1' }}>
                                         <span style={{ textTransform: 'uppercase', letterSpacing: '0.05em' }}>Consumo Mensual del Paciente</span>
@@ -682,15 +641,15 @@ const Dispensary: React.FC = () => {
                                     </div>
                                     <div style={{ width: '100%', height: '6px', background: 'rgba(255, 255, 255, 0.1)', borderRadius: '3px', overflow: 'hidden' }}>
                                         <div style={{
-                                            width: `${Math.min((consumptionStats.current / consumptionStats.limit) * 100, 100)}% `,
+                                            width: `${Math.min((consumptionStats.current / consumptionStats.limit) * 100, 100)}%`,
                                             height: '100%',
-                                            background: consumptionStats.current >= consumptionStats.limit ? 'linear-gradient(90deg, #ef4444, #f87171)' : 'linear-gradient(90deg, #4ade80, #38bdf8)',
+                                            background: consumptionStats.current >= consumptionStats.limit ? 'linear-gradient(90deg, #ef4444, #f87171)' : 'linear-gradient(90deg, #10b981, #06b6d4)',
                                             transition: 'width 0.3s'
                                         }}></div>
                                     </div>
                                     {consumptionStats.current >= consumptionStats.limit && (
-                                        <div style={{ color: '#fca5a5', fontSize: '0.8rem', marginTop: '0.5rem', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                                            <span>⚠️</span> Límite mensual de flores excedido ({consumptionStats.limit}g)
+                                        <div style={{ color: '#fca5a5', fontSize: '0.8rem', marginTop: '0.5rem', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                                            <AlertCircle size={14} /> Límite mensual de flores excedido ({consumptionStats.limit}g)
                                         </div>
                                     )}
                                 </div>
@@ -699,8 +658,8 @@ const Dispensary: React.FC = () => {
                     )}
 
                     <ModalActions>
-                        <ButtonComp variant="secondary" onClick={() => setDispenseModalOpen(false)}>Cancelar</ButtonComp>
-                        <ButtonComp variant="primary" onClick={confirmDispense}>Confirmar Entrega</ButtonComp>
+                        <ShadcnButton variant="secondary" onClick={() => setDispenseModalOpen(false)}>Cancelar</ShadcnButton>
+                        <ShadcnButton onClick={confirmDispense}>Confirmar Entrega</ShadcnButton>
                     </ModalActions>
                 </ModalContent>
             </Modal>
@@ -714,7 +673,7 @@ const Dispensary: React.FC = () => {
                     {qrBatch && (
                         <div style={{ background: 'white', padding: '1rem', display: 'inline-block', border: '1px solid #e2e8f0', borderRadius: '1rem', marginBottom: '1.5rem', boxShadow: '0 0 20px rgba(255, 255, 255, 0.1)' }}>
                             <QRCode
-                                value={`${window.location.origin} /passport/${qrBatch.id} `}
+                                value={`${window.location.origin}/passport/${qrBatch.id}`}
                                 size={200}
                             />
                         </div>
@@ -724,10 +683,10 @@ const Dispensary: React.FC = () => {
                     <p style={{ fontFamily: 'monospace', color: '#38bdf8', background: 'rgba(56, 189, 248, 0.1)', padding: '0.25rem 0.75rem', borderRadius: '0.5rem', display: 'inline-block' }}>{qrBatch?.batch_code}</p>
 
                     <div style={{ marginTop: '2.5rem', display: 'flex', justifyContent: 'center', gap: '1rem' }}>
-                        <ButtonComp variant="secondary" onClick={() => setQrModalOpen(false)}>Cerrar</ButtonComp>
-                        <ButtonComp variant="primary" onClick={() => handlePrintLabel()}>
-                            <FaPrint /> Imprimir Etiqueta
-                        </ButtonComp>
+                        <ShadcnButton variant="secondary" onClick={() => setQrModalOpen(false)}>Cerrar</ShadcnButton>
+                        <ShadcnButton onClick={() => handlePrintLabel()}>
+                            <Printer size={16} /> Imprimir Etiqueta
+                        </ShadcnButton>
                     </div>
 
                     {/* Printable Content (Hidden until print) */}
