@@ -1,328 +1,358 @@
 import React, { useState, useEffect } from 'react';
-import styled from 'styled-components';
+import styled, { keyframes } from 'styled-components';
 import { DispensaryBatch, dispensaryService } from '../services/dispensaryService';
-import { FaSave, FaTimes } from 'react-icons/fa';
+import { X as LucideX, Save, Edit3 } from 'lucide-react';
 import { CustomSelect } from './CustomSelect';
+import { Button as ShadcnButton } from './ui/Button';
+import { Badge as ShadcnBadge } from './ui/Badge';
+
+const fadeIn = keyframes`
+  from { opacity: 0; }
+  to { opacity: 1; }
+`;
+
+const slideUp = keyframes`
+  from { opacity: 0; transform: translateY(12px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+`;
 
 const ModalOverlay = styled.div`
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(15, 23, 42, 0.8);
-  backdrop-filter: blur(8px);
+  inset: 0;
+  background: rgba(3, 7, 18, 0.82);
+  backdrop-filter: blur(12px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 2100;
+  padding: 1rem;
+  animation: ${fadeIn} 0.2s ease-out;
 `;
 
 const ModalContent = styled.div`
-  background: rgba(30, 41, 59, 0.95);
-  backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 2.5rem;
-  border-radius: 1rem;
-  width: 90%;
-  max-width: 500px;
+  background: rgba(15, 23, 42, 0.96);
+  backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 1.75rem;
+  border-radius: 1.25rem;
+  width: 100%;
+  max-width: 520px;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 25px 60px -12px rgba(0, 0, 0, 0.75);
   color: #f8fafc;
+  animation: ${slideUp} 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+  }
+
+  @media (max-width: 768px) {
+    padding: 1.25rem;
+    max-height: 94vh;
+  }
 `;
 
 const Header = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 2rem;
-  
-  h2 {
-    font-size: 1.5rem;
-    color: #f8fafc;
-    margin: 0;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+
+    .icon-badge {
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      color: #34d399;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .title-col {
+      display: flex;
+      flex-direction: column;
+
+      h2 {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #f8fafc;
+        margin: 0;
+        letter-spacing: -0.01em;
+      }
+
+      .meta-row {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-top: 2px;
+      }
+    }
   }
 `;
 
 const CloseButton = styled.button`
-  background: none;
-  border: none;
-  font-size: 1.5rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
   color: #94a3b8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  padding: 0.5rem;
-  transition: color 0.2s;
-  
+  transition: all 0.15s ease;
+
   &:hover {
+    background: rgba(255, 255, 255, 0.1);
     color: #f8fafc;
+    border-color: rgba(255, 255, 255, 0.2);
   }
 `;
 
 const FormGroup = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  margin-bottom: 1.5rem;
+  gap: 0.4rem;
+  margin-bottom: 1.25rem;
 
   label {
     font-weight: 600;
     color: #cbd5e1;
-    font-size: 0.875rem;
+    font-size: 0.8rem;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.04em;
   }
 
-  input, select, textarea {
-    padding: 0.875rem 1rem;
+  input,
+  textarea {
+    padding: 0.75rem 0.95rem;
     background: rgba(15, 23, 42, 0.6);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: 0.75rem;
     color: #f8fafc;
-    font-size: 1rem;
+    font-size: 0.9rem;
     transition: all 0.2s;
 
     &:focus {
       outline: none;
-      border-color: #38bdf8;
-      box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
-    }
-
-    option {
-      background: #1e293b;
-      color: #f8fafc;
+      border-color: #34d399;
+      box-shadow: 0 0 0 2px rgba(52, 211, 153, 0.2);
     }
   }
-  
+
   .hint {
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     color: #94a3b8;
-    margin-top: 0.25rem;
-  }
-`;
-
-const Button = styled.button<{ variant?: 'primary' | 'secondary' | 'danger' }>`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1rem;
-  border: none;
-  border-radius: 0.75rem;
-  font-size: 0.875rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-
-  background: ${props => {
-        switch (props.variant) {
-            case 'primary': return 'linear-gradient(135deg, rgba(74, 222, 128, 0.2) 0%, rgba(56, 189, 248, 0.2) 100%)';
-            case 'danger': return 'rgba(239, 68, 68, 0.1)';
-            case 'secondary': return 'rgba(148, 163, 184, 0.1)';
-            default: return 'rgba(255, 255, 255, 0.05)';
-        }
-    }};
-
-  border: 1px solid ${props => {
-        switch (props.variant) {
-            case 'primary': return 'rgba(74, 222, 128, 0.3)';
-            case 'danger': return 'rgba(239, 68, 68, 0.3)';
-            case 'secondary': return 'rgba(148, 163, 184, 0.2)';
-            default: return 'rgba(255, 255, 255, 0.1)';
-        }
-    }};
-
-  color: ${props => {
-        switch (props.variant) {
-            case 'primary': return '#f8fafc';
-            case 'danger': return '#fca5a5';
-            case 'secondary': return '#e2e8f0';
-            default: return '#f8fafc';
-        }
-    }};
-
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px ${props => {
-        switch (props.variant) {
-            case 'primary': return 'rgba(74, 222, 128, 0.2)';
-            case 'danger': return 'rgba(239, 68, 68, 0.2)';
-            default: return 'rgba(0, 0, 0, 0.2)';
-        }
-    }};
+    margin-top: 0.2rem;
+    font-family: monospace;
   }
 `;
 
 const Actions = styled.div`
   display: flex;
   justify-content: flex-end;
-  gap: 1rem;
-  margin-top: 2rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+
+  @media (max-width: 640px) {
+    flex-direction: column-reverse;
+    button {
+      width: 100%;
+    }
+  }
 `;
 
 interface EditDispensaryModalProps {
-    isOpen: boolean;
-    batch: DispensaryBatch | null;
-    onClose: () => void;
-    onSuccess: () => void;
+  isOpen: boolean;
+  batch: DispensaryBatch | null;
+  onClose: () => void;
+  onSuccess: () => void;
 }
 
 export const EditDispensaryModal: React.FC<EditDispensaryModalProps> = ({
-    isOpen,
-    batch,
-    onClose,
-    onSuccess
+  isOpen,
+  batch,
+  onClose,
+  onSuccess
 }) => {
-    const [formData, setFormData] = useState({
-        strain_name: '',
-        initial_weight: '',
-        current_weight: '',
-        status: 'curing',
-        quality_grade: 'Standard',
-        price_per_gram: '',
-        notes: ''
-    });
+  const [formData, setFormData] = useState({
+    strain_name: '',
+    initial_weight: '',
+    current_weight: '',
+    status: 'curing',
+    quality_grade: 'Standard',
+    price_per_gram: '',
+    notes: ''
+  });
+  const [loading, setLoading] = useState(false);
 
-    useEffect(() => {
-        if (batch) {
-            setFormData({
-                strain_name: batch.strain_name,
-                initial_weight: batch.initial_weight.toString(),
-                current_weight: batch.current_weight.toString(),
-                status: batch.status,
-                quality_grade: batch.quality_grade,
-                price_per_gram: batch.price_per_gram ? batch.price_per_gram.toString() : '',
-                notes: batch.notes || ''
-            });
-        }
-    }, [batch]);
+  useEffect(() => {
+    if (batch) {
+      setFormData({
+        strain_name: batch.strain_name,
+        initial_weight: batch.initial_weight.toString(),
+        current_weight: batch.current_weight.toString(),
+        status: batch.status,
+        quality_grade: batch.quality_grade,
+        price_per_gram: batch.price_per_gram ? batch.price_per_gram.toString() : '',
+        notes: batch.notes || ''
+      });
+    }
+  }, [batch]);
 
-    if (!isOpen || !batch) return null;
+  if (!isOpen || !batch) return null;
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
 
-        const updates: Partial<DispensaryBatch> = {
-            strain_name: formData.strain_name,
-            initial_weight: parseFloat(formData.initial_weight),
-            current_weight: parseFloat(formData.current_weight),
-            status: formData.status as any,
-            quality_grade: formData.quality_grade as any,
-            price_per_gram: formData.price_per_gram ? parseFloat(formData.price_per_gram) : 0,
-            notes: formData.notes
-        };
-
-        const success = await dispensaryService.updateBatch(batch.id, updates);
-
-        if (success) {
-            onSuccess();
-        } else {
-            alert('Error al actualizar el lote');
-        }
+    const updates: Partial<DispensaryBatch> = {
+      strain_name: formData.strain_name,
+      initial_weight: parseFloat(formData.initial_weight),
+      current_weight: parseFloat(formData.current_weight),
+      status: formData.status as any,
+      quality_grade: formData.quality_grade as any,
+      price_per_gram: formData.price_per_gram ? parseFloat(formData.price_per_gram) : 0,
+      notes: formData.notes
     };
 
-    return (
-        <ModalOverlay>
-            <ModalContent onClick={e => e.stopPropagation()}>
-                <Header>
-                    <div>
-                        <h2>Editar Lote</h2>
-                        <span style={{ fontSize: '0.9rem', color: '#94a3b8', fontFamily: 'monospace' }}>
-                            {batch.batch_code}
-                        </span>
-                    </div>
-                    <CloseButton onClick={onClose}><FaTimes /></CloseButton>
-                </Header>
+    const success = await dispensaryService.updateBatch(batch.id, updates);
+    setLoading(false);
 
-                <form onSubmit={handleSubmit}>
-                    <FormGroup>
-                        <label>Variedad (Strain)</label>
-                        <input
-                            type="text"
-                            value={formData.strain_name}
-                            onChange={e => setFormData({ ...formData, strain_name: e.target.value })}
-                            required
-                        />
-                    </FormGroup>
+    if (success) {
+      onSuccess();
+    } else {
+      alert('Error al actualizar el lote');
+    }
+  };
 
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                        <FormGroup>
-                            <label>Peso Inicial (g)</label>
-                            <input
-                                type="number"
-                                step="0.01"
-                                value={formData.initial_weight}
-                                onChange={e => setFormData({ ...formData, initial_weight: e.target.value })}
-                                required
-                            />
-                            <div className="hint">Original: {batch.initial_weight}g</div>
-                        </FormGroup>
+  return (
+    <ModalOverlay onClick={onClose}>
+      <ModalContent onClick={e => e.stopPropagation()}>
+        <Header>
+          <div className="header-left">
+            <div className="icon-badge">
+              <Edit3 size={20} />
+            </div>
+            <div className="title-col">
+              <h2>Editar Lote de Dispensario</h2>
+              <div className="meta-row">
+                <ShadcnBadge variant="outline">
+                  {batch.batch_code}
+                </ShadcnBadge>
+              </div>
+            </div>
+          </div>
+          <CloseButton onClick={onClose} title="Cerrar">
+            <LucideX size={18} />
+          </CloseButton>
+        </Header>
 
-                        <FormGroup>
-                            <label>Peso Actual (g)</label>
-                            <input
-                                type="number"
-                                step="0.01"
-                                value={formData.current_weight}
-                                onChange={e => setFormData({ ...formData, current_weight: e.target.value })}
-                                required
-                            />
-                            <div className="hint">Original: {batch.current_weight}g</div>
-                        </FormGroup>
-                    </div>
+        <form onSubmit={handleSubmit}>
+          <FormGroup>
+            <label>Variedad (Strain)</label>
+            <input
+              type="text"
+              value={formData.strain_name}
+              onChange={e => setFormData({ ...formData, strain_name: e.target.value })}
+              required
+            />
+          </FormGroup>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                        <FormGroup>
-                            <label>Estado</label>
-                            <CustomSelect
-                                value={formData.status}
-                                onChange={val => setFormData({ ...formData, status: val })}
-                                options={[
-                                    { value: 'curing', label: 'Curándose (Curing)' },
-                                    { value: 'available', label: 'Disponible' },
-                                    { value: 'quarantine', label: 'Cuarentena' },
-                                    { value: 'depleted', label: 'Agotado' }
-                                ]}
-                            />
-                        </FormGroup>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <FormGroup>
+              <label>Peso Inicial (g)</label>
+              <input
+                type="number"
+                step="0.01"
+                value={formData.initial_weight}
+                onChange={e => setFormData({ ...formData, initial_weight: e.target.value })}
+                required
+              />
+              <div className="hint">Original: {batch.initial_weight}g</div>
+            </FormGroup>
 
-                        <FormGroup>
-                            <label>Calidad</label>
-                            <CustomSelect
-                                value={formData.quality_grade}
-                                onChange={val => setFormData({ ...formData, quality_grade: val })}
-                                options={[
-                                    { value: 'Premium', label: 'Premium' },
-                                    { value: 'Standard', label: 'Standard' },
-                                    { value: 'Extracts', label: 'Extracts' },
-                                    { value: 'Trim', label: 'Trim' }
-                                ]}
-                            />
-                        </FormGroup>
-                    </div>
+            <FormGroup>
+              <label>Peso Actual (g)</label>
+              <input
+                type="number"
+                step="0.01"
+                value={formData.current_weight}
+                onChange={e => setFormData({ ...formData, current_weight: e.target.value })}
+                required
+              />
+              <div className="hint">Original: {batch.current_weight}g</div>
+            </FormGroup>
+          </div>
 
-                    <FormGroup>
-                        <label>Notas</label>
-                        <textarea
-                            rows={3}
-                            value={formData.notes}
-                            onChange={e => setFormData({ ...formData, notes: e.target.value })}
-                            placeholder="Notas opcionales..."
-                        />
-                    </FormGroup>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <FormGroup>
+              <label>Estado</label>
+              <CustomSelect
+                value={formData.status}
+                onChange={val => setFormData({ ...formData, status: val })}
+                options={[
+                  { value: 'curing', label: 'Curándose (Curing)' },
+                  { value: 'available', label: 'Disponible' },
+                  { value: 'quarantine', label: 'Cuarentena' },
+                  { value: 'depleted', label: 'Agotado' }
+                ]}
+              />
+            </FormGroup>
 
-                    <Actions>
-                        <Button type="button" variant="secondary" onClick={onClose}>
-                            Cancelar
-                        </Button>
-                        <Button type="submit" variant="primary">
-                            <FaSave /> Guardar Cambios
-                        </Button>
-                    </Actions>
-                </form>
-            </ModalContent>
-        </ModalOverlay>
-    );
+            <FormGroup>
+              <label>Calidad</label>
+              <CustomSelect
+                value={formData.quality_grade}
+                onChange={val => setFormData({ ...formData, quality_grade: val })}
+                options={[
+                  { value: 'Premium', label: 'Premium' },
+                  { value: 'Standard', label: 'Standard' },
+                  { value: 'Extracts', label: 'Extracts' },
+                  { value: 'Trim', label: 'Trim' }
+                ]}
+              />
+            </FormGroup>
+          </div>
+
+          <FormGroup>
+            <label>Notas</label>
+            <textarea
+              rows={3}
+              value={formData.notes}
+              onChange={e => setFormData({ ...formData, notes: e.target.value })}
+              placeholder="Notas opcionales..."
+              style={{ resize: 'none' }}
+            />
+          </FormGroup>
+
+          <Actions>
+            <ShadcnButton type="button" variant="secondary" onClick={onClose} disabled={loading}>
+              Cancelar
+            </ShadcnButton>
+            <ShadcnButton type="submit" variant="default" isLoading={loading}>
+              <Save size={16} style={{ marginRight: 6 }} /> Guardar Cambios
+            </ShadcnButton>
+          </Actions>
+        </form>
+      </ModalContent>
+    </ModalOverlay>
+  );
 };

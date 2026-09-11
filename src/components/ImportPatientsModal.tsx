@@ -1,10 +1,23 @@
 import React, { useState, useRef } from 'react';
 import styled, { keyframes } from 'styled-components';
-import { FaCloudUploadAlt, FaFileExcel, FaTimes, FaExclamationTriangle, FaInfoCircle, FaDownload } from 'react-icons/fa';
+import {
+  UploadCloud,
+  FileSpreadsheet,
+  X as LucideX,
+  AlertTriangle,
+  Info,
+  Download,
+  CheckCircle2,
+  AlertCircle,
+  FileUp,
+  RefreshCw
+} from 'lucide-react';
 import * as XLSX from 'xlsx';
 import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 import { Patient } from '../services/patientsService';
+import { Button as ShadcnButton } from './ui/Button';
+import { Badge as ShadcnBadge } from './ui/Badge';
 
 const fadeIn = keyframes`
   from { opacity: 0; }
@@ -12,65 +25,103 @@ const fadeIn = keyframes`
 `;
 
 const slideUp = keyframes`
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(14px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 `;
 
 const ModalOverlay = styled.div`
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.75);
-  backdrop-filter: blur(5px);
+  inset: 0;
+  background: rgba(3, 7, 18, 0.84);
+  backdrop-filter: blur(12px);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 1050;
-  animation: ${fadeIn} 0.3s ease-out;
+  animation: ${fadeIn} 0.2s ease-out;
   padding: 1rem;
 `;
 
 const ModalContent = styled.div`
-  background: rgba(15, 23, 42, 0.95);
-  border: 1px solid rgba(var(--primary-color-rgb, 168, 85, 247), 0.3);
-  border-radius: 1rem;
+  background: rgba(15, 23, 42, 0.96);
+  backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 1.25rem;
   width: 100%;
-  max-width: 900px;
+  max-width: 920px;
   max-height: 90vh;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
-  animation: ${slideUp} 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 25px 60px -12px rgba(0, 0, 0, 0.75);
+  animation: ${slideUp} 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 `;
 
 const Header = styled.div`
-  padding: 1.5rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   display: flex;
   justify-content: space-between;
   align-items: center;
 
-  h2 {
-    margin: 0;
-    font-size: 1.5rem;
-    color: #f8fafc;
+  .header-left {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.85rem;
+
+    .icon-badge {
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      color: #34d399;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .title-col {
+      display: flex;
+      flex-direction: column;
+
+      h2 {
+        margin: 0;
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #f8fafc;
+        letter-spacing: -0.01em;
+      }
+
+      span {
+        font-size: 0.8rem;
+        color: #94a3b8;
+      }
+    }
+  }
+`;
+
+const CloseButton = styled.button`
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.1);
+    color: #f8fafc;
+    border-color: rgba(255, 255, 255, 0.2);
   }
 
-  button {
-    background: none;
-    border: none;
-    color: #94a3b8;
-    cursor: pointer;
-    padding: 0.5rem;
-    
-    &:hover {
-      color: #f8fafc;
-    }
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
 `;
 
@@ -587,19 +638,29 @@ export const ImportPatientsModal: React.FC<Props> = ({ isOpen, onClose, existing
             <ModalOverlay>
                 <ModalContent>
                     <Header>
-                        <h2><FaFileExcel style={{ color: '#22c55e' }} /> Importar Pacientes desde CSV/XLSX</h2>
-                        <button onClick={onClose} disabled={isProcessing}><FaTimes size={20} /></button>
+                        <div className="header-left">
+                            <div className="icon-badge">
+                                <FileSpreadsheet size={20} />
+                            </div>
+                            <div className="title-col">
+                                <h2>Importar Pacientes</h2>
+                                <span>Carga masiva desde archivo Excel (.xlsx) o CSV</span>
+                            </div>
+                        </div>
+                        <CloseButton onClick={onClose} disabled={isProcessing} title="Cerrar">
+                            <LucideX size={18} />
+                        </CloseButton>
                     </Header>
                     <Body>
                         {parsedData.length === 0 ? (
                             <>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                                    <p style={{ color: '#94a3b8', margin: 0 }}>
-                                        Sube un archivo de Excel (.xlsx) o de valores separados por coma (.csv). Puedes descargar la plantilla oficial aquí.
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', gap: '1rem', flexWrap: 'wrap' }}>
+                                    <p style={{ color: '#94a3b8', margin: 0, fontSize: '0.875rem' }}>
+                                        Sube un archivo Excel (.xlsx) o CSV. Puedes descargar la plantilla oficial con el formato requerido.
                                     </p>
-                                    <Button $variant="secondary" onClick={handleDownloadTemplate}>
-                                        <FaDownload /> Plantilla
-                                    </Button>
+                                    <ShadcnButton variant="secondary" onClick={handleDownloadTemplate} size="sm">
+                                        <Download size={15} style={{ marginRight: 6 }} /> Descargar Plantilla
+                                    </ShadcnButton>
                                 </div>
 
                                 <DropZone
@@ -610,9 +671,9 @@ export const ImportPatientsModal: React.FC<Props> = ({ isOpen, onClose, existing
                                     onDrop={handleDrop}
                                     onClick={() => fileInputRef.current?.click()}
                                 >
-                                    <FaCloudUploadAlt size={48} color={isDragActive ? "var(--primary-color, #a855f7)" : "#64748b"} style={{ marginBottom: '1rem' }} />
-                                    <h3 style={{ color: '#f8fafc', margin: '0 0 0.5rem 0' }}>Arrastra el archivo aquí o haz clic</h3>
-                                    <p style={{ color: '#64748b', margin: 0 }}>Archivos soportados: .xlsx, .csv (Máximo 200 filas recomendadas)</p>
+                                    <UploadCloud size={44} color={isDragActive ? "#34d399" : "#64748b"} style={{ marginBottom: '0.85rem' }} />
+                                    <h3 style={{ color: '#f8fafc', margin: '0 0 0.35rem 0', fontSize: '1.1rem' }}>Arrastra el archivo aquí o haz clic</h3>
+                                    <p style={{ color: '#64748b', margin: 0, fontSize: '0.85rem' }}>Archivos soportados: .xlsx, .csv (Recomendado hasta 200 filas)</p>
                                     <input
                                         type="file"
                                         accept=".xlsx, .csv"
@@ -620,17 +681,20 @@ export const ImportPatientsModal: React.FC<Props> = ({ isOpen, onClose, existing
                                         onChange={(e) => {
                                             if (e.target.files && e.target.files[0]) processFile(e.target.files[0]);
                                         }}
+                                        style={{ display: 'none' }}
                                     />
                                 </DropZone>
                             </>
                         ) : (
                             <>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <h3 style={{ color: '#f8fafc', margin: 0 }}>Vista Previa ({parsedData.length} filas detectadas)</h3>
-                                    <Button $variant="secondary" onClick={() => setParsedData([])} disabled={isProcessing}>Subir otro archivo</Button>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
+                                    <h3 style={{ color: '#f8fafc', margin: 0, fontSize: '1.1rem' }}>Vista Previa ({parsedData.length} filas detectadas)</h3>
+                                    <ShadcnButton variant="secondary" size="sm" onClick={() => setParsedData([])} disabled={isProcessing}>
+                                        <RefreshCw size={14} style={{ marginRight: 6 }} /> Subir otro archivo
+                                    </ShadcnButton>
                                 </div>
 
-                                <div style={{ overflowX: 'auto', marginTop: '1rem', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '0.5rem' }}>
+                                <div style={{ overflowX: 'auto', marginTop: '1rem', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '0.75rem' }}>
                                     <Table>
                                         <thead>
                                             <tr>
@@ -646,9 +710,18 @@ export const ImportPatientsModal: React.FC<Props> = ({ isOpen, onClose, existing
                                             {parsedData.map((row, idx) => (
                                                 <tr key={idx} className={row.validationStatus}>
                                                     <td>
-                                                        <StatusPill $type={row.validationStatus}>
+                                                        <ShadcnBadge
+                                                            variant={
+                                                                row.validationStatus === 'ok'
+                                                                    ? 'emerald'
+                                                                    : row.validationStatus === 'error'
+                                                                    ? 'rose'
+                                                                    : 'amber'
+                                                            }
+                                                            dot
+                                                        >
                                                             {row.validationStatus.toUpperCase()}
-                                                        </StatusPill>
+                                                        </ShadcnBadge>
                                                     </td>
                                                     <td>{row.fullName}</td>
                                                     <td>{row.email}</td>
@@ -671,33 +744,35 @@ export const ImportPatientsModal: React.FC<Props> = ({ isOpen, onClose, existing
 
                         return (
                             <ActionRow>
-                                <div style={{ color: hasOnlyErrors ? '#ef4444' : '#94a3b8', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                    {hasOnlyErrors ? <FaExclamationTriangle /> : <FaInfoCircle />}
+                                <div style={{ color: hasOnlyErrors ? '#f87171' : '#94a3b8', fontSize: '0.875rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                    {hasOnlyErrors ? <AlertTriangle size={16} /> : <Info size={16} />}
                                     {hasOnlyErrors
-                                        ? "No hay registros válidos para importar. Por favor, corrija los errores en la plantilla."
+                                        ? "No hay registros válidos para importar. Corrija los errores en la plantilla."
                                         : `${errorCount > 0 ? `${errorCount} errores detectados que serán omitidos.` : 'Todos los registros son válidos.'}`
                                     }
                                 </div>
-                                <Button
-                                    $variant="primary"
+                                <ShadcnButton
+                                    variant="default"
                                     onClick={handleImport}
                                     disabled={isProcessing || hasOnlyErrors}
+                                    isLoading={isProcessing}
                                 >
-                                    {isProcessing ? "Importando..." : `Procesar e Importar (${validCount} válidos)`}
-                                </Button>
+                                    <CheckCircle2 size={16} style={{ marginRight: 6 }} />
+                                    Procesar e Importar ({validCount} válidos)
+                                </ShadcnButton>
                             </ActionRow>
                         );
                     })()}
                 </ModalContent>
             </ModalOverlay>
 
-            {/* Moda de Resolución de Conflictos */}
+            {/* Modal de Resolución de Conflictos */}
             {conflictState && (
                 <ModalOverlay style={{ zIndex: 1100 }}>
                     <ConflictModalContent>
-                        <FaExclamationTriangle size={48} color="#eab308" style={{ marginBottom: '1rem' }} />
-                        <h2 style={{ margin: '0 0 0.5rem 0' }}>Paciente Duplicado Detectado</h2>
-                        <p style={{ color: '#94a3b8', margin: 0 }}>
+                        <AlertTriangle size={44} color="#facc15" style={{ margin: '0 auto 0.75rem' }} />
+                        <h2 style={{ margin: '0 0 0.5rem 0', fontSize: '1.25rem' }}>Paciente Duplicado Detectado</h2>
+                        <p style={{ color: '#94a3b8', margin: 0, fontSize: '0.875rem' }}>
                             El sistema encontró un paciente existente con el mismo Email o DNI.
                         </p>
 
@@ -709,8 +784,8 @@ export const ImportPatientsModal: React.FC<Props> = ({ isOpen, onClose, existing
                                 <p>DNI: {conflictState.existingPatient.document_number || 'N/A'}</p>
                                 <p>Reprocann: {conflictState.existingPatient.reprocann_number || 'N/A'}</p>
                             </div>
-                            <div className="box" style={{ borderColor: 'rgba(var(--primary-color-rgb, 168, 85, 247), 0.5)', background: 'rgba(var(--primary-color-rgb, 168, 85, 247), 0.05)' }}>
-                                <div className="title" style={{ color: '#d8b4fe' }}>Datos a Importar (Excel)</div>
+                            <div className="box" style={{ borderColor: 'rgba(52, 211, 153, 0.35)', background: 'rgba(52, 211, 153, 0.05)' }}>
+                                <div className="title" style={{ color: '#34d399' }}>Datos a Importar (Excel)</div>
                                 <p><strong>{conflictState.pendingPatient.fullName}</strong></p>
                                 <p>{conflictState.pendingPatient.email}</p>
                                 <p>DNI: {conflictState.pendingPatient.documentNumber || 'N/A'}</p>
@@ -718,24 +793,24 @@ export const ImportPatientsModal: React.FC<Props> = ({ isOpen, onClose, existing
                             </div>
                         </ConflictDataComparison>
 
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '2rem' }}>
-                            <Button $variant="primary" onClick={() => resolveConflict('update')} style={{ justifyContent: 'center' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '1.5rem' }}>
+                            <ShadcnButton variant="default" onClick={() => resolveConflict('update')} style={{ justifyContent: 'center' }}>
                                 Actualizar con Nuevos Datos (Recomendado)
-                            </Button>
+                            </ShadcnButton>
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-                                <Button $variant="warning" onClick={() => resolveConflict('duplicate')} style={{ justifyContent: 'center', color: '#854d0e', background: 'rgba(234, 179, 8, 0.2)' }}>
+                                <ShadcnButton variant="outline" onClick={() => resolveConflict('duplicate')} style={{ justifyContent: 'center' }}>
                                     Copiar de Todas Formas
-                                </Button>
-                                <Button $variant="secondary" onClick={() => resolveConflict('skip')} style={{ justifyContent: 'center' }}>
+                                </ShadcnButton>
+                                <ShadcnButton variant="secondary" onClick={() => resolveConflict('skip')} style={{ justifyContent: 'center' }}>
                                     Omitir este Registro
-                                </Button>
+                                </ShadcnButton>
                             </div>
-                            <Button $variant="danger" onClick={() => resolveConflict('abort')} style={{ justifyContent: 'center', marginTop: '1rem', background: 'transparent', border: '1px solid #ef4444' }}>
+                            <ShadcnButton variant="destructive" onClick={() => resolveConflict('abort')} style={{ justifyContent: 'center', marginTop: '0.5rem' }}>
                                 Cancelar toda la Importación
-                            </Button>
+                            </ShadcnButton>
                         </div>
 
-                        <p style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '1.5rem', marginBottom: 0 }}>
+                        <p style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '1.25rem', marginBottom: 0 }}>
                             Nota: "Copiar de Todas Formas" puede fallar si el email provisto no puede registrarse por duplicidad en el sistema de seguridad.
                         </p>
                     </ConflictModalContent>

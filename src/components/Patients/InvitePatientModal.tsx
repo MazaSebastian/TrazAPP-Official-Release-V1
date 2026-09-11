@@ -1,76 +1,108 @@
 import React, { useState } from 'react';
-import styled from 'styled-components';
-import { FaTimes, FaLink, FaEnvelope, FaCopy, FaCheck, FaSpider, FaSpinner } from 'react-icons/fa';
+import styled, { keyframes } from 'styled-components';
+import { X as LucideX, Link2, Mail, Copy, Check, CheckCircle2, AlertCircle } from 'lucide-react';
 import { supabase } from '../../services/supabaseClient';
 import { useOrganization } from '../../context/OrganizationContext';
+import { Button as ShadcnButton } from '../ui/Button';
+
+const fadeIn = keyframes`
+  from { opacity: 0; }
+  to { opacity: 1; }
+`;
+
+const slideUp = keyframes`
+  from { opacity: 0; transform: translateY(12px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+`;
 
 const Overlay = styled.div`
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.7);
+  inset: 0;
+  background-color: rgba(3, 7, 18, 0.82);
+  backdrop-filter: blur(12px);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 1000;
-  backdrop-filter: blur(5px);
   padding: 1rem;
+  animation: ${fadeIn} 0.2s ease-out;
 `;
 
 const ModalContainer = styled.div`
-  background: #1e293b;
-  border-radius: 16px;
+  background: rgba(15, 23, 42, 0.96);
+  backdrop-filter: blur(24px);
+  border-radius: 1.25rem;
   width: 100%;
   max-width: 500px;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 25px 60px -12px rgba(0, 0, 0, 0.75);
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  border: 1px solid rgba(255,255,255,0.1);
-  animation: fadeIn 0.3s ease-out;
-
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-20px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  animation: ${slideUp} 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 `;
 
 const Header = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1.5rem;
-  border-bottom: 1px solid rgba(255,255,255,0.1);
-  background: rgba(15, 23, 42, 0.5);
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 
-  h2 {
-    margin: 0;
-    font-size: 1.25rem;
-    color: #f8fafc;
+  .header-left {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-  }
+    gap: 0.85rem;
 
-  button {
-    background: none;
-    border: none;
-    color: #94a3b8;
-    cursor: pointer;
-    font-size: 1.25rem;
-    padding: 0.5rem;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s;
-
-    &:hover {
-      background: rgba(255,255,255,0.1);
-      color: #f8fafc;
+    .icon-badge {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      color: #34d399;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
+
+    .title-col {
+      display: flex;
+      flex-direction: column;
+
+      h2 {
+        margin: 0;
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: #f8fafc;
+        letter-spacing: -0.01em;
+      }
+
+      span {
+        font-size: 0.8rem;
+        color: #94a3b8;
+      }
+    }
+  }
+`;
+
+const CloseButton = styled.button`
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #f8fafc;
+    border-color: rgba(255, 255, 255, 0.2);
   }
 `;
 
@@ -78,18 +110,20 @@ const Content = styled.div`
   padding: 1.5rem;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1.25rem;
 `;
 
 const FormGroup = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.4rem;
 
   label {
-    font-size: 0.875rem;
-    font-weight: 500;
+    font-size: 0.8rem;
+    font-weight: 600;
     color: #cbd5e1;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
   }
 `;
 
@@ -98,7 +132,7 @@ const InputGroup = styled.div`
   display: flex;
   align-items: center;
 
-  svg {
+  .input-icon {
     position: absolute;
     left: 1rem;
     color: #64748b;
@@ -106,195 +140,208 @@ const InputGroup = styled.div`
 
   input {
     width: 100%;
-    padding: 0.75rem 1rem 0.75rem 2.5rem;
-    background: #0f172a;
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 8px;
+    padding: 0.75rem 1rem 0.75rem 2.6rem;
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 0.75rem;
     color: #f8fafc;
-    font-size: 1rem;
+    font-size: 0.95rem;
     transition: all 0.2s;
 
     &:focus {
       outline: none;
-      border-color: #3b82f6;
-      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+      border-color: #34d399;
+      box-shadow: 0 0 0 2px rgba(52, 211, 153, 0.2);
+    }
+
+    &::placeholder {
+      color: #64748b;
     }
   }
 `;
 
-const Button = styled.button<{ $primary?: boolean, $loading?: boolean }>`
-  padding: 0.75rem 1.5rem;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  border: none;
-  font-size: 1rem;
-  opacity: ${props => props.$loading ? 0.7 : 1};
-  pointer-events: ${props => props.$loading ? 'none' : 'auto'};
-
-  background: ${props => props.$primary ? 'linear-gradient(to right, #3b82f6, #2563eb)' : 'rgba(255,255,255,0.1)'};
-  color: ${props => props.$primary ? 'white' : '#f8fafc'};
-
-  &:hover {
-    transform: translateY(-1px);
-    box-shadow: ${props => props.$primary ? '0 4px 6px -1px rgba(59, 130, 246, 0.5)' : 'none'};
-    background: ${props => props.$primary ? '' : 'rgba(255,255,255,0.15)'};
-  }
-`;
-
 const GeneratedLinkBox = styled.div`
-  background: #0f172a;
-  border: 1px solid rgba(59, 130, 246, 0.3);
-  border-radius: 8px;
-  padding: 1rem;
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(52, 211, 153, 0.3);
+  border-radius: 0.75rem;
+  padding: 0.85rem 1rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
+  gap: 0.85rem;
 
   .link-text {
-    color: #60a5fa;
+    color: #34d399;
     font-family: monospace;
-    font-size: 0.875rem;
+    font-size: 0.85rem;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
-  
-  button {
-    background: #3b82f6;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    padding: 0.5rem 1rem;
-    cursor: pointer;
-    font-weight: bold;
-    font-size: 0.875rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    flex-shrink: 0;
+`;
 
-    &:hover { background: #2563eb; }
-  }
+const ModalActions = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
 `;
 
 interface InvitePatientModalProps {
-    onClose: () => void;
-    onSuccess?: () => void;
+  onClose: () => void;
+  onSuccess?: () => void;
 }
 
 export const InvitePatientModal: React.FC<InvitePatientModalProps> = ({ onClose, onSuccess }) => {
-    const { currentOrganization } = useOrganization();
-    const [email, setEmail] = useState('');
-    const [loading, setLoading] = useState(false);
-    const [generatedLink, setGeneratedLink] = useState('');
-    const [copied, setCopied] = useState(false);
-    const [errorMsg, setErrorMsg] = useState('');
+  const { currentOrganization } = useOrganization();
+  const [email, setEmail] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [generatedLink, setGeneratedLink] = useState('');
+  const [copied, setCopied] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
-    const handleGenerate = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!email || !currentOrganization) return;
+  const handleGenerate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !currentOrganization) return;
 
-        setLoading(true);
-        setErrorMsg('');
+    setLoading(true);
+    setErrorMsg('');
 
-        try {
-            const { data, error } = await supabase.functions.invoke('generate-invite-link', {
-                body: { email, organization_id: currentOrganization.id }
-            });
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-invite-link', {
+        body: { email, organization_id: currentOrganization.id }
+      });
 
-            if (error || !data?.success) {
-                throw new Error(data?.error || error?.message || 'Error desconocido al generar la invitación');
-            }
+      if (error || !data?.success) {
+        throw new Error(data?.error || error?.message || 'Error desconocido al generar la invitación');
+      }
 
-            setGeneratedLink(data.link);
-            if (onSuccess) onSuccess();
+      setGeneratedLink(data.link);
+      if (onSuccess) onSuccess();
+    } catch (err: any) {
+      console.error(err);
+      setErrorMsg(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-        } catch (err: any) {
-            console.error(err);
-            setErrorMsg(err.message);
-        } finally {
-            setLoading(false);
-        }
-    };
+  const handleCopy = () => {
+    navigator.clipboard.writeText(generatedLink);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 3000);
+  };
 
-    const handleCopy = () => {
-        navigator.clipboard.writeText(generatedLink);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 3000);
-    };
+  return (
+    <Overlay onClick={onClose}>
+      <ModalContainer onClick={e => e.stopPropagation()}>
+        <Header>
+          <div className="header-left">
+            <div className="icon-badge">
+              <Link2 size={20} />
+            </div>
+            <div className="title-col">
+              <h2>Generar Enlace de Invitación</h2>
+              <span>Acceso de auto-alta para pacientes y socios</span>
+            </div>
+          </div>
+          <CloseButton onClick={onClose} title="Cerrar">
+            <LucideX size={18} />
+          </CloseButton>
+        </Header>
 
-    return (
-        <Overlay onClick={onClose}>
-            <ModalContainer onClick={e => e.stopPropagation()}>
-                <Header>
-                    <h2><FaLink /> Generar Enlace de Invitación</h2>
-                    <button onClick={onClose}><FaTimes /></button>
-                </Header>
+        <Content>
+          {!generatedLink ? (
+            <form onSubmit={handleGenerate} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+              <p style={{ color: '#94a3b8', fontSize: '0.85rem', margin: 0, lineHeight: 1.55 }}>
+                Ingresa el correo electrónico del futuro socio. Generaremos un enlace único de{' '}
+                <strong style={{ color: '#f8fafc' }}>Auto-Alta</strong> cifrado y vinculado a esta organización (expira en 48hs).
+              </p>
+              <FormGroup>
+                <label>Correo del paciente</label>
+                <InputGroup>
+                  <Mail size={18} className="input-icon" />
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                    placeholder="paciente@ejemplo.com"
+                    required
+                  />
+                </InputGroup>
+              </FormGroup>
 
-                <Content>
-                    {!generatedLink ? (
-                        <form onSubmit={handleGenerate} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                            <p style={{ color: '#cbd5e1', fontSize: '0.875rem', margin: 0, lineHeight: 1.5 }}>
-                                Ingresa el correo electrónico del futuro socio. Generaremos un enlace único de <strong>Auto-Alta</strong> cifrado y vinculado a esta organización (expira en 48hs).
-                            </p>
-                            <FormGroup>
-                                <label>Correo del paciente</label>
-                                <InputGroup>
-                                    <FaEnvelope />
-                                    <input
-                                        type="email"
-                                        value={email}
-                                        onChange={e => setEmail(e.target.value)}
-                                        placeholder="paciente@ejemplo.com"
-                                        required
-                                    />
-                                </InputGroup>
-                            </FormGroup>
+              {errorMsg && (
+                <div
+                  style={{
+                    color: '#f87171',
+                    fontSize: '0.85rem',
+                    background: 'rgba(239, 68, 68, 0.1)',
+                    border: '1px solid rgba(239, 68, 68, 0.25)',
+                    padding: '0.75rem 1rem',
+                    borderRadius: '0.75rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem'
+                  }}
+                >
+                  <AlertCircle size={16} />
+                  <span>{errorMsg}</span>
+                </div>
+              )}
 
-                            {errorMsg && (
-                                <div style={{ color: '#ef4444', fontSize: '0.875rem', background: 'rgba(239,68,68,0.1)', padding: '0.75rem', borderRadius: '8px' }}>
-                                    {errorMsg}
-                                </div>
-                            )}
+              <ModalActions>
+                <ShadcnButton type="button" variant="secondary" onClick={onClose} disabled={loading}>
+                  Cancelar
+                </ShadcnButton>
+                <ShadcnButton type="submit" variant="default" isLoading={loading}>
+                  <Link2 size={16} style={{ marginRight: 6 }} /> Generar Link
+                </ShadcnButton>
+              </ModalActions>
+            </form>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+              <div style={{ textAlign: 'center', padding: '0.5rem 0' }}>
+                <CheckCircle2 size={44} color="#34d399" style={{ margin: '0 auto 0.75rem' }} />
+                <h3 style={{ margin: 0, color: '#f8fafc', fontSize: '1.15rem' }}>¡Enlace Generado!</h3>
+                <p style={{ color: '#94a3b8', fontSize: '0.85rem', marginTop: '0.35rem' }}>
+                  El paciente <b style={{ color: '#f8fafc' }}>{email}</b> ya está autorizado para ingresar.
+                </p>
+              </div>
 
-                            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '0.5rem' }}>
-                                <Button type="button" onClick={onClose}>Cancelar</Button>
-                                <Button $primary type="submit" $loading={loading}>
-                                    {loading ? <FaSpinner className="fa-spin" /> : 'Generar Link'}
-                                </Button>
-                            </div>
-                        </form>
-                    ) : (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                            <div style={{ textAlign: 'center', color: '#4ade80' }}>
-                                <FaCheck size={48} style={{ marginBottom: '1rem' }} />
-                                <h3 style={{ margin: 0, color: '#f8fafc' }}>¡Enlace Generado!</h3>
-                                <p style={{ color: '#94a3b8', fontSize: '0.875rem', marginTop: '0.5rem' }}>El paciente <b>{email}</b> ya está autorizado para ingresar.</p>
-                            </div>
+              <GeneratedLinkBox>
+                <div className="link-text">{generatedLink}</div>
+                <ShadcnButton
+                  type="button"
+                  variant={copied ? 'secondary' : 'default'}
+                  size="sm"
+                  onClick={handleCopy}
+                  style={{ flexShrink: 0 }}
+                >
+                  {copied ? (
+                    <>
+                      <Check size={14} style={{ marginRight: 4 }} /> Copiado
+                    </>
+                  ) : (
+                    <>
+                      <Copy size={14} style={{ marginRight: 4 }} /> Copiar
+                    </>
+                  )}
+                </ShadcnButton>
+              </GeneratedLinkBox>
 
-                            <GeneratedLinkBox>
-                                <div className="link-text">{generatedLink}</div>
-                                <button onClick={handleCopy}>
-                                    {copied ? <><FaCheck /> ¡Copiado!</> : <><FaCopy /> Copiar</>}
-                                </button>
-                            </GeneratedLinkBox>
+              <p style={{ fontSize: '0.825rem', color: '#94a3b8', textAlign: 'center', margin: 0, lineHeight: 1.5 }}>
+                Copia este enlace y envíaselo por WhatsApp o correo. Una vez que complete sus datos, aparecerá en tu{' '}
+                <b style={{ color: '#f8fafc' }}>Sala de Espera</b>.
+              </p>
 
-                            <p style={{ fontSize: '0.875rem', color: '#cbd5e1', textAlign: 'center', margin: 0 }}>
-                                Copia este enlace y envíaselo por WhatsApp o correo. Una vez que complete sus datos, aparecerá en tu <b>Sala de Espera</b>.
-                            </p>
-
-                            <Button $primary onClick={onClose} style={{ marginTop: '1rem' }}>Entendido</Button>
-                        </div>
-                    )}
-                </Content>
-            </ModalContainer>
-        </Overlay>
-    );
+              <ShadcnButton variant="default" onClick={onClose} style={{ marginTop: '0.5rem', width: '100%' }}>
+                Entendido
+              </ShadcnButton>
+            </div>
+          )}
+        </Content>
+      </ModalContainer>
+    </Overlay>
+  );
 };
