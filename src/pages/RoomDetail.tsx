@@ -118,7 +118,13 @@ import {
   Package as LucidePackage,
   FileText as LucideFileText,
   Check as LucideCheck,
-  Tag as LucideTag
+  Tag as LucideTag,
+  Edit3 as LucideEdit3,
+  Grid as LucideGrid,
+  AlertTriangle as LucideAlertTriangle,
+  Leaf as LucideLeaf,
+  Flower2 as LucideFlower2,
+  Warehouse as LucideWarehouse
 } from 'lucide-react';
 
 import { createGlobalStyle } from 'styled-components';
@@ -697,18 +703,36 @@ const PortalModalOverlay = ({ children, isClosing }: { children: React.ReactNode
     );
 };
 const ModalContent = styled.div<{ isClosing?: boolean }>`
-  background: rgba(15, 23, 42, 0.95);
-  backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(15, 23, 42, 0.96);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   padding: 2rem;
-  border-radius: 1rem;
+  border-radius: 1.25rem;
   width: 90%;
   max-width: 500px;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.05);
   color: #f8fafc;
-  animation: ${p => p.isClosing ? scaleOut : scaleIn} 0.2s ease-in-out forwards;
+  animation: ${p => p.isClosing ? scaleOut : scaleIn} 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  &::-webkit-scrollbar-track {
+    background: rgba(15, 23, 42, 0.5);
+  }
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 9999px;
+  }
+
+  @media(max-width: 768px) {
+    padding: 1.25rem;
+    width: 95%;
+    border-radius: 1rem;
+  }
 `;
 
 const TaskModalContent = styled.div<{ isClosing?: boolean }>`
@@ -6773,50 +6797,140 @@ const RoomDetail: React.FC = () => {
                 {
                     (isMapModalOpen || isClosingMapModal) && (
                         <PortalModalOverlay isClosing={isClosingMapModal}>
-                            <ModalContent style={{ maxWidth: '400px' }} isClosing={isClosingMapModal}>
-                                <h3 style={{ marginBottom: '1.5rem', color: '#f8fafc' }}>{room?.type === 'living_soil' ? 'Nueva Cama/Cultivo' : 'Nuevo Mapa de Esquejes'}</h3>
-                                <FormGroup>
-                                    <label>{room?.type === 'living_soil' ? 'Nombre (ej: Cama 1)' : 'Nombre (ej: Bandeja 1)'}</label>
+                            <ModalContent style={{ maxWidth: '440px' }} isClosing={isClosingMapModal}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.75rem', borderBottom: '1px solid rgba(255, 255, 255, 0.08)', paddingBottom: '1rem' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+                                        <div style={{
+                                            width: 42,
+                                            height: 42,
+                                            borderRadius: '10px',
+                                            background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(5, 150, 105, 0.1) 100%)',
+                                            border: '1px solid rgba(16, 185, 129, 0.3)',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            color: '#34d399',
+                                            boxShadow: '0 0 15px rgba(16, 185, 129, 0.15)'
+                                        }}>
+                                            <LucideGrid size={20} />
+                                        </div>
+                                        <div>
+                                            <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 700, color: '#f8fafc', letterSpacing: '-0.02em' }}>
+                                                {room?.type === 'living_soil' ? 'Nueva Cama / Cultivo' : 'Nuevo Mapa de Esquejes'}
+                                            </h3>
+                                            <span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>
+                                                Configura el nombre y la cuadrícula de la mesa
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={closeMapModal}
+                                        style={{
+                                            background: 'rgba(255, 255, 255, 0.05)',
+                                            border: '1px solid rgba(255, 255, 255, 0.1)',
+                                            borderRadius: '0.5rem',
+                                            width: 32,
+                                            height: 32,
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            cursor: 'pointer',
+                                            color: '#94a3b8',
+                                            transition: 'all 0.2s ease'
+                                        }}
+                                        onMouseOver={(e) => {
+                                            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                                            e.currentTarget.style.color = '#ffffff';
+                                        }}
+                                        onMouseOut={(e) => {
+                                            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                                            e.currentTarget.style.color = '#94a3b8';
+                                        }}
+                                    >
+                                        <LucideX size={16} />
+                                    </button>
+                                </div>
+
+                                <FormGroup style={{ marginBottom: '1.25rem' }}>
+                                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.88rem', color: '#cbd5e1' }}>
+                                        <LucideTag size={14} style={{ color: '#38bdf8' }} /> {room?.type === 'living_soil' ? 'Nombre (ej: Cama 1)' : 'Nombre (ej: Bandeja 1)'}
+                                    </label>
                                     <input
                                         autoFocus
                                         value={newMapName}
                                         onChange={e => setNewMapName(e.target.value)}
-                                        placeholder="Nombre del mapa..."
+                                        placeholder="Nombre del mapa o mesa..."
+                                        style={{
+                                            width: '100%',
+                                            padding: '0.75rem 0.85rem',
+                                            background: 'rgba(15, 23, 42, 0.6)',
+                                            border: '1px solid rgba(255, 255, 255, 0.12)',
+                                            color: '#f8fafc',
+                                            borderRadius: '0.5rem',
+                                            fontSize: '0.92rem',
+                                            outline: 'none',
+                                            transition: 'all 0.2s ease'
+                                        }}
                                     />
                                 </FormGroup>
                                 <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem' }}>
                                     <FormGroup style={{ flex: 1, marginBottom: 0 }}>
-                                        <label>Filas</label>
+                                        <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.88rem', color: '#cbd5e1' }}>
+                                            <LucideLayers size={14} style={{ color: '#34d399' }} /> Filas (Máx 26)
+                                        </label>
                                         <input
                                             type="number"
                                             min="1"
                                             max="26"
                                             value={newMapRows}
                                             onChange={e => setNewMapRows(e.target.value === '' ? '' : Number(e.target.value))}
+                                            style={{
+                                                width: '100%',
+                                                padding: '0.75rem 0.85rem',
+                                                background: 'rgba(15, 23, 42, 0.6)',
+                                                border: '1px solid rgba(255, 255, 255, 0.12)',
+                                                color: '#f8fafc',
+                                                borderRadius: '0.5rem',
+                                                fontSize: '0.92rem',
+                                                outline: 'none'
+                                            }}
                                         />
                                     </FormGroup>
                                     <FormGroup style={{ flex: 1, marginBottom: 0 }}>
-                                        <label>Columnas</label>
+                                        <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.88rem', color: '#cbd5e1' }}>
+                                            <LucideGrid size={14} style={{ color: '#a78bfa' }} /> Columnas (Máx 50)
+                                        </label>
                                         <input
                                             type="number"
                                             min="1"
                                             max="50"
                                             value={newMapCols}
                                             onChange={e => setNewMapCols(e.target.value === '' ? '' : Number(e.target.value))}
+                                            style={{
+                                                width: '100%',
+                                                padding: '0.75rem 0.85rem',
+                                                background: 'rgba(15, 23, 42, 0.6)',
+                                                border: '1px solid rgba(255, 255, 255, 0.12)',
+                                                color: '#f8fafc',
+                                                borderRadius: '0.5rem',
+                                                fontSize: '0.92rem',
+                                                outline: 'none'
+                                            }}
                                         />
                                     </FormGroup>
                                 </div>
-                                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
-                                    <CancelButton onClick={closeMapModal} disabled={isCreatingMap}>Cancelar</CancelButton>
-                                    <ActionButton
+                                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1.5rem', paddingTop: '1.25rem', borderTop: '1px solid rgba(255, 255, 255, 0.08)' }}>
+                                    <ShadcnButton variant="secondary" onClick={closeMapModal} disabled={isCreatingMap}>
+                                        Cancelar
+                                    </ShadcnButton>
+                                    <ShadcnButton
+                                        variant="default"
                                         onClick={handleCreateMap}
-                                        $variant="success"
                                         disabled={isCreatingMap}
-                                        style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
                                     >
-                                        {isCreatingMap && <FaCircleNotch className="spin" />}
+                                        {isCreatingMap ? <FaCircleNotch className="spin" /> : <LucidePlus size={16} />}
                                         {isCreatingMap ? 'Creando...' : 'Crear Mapa'}
-                                    </ActionButton>
+                                    </ShadcnButton>
                                 </div>
                             </ModalContent>
                         </PortalModalOverlay>
@@ -6827,44 +6941,139 @@ const RoomDetail: React.FC = () => {
                 {
                     (isEditMapModalOpen || isClosingEditMap) && (
                         <PortalModalOverlay isClosing={isClosingEditMap}>
-                            <ModalContent onClick={e => e.stopPropagation()} isClosing={isClosingEditMap}>
-                                <h3 style={{ marginBottom: '1.5rem', color: '#f8fafc' }}>Editar Mapa</h3>
-                                <FormGroup>
-                                    <label>Nombre</label>
-                                    <input autoFocus value={editMapName} onChange={e => setEditMapName(e.target.value)} placeholder="Nombre del mapa..." />
+                            <ModalContent onClick={e => e.stopPropagation()} isClosing={isClosingEditMap} style={{ maxWidth: '440px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.75rem', borderBottom: '1px solid rgba(255, 255, 255, 0.08)', paddingBottom: '1rem' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+                                        <div style={{
+                                            width: 42,
+                                            height: 42,
+                                            borderRadius: '10px',
+                                            background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.2) 0%, rgba(14, 165, 233, 0.1) 100%)',
+                                            border: '1px solid rgba(56, 189, 248, 0.3)',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            color: '#38bdf8',
+                                            boxShadow: '0 0 15px rgba(56, 189, 248, 0.15)'
+                                        }}>
+                                            <LucideGrid size={20} />
+                                        </div>
+                                        <div>
+                                            <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 700, color: '#f8fafc', letterSpacing: '-0.02em' }}>
+                                                Editar Mapa
+                                            </h3>
+                                            <span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>
+                                                Modifica las dimensiones o el nombre de la mesa
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={closeEditMapModal}
+                                        style={{
+                                            background: 'rgba(255, 255, 255, 0.05)',
+                                            border: '1px solid rgba(255, 255, 255, 0.1)',
+                                            borderRadius: '0.5rem',
+                                            width: 32,
+                                            height: 32,
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            cursor: 'pointer',
+                                            color: '#94a3b8',
+                                            transition: 'all 0.2s ease'
+                                        }}
+                                        onMouseOver={(e) => {
+                                            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                                            e.currentTarget.style.color = '#ffffff';
+                                        }}
+                                        onMouseOut={(e) => {
+                                            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                                            e.currentTarget.style.color = '#94a3b8';
+                                        }}
+                                    >
+                                        <LucideX size={16} />
+                                    </button>
+                                </div>
+
+                                <FormGroup style={{ marginBottom: '1.25rem' }}>
+                                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.88rem', color: '#cbd5e1' }}>
+                                        <LucideTag size={14} style={{ color: '#38bdf8' }} /> Nombre
+                                    </label>
+                                    <input
+                                        autoFocus
+                                        value={editMapName}
+                                        onChange={e => setEditMapName(e.target.value)}
+                                        placeholder="Nombre del mapa..."
+                                        style={{
+                                            width: '100%',
+                                            padding: '0.75rem 0.85rem',
+                                            background: 'rgba(15, 23, 42, 0.6)',
+                                            border: '1px solid rgba(255, 255, 255, 0.12)',
+                                            color: '#f8fafc',
+                                            borderRadius: '0.5rem',
+                                            fontSize: '0.92rem',
+                                            outline: 'none'
+                                        }}
+                                    />
                                 </FormGroup>
-                                <div style={{ display: 'flex', gap: '1rem' }}>
+                                <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem' }}>
                                     <FormGroup style={{ flex: 1, marginBottom: 0 }}>
-                                        <label>Filas</label>
+                                        <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.88rem', color: '#cbd5e1' }}>
+                                            <LucideLayers size={14} style={{ color: '#34d399' }} /> Filas (Máx 26)
+                                        </label>
                                         <input
                                             type="number"
                                             min="1"
                                             max="26"
                                             value={editMapRows}
                                             onChange={e => setEditMapRows(e.target.value === '' ? '' : Number(e.target.value))}
+                                            style={{
+                                                width: '100%',
+                                                padding: '0.75rem 0.85rem',
+                                                background: 'rgba(15, 23, 42, 0.6)',
+                                                border: '1px solid rgba(255, 255, 255, 0.12)',
+                                                color: '#f8fafc',
+                                                borderRadius: '0.5rem',
+                                                fontSize: '0.92rem',
+                                                outline: 'none'
+                                            }}
                                         />
                                     </FormGroup>
                                     <FormGroup style={{ flex: 1, marginBottom: 0 }}>
-                                        <label>Columnas</label>
+                                        <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.88rem', color: '#cbd5e1' }}>
+                                            <LucideGrid size={14} style={{ color: '#a78bfa' }} /> Columnas (Máx 50)
+                                        </label>
                                         <input
                                             type="number"
                                             min="1"
                                             max="50"
                                             value={editMapCols}
                                             onChange={e => setEditMapCols(e.target.value === '' ? '' : Number(e.target.value))}
+                                            style={{
+                                                width: '100%',
+                                                padding: '0.75rem 0.85rem',
+                                                background: 'rgba(15, 23, 42, 0.6)',
+                                                border: '1px solid rgba(255, 255, 255, 0.12)',
+                                                color: '#f8fafc',
+                                                borderRadius: '0.5rem',
+                                                fontSize: '0.92rem',
+                                                outline: 'none'
+                                            }}
                                         />
                                     </FormGroup>
                                 </div>
-                                <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
-                                    <CancelButton onClick={closeEditMapModal} disabled={isUpdatingMap}>Cancelar</CancelButton>
-                                    <ActionButton
-                                        $variant="success"
+                                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1.5rem', paddingTop: '1.25rem', borderTop: '1px solid rgba(255, 255, 255, 0.08)' }}>
+                                    <ShadcnButton variant="secondary" onClick={closeEditMapModal} disabled={isUpdatingMap}>
+                                        Cancelar
+                                    </ShadcnButton>
+                                    <ShadcnButton
+                                        variant="default"
                                         onClick={handleUpdateMap}
                                         disabled={isUpdatingMap}
                                     >
-                                        {isUpdatingMap && <FaCircleNotch className="spin" />}
+                                        {isUpdatingMap ? <FaCircleNotch className="spin" /> : <LucideCheck size={16} />}
                                         {isUpdatingMap ? 'Guardando...' : 'Guardar Cambios'}
-                                    </ActionButton>
+                                    </ShadcnButton>
                                 </div>
                             </ModalContent>
                         </PortalModalOverlay>
@@ -7214,53 +7423,159 @@ const RoomDetail: React.FC = () => {
                 {
                     (isEditBatchModalOpen || isClosingEditBatch) && (
                         <PortalModalOverlay isClosing={isClosingEditBatch}>
-                            <ModalContent isClosing={isClosingEditBatch}>
-                                <h3>Editar Lote</h3>
-                                <FormGroup>
-                                    <label>Nombre / Identificador</label>
+                            <ModalContent isClosing={isClosingEditBatch} style={{ maxWidth: '480px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.75rem', borderBottom: '1px solid rgba(255, 255, 255, 0.08)', paddingBottom: '1rem' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+                                        <div style={{
+                                            width: 42,
+                                            height: 42,
+                                            borderRadius: '10px',
+                                            background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.2) 0%, rgba(14, 165, 233, 0.1) 100%)',
+                                            border: '1px solid rgba(56, 189, 248, 0.3)',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            color: '#38bdf8',
+                                            boxShadow: '0 0 15px rgba(56, 189, 248, 0.15)'
+                                        }}>
+                                            <LucideEdit3 size={20} />
+                                        </div>
+                                        <div>
+                                            <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 700, color: '#f8fafc', letterSpacing: '-0.02em' }}>
+                                                Editar Lote
+                                            </h3>
+                                            <span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>
+                                                Modifica las propiedades y anotaciones del lote
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={closeEditBatchModal}
+                                        style={{
+                                            background: 'rgba(255, 255, 255, 0.05)',
+                                            border: '1px solid rgba(255, 255, 255, 0.1)',
+                                            borderRadius: '0.5rem',
+                                            width: 32,
+                                            height: 32,
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            cursor: 'pointer',
+                                            color: '#94a3b8',
+                                            transition: 'all 0.2s ease'
+                                        }}
+                                        onMouseOver={(e) => {
+                                            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                                            e.currentTarget.style.color = '#ffffff';
+                                        }}
+                                        onMouseOut={(e) => {
+                                            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                                            e.currentTarget.style.color = '#94a3b8';
+                                        }}
+                                    >
+                                        <LucideX size={16} />
+                                    </button>
+                                </div>
+
+                                <FormGroup style={{ marginBottom: '1.25rem' }}>
+                                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.88rem', color: '#cbd5e1' }}>
+                                        <LucideTag size={14} style={{ color: '#38bdf8' }} /> Nombre / Identificador
+                                    </label>
                                     <input
                                         value={editBatchForm.name}
                                         onChange={e => setEditBatchForm({ ...editBatchForm, name: e.target.value })}
+                                        style={{
+                                            width: '100%',
+                                            padding: '0.75rem 0.85rem',
+                                            background: 'rgba(15, 23, 42, 0.6)',
+                                            border: '1px solid rgba(255, 255, 255, 0.12)',
+                                            color: '#f8fafc',
+                                            borderRadius: '0.5rem',
+                                            fontSize: '0.92rem',
+                                            outline: 'none',
+                                            transition: 'all 0.2s ease'
+                                        }}
                                     />
                                 </FormGroup>
-                                <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
+                                <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.25rem' }}>
                                     <FormGroup style={{ flex: 1, marginBottom: 0 }}>
-                                        <label>Cantidad</label>
+                                        <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.88rem', color: '#cbd5e1' }}>
+                                            <LucidePackage size={14} style={{ color: '#34d399' }} /> Cantidad
+                                        </label>
                                         <input
                                             type="number"
                                             min="1"
                                             value={editBatchForm.quantity}
                                             onChange={e => setEditBatchForm({ ...editBatchForm, quantity: e.target.value })}
+                                            style={{
+                                                width: '100%',
+                                                padding: '0.75rem 0.85rem',
+                                                background: 'rgba(15, 23, 42, 0.6)',
+                                                border: '1px solid rgba(255, 255, 255, 0.12)',
+                                                color: '#f8fafc',
+                                                borderRadius: '0.5rem',
+                                                fontSize: '0.92rem',
+                                                outline: 'none',
+                                                transition: 'all 0.2s ease'
+                                            }}
                                         />
                                     </FormGroup>
                                     <FormGroup style={{ flex: 1, marginBottom: 0 }}>
-                                        <label>Fecha de Inicio</label>
+                                        <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.88rem', color: '#cbd5e1' }}>
+                                            <LucideCalendar size={14} style={{ color: '#a78bfa' }} /> Fecha de Inicio
+                                        </label>
                                         <input
                                             type="date"
                                             value={editBatchForm.start_date}
                                             onChange={e => setEditBatchForm({ ...editBatchForm, start_date: e.target.value })}
-                                            style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}
+                                            style={{
+                                                width: '100%',
+                                                padding: '0.75rem 0.85rem',
+                                                borderRadius: '0.5rem',
+                                                background: 'rgba(15, 23, 42, 0.6)',
+                                                border: '1px solid rgba(255, 255, 255, 0.12)',
+                                                color: '#f8fafc',
+                                                fontSize: '0.92rem',
+                                                outline: 'none',
+                                                transition: 'all 0.2s ease'
+                                            }}
                                         />
                                     </FormGroup>
                                 </div>
-                                <FormGroup>
-                                    <label>Notas</label>
+                                <FormGroup style={{ marginBottom: '1.5rem' }}>
+                                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.88rem', color: '#cbd5e1' }}>
+                                        <LucideFileText size={14} style={{ color: '#94a3b8' }} /> Notas / Bitácora
+                                    </label>
                                     <textarea
                                         value={editBatchForm.notes}
                                         onChange={e => setEditBatchForm({ ...editBatchForm, notes: e.target.value })}
+                                        rows={3}
+                                        style={{
+                                            width: '100%',
+                                            padding: '0.75rem 0.85rem',
+                                            background: 'rgba(15, 23, 42, 0.6)',
+                                            border: '1px solid rgba(255, 255, 255, 0.12)',
+                                            color: '#f8fafc',
+                                            borderRadius: '0.5rem',
+                                            fontSize: '0.92rem',
+                                            resize: 'vertical',
+                                            outline: 'none',
+                                            transition: 'all 0.2s ease'
+                                        }}
                                     />
                                 </FormGroup>
-                                <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
-                                    <CancelButton onClick={closeEditBatchModal} disabled={isUpdatingBatch}>Cancelar</CancelButton>
-                                    <ActionButton
-                                        $variant="success"
+                                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1.5rem', paddingTop: '1.25rem', borderTop: '1px solid rgba(255, 255, 255, 0.08)' }}>
+                                    <ShadcnButton variant="secondary" onClick={closeEditBatchModal} disabled={isUpdatingBatch}>
+                                        Cancelar
+                                    </ShadcnButton>
+                                    <ShadcnButton
+                                        variant="default"
                                         onClick={handleUpdateBatch}
                                         disabled={isUpdatingBatch || !editBatchForm.quantity || Number(editBatchForm.quantity) <= 0}
-                                        style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
                                     >
-                                        {isUpdatingBatch && <FaCircleNotch className="spin" />}
+                                        {isUpdatingBatch ? <FaCircleNotch className="spin" /> : <LucideCheck size={16} />}
                                         {isUpdatingBatch ? 'Guardando...' : 'Guardar Cambios'}
-                                    </ActionButton>
+                                    </ShadcnButton>
                                 </div>
                             </ModalContent>
                         </PortalModalOverlay>
@@ -7271,41 +7586,60 @@ const RoomDetail: React.FC = () => {
                 {
                     availableBatchToDelete && (
                         <PortalModalOverlay>
-                            <ModalContent style={{ width: '400px', textAlign: 'center' }}>
-                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
+                            <ModalContent style={{ maxWidth: '440px', textAlign: 'center' }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.25rem' }}>
                                     <div style={{
-                                        width: '60px', height: '60px', borderRadius: '50%', background: 'rgba(229, 62, 62, 0.1)',
-                                        display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fc8181', fontSize: '2rem'
+                                        width: '56px',
+                                        height: '56px',
+                                        borderRadius: '50%',
+                                        background: 'rgba(239, 68, 68, 0.15)',
+                                        border: '1px solid rgba(239, 68, 68, 0.3)',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        color: '#f87171',
+                                        boxShadow: '0 0 20px rgba(239, 68, 68, 0.2)'
                                     }}>
-                                        <FaTrash />
+                                        <LucideTrash2 size={24} />
                                     </div>
-                                    <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold', margin: '0' }}>¿Eliminar Lote Disponible?</h2>
-                                    <p style={{ color: '#a0aec0', fontSize: '0.95rem', margin: '0 0 1rem 0' }}>
-                                        Vas a eliminar permanentemente el lote: <strong style={{ color: '#f8fafc' }}>{availableBatchToDelete.tracking_code || availableBatchToDelete.name}</strong>.
-                                    </p>
+                                    <div>
+                                        <h3 style={{ fontSize: '1.25rem', fontWeight: 700, margin: '0 0 0.5rem 0', color: '#f8fafc' }}>
+                                            ¿Eliminar Lote Disponible?
+                                        </h3>
+                                        <p style={{ color: '#94a3b8', fontSize: '0.92rem', margin: 0, lineHeight: 1.5 }}>
+                                            Vas a eliminar permanentemente el lote: <strong style={{ color: '#f8fafc' }}>{availableBatchToDelete.tracking_code || availableBatchToDelete.name}</strong>.
+                                        </p>
+                                    </div>
                                     <div style={{
-                                        background: 'rgba(236, 201, 75, 0.1)',
-                                        border: '1px solid rgba(236, 201, 75, 0.3)',
-                                        borderRadius: '0.5rem',
-                                        padding: '0.75rem',
-                                        width: '100%'
+                                        background: 'rgba(245, 158, 11, 0.1)',
+                                        border: '1px solid rgba(245, 158, 11, 0.25)',
+                                        borderRadius: '0.75rem',
+                                        padding: '0.85rem 1rem',
+                                        width: '100%',
+                                        textAlign: 'left',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '0.65rem'
                                     }}>
-                                        <p style={{ color: '#ecc94b', fontSize: '0.85rem', margin: '0', fontWeight: 600 }}>
-                                            ⚠️ Esta acción no generará registro de mortalidad en tus métricas.
+                                        <LucideAlertTriangle size={18} style={{ color: '#fbbf24', flexShrink: 0 }} />
+                                        <p style={{ color: '#fbbf24', fontSize: '0.83rem', margin: 0, fontWeight: 500, lineHeight: 1.4 }}>
+                                            Esta acción no generará registro de mortalidad en tus métricas generales.
                                         </p>
                                     </div>
                                 </div>
-                                <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem', justifyContent: 'center' }}>
-                                    <CancelButton onClick={() => setAvailableBatchToDelete(null)} disabled={isDeletingAvailable} style={{ flex: 1 }}>Cancelar</CancelButton>
-                                    <ActionButton
-                                        $variant="danger"
+                                <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.75rem', paddingTop: '1.25rem', borderTop: '1px solid rgba(255, 255, 255, 0.08)' }}>
+                                    <ShadcnButton variant="secondary" onClick={() => setAvailableBatchToDelete(null)} disabled={isDeletingAvailable} style={{ flex: 1 }}>
+                                        Cancelar
+                                    </ShadcnButton>
+                                    <ShadcnButton
+                                        variant="destructive"
                                         onClick={handleConfirmDeleteAvailable}
                                         disabled={isDeletingAvailable}
-                                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', flex: 1 }}
+                                        style={{ flex: 1 }}
                                     >
-                                        {isDeletingAvailable && <FaCircleNotch className="spin" />}
+                                        {isDeletingAvailable ? <FaCircleNotch className="spin" /> : <LucideTrash2 size={16} />}
                                         {isDeletingAvailable ? 'Eliminando...' : 'Sí, eliminar'}
-                                    </ActionButton>
+                                    </ShadcnButton>
                                 </div>
                             </ModalContent>
                         </PortalModalOverlay>
@@ -7316,48 +7650,120 @@ const RoomDetail: React.FC = () => {
                 {
                     isBulkEditModalOpen && (
                         <PortalModalOverlay>
-                            <ModalContent style={{ width: '400px' }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                                    <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold', margin: 0 }}>
-                                        Editando {selectedBatchIds.size} Lotes
-                                    </h2>
-                                    <button onClick={() => setIsBulkEditModalOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.25rem' }}>✕</button>
+                            <ModalContent style={{ maxWidth: '440px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.75rem', borderBottom: '1px solid rgba(255, 255, 255, 0.08)', paddingBottom: '1rem' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+                                        <div style={{
+                                            width: 42,
+                                            height: 42,
+                                            borderRadius: '10px',
+                                            background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.2) 0%, rgba(14, 165, 233, 0.1) 100%)',
+                                            border: '1px solid rgba(56, 189, 248, 0.3)',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            color: '#38bdf8',
+                                            boxShadow: '0 0 15px rgba(56, 189, 248, 0.15)'
+                                        }}>
+                                            <LucideLayers size={20} />
+                                        </div>
+                                        <div>
+                                            <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 700, color: '#f8fafc', letterSpacing: '-0.02em' }}>
+                                                Edición Masiva
+                                            </h3>
+                                            <span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>
+                                                Editando <strong style={{ color: '#38bdf8' }}>{selectedBatchIds.size}</strong> lotes en paralelo
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={() => setIsBulkEditModalOpen(false)}
+                                        style={{
+                                            background: 'rgba(255, 255, 255, 0.05)',
+                                            border: '1px solid rgba(255, 255, 255, 0.1)',
+                                            borderRadius: '0.5rem',
+                                            width: 32,
+                                            height: 32,
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            cursor: 'pointer',
+                                            color: '#94a3b8',
+                                            transition: 'all 0.2s ease'
+                                        }}
+                                        onMouseOver={(e) => {
+                                            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                                            e.currentTarget.style.color = '#ffffff';
+                                        }}
+                                        onMouseOut={(e) => {
+                                            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                                            e.currentTarget.style.color = '#94a3b8';
+                                        }}
+                                    >
+                                        <LucideX size={16} />
+                                    </button>
                                 </div>
 
-                                <div style={{ marginBottom: '1.5rem' }}>
-                                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#4a5568' }}>Nueva Etapa (Opcional)</label>
+                                <div style={{ marginBottom: '1.25rem' }}>
+                                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.88rem', color: '#cbd5e1' }}>
+                                        <LucideLayers size={14} style={{ color: '#38bdf8' }} /> Nueva Etapa (Opcional)
+                                    </label>
                                     <select
                                         value={bulkEditForm.stage}
                                         onChange={e => setBulkEditForm({ ...bulkEditForm, stage: e.target.value })}
-                                        style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid #e2e8f0' }}
+                                        style={{
+                                            width: '100%',
+                                            padding: '0.75rem 0.85rem',
+                                            borderRadius: '0.5rem',
+                                            background: 'rgba(15, 23, 42, 0.6)',
+                                            border: '1px solid rgba(255, 255, 255, 0.12)',
+                                            color: '#f8fafc',
+                                            fontSize: '0.92rem',
+                                            outline: 'none'
+                                        }}
                                     >
-                                        <option value="">-- No cambiar --</option>
-                                        <option value="seedling">Plántula</option>
-                                        <option value="vegetation">Vegetativo</option>
-                                        <option value="flowering">Floración</option>
-                                        <option value="drying">Secado</option>
-                                        <option value="completed">Corte</option>
+                                        <option value="" style={{ background: '#0f172a', color: '#94a3b8' }}>-- No cambiar etapa --</option>
+                                        <option value="seedling" style={{ background: '#0f172a', color: '#f8fafc' }}>Plántula</option>
+                                        <option value="vegetation" style={{ background: '#0f172a', color: '#f8fafc' }}>Vegetativo</option>
+                                        <option value="flowering" style={{ background: '#0f172a', color: '#f8fafc' }}>Floración</option>
+                                        <option value="drying" style={{ background: '#0f172a', color: '#f8fafc' }}>Secado</option>
+                                        <option value="completed" style={{ background: '#0f172a', color: '#f8fafc' }}>Corte</option>
                                     </select>
                                 </div>
 
                                 <div style={{ marginBottom: '1.5rem' }}>
-                                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#4a5568' }}>Notas / Bitácora (Se sobreescribirá)</label>
+                                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.88rem', color: '#cbd5e1' }}>
+                                        <LucideFileText size={14} style={{ color: '#94a3b8' }} /> Notas / Bitácora (Se sobreescribirá en todos)
+                                    </label>
                                     <textarea
                                         value={bulkEditForm.notes}
                                         onChange={e => setBulkEditForm({ ...bulkEditForm, notes: e.target.value })}
-                                        placeholder="Escribe una nota para aplicar a todos..."
-                                        style={{ width: '100%', minHeight: '100px', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid #e2e8f0' }}
+                                        placeholder="Escribe una nota para aplicar a todos los lotes..."
+                                        rows={3}
+                                        style={{
+                                            width: '100%',
+                                            padding: '0.75rem 0.85rem',
+                                            borderRadius: '0.5rem',
+                                            background: 'rgba(15, 23, 42, 0.6)',
+                                            border: '1px solid rgba(255, 255, 255, 0.12)',
+                                            color: '#f8fafc',
+                                            fontSize: '0.92rem',
+                                            resize: 'vertical',
+                                            outline: 'none'
+                                        }}
                                     />
                                 </div>
 
-                                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
-                                    <button onClick={() => setIsBulkEditModalOpen(false)} style={{ background: 'white', border: '1px solid #e2e8f0', padding: '0.5rem 1rem', borderRadius: '0.5rem', cursor: 'pointer' }}>Cancelar</button>
-                                    <button onClick={handleBulkEditSubmit} style={{ background: '#3182ce', color: 'white', border: 'none', padding: '0.5rem 1.5rem', borderRadius: '0.5rem', fontWeight: 600, cursor: 'pointer' }}>
-                                        Aplicar Cambios
-                                    </button>
+                                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1.5rem', paddingTop: '1.25rem', borderTop: '1px solid rgba(255, 255, 255, 0.08)' }}>
+                                    <ShadcnButton variant="secondary" onClick={() => setIsBulkEditModalOpen(false)}>
+                                        Cancelar
+                                    </ShadcnButton>
+                                    <ShadcnButton variant="default" onClick={handleBulkEditSubmit}>
+                                        <LucideCheck size={16} /> Aplicar Cambios
+                                    </ShadcnButton>
                                 </div>
                             </ModalContent>
-                        </PortalModalOverlay >
+                        </PortalModalOverlay>
                     )
                 }
 
@@ -7475,80 +7881,152 @@ const RoomDetail: React.FC = () => {
                 {
                     (isHistoryModalOpen || isClosingHistory) && (
                         <PortalModalOverlay isClosing={isClosingHistory}>
-                            <ModalContent style={{ maxWidth: '1000px', width: '90%' }} isClosing={isClosingHistory}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                                    <h2 style={{ fontSize: '1.5rem', margin: 0, color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                        <FaHistory color="#4ade80" /> Historial de Movimientos
-                                    </h2>
-                                    <button onClick={closeHistoryModal} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.5rem', color: '#a0aec0' }}>
-                                        ✕
+                            <ModalContent style={{ maxWidth: '980px', width: '92%' }} isClosing={isClosingHistory}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.75rem', borderBottom: '1px solid rgba(255, 255, 255, 0.08)', paddingBottom: '1rem' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+                                        <div style={{
+                                            width: 42,
+                                            height: 42,
+                                            borderRadius: '10px',
+                                            background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(5, 150, 105, 0.1) 100%)',
+                                            border: '1px solid rgba(16, 185, 129, 0.3)',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            color: '#34d399',
+                                            boxShadow: '0 0 15px rgba(16, 185, 129, 0.15)'
+                                        }}>
+                                            <LucideHistory size={20} />
+                                        </div>
+                                        <div>
+                                            <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700, color: '#f8fafc', letterSpacing: '-0.02em' }}>
+                                                Historial de Movimientos
+                                            </h3>
+                                            <span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>
+                                                Auditoría cronológica y trazabilidad de eventos en esta sala
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={closeHistoryModal}
+                                        style={{
+                                            background: 'rgba(255, 255, 255, 0.05)',
+                                            border: '1px solid rgba(255, 255, 255, 0.1)',
+                                            borderRadius: '0.5rem',
+                                            width: 32,
+                                            height: 32,
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            cursor: 'pointer',
+                                            color: '#94a3b8',
+                                            transition: 'all 0.2s ease'
+                                        }}
+                                        onMouseOver={(e) => {
+                                            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                                            e.currentTarget.style.color = '#ffffff';
+                                        }}
+                                        onMouseOut={(e) => {
+                                            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                                            e.currentTarget.style.color = '#94a3b8';
+                                        }}
+                                    >
+                                        <LucideX size={16} />
                                     </button>
                                 </div>
 
                                 <div style={{ maxHeight: '60vh', overflowY: 'auto' }}>
                                     {historyLoading ? (
-                                        <p style={{ textAlign: 'center', padding: '2rem', color: '#94a3b8' }}>Cargando historial...</p>
+                                        <div style={{ textAlign: 'center', padding: '3rem', color: '#94a3b8', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem' }}>
+                                            <FaCircleNotch className="spin" style={{ fontSize: '1.5rem', color: '#34d399' }} />
+                                            <p style={{ margin: 0, fontSize: '0.9rem' }}>Cargando registros históricos...</p>
+                                        </div>
                                     ) : roomHistory.length === 0 ? (
-                                        <p style={{ textAlign: 'center', padding: '2rem', color: '#94a3b8', background: 'rgba(255, 255, 255, 0.05)', borderRadius: '0.5rem', border: '1px dashed rgba(255, 255, 255, 0.2)' }}>
-                                            No hay movimientos registrados recientemente.
-                                        </p>
+                                        <div style={{ textAlign: 'center', padding: '3rem 2rem', color: '#94a3b8', background: 'rgba(255, 255, 255, 0.02)', borderRadius: '0.75rem', border: '1px dashed rgba(255, 255, 255, 0.12)' }}>
+                                            <LucideHistory size={32} style={{ color: '#64748b', marginBottom: '0.75rem' }} />
+                                            <p style={{ margin: 0, fontSize: '0.95rem', fontWeight: 500, color: '#cbd5e1' }}>No hay movimientos registrados recientemente</p>
+                                            <span style={{ fontSize: '0.8rem', color: '#64748b' }}>Los cambios de etapa, trasplantes y notas aparecerán aquí</span>
+                                        </div>
                                     ) : (
-                                        <div style={{ width: '100%', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
-                                            <table style={{ minWidth: '600px', width: '100%', borderCollapse: 'collapse', color: '#f8fafc' }}>
+                                        <div style={{ width: '100%', overflowX: 'auto', WebkitOverflowScrolling: 'touch', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '0.75rem' }}>
+                                            <table style={{ minWidth: '600px', width: '100%', borderCollapse: 'collapse', color: '#f8fafc', background: 'rgba(15, 23, 42, 0.4)' }}>
                                                 <thead>
-                                                    <tr style={{ borderBottom: '2px solid rgba(255, 255, 255, 0.1)', textAlign: 'left' }}>
-                                                        <th style={{ padding: '0.75rem', color: '#94a3b8', fontSize: '0.85rem', whiteSpace: 'nowrap' }}>Fecha</th>
-                                                        <th style={{ padding: '0.75rem', color: '#94a3b8', fontSize: '0.85rem', whiteSpace: 'nowrap' }}>Usuario</th>
-                                                        <th style={{ padding: '0.75rem', color: '#94a3b8', fontSize: '0.85rem', whiteSpace: 'nowrap' }}>Código</th>
-                                                        <th style={{ padding: '0.75rem', color: '#94a3b8', fontSize: '0.85rem', whiteSpace: 'nowrap' }}>Acción/Notas</th>
+                                                    <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.1)', background: 'rgba(255, 255, 255, 0.03)', textAlign: 'left' }}>
+                                                        <th style={{ padding: '0.85rem 1rem', color: '#94a3b8', fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>Fecha</th>
+                                                        <th style={{ padding: '0.85rem 1rem', color: '#94a3b8', fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>Usuario</th>
+                                                        <th style={{ padding: '0.85rem 1rem', color: '#94a3b8', fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>Código Lote</th>
+                                                        <th style={{ padding: '0.85rem 1rem', color: '#94a3b8', fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>Acción / Notas</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
                                                     {roomHistory.map((move: any) => {
                                                         // Date Formatting
                                                         const dateObj = move.moved_at ? new Date(move.moved_at) : null;
-                                                        const dateStr = dateObj ? dateObj.toLocaleDateString('es-AR', { weekday: 'long', year: 'numeric', month: '2-digit', day: '2-digit' }) : '-';
+                                                        const dateStr = dateObj ? dateObj.toLocaleDateString('es-AR', { weekday: 'short', year: 'numeric', month: '2-digit', day: '2-digit' }) : '-';
                                                         const timeStr = dateObj ? dateObj.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: true }).toLowerCase() : '';
-                                                        const fullDate = dateObj ? `${dateStr.charAt(0).toUpperCase() + dateStr.slice(1)} - ${timeStr} ` : '-';
+                                                        const fullDate = dateObj ? `${dateStr.charAt(0).toUpperCase() + dateStr.slice(1)} • ${timeStr}` : '-';
 
                                                         // Color Coding Logic
-                                                        let rowBg = 'transparent';
-                                                        let noteColor = '#94a3b8';
-                                                        let borderColor = 'rgba(255, 255, 255, 0.05)';
+                                                        let badgeBg = 'rgba(255, 255, 255, 0.05)';
+                                                        let badgeColor = '#94a3b8';
+                                                        let badgeBorder = 'rgba(255, 255, 255, 0.1)';
 
                                                         const noteLower = (move.notes || '').toLowerCase();
 
                                                         if (noteLower.includes('observación') || noteLower.includes('alerta')) {
-                                                            rowBg = 'rgba(253, 224, 71, 0.1)'; // Light Yellow
-                                                            noteColor = '#fde047'; // Dark Yellow
-                                                            borderColor = 'rgba(253, 224, 71, 0.2)';
+                                                            badgeBg = 'rgba(253, 224, 71, 0.12)';
+                                                            badgeColor = '#fde047';
+                                                            badgeBorder = 'rgba(253, 224, 71, 0.25)';
                                                         } else if (noteLower.includes('etapa') || noteLower.includes('transplante') || noteLower.includes('siembra')) {
-                                                            rowBg = 'rgba(74, 222, 128, 0.1)'; // Light Green
-                                                            noteColor = '#4ade80'; // Dark Green
-                                                            borderColor = 'rgba(74, 222, 128, 0.2)';
+                                                            badgeBg = 'rgba(74, 222, 128, 0.12)';
+                                                            badgeColor = '#4ade80';
+                                                            badgeBorder = 'rgba(74, 222, 128, 0.25)';
                                                         } else if (noteLower.includes('eliminado') || noteLower.includes('baja') || noteLower.includes('descartad')) {
-                                                            rowBg = 'rgba(248, 113, 113, 0.1)'; // Light Red
-                                                            noteColor = '#f87171'; // Dark Red
-                                                            borderColor = 'rgba(248, 113, 113, 0.2)';
+                                                            badgeBg = 'rgba(248, 113, 113, 0.12)';
+                                                            badgeColor = '#f87171';
+                                                            badgeBorder = 'rgba(248, 113, 113, 0.25)';
                                                         } else if (noteLower.includes('nota') || noteLower.includes('edición')) {
-                                                            rowBg = 'rgba(56, 189, 248, 0.1)'; // Light Blue
-                                                            noteColor = '#38bdf8'; // Dark Blue
-                                                            borderColor = 'rgba(56, 189, 248, 0.2)';
+                                                            badgeBg = 'rgba(56, 189, 248, 0.12)';
+                                                            badgeColor = '#38bdf8';
+                                                            badgeBorder = 'rgba(56, 189, 248, 0.25)';
                                                         }
 
                                                         return (
-                                                            <tr key={move.id} style={{ borderBottom: `1px solid ${borderColor}`, background: rowBg }}>
-                                                                <td style={{ padding: '0.75rem', color: '#f8fafc', fontSize: '0.9rem', whiteSpace: 'nowrap' }}>
+                                                            <tr key={move.id} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.05)', transition: 'background 0.15s ease' }}>
+                                                                <td style={{ padding: '0.85rem 1rem', color: '#94a3b8', fontSize: '0.85rem', whiteSpace: 'nowrap' }}>
                                                                     {fullDate}
                                                                 </td>
-                                                                <td style={{ padding: '0.75rem', color: '#cbd5e1', fontSize: '0.9rem', whiteSpace: 'nowrap' }}>
-                                                                    {move.user?.full_name || move.user?.email || 'Sistema'}
+                                                                <td style={{ padding: '0.85rem 1rem', color: '#cbd5e1', fontSize: '0.88rem', whiteSpace: 'nowrap' }}>
+                                                                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+                                                                        <LucideUser size={13} style={{ color: '#64748b' }} />
+                                                                        {move.user?.full_name || move.user?.email || 'Sistema'}
+                                                                    </span>
                                                                 </td>
-                                                                <td style={{ padding: '0.75rem', fontWeight: 600, color: '#f8fafc', fontSize: '0.9rem', whiteSpace: 'nowrap' }}>
-                                                                    {move.batch?.tracking_code || move.batch?.name || 'Desconocido'}
+                                                                <td style={{ padding: '0.85rem 1rem', fontWeight: 600, color: '#f8fafc', fontSize: '0.88rem', whiteSpace: 'nowrap' }}>
+                                                                    <span style={{
+                                                                        padding: '0.2rem 0.5rem',
+                                                                        borderRadius: '0.375rem',
+                                                                        background: 'rgba(255, 255, 255, 0.05)',
+                                                                        border: '1px solid rgba(255, 255, 255, 0.08)',
+                                                                        fontFamily: 'monospace',
+                                                                        fontSize: '0.82rem'
+                                                                    }}>
+                                                                        {move.batch?.tracking_code || move.batch?.name || 'Desconocido'}
+                                                                    </span>
                                                                 </td>
-                                                                <td style={{ padding: '0.75rem', color: noteColor, fontSize: '0.9rem', fontWeight: 500, whiteSpace: 'nowrap' }}>
-                                                                    {move.notes || '-'}
+                                                                <td style={{ padding: '0.85rem 1rem', fontSize: '0.88rem' }}>
+                                                                    <span style={{
+                                                                        display: 'inline-block',
+                                                                        padding: '0.25rem 0.65rem',
+                                                                        borderRadius: '9999px',
+                                                                        background: badgeBg,
+                                                                        color: badgeColor,
+                                                                        border: `1px solid ${badgeBorder}`,
+                                                                        fontWeight: 500,
+                                                                        fontSize: '0.82rem'
+                                                                    }}>
+                                                                        {move.notes || '-'}
+                                                                    </span>
                                                                 </td>
                                                             </tr>
                                                         );
@@ -7755,39 +8233,96 @@ const RoomDetail: React.FC = () => {
                 {
                     (isEditModalOpen || isClosingEditRoom) && (
                         <PortalModalOverlay isClosing={isClosingEditRoom}>
-                            <ModalContent isClosing={isClosingEditRoom}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                                    <h2 style={{ fontSize: '1.5rem', margin: 0, color: '#f8fafc' }}>Editar Sala</h2>
+                            <ModalContent isClosing={isClosingEditRoom} style={{ maxWidth: '480px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.75rem', borderBottom: '1px solid rgba(255, 255, 255, 0.08)', paddingBottom: '1rem' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+                                        <div style={{
+                                            width: 42,
+                                            height: 42,
+                                            borderRadius: '10px',
+                                            background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.2) 0%, rgba(14, 165, 233, 0.1) 100%)',
+                                            border: '1px solid rgba(56, 189, 248, 0.3)',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            color: '#38bdf8',
+                                            boxShadow: '0 0 15px rgba(56, 189, 248, 0.15)'
+                                        }}>
+                                            <LucideSettings size={20} />
+                                        </div>
+                                        <div>
+                                            <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 700, color: '#f8fafc', letterSpacing: '-0.02em' }}>
+                                                Editar Sala
+                                            </h3>
+                                            <span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>
+                                                Ajusta el nombre, etapa de cultivo y fecha
+                                            </span>
+                                        </div>
+                                    </div>
                                     <button
                                         onClick={closeEditRoomModal}
-                                        style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.5rem', color: '#94a3b8' }}
+                                        style={{
+                                            background: 'rgba(255, 255, 255, 0.05)',
+                                            border: '1px solid rgba(255, 255, 255, 0.1)',
+                                            borderRadius: '0.5rem',
+                                            width: 32,
+                                            height: 32,
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            cursor: 'pointer',
+                                            color: '#94a3b8',
+                                            transition: 'all 0.2s ease'
+                                        }}
+                                        onMouseOver={(e) => {
+                                            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                                            e.currentTarget.style.color = '#ffffff';
+                                        }}
+                                        onMouseOut={(e) => {
+                                            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                                            e.currentTarget.style.color = '#94a3b8';
+                                        }}
                                     >
-                                        ✕
+                                        <LucideX size={16} />
                                     </button>
                                 </div>
 
-                                <div style={{ marginBottom: '1rem' }}>
-                                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#f8fafc' }}>Nombre</label>
+                                <div style={{ marginBottom: '1.25rem' }}>
+                                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.88rem', color: '#cbd5e1' }}>
+                                        <LucideTag size={14} style={{ color: '#38bdf8' }} /> Nombre de la Sala
+                                    </label>
                                     <input
                                         type="text"
                                         value={editRoomName}
                                         onChange={e => setEditRoomName(e.target.value)}
-                                        style={{ width: '100%', padding: '0.75rem', background: 'rgba(15, 23, 42, 0.6)', border: '1px solid rgba(255, 255, 255, 0.1)', color: '#f8fafc', borderRadius: '0.5rem' }}
+                                        style={{
+                                            width: '100%',
+                                            padding: '0.75rem 0.85rem',
+                                            background: 'rgba(15, 23, 42, 0.6)',
+                                            border: '1px solid rgba(255, 255, 255, 0.12)',
+                                            color: '#f8fafc',
+                                            borderRadius: '0.5rem',
+                                            fontSize: '0.92rem',
+                                            outline: 'none',
+                                            transition: 'all 0.2s ease'
+                                        }}
                                     />
                                 </div>
 
-                                <div style={{ marginBottom: '1.5rem' }}>
-                                    <label style={{ display: 'block', marginBottom: '0.75rem', fontWeight: 600, color: '#f8fafc' }}>Etapa de cultivo</label>
+                                <div style={{ marginBottom: '1.25rem' }}>
+                                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.65rem', fontWeight: 600, fontSize: '0.88rem', color: '#cbd5e1' }}>
+                                        <LucideLayers size={14} style={{ color: '#34d399' }} /> Etapa de Cultivo
+                                    </label>
                                     <div style={{
                                         display: 'grid',
                                         gridTemplateColumns: ['clones', 'vegetation', 'flowering'].includes(room?.type || '') ? '1fr 1fr' : 'repeat(4, minmax(0, 1fr))',
                                         gap: '0.5rem'
                                     }}>
                                         {[
-                                            { id: 'vegetation', label: 'Vege', icon: <FaLeaf /> },
-                                            { id: 'flowering', label: 'Flora', icon: <FaSpa /> },
-                                            { id: 'drying', label: 'Secado', icon: <FaWarehouse /> },
-                                            { id: 'living_soil', label: 'Agro', icon: <FaSeedling /> }
+                                            { id: 'vegetation', label: 'Vege', icon: <LucideLeaf size={18} /> },
+                                            { id: 'flowering', label: 'Flora', icon: <LucideFlower2 size={18} /> },
+                                            { id: 'drying', label: 'Secado', icon: <LucideWarehouse size={18} /> },
+                                            { id: 'living_soil', label: 'Agro', icon: <LucideSprout size={18} /> }
                                         ].filter(option => {
                                             if (['clones', 'vegetation', 'flowering'].includes(room?.type || '')) {
                                                 return ['vegetation', 'flowering'].includes(option.id);
@@ -7798,17 +8333,19 @@ const RoomDetail: React.FC = () => {
                                                 key={option.id}
                                                 onClick={() => setEditRoomType(option.id as any)}
                                                 isActive={editRoomType === option.id}
-                                                style={{ padding: '0.5rem', minHeight: '80px' }}
+                                                style={{ padding: '0.65rem 0.5rem', minHeight: '72px' }}
                                             >
-                                                <div style={{ fontSize: '1.25rem', marginBottom: '0.25rem' }}>{option.icon}</div>
-                                                <span style={{ fontSize: '0.75rem', textAlign: 'center', lineHeight: '1.1' }}>{option.label}</span>
+                                                <div style={{ marginBottom: '0.25rem' }}>{option.icon}</div>
+                                                <span style={{ fontSize: '0.8rem', textAlign: 'center', lineHeight: '1.1' }}>{option.label}</span>
                                             </StageButton>
                                         ))}
                                     </div>
                                 </div>
 
-                                <div style={{ marginBottom: '1.5rem' }}>
-                                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#f8fafc' }}>Fecha de Inicio</label>
+                                <div style={{ marginBottom: '1.75rem' }}>
+                                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.88rem', color: '#cbd5e1' }}>
+                                        <LucideCalendar size={14} style={{ color: '#a78bfa' }} /> Fecha de Inicio
+                                    </label>
                                     <CustomDatePicker
                                         selected={editRoomStartDate ? new Date(editRoomStartDate.replace(/-/g, '/') + ' 12:00:00') : new Date()}
                                         onChange={(date) => {
@@ -7819,31 +8356,24 @@ const RoomDetail: React.FC = () => {
                                     />
                                 </div>
 
-                                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1rem' }}>
-                                    <CancelButton
+                                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1.5rem', paddingTop: '1.25rem', borderTop: '1px solid rgba(255, 255, 255, 0.08)' }}>
+                                    <ShadcnButton
+                                        variant="secondary"
                                         onClick={closeEditRoomModal}
                                     >
                                         Cancelar
-                                    </CancelButton>
-                                    <ActionButton
+                                    </ShadcnButton>
+                                    <ShadcnButton
+                                        variant="default"
                                         onClick={handleUpdateRoom}
                                         disabled={isUpdatingRoom}
-                                        $variant="success"
-                                        style={{
-                                            cursor: isUpdatingRoom ? 'not-allowed' : 'pointer',
-                                        }}
                                     >
-                                        {isUpdatingRoom ? (
-                                            <>
-                                                <SpinningIcon /> Guardando...
-                                            </>
-                                        ) : (
-                                            'Guardar Cambios'
-                                        )}
-                                    </ActionButton>
+                                        {isUpdatingRoom ? <FaCircleNotch className="spin" /> : <LucideCheck size={16} />}
+                                        {isUpdatingRoom ? 'Guardando...' : 'Guardar Cambios'}
+                                    </ShadcnButton>
                                 </div>
                             </ModalContent>
-                        </PortalModalOverlay >
+                        </PortalModalOverlay>
                     )
                 }
 
@@ -8080,21 +8610,64 @@ const RoomDetail: React.FC = () => {
                 {
                     (isCreateBatchModalOpen || isClosingCreateBatch) && (
                         <PortalModalOverlay isClosing={isClosingCreateBatch}>
-                            <ModalContent isClosing={isClosingCreateBatch}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                                    <h3 style={{ margin: 0, fontSize: '1.25rem', color: '#f8fafc' }}>
-                                        {['germinacion', 'germinación', 'germination', 'semillero'].includes((room?.type || '').toLowerCase()) ? 'Nuevo Lote de Semillas' : 'Nuevo Lote'}
-                                    </h3>
+                            <ModalContent isClosing={isClosingCreateBatch} style={{ maxWidth: '480px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.75rem', borderBottom: '1px solid rgba(255, 255, 255, 0.08)', paddingBottom: '1rem' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+                                        <div style={{
+                                            width: 42,
+                                            height: 42,
+                                            borderRadius: '10px',
+                                            background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(5, 150, 105, 0.1) 100%)',
+                                            border: '1px solid rgba(16, 185, 129, 0.3)',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            color: '#34d399',
+                                            boxShadow: '0 0 15px rgba(16, 185, 129, 0.15)'
+                                        }}>
+                                            <LucideLayers size={20} />
+                                        </div>
+                                        <div>
+                                            <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 700, color: '#f8fafc', letterSpacing: '-0.02em' }}>
+                                                {['germinacion', 'germinación', 'germination', 'semillero'].includes((room?.type || '').toLowerCase()) ? 'Nuevo Lote de Semillas' : 'Nuevo Lote de Cultivo'}
+                                            </h3>
+                                            <span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>
+                                                Registra un nuevo lote de plantas en esta sala
+                                            </span>
+                                        </div>
+                                    </div>
                                     <button
                                         onClick={closeCreateBatchModal}
-                                        style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.5rem', color: '#94a3b8' }}
+                                        style={{
+                                            background: 'rgba(255, 255, 255, 0.05)',
+                                            border: '1px solid rgba(255, 255, 255, 0.1)',
+                                            borderRadius: '0.5rem',
+                                            width: 32,
+                                            height: 32,
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            cursor: 'pointer',
+                                            color: '#94a3b8',
+                                            transition: 'all 0.2s ease'
+                                        }}
+                                        onMouseOver={(e) => {
+                                            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                                            e.currentTarget.style.color = '#ffffff';
+                                        }}
+                                        onMouseOut={(e) => {
+                                            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                                            e.currentTarget.style.color = '#94a3b8';
+                                        }}
                                     >
-                                        ✕
+                                        <LucideX size={16} />
                                     </button>
                                 </div>
 
-                                <div style={{ marginBottom: '1rem' }}>
-                                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Genética</label>
+                                <div style={{ marginBottom: '1.25rem' }}>
+                                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.88rem', color: '#cbd5e1' }}>
+                                        <LucideSprout size={14} style={{ color: '#34d399' }} /> Genética
+                                    </label>
                                     <CustomSelect
                                         value={newBatch.geneticId}
                                         onChange={(value) => setNewBatch({ ...newBatch, geneticId: value })}
@@ -8105,18 +8678,40 @@ const RoomDetail: React.FC = () => {
                                         placeholder="Seleccionar Genética"
                                     />
                                 </div>
-                                <div style={{ marginBottom: '1rem' }}>
-                                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#f8fafc' }}>Cantidad</label>
+                                <div style={{ marginBottom: '1.25rem' }}>
+                                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.88rem', color: '#cbd5e1' }}>
+                                        <LucidePackage size={14} style={{ color: '#38bdf8' }} /> Cantidad de Plantas
+                                    </label>
                                     <input
                                         type="number"
                                         value={newBatch.quantity}
                                         onChange={e => setNewBatch({ ...newBatch, quantity: e.target.value })}
-                                        style={{ width: '100%', padding: '0.75rem', background: 'rgba(15, 23, 42, 0.6)', border: '1px solid rgba(255, 255, 255, 0.1)', color: '#f8fafc', borderRadius: '0.5rem' }}
+                                        style={{
+                                            width: '100%',
+                                            padding: '0.75rem 0.85rem',
+                                            background: 'rgba(15, 23, 42, 0.6)',
+                                            border: '1px solid rgba(255, 255, 255, 0.12)',
+                                            color: '#f8fafc',
+                                            borderRadius: '0.5rem',
+                                            fontSize: '0.92rem',
+                                            outline: 'none',
+                                            transition: 'all 0.2s ease'
+                                        }}
+                                        onFocus={(e) => {
+                                            e.target.style.borderColor = '#10b981';
+                                            e.target.style.boxShadow = '0 0 0 2px rgba(16, 185, 129, 0.2)';
+                                        }}
+                                        onBlur={(e) => {
+                                            e.target.style.borderColor = 'rgba(255, 255, 255, 0.12)';
+                                            e.target.style.boxShadow = 'none';
+                                        }}
                                         placeholder="0"
                                     />
                                 </div>
-                                <div style={{ marginBottom: '1.5rem' }}>
-                                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Fecha de Inicio</label>
+                                <div style={{ marginBottom: '1.75rem' }}>
+                                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.88rem', color: '#cbd5e1' }}>
+                                        <LucideCalendar size={14} style={{ color: '#a78bfa' }} /> Fecha de Inicio
+                                    </label>
                                     <CustomDatePicker
                                         selected={newBatch.date ? new Date(newBatch.date) : new Date()}
                                         onChange={(date) => {
@@ -8129,23 +8724,21 @@ const RoomDetail: React.FC = () => {
                                         }}
                                     />
                                 </div>
-                                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1rem' }}>
-                                    <CancelButton
+                                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1.5rem', paddingTop: '1.25rem', borderTop: '1px solid rgba(255, 255, 255, 0.08)' }}>
+                                    <ShadcnButton
+                                        variant="secondary"
                                         onClick={closeCreateBatchModal}
                                     >
                                         Cancelar
-                                    </CancelButton>
-                                    <ActionButton
+                                    </ShadcnButton>
+                                    <ShadcnButton
+                                        variant="default"
                                         onClick={handleCreateBatch}
                                         disabled={isCreatingBatch}
-                                        $variant="success"
-                                        style={{
-                                            cursor: isCreatingBatch ? 'not-allowed' : 'pointer',
-                                        }}
                                     >
-                                        {isCreatingBatch && <FaCircleNotch className="spin" />}
-                                        {isCreatingBatch ? 'Creando...' : 'Crear'}
-                                    </ActionButton>
+                                        {isCreatingBatch ? <FaCircleNotch className="spin" /> : <LucidePlus size={16} />}
+                                        {isCreatingBatch ? 'Creando...' : 'Crear Lote'}
+                                    </ShadcnButton>
                                 </div>
                             </ModalContent>
                         </PortalModalOverlay>
