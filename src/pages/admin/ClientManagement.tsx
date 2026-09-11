@@ -5,7 +5,7 @@ import { Organization } from '../../types';
 import { CreateOrgModal } from './CreateOrgModal';
 import { ManageOrgModal } from './ManageOrgModal';
 import { ConfirmModal } from '../../components/ConfirmModal';
-import { FaPlus, FaUsers, FaTrash, FaCheck, FaBan, FaClock, FaCalendarAlt } from 'react-icons/fa';
+import { Plus, Users, Trash2, Check, Ban, Clock, Calendar } from 'lucide-react';
 
 const fadeIn = keyframes`
   from { opacity: 0; transform: translateY(10px); }
@@ -364,10 +364,10 @@ const ClientManagement: React.FC = () => {
         <Container>
             <Header>
                 <Title>
-                    <FaUsers /> Gestión de Clientes
+                    <Users size={24} style={{ color: '#38bdf8' }} /> Gestión de Clientes
                 </Title>
                 <ActionButton onClick={() => setShowModal(true)}>
-                    <FaPlus /> Nueva Organización
+                    <Plus size={16} /> Nueva Organización
                 </ActionButton>
             </Header>
 
@@ -389,7 +389,7 @@ const ClientManagement: React.FC = () => {
             {/* Warning if pending items exist */}
             {pendingCount > 0 && (
                 <div style={{ background: 'rgba(234, 179, 8, 0.1)', border: '1px solid rgba(234, 179, 8, 0.3)', borderLeft: '4px solid #facc15', padding: '1rem', marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '1rem', borderRadius: '0.5rem', backdropFilter: 'blur(8px)' }}>
-                    <FaClock style={{ fontSize: '1.5rem', color: '#facc15' }} />
+                    <Clock size={24} style={{ color: '#facc15' }} />
                     <div>
                         <strong style={{ color: '#f8fafc' }}>Tienes {pendingCount} solicitud(es) pendiente(s).</strong>
                         <p style={{ margin: 0, fontSize: '0.9rem', color: '#fde047' }}>Revisa la pestaña "Pendientes" para aprobar los accesos.</p>
@@ -467,18 +467,18 @@ const ClientManagement: React.FC = () => {
 
                             <div style={{ fontSize: '0.875rem', color: '#94a3b8', minHeight: '40px', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                    <FaUsers style={{ color: '#cbd5e1' }} /> {org.member_count || 0} Usuarios activos
+                                    <Users size={14} style={{ color: '#cbd5e1' }} /> {org.member_count || 0} Usuarios activos
                                 </div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                    <FaCalendarAlt style={{ color: '#cbd5e1' }} /> Alta: {new Date(org.created_at).toLocaleDateString()}
+                                    <Calendar size={14} style={{ color: '#cbd5e1' }} /> Alta: {new Date(org.created_at).toLocaleDateString()}
                                 </div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                    <FaCalendarAlt style={{ color: '#cbd5e1' }} /> Renueva: {(() => {
+                                    <Calendar size={14} style={{ color: '#cbd5e1' }} /> Renueva: {(() => {
                                         if (org.valid_until) return new Date(org.valid_until).toLocaleDateString();
                                         if (org.created_at) {
-                                            const created = new Date(org.created_at);
-                                            created.setDate(created.getDate() + (org.plan === 'demo' ? 15 : 30));
-                                            return created.toLocaleDateString();
+                                             const created = new Date(org.created_at);
+                                             created.setDate(created.getDate() + (org.plan === 'demo' ? 15 : 30));
+                                             return created.toLocaleDateString();
                                         }
                                         return 'Vitalicio';
                                     })()}
@@ -489,10 +489,10 @@ const ClientManagement: React.FC = () => {
                                 {org.status === 'pending' && (
                                     <>
                                         <SmallBtn variant="success" onClick={() => handleUpdateStatus(org.id, 'active')}>
-                                            <FaCheck /> Aprobar
+                                            <Check size={14} /> Aprobar
                                         </SmallBtn>
                                         <SmallBtn variant="danger" onClick={() => handleDelete(org.id, org.name)}>
-                                            <FaTrash /> Rechazar
+                                            <Trash2 size={14} /> Rechazar
                                         </SmallBtn>
                                     </>
                                 )}
@@ -503,10 +503,10 @@ const ClientManagement: React.FC = () => {
                                             Gestionar
                                         </SmallBtn>
                                         <SmallBtn variant="danger" onClick={() => handleUpdateStatus(org.id, 'suspended')} title="Suspender Acceso">
-                                            <FaBan /> Suspender
+                                            <Ban size={14} /> Suspender
                                         </SmallBtn>
                                         <SmallBtn variant="danger" onClick={() => handleDelete(org.id, org.name)} title="Eliminar Definitivamente">
-                                            <FaTrash /> Eliminar
+                                            <Trash2 size={14} /> Eliminar
                                         </SmallBtn>
                                     </>
                                 )}
@@ -514,10 +514,10 @@ const ClientManagement: React.FC = () => {
                                 {org.status === 'suspended' && (
                                     <>
                                         <SmallBtn variant="success" onClick={() => handleUpdateStatus(org.id, 'active')}>
-                                            <FaCheck /> Reactivar
+                                            <Check size={14} /> Reactivar
                                         </SmallBtn>
                                         <SmallBtn variant="danger" onClick={() => handleDelete(org.id, org.name)}>
-                                            <FaTrash /> Eliminar
+                                            <Trash2 size={14} /> Eliminar
                                         </SmallBtn>
                                     </>
                                 )}

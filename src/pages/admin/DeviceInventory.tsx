@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import styled, { keyframes } from 'styled-components';
 import {
-  FaMicrochip, FaPlus, FaTimes, FaEdit, FaToggleOn, FaToggleOff,
-  FaSearch, FaCheckCircle, FaTimesCircle, FaWifi,
-  FaSave, FaExclamationTriangle, FaInfoCircle
-} from 'react-icons/fa';
+  Cpu, Plus, X, Edit3, ToggleLeft, ToggleRight,
+  Search, CheckCircle2, XCircle, Wifi,
+  Save, AlertTriangle, Info
+} from 'lucide-react';
 import { supabase } from '../../services/supabaseClient';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -571,11 +571,11 @@ const DeviceInventory: React.FC = () => {
     <Page>
       <PageHeader>
         <div>
-          <h1><FaMicrochip /> Inventario de Dispositivos</h1>
+          <h1><Cpu size={26} style={{ color: '#10b981' }} /> Inventario de Dispositivos</h1>
           <p className="subtitle">Panel interno — Registro de hardware TrazAPP antes de entrega al cliente</p>
         </div>
         <AddButton onClick={openCreate}>
-          <FaPlus /> Registrar Dispositivo
+          <Plus size={16} /> Registrar Dispositivo
         </AddButton>
       </PageHeader>
 
@@ -587,7 +587,7 @@ const DeviceInventory: React.FC = () => {
       </StatsRow>
 
       <SearchBar>
-        <FaSearch />
+        <Search size={16} />
         <input
           placeholder="Buscar por Device ID, alias o notas..."
           value={search}
@@ -595,7 +595,7 @@ const DeviceInventory: React.FC = () => {
         />
         {search && (
           <ActionBtn onClick={() => setSearch('')} style={{ padding: '0.25rem' }}>
-            <FaTimes />
+            <X size={14} />
           </ActionBtn>
         )}
       </SearchBar>
@@ -612,10 +612,10 @@ const DeviceInventory: React.FC = () => {
         </TableHead>
 
         {loading ? (
-          <EmptyState><FaMicrochip style={{ fontSize: '2rem', color: '#334155' }} /><h3>Cargando...</h3></EmptyState>
+          <EmptyState><Cpu size={32} style={{ color: '#334155', marginBottom: '0.5rem' }} /><h3>Cargando...</h3></EmptyState>
         ) : filtered.length === 0 ? (
           <EmptyState>
-            <FaMicrochip style={{ fontSize: '2rem', color: '#334155' }} />
+            <Cpu size={32} style={{ color: '#334155', marginBottom: '0.5rem' }} />
             <h3>Sin resultados</h3>
             <p>{search ? 'Ningún dispositivo coincide con la búsqueda.' : 'Registrá el primer dispositivo con el botón de arriba.'}</p>
           </EmptyState>
@@ -636,8 +636,8 @@ const DeviceInventory: React.FC = () => {
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                 {online
-                  ? <FaWifi style={{ color: '#10b981', fontSize: '0.75rem' }} />
-                  : <FaTimesCircle style={{ color: '#475569', fontSize: '0.75rem' }} />}
+                  ? <Wifi size={12} style={{ color: '#10b981' }} />
+                  : <XCircle size={12} style={{ color: '#475569' }} />}
                 <span style={{ color: online ? '#10b981' : '#475569', fontSize: '0.78rem' }}>
                   {online ? 'Online' : (device.last_seen_at ? formatDate(device.last_seen_at) : 'Nunca')}
                 </span>
@@ -652,14 +652,14 @@ const DeviceInventory: React.FC = () => {
               </div>
               <Actions>
                 <ActionBtn title="Editar" onClick={() => openEdit(device)}>
-                  <FaEdit />
+                  <Edit3 size={15} />
                 </ActionBtn>
                 <ActionBtn
                   title={device.is_active ? 'Desactivar' : 'Activar'}
                   $color={device.is_active ? '#f59e0b' : '#10b981'}
                   onClick={() => toggleActive(device)}
                 >
-                  {device.is_active ? <FaToggleOn /> : <FaToggleOff />}
+                  {device.is_active ? <ToggleRight size={20} /> : <ToggleLeft size={20} />}
                 </ActionBtn>
               </Actions>
             </TableRow>
@@ -671,7 +671,7 @@ const DeviceInventory: React.FC = () => {
         <Overlay onClick={() => setShowModal(false)}>
           <Modal onClick={e => e.stopPropagation()}>
             <h2>
-              <FaMicrochip />
+              <Cpu size={22} style={{ color: '#10b981', marginRight: '0.5rem' }} />
               {editDevice ? `Editar — ${editDevice.device_id}` : 'Registrar Nuevo Dispositivo'}
             </h2>
 
@@ -779,24 +779,24 @@ const DeviceInventory: React.FC = () => {
 
             {!editDevice && (
               <WarnBox>
-                <FaExclamationTriangle />
+                <AlertTriangle size={18} />
                 <span>El dispositivo se registra como <strong>inactivo y sin vincular</strong>. El cliente podrá vincularlo desde su cuenta ingresando el Device ID y el PIN.</span>
               </WarnBox>
             )}
 
             {error && <ErrorMsg>{error}</ErrorMsg>}
-            {success && <SuccessMsg><FaCheckCircle style={{ marginRight: 6 }} />{success}</SuccessMsg>}
+            {success && <SuccessMsg><CheckCircle2 size={16} style={{ marginRight: 6 }} />{success}</SuccessMsg>}
 
             <ModalActions>
               <button className="secondary" onClick={() => setShowModal(false)}>
-                <FaTimes style={{ marginRight: 6 }} /> Cancelar
+                <X size={16} style={{ marginRight: 6 }} /> Cancelar
               </button>
               <button
                 className="primary"
                 onClick={handleSave}
                 disabled={saving}
               >
-                {saving ? <><Spinner />{editDevice ? 'Guardando...' : 'Registrando...'}</> : <><FaSave style={{ marginRight: 6 }} />{editDevice ? 'Guardar cambios' : 'Registrar'}</>}
+                {saving ? <><Spinner />{editDevice ? 'Guardando...' : 'Registrando...'}</> : <><Save size={16} style={{ marginRight: 6 }} />{editDevice ? 'Guardar cambios' : 'Registrar'}</>}
               </button>
             </ModalActions>
           </Modal>

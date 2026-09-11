@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { supabase } from '../../services/supabaseClient';
 import { SystemHealth } from '../../components/admin/SystemHealth';
-import { FaHeartbeat, FaBullhorn, FaPlus, FaTrash, FaCheck, FaTimes } from 'react-icons/fa';
+import { Activity, Megaphone, Plus, Trash2, Check, X } from 'lucide-react';
 
 const Container = styled.div`
   padding: 2rem;
@@ -153,7 +153,7 @@ const SystemMonitoring: React.FC = () => {
     <Container>
       <Header>
         <Title>
-          <FaHeartbeat /> Monitoreo de Infraestructura
+          <Activity size={24} style={{ color: '#ef4444' }} /> Monitoreo de Infraestructura
         </Title>
       </Header>
 
@@ -163,7 +163,7 @@ const SystemMonitoring: React.FC = () => {
 
         <div style={{ padding: '1.5rem', background: 'rgba(30, 41, 59, 0.6)', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
           <h3 style={{ color: '#f8fafc', margin: '0 0 1rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <FaBullhorn /> Redactar Anuncio Global
+            <Megaphone size={18} style={{ color: '#38bdf8' }} /> Redactar Anuncio Global
           </h3>
           <p style={{ color: '#94a3b8', fontSize: '0.9rem' }}>Este aviso aparecerá flotando en la pantalla de TODAS las empresas en tiempo real. Soporta código HTML básico (ej. <code>&lt;b&gt;negrita&lt;/b&gt;</code>).</p>
 
@@ -188,7 +188,7 @@ const SystemMonitoring: React.FC = () => {
             </div>
 
             <Button onClick={handleCreate} disabled={isLoading} style={{ alignSelf: 'flex-start' }}>
-              <FaBullhorn /> {isLoading ? 'Publicando...' : 'Publicar Anuncio In-App'}
+              <Megaphone size={16} /> {isLoading ? 'Publicando...' : 'Publicar Anuncio In-App'}
             </Button>
           </BroadcastForm>
         </div>
@@ -214,16 +214,16 @@ const SystemMonitoring: React.FC = () => {
                     <button
                       onClick={() => toggleActive(ann.id, ann.is_active)}
                       title={ann.is_active ? "Apagar anuncio" : "Re-publicar anuncio"}
-                      style={{ background: 'transparent', border: 'none', color: ann.is_active ? '#f59e0b' : '#3b82f6', cursor: 'pointer', fontSize: '1.2rem' }}
+                      style={{ background: 'transparent', border: 'none', color: ann.is_active ? '#f59e0b' : '#3b82f6', cursor: 'pointer', fontSize: '1.2rem', display: 'flex', alignItems: 'center' }}
                     >
-                      {ann.is_active ? <FaTimes /> : <FaCheck />}
+                      {ann.is_active ? <X size={16} /> : <Check size={16} />}
                     </button>
                     <button
                       onClick={() => deleteAnnouncement(ann.id)}
                       title="Eliminar historial"
-                      style={{ background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '1.1rem' }}
+                      style={{ background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '1.1rem', display: 'flex', alignItems: 'center' }}
                     >
-                      <FaTrash />
+                      <Trash2 size={16} />
                     </button>
                   </div>
                 </AnnouncementCard>

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { supabase } from '../../services/supabaseClient';
 import { Organization } from '../../types';
-import { FaChartLine, FaExclamationTriangle, FaClock, FaMoneyBillWave, FaUsers, FaArrowRight } from 'react-icons/fa';
+import { LineChart, AlertTriangle, Clock, DollarSign, Users, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const Container = styled.div`
@@ -219,27 +219,27 @@ const AdminDashboard: React.FC = () => {
     <Container>
       <Header>
         <Title>
-          <FaChartLine /> Dashboard General
+          <LineChart size={26} style={{ color: '#38bdf8' }} /> Dashboard General
         </Title>
       </Header>
 
       <StatsGrid>
         <StatCard color="#48bb78">
-          <FaMoneyBillWave className="icon" />
+          <DollarSign className="icon" size={24} />
           <h3>Ingresos Mensuales Est.</h3>
           <div className="value">${revenue.toLocaleString()}</div>
           <div className="sub">Base: {activeOrgs.length} clientes activos</div>
         </StatCard>
 
         <StatCard color="#3182ce">
-          <FaUsers className="icon" />
+          <Users className="icon" size={24} />
           <h3>Clientes Totales</h3>
           <div className="value">{activeOrgs.length + recentOrgs.length}</div>
           <div className="sub">+ {recentOrgs.filter(o => o.status === 'pending').length} pendientes validación</div>
         </StatCard>
 
         <StatCard color="#f56565">
-          <FaExclamationTriangle className="icon" />
+          <AlertTriangle className="icon" size={24} />
           <h3>Cartera en Riesgo</h3>
           <div className="value">{debtorOrgs.length}</div>
           <div className="sub">Clientes con deuda o impagos</div>
@@ -250,7 +250,7 @@ const AdminDashboard: React.FC = () => {
         {/* WIDGET: PRÓXIMOS A VENCER */}
         <Widget>
           <SectionTitle>
-            <FaClock style={{ color: '#ed8936' }} /> Próximos Vencimientos
+            <Clock size={18} style={{ color: '#ed8936' }} /> Próximos Vencimientos
           </SectionTitle>
           <List>
             {expiringOrgs.length === 0 ? (
@@ -280,13 +280,13 @@ const AdminDashboard: React.FC = () => {
                 );
             })}
           </List>
-          <ActionLink to="/admin/clients">Ver todos <FaArrowRight /></ActionLink>
+          <ActionLink to="/admin/clients">Ver todos <ArrowRight size={14} /></ActionLink>
         </Widget>
 
         {/* WIDGET: CLIENTES CON DEUDA */}
         <Widget>
           <SectionTitle>
-            <FaMoneyBillWave style={{ color: '#f56565' }} /> Gestión de Cobranzas
+            <DollarSign size={18} style={{ color: '#f56565' }} /> Gestión de Cobranzas
           </SectionTitle>
           <List>
             {debtorOrgs.length === 0 ? (
@@ -301,13 +301,13 @@ const AdminDashboard: React.FC = () => {
               </ListItem>
             ))}
           </List>
-          <ActionLink to="/admin/clients">Gestionar Deudas <FaArrowRight /></ActionLink>
+          <ActionLink to="/admin/clients">Gestionar Deudas <ArrowRight size={14} /></ActionLink>
         </Widget>
 
         {/* WIDGET: ACTIVIDAD RECIENTE */}
         <Widget>
           <SectionTitle>
-            <FaUsers style={{ color: '#4299e1' }} /> Nuevos Clientes
+            <Users size={18} style={{ color: '#4299e1' }} /> Nuevos Clientes
           </SectionTitle>
           <List>
             {recentOrgs.map(org => (
@@ -320,7 +320,7 @@ const AdminDashboard: React.FC = () => {
               </ListItem>
             ))}
           </List>
-          <ActionLink to="/admin/clients">Ver lista completa <FaArrowRight /></ActionLink>
+          <ActionLink to="/admin/clients">Ver lista completa <ArrowRight size={14} /></ActionLink>
         </Widget>
       </Grid>
     </Container>

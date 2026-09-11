@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { Plan } from '../../types';
 import { planService } from '../../services/planService';
-import { FaEdit, FaPlus, FaCheck } from 'react-icons/fa';
+import { Edit3, Plus, Check } from 'lucide-react';
 
 const Container = styled.div`
   padding: 2rem;
@@ -160,7 +160,7 @@ const PlansManagement: React.FC = () => {
     <Container>
       <Header>
         <Title>Planes y Suscripciones</Title>
-        <Button><FaPlus /> Nuevo Plan</Button>
+        <Button><Plus size={16} /> Nuevo Plan</Button>
       </Header>
 
       <PlansGrid>
@@ -188,13 +188,13 @@ const PlansManagement: React.FC = () => {
             <FeaturesList>
               {plan.features.map((feature, idx) => (
                 <FeatureItem key={idx}>
-                  <FaCheck /> {formatFeatureName(feature)}
+                  <Check size={14} /> {formatFeatureName(feature)}
                 </FeatureItem>
               ))}
             </FeaturesList>
 
             <Button style={{ width: '100%', justifyContent: 'center', background: 'transparent', color: '#cbd5e1', border: '1px solid rgba(255, 255, 255, 0.2)', backdropFilter: 'blur(8px)' }}>
-              <FaEdit /> Editar Plan
+              <Edit3 size={15} /> Editar Plan
             </Button>
           </PlanCard>
         ))}
