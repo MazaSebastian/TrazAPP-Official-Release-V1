@@ -41,6 +41,7 @@ import { TrazAppDeviceDetailModal } from '../components/TrazAppDeviceDetailModal
 import { DashboardKpiRibbon } from '../components/Dashboard/DashboardKpiRibbon';
 import { Badge } from '../components/ui/Badge';
 import { Button as ShadcnButton } from '../components/ui/Button';
+import { StickyNoteModal } from '../components/StickyNoteModal';
 
 // --- Styled Components (Premium Eco-Tech Theme) ---
 
@@ -1558,34 +1559,20 @@ const Dashboard: React.FC = () => {
         </StickyGrid>
       </StickyBoard>
 
-      {/* Sticky Modal */}
-      {isStickyModalOpen && (
-        <ModalOverlay $isClosing={isClosingStickyModal} onClick={handleCloseStickyModal}>
-          <ModalContent $isClosing={isClosingStickyModal} onClick={e => e.stopPropagation()}>
-            <h3><StickyNote style={{ color: '#4ade80' }} /> Nueva Nota Adhesiva</h3>
-            <ColorPicker>
-              {['yellow', 'blue', 'pink', 'green'].map(c => (
-                <ColorOption
-                  key={c}
-                  color={c}
-                  selected={newStickyColor === c}
-                  onClick={() => setNewStickyColor(c as any)}
-                />
-              ))}
-            </ColorPicker>
-            <textarea
-              placeholder="Escribe tu recordatorio aquí..."
-              value={newStickyContent}
-              onChange={e => setNewStickyContent(e.target.value)}
-              autoFocus
-            />
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
-              <Button variant="secondary" onClick={handleCloseStickyModal}>Cancelar</Button>
-              <Button onClick={handleCreateSticky}>Pegar Nota</Button>
-            </div>
-          </ModalContent>
-        </ModalOverlay>
-      )}
+      {/* Modern Shadcn Sticky Modal */}
+      <StickyNoteModal
+        isOpen={isStickyModalOpen}
+        onClose={handleCloseStickyModal}
+        onSave={async (content, color) => {
+          const note = await stickiesService.createSticky(content, color);
+          if (note) {
+            updateStickies();
+            handleCloseStickyModal();
+          }
+        }}
+        title="Nueva Nota Adhesiva"
+        subtitle="Fija un recordatorio rápido en el tablero principal"
+      />
 
       <WeatherWidget className="tour-weather" />
       <div style={{ margin: '1.5rem 0' }}>

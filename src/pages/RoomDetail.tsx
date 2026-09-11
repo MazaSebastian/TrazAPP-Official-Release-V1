@@ -52,6 +52,7 @@ import { PromptModal } from '../components/PromptModal';
 import { CustomSelect } from '../components/CustomSelect';
 import { Button as ShadcnButton } from '../components/ui/Button';
 import { Badge as ShadcnBadge } from '../components/ui/Badge';
+import { StickyNoteModal } from '../components/StickyNoteModal';
 import {
   ArrowLeft as LucideArrowLeft,
   Sprout as LucideSprout,
@@ -6546,89 +6547,30 @@ const RoomDetail: React.FC = () => {
                     )
                 }
 
-                {/* Sticky Note Modal */}
-                {
-                    isStickyModalOpen && (
-                        <PortalModalOverlay isClosing={isStickyModalClosing}>
-                            <ModalContent isClosing={isStickyModalClosing} style={{
-                                background: 'rgba(15, 23, 42, 0.95)',
-                                borderTop: `8px solid ${stickyColor === 'yellow' ? '#facc15' :
-                                    stickyColor === 'blue' ? '#38bdf8' :
-                                        stickyColor === 'pink' ? '#f472b6' :
-                                            '#4ade80' // green
-                                    }`
-                            }}>
-                                <h3 style={{ color: '#f8fafc', marginBottom: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
-                                    <LucideStickyNote color={
-                                        stickyColor === 'yellow' ? '#facc15' :
-                                            stickyColor === 'blue' ? '#38bdf8' :
-                                                stickyColor === 'pink' ? '#f472b6' :
-                                                    '#4ade80'
-                                    } /> Nueva Nota
-                                </h3>
-
-                                <FormGroup>
-                                    <label>Mensaje</label>
-                                    <textarea
-                                        autoFocus
-                                        value={stickyContent}
-                                        onChange={e => setStickyContent(e.target.value)}
-                                        placeholder="Escribe tu nota aquí..."
-                                        disabled={isSavingSticky}
-                                        style={{
-                                            width: '100%',
-                                            background: isSavingSticky ? 'rgba(30, 41, 59, 0.5)' : 'rgba(15, 23, 42, 0.6)',
-                                            border: '1px solid rgba(255, 255, 255, 0.1)',
-                                            color: '#f8fafc',
-                                            minHeight: '120px',
-                                            fontSize: '1rem',
-                                            borderRadius: '0.5rem',
-                                            padding: '1rem',
-                                            opacity: isSavingSticky ? 0.7 : 1
-                                        }}
-                                    />
-                                </FormGroup>
-
-                                <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', justifyContent: 'center' }}>
-                                    {(['yellow', 'blue', 'pink', 'green'] as const).map(c => (
-                                        <button
-                                            key={c}
-                                            onClick={() => !isSavingSticky && setStickyColor(c)}
-                                            disabled={isSavingSticky}
-                                            style={{
-                                                width: '30px', height: '30px', borderRadius: '50%',
-                                                background: c === 'yellow' ? 'rgba(250, 204, 21, 0.3)' : c === 'blue' ? 'rgba(56, 189, 248, 0.3)' : c === 'pink' ? 'rgba(244, 114, 182, 0.3)' : 'rgba(74, 222, 128, 0.3)',
-                                                border: stickyColor === c ? '2px solid rgba(255, 255, 255, 0.8)' : '1px solid rgba(255, 255, 255, 0.1)',
-                                                cursor: isSavingSticky ? 'not-allowed' : 'pointer',
-                                                opacity: isSavingSticky ? 0.7 : 1
-                                            }}
-                                        />
-                                    ))}
-                                </div>
-
-                                <div style={{ display: 'flex', gap: '1rem' }}>
-                                    <CancelButton onClick={handleCloseStickyModal} disabled={isSavingSticky}>
-                                        Cancelar
-                                    </CancelButton>
-                                    <ActionButton
-                                        onClick={handleSaveSticky}
-                                        $variant="success"
-                                        disabled={isSavingSticky || !stickyContent.trim()}
-                                        style={{
-                                            flex: 1,
-                                            background: isSavingSticky ? 'rgba(74, 222, 128, 0.5)' : 'rgba(250, 204, 21, 0.2)', // Use yellow as default variant for notes
-                                            color: '#fcd34d',
-                                            border: '1px solid rgba(250, 204, 21, 0.5)',
-                                            opacity: (isSavingSticky || !stickyContent.trim()) ? 0.7 : 1
-                                        }}
-                                    >
-                                        {isSavingSticky ? 'Guardando...' : 'Pegar Nota'}
-                                    </ActionButton>
-                                </div>
-                            </ModalContent>
-                        </PortalModalOverlay>
-                    )
-                }
+                {/* Modern Shadcn Sticky Note Modal */}
+                <StickyNoteModal
+                    isOpen={isStickyModalOpen}
+                    onClose={handleCloseStickyModal}
+                    onSave={async (content, color) => {
+                        if (!id) return;
+                        setIsSavingSticky(true);
+                        try {
+                            await stickiesService.createSticky(content, color, id, undefined);
+                            const freshStickies = await stickiesService.getStickies(id);
+                            setStickies(freshStickies);
+                            handleCloseStickyModal();
+                        } catch (error) {
+                            console.error("Error saving sticky:", error);
+                            alert("Error al guardar la nota. Intente nuevamente.");
+                        } finally {
+                            setIsSavingSticky(false);
+                        }
+                    }}
+                    title="Nueva Nota"
+                    subtitle={`Fija un recordatorio para la sala ${room?.name || ''}`}
+                    placeholder="Escribe recordatorios técnicos, observaciones, alertas o tareas..."
+                    isSaving={isSavingSticky}
+                />
 
                 {/* Sticky Delete Confirmation Modal */}
                 {
