@@ -2,22 +2,18 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';
 import {
-  FaArrowLeft,
-  FaSeedling,
-  FaBorderAll,
-  FaThermometerHalf,
-  FaCalendarAlt,
-  FaStickyNote,
-  FaPlus,
-  FaHistory,
-  FaExchangeAlt,
-  FaEdit,
-  FaTrash,
-  FaBoxes,
-  FaTint,
-  FaEllipsisV,
-  FaInfoCircle
-} from 'react-icons/fa';
+  ArrowLeft,
+  Sprout,
+  LayoutGrid,
+  Thermometer,
+  Calendar,
+  StickyNote,
+  Plus,
+  History,
+  ArrowLeftRight,
+  Pencil,
+  Trash2
+} from 'lucide-react';
 
 const floatIn = keyframes`
   from { opacity: 0; transform: translateY(16px); }
@@ -447,7 +443,7 @@ export const RoomDetailV2: React.FC = () => {
       {/* HEADER NAVIGATION */}
       <HeaderNav>
         <Link to="/rooms" className="back-btn">
-          <FaArrowLeft /> Volver
+          <ArrowLeft size={16} /> Volver
         </Link>
         <div className="title-group">
           <h1>Sala de Esquejes</h1>
@@ -459,7 +455,7 @@ export const RoomDetailV2: React.FC = () => {
       <KPIGrid>
         <KPICard $glowColor="#10b981">
           <div className="kpi-header">
-            <FaSeedling className="icon" /> TOTAL ESQUEJES
+            <Sprout className="icon" size={16} /> TOTAL ESQUEJES
           </div>
           <div className="value">15</div>
           <div className="sub">En 1 lotes activos</div>
@@ -467,7 +463,7 @@ export const RoomDetailV2: React.FC = () => {
 
         <KPICard $glowColor="#38bdf8">
           <div className="kpi-header">
-            <FaBorderAll className="icon" /> TOTAL DE ESQUEJERAS
+            <LayoutGrid className="icon" size={16} /> TOTAL DE ESQUEJERAS
           </div>
           <div className="value">1</div>
           <div className="sub">Mapas activos</div>
@@ -475,7 +471,7 @@ export const RoomDetailV2: React.FC = () => {
 
         <KPICard $glowColor="#f59e0b">
           <div className="kpi-header">
-            <FaThermometerHalf className="icon" /> AMBIENTE EN VIVO
+            <Thermometer className="icon" size={16} /> AMBIENTE EN VIVO
           </div>
           <div className="value" style={{ fontSize: '1.65rem' }}>24.5°C / 62%</div>
           <div className="sub">Temperatura & Humedad OK</div>
@@ -483,7 +479,7 @@ export const RoomDetailV2: React.FC = () => {
 
         <KPICard $glowColor="#a855f7">
           <div className="kpi-header">
-            <FaCalendarAlt className="icon" /> FECHA INICIO
+            <Calendar className="icon" size={16} /> FECHA INICIO
           </div>
           <div className="value" style={{ fontSize: '1.65rem' }}>15 Mar 2026</div>
           <div className="sub">Creado hace 147 días</div>
@@ -493,12 +489,12 @@ export const RoomDetailV2: React.FC = () => {
       {/* PIZARRA DE NOTAS SECTION */}
       <StickyNotesSection>
         <div className="section-title">
-          <FaStickyNote /> Pizarra de Notas
+          <StickyNote size={18} /> Pizarra de Notas
         </div>
         <StickyNotesContainer>
           <div className="empty-left">
             <div className="plus-circle">
-              <FaPlus />
+              <Plus size={20} />
             </div>
             <div className="info">
               <div className="head">No hay notas fijadas en esta sala</div>
@@ -506,7 +502,7 @@ export const RoomDetailV2: React.FC = () => {
             </div>
           </div>
           <button className="add-btn" onClick={() => alert('Abrir modal para nueva nota')}>
-            <FaPlus /> Agregar Nota
+            <Plus size={16} /> Agregar Nota
           </button>
         </StickyNotesContainer>
       </StickyNotesSection>
@@ -516,13 +512,13 @@ export const RoomDetailV2: React.FC = () => {
         <h2 className="section-heading">Mapa y Estructura de la Sala</h2>
         <div className="action-group">
           <ActionButton $variant="outline">
-            <FaHistory /> Historial
+            <History size={16} /> Historial
           </ActionButton>
           <ActionButton $variant="primary">
-            <FaExchangeAlt /> Transplantar
+            <ArrowLeftRight size={16} /> Transplantar
           </ActionButton>
           <ActionButton $variant="secondary">
-            <FaEdit /> Editar Sala
+            <Pencil size={16} /> Editar Sala
           </ActionButton>
         </div>
       </ToolbarRow>
@@ -540,8 +536,8 @@ export const RoomDetailV2: React.FC = () => {
               <div className="mesa-head">
                 <span className="title">b1</span>
                 <div className="actions">
-                  <FaEdit style={{ cursor: 'pointer' }} />
-                  <FaTrash style={{ cursor: 'pointer', color: '#f43f5e' }} />
+                  <Pencil size={15} style={{ cursor: 'pointer' }} />
+                  <Trash2 size={15} style={{ cursor: 'pointer', color: '#f43f5e' }} />
                 </div>
               </div>
               <div className="mesa-stats">
@@ -566,7 +562,7 @@ export const RoomDetailV2: React.FC = () => {
           </div>
 
           <ActionButton $variant="primary" style={{ width: '100%', justifyContent: 'center', marginBottom: '1.25rem' }}>
-            <FaPlus /> Nuevo Lote
+            <Plus size={16} /> Nuevo Lote
           </ActionButton>
 
           <BatchCard>
@@ -575,8 +571,8 @@ export const RoomDetailV2: React.FC = () => {
               <div className="batch-details">09/04/26 17:11 • Total: 15 u.</div>
             </div>
             <div className="batch-actions">
-              <div className="icon-btn" title="Editar"><FaEdit size={13} /></div>
-              <div className="icon-btn" title="Eliminar"><FaTrash size={13} style={{ color: '#f43f5e' }} /></div>
+              <div className="icon-btn" title="Editar"><Pencil size={13} /></div>
+              <div className="icon-btn" title="Eliminar"><Trash2 size={13} style={{ color: '#f43f5e' }} /></div>
             </div>
           </BatchCard>
         </SectionBox>

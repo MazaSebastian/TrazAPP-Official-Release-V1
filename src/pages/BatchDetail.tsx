@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { useParams, useNavigate } from 'react-router-dom';
-import { FaArrowLeft, FaBarcode, FaBox, FaCalendarAlt, FaCut, FaMapMarkerAlt, FaSeedling, FaTag, FaPrint } from 'react-icons/fa';
+import { ArrowLeft, Printer } from 'lucide-react';
 import { roomsService } from '../services/roomsService';
 import { Batch } from '../types/rooms';
 import { LoadingSpinner } from '../components/LoadingSpinner';
@@ -267,7 +267,7 @@ export const BatchDetail: React.FC = () => {
         return (
             <Container>
                 <Header>
-                    <BackButton onClick={() => navigate('/clones')}><FaArrowLeft /></BackButton>
+                    <BackButton onClick={() => navigate('/clones')}><ArrowLeft size={18} /></BackButton>
                     <h1>Error</h1>
                 </Header>
                 <GlassCard style={{ textAlign: 'center', padding: '4rem 2rem' }}>
@@ -327,10 +327,10 @@ export const BatchDetail: React.FC = () => {
 
                 <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
                     <ActionButton onClick={handlePrint} title="Imprimir Ficha">
-                        <FaPrint /> Imprimir
+                        <Printer size={16} /> Imprimir
                     </ActionButton>
                     <ActionButton onClick={() => navigate('/clones')} title="Volver al Listado">
-                        <FaArrowLeft /> Volver
+                        <ArrowLeft size={16} /> Volver
                     </ActionButton>
                 </div>
             </div>

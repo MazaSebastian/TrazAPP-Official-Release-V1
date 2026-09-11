@@ -19,27 +19,24 @@ import { cropsService } from '../services/cropsService';
 import { geneticsService } from '../services/geneticsService';
 import es from 'date-fns/locale/es';
 import {
-  FaArrowLeft,
-  FaCalendarAlt,
-  FaSeedling,
-  FaTint,
-  FaTemperatureHigh,
-  // FaChevronLeft removed
-  // FaChevronRight removed
-  FaLeaf,
-  // FaChartLine removed
-  FaPlus,
-  FaEdit,
-  FaTrash,
-  FaWarehouse,
-  FaClock,
-  FaTimes, // Re-added for Modal
-  FaCheckCircle,
-  FaRegCircle,
-  FaExchangeAlt,
-  FaFileUpload,
-  FaExclamationTriangle,
-} from 'react-icons/fa';
+  ArrowLeft,
+  Calendar,
+  Sprout,
+  Droplets,
+  Thermometer,
+  Leaf,
+  Plus,
+  Pencil,
+  Trash2,
+  Warehouse,
+  Clock,
+  X,
+  CheckCircle2,
+  Circle,
+  ArrowLeftRight,
+  Upload,
+  AlertTriangle,
+} from 'lucide-react';
 
 import { Task, CreateTaskInput, RecurrenceConfig, Crop } from '../types';
 import { tasksService } from '../services/tasksService';
@@ -964,7 +961,7 @@ const SortableRoomItem = ({ room, children }: { room: any, children: React.React
             e.currentTarget.style.color = '#94a3b8';
           }}
         >
-          <FaExchangeAlt size={16} className="desktop-layout" style={{ transform: 'rotate(90deg)' }} />
+          <ArrowLeftRight size={16} className="desktop-layout" style={{ transform: 'rotate(90deg)' }} />
         </div>
         <DragPropsContext.Provider value={{ attributes, listeners }}>
           {children}
@@ -1895,7 +1892,7 @@ const CropDetail: React.FC = () => {
       <Header>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <BackButton onClick={() => navigate('/crops')}>
-            <FaArrowLeft /> Volver a Cultivos
+            <ArrowLeft size={16} /> Volver a Cultivos
           </BackButton>
         </div>
 
@@ -1903,14 +1900,14 @@ const CropDetail: React.FC = () => {
           <div className="tour-crop-detail-title">
             <CropTitle>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                <FaSeedling /> {/* Changed icon to Seedling/Spot concept */}
+                <Sprout size={20} /> {/* Changed icon to Seedling/Spot concept */}
                 {crop.name}
                 {/* Buttons removed as per request */}
               </div>
             </CropTitle>
             <MetaGrid>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                <FaCalendarAlt /> Creado: {format(new Date(crop.startDate), 'dd MMM yyyy', { locale: es })}
+                <Calendar size={15} /> Creado: {format(new Date(crop.startDate), 'dd MMM yyyy', { locale: es })}
               </div>
             </MetaGrid>
           </div>
@@ -1953,7 +1950,7 @@ const CropDetail: React.FC = () => {
 
                 <CreateCard className="tour-create-first-room" onClick={() => setIsRoomModalOpen(true)}>
                   <DashedCircle>
-                    <FaPlus />
+                    <Plus size={20} />
                   </DashedCircle>
                   <span style={{ fontWeight: 600, fontSize: '1rem', color: 'inherit', textAlign: 'center', padding: '0 1rem' }}>
                     Crear la primera sala
@@ -2081,13 +2078,13 @@ const CropDetail: React.FC = () => {
 
                                 {/* Visual Stage Badge - Replaces old small badge */}
                                 <VisualStageBadge $type={room.type}>
-                                  {room.type === 'vegetation' ? <FaLeaf />
+                                  {room.type === 'vegetation' ? <Leaf size={14} />
                                     : room.type === 'flowering' ? <span>🌸</span>
-                                      : room.type === 'mother' ? <FaSeedling />
+                                      : room.type === 'mother' ? <Sprout size={14} />
                                         : room.type === 'clones' ? <span>🧬</span>
                                           : room.type === 'germination' ? <span>🌱</span>
                                             : room.type === 'living_soil' ? <span>🌍</span>
-                                              : <FaWarehouse />}
+                                              : <Warehouse size={14} />}
                                   <span>
                                     {room.type === 'vegetation' ? 'VEGETACIÓN'
                                       : room.type === 'flowering' ? 'FLORA'
@@ -2102,7 +2099,7 @@ const CropDetail: React.FC = () => {
 
                               {weekInfo && (
                                 <WeekBadgeObj>
-                                  <FaRegCircle size={8} /> {weekInfo}
+                                  <Circle size={8} /> {weekInfo}
                                 </WeekBadgeObj>
                               )}
 
@@ -2111,14 +2108,14 @@ const CropDetail: React.FC = () => {
                               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                                 {/* Start Date */}
                                 <StartDateContainer>
-                                  <FaCalendarAlt size={14} color="#64748b" />
+                                  <Calendar size={14} color="#64748b" />
                                   <span>Iniciado: <strong style={{ color: '#f8fafc' }}>{startDateDisplay}</strong></span>
                                 </StartDateContainer>
 
                                 {/* OPERATIONAL DAYS ALERT/COUNTDOWN */}
                                 {room.operational_days && daysRemainingString && (
                                   <RoomAlertBadge $alertLevel={alertLevel} $isPeriodOver={isPeriodOver}>
-                                    {alertLevel >= 1 || isPeriodOver ? <FaExclamationTriangle /> : <FaClock />}
+                                    {alertLevel >= 1 || isPeriodOver ? <AlertTriangle size={14} /> : <Clock size={14} />}
                                     <span>{daysRemainingString}</span>
                                   </RoomAlertBadge>
                                 )}
@@ -2186,11 +2183,11 @@ const CropDetail: React.FC = () => {
                                 {/* Environmental Data (Placeholders for TUYA API) */}
                                 <EnvDataContainer>
                                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#94a3b8' }} className="env-row">
-                                    <FaTemperatureHigh size={12} color="#f87171" />
+                                    <Thermometer size={12} color="#f87171" />
                                     <span>Temp. Actual <span style={{ float: 'right', fontWeight: 'bold', color: '#f8fafc' }}>--</span></span>
                                   </div>
                                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#94a3b8' }} className="env-row">
-                                    <FaTint size={12} color="#38bdf8" />
+                                    <Droplets size={12} color="#38bdf8" />
                                     <span>Humedad <span style={{ float: 'right', fontWeight: 'bold', color: '#f8fafc' }}>--</span></span>
                                   </div>
                                 </EnvDataContainer>
@@ -2202,30 +2199,6 @@ const CropDetail: React.FC = () => {
 
                                   {/* Left: Stage Action (or empty spacer if none) */}
                                   <div style={{ flex: 1 }}>
-                                    {/* {room.type === 'vegetation' && (
-                                <button
-                                  onClick={(e) => handleForceStage(e, room, 'flowering')}
-                                  style={{
-                                    width: '100%',
-                                    background: '#fbd38d',
-                                    color: '#975a16',
-                                    border: '1px solid #f6ad55',
-                                    padding: '0.5rem',
-                                    borderRadius: '0.5rem',
-                                    cursor: 'pointer',
-                                    fontSize: '0.9rem',
-                                    fontWeight: 700,
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    gap: '0.5rem',
-                                    boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
-                                    transition: 'all 0.2s'
-                                  }}
-                                >
-                                  <span>🌸</span> Pasar a Floración
-                                </button>
-                              )} */}
 
 
 
@@ -2234,20 +2207,6 @@ const CropDetail: React.FC = () => {
 
                                   {/* Right: Utility Buttons (Moved from Absolute Position) */}
                                   <div style={{ display: 'flex', gap: '5px' }}>
-                                    {/* Removed "Asignar Nuevo Lote" button as per request, since it is handled in the map */}
-                                    {/* Removed Transplant Button as per request */}
-                                    {/* <Tooltip text="Transplantar">
-                                <button
-                                  onClick={(e) => handleOpenTransplant(e, room)}
-                                  style={{
-                                    background: 'white', border: '1px solid #e2e8f0', cursor: 'pointer', color: '#718096', padding: '8px', borderRadius: '6px', display: 'flex', alignItems: 'center', transition: 'all 0.2s', boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
-                                  }}
-                                  onMouseEnter={(e) => { e.currentTarget.style.color = '#d69e2e'; e.currentTarget.style.borderColor = '#d69e2e'; }}
-                                  onMouseLeave={(e) => { e.currentTarget.style.color = '#718096'; e.currentTarget.style.borderColor = '#e2e8f0'; }}
-                                >
-                                  <FaExchangeAlt size={14} />
-                                </button>
-                              </Tooltip> */}
                                     <Tooltip text="Editar Nombre de Sala">
                                       <button
                                         onClick={(e) => handleEditRoomName(e, room)}
@@ -2257,7 +2216,7 @@ const CropDetail: React.FC = () => {
                                         onMouseEnter={(e) => { e.currentTarget.style.color = '#38bdf8'; e.currentTarget.style.borderColor = 'rgba(56, 189, 248, 0.5)'; e.currentTarget.style.background = 'rgba(56, 189, 248, 0.1)'; }}
                                         onMouseLeave={(e) => { e.currentTarget.style.color = '#94a3b8'; e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)'; e.currentTarget.style.background = 'rgba(30, 41, 59, 0.5)'; }}
                                       >
-                                        <FaEdit size={14} />
+                                        <Pencil size={14} />
                                       </button>
                                     </Tooltip>
                                     <Tooltip text="Eliminar Sala">
@@ -2269,7 +2228,7 @@ const CropDetail: React.FC = () => {
                                         onMouseEnter={(e) => { e.currentTarget.style.color = '#f87171'; e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.5)'; e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)'; }}
                                         onMouseLeave={(e) => { e.currentTarget.style.color = '#94a3b8'; e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)'; e.currentTarget.style.background = 'rgba(30, 41, 59, 0.5)'; }}
                                       >
-                                        <FaTrash size={14} />
+                                        <Trash2 size={14} />
                                       </button>
                                     </Tooltip>
                                   </div>
@@ -2305,7 +2264,7 @@ const CropDetail: React.FC = () => {
                                       background: 'rgba(30, 41, 59, 0.5)', border: '1px solid rgba(255, 255, 255, 0.1)', cursor: 'pointer', color: '#94a3b8', padding: '6px', borderRadius: '6px', display: 'flex', alignItems: 'center'
                                     }}
                                   >
-                                    <FaEdit size={12} />
+                                    <Pencil size={12} />
                                   </button>
                                   <button
                                     onClick={(e) => { e.stopPropagation(); handleDeleteRoom(e, room.id, room.name); }}
@@ -2313,14 +2272,14 @@ const CropDetail: React.FC = () => {
                                       background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)', cursor: 'pointer', color: '#f87171', padding: '6px', borderRadius: '6px', display: 'flex', alignItems: 'center'
                                     }}
                                   >
-                                    <FaTrash size={12} />
+                                    <Trash2 size={12} />
                                   </button>
                                 </div>
                               </div>
 
                               <div style={{ display: 'flex', flexWrap: 'nowrap', alignItems: 'center', gap: '0.4rem', color: '#94a3b8', fontSize: '0.7rem', justifyContent: 'space-between', paddingTop: '0.2rem' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.2rem', whiteSpace: 'nowrap' }}>
-                                  <FaCalendarAlt size={9} /> {startDateDisplay}
+                                  <Calendar size={9} /> {startDateDisplay}
                                 </div>
 
                                 {daysRemainingString && (
@@ -2328,14 +2287,14 @@ const CropDetail: React.FC = () => {
                                     color: alertLevel >= 1 || isPeriodOver ? '#f87171' : '#4ade80',
                                     display: 'flex', alignItems: 'center', gap: '0.2rem', fontWeight: 600, whiteSpace: 'nowrap'
                                   }}>
-                                    {alertLevel >= 1 || isPeriodOver ? <FaExclamationTriangle size={9} /> : <FaClock size={9} />}
+                                    {alertLevel >= 1 || isPeriodOver ? <AlertTriangle size={9} /> : <Clock size={9} />}
                                     {daysRemainingString.replace(' días restantes', 'd')}
                                   </div>
                                 )}
 
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', whiteSpace: 'nowrap' }}>
-                                  <span style={{ display: 'flex', alignItems: 'center', gap: '2px' }}><FaTemperatureHigh size={9} color="#f87171" /> --</span>
-                                  <span style={{ display: 'flex', alignItems: 'center', gap: '2px' }}><FaTint size={9} color="#38bdf8" /> --</span>
+                                  <span style={{ display: 'flex', alignItems: 'center', gap: '2px' }}><Thermometer size={9} color="#f87171" /> --</span>
+                                  <span style={{ display: 'flex', alignItems: 'center', gap: '2px' }}><Droplets size={9} color="#38bdf8" /> --</span>
                                 </div>
                               </div>
                             </MobileDragWrapper>
@@ -2347,7 +2306,7 @@ const CropDetail: React.FC = () => {
                     {/* Add New Room Card */}
                     <CreateCard onClick={() => setIsRoomModalOpen(true)}>
                       <DashedCircle>
-                        <FaPlus />
+                        <Plus size={20} />
                       </DashedCircle>
                       <span style={{ fontWeight: 600, fontSize: '1rem', color: 'inherit' }}>Haz click aquí para crear una nueva sala</span>
                     </CreateCard>
@@ -2357,19 +2316,6 @@ const CropDetail: React.FC = () => {
                   {activeDragRoom ? (
                     <div style={{ transform: 'scale(1.05)', cursor: 'grabbing' }}>
                       <RoomCardContainer room={activeDragRoom}>
-                        {/* Re-render content? Or just basic card? 
-                               We need to render the content to make it look like the actual card being dragged.
-                               Ideally we'd extract the card content to a component, but for now we can't easily replicate
-                               the distinct children logic (Drag batches etc) without refactoring properly.
-                               However, the SortableRoomItem usually wraps the content.
-                               
-                               Wait, the children of RoomCardContainer in the main loop contains the batch list.
-                               If we don't render that, the drag overlay will be empty/different. 
-    
-                               For now, let's render a "Collapsed" version or just the Title/Header style 
-                               because dragging a huge list is heavy. 
-                               But the user expects the card.
-                           */}
                         <div style={{ padding: '1rem' }} className="desktop-layout">
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -2395,7 +2341,7 @@ const CropDetail: React.FC = () => {
                             })()}
                           </div>
                           <div style={{ fontSize: '0.9rem', color: '#718096' }}>
-                            <FaClock style={{ marginRight: '0.4rem' }} /> Suelta para reubicar.
+                            <Clock size={14} style={{ marginRight: '0.4rem' }} /> Suelta para reubicar.
                           </div>
                         </div>
 
@@ -2812,7 +2758,7 @@ const CropDetail: React.FC = () => {
                               style={{ border: 'none', background: 'none', cursor: 'pointer', color: task.status === 'done' ? '#38a169' : '#cbd5e0', padding: 0, display: 'flex' }}
                               title={task.status === 'done' ? 'Marcar como pendiente' : 'Marcar como completada'}
                             >
-                              {task.status === 'done' ? <FaCheckCircle size={18} /> : <FaRegCircle size={18} />}
+                              {task.status === 'done' ? <CheckCircle2 size={18} /> : <Circle size={18} />}
                             </button>
                             <span style={{
                               fontWeight: 500,
@@ -2824,10 +2770,10 @@ const CropDetail: React.FC = () => {
                           </div>
                           <div style={{ display: 'flex', gap: '0.5rem' }}>
                             <button onClick={() => handleEditTask(task)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#4299e1' }}>
-                              <FaEdit />
+                              <Pencil size={15} />
                             </button>
                             <button onClick={() => handleDeleteTask(task.id)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#e53e3e' }}>
-                              <FaTrash />
+                              <Trash2 size={15} />
                             </button>
                           </div>
                         </div>
@@ -2971,7 +2917,7 @@ const CropDetail: React.FC = () => {
                     <label style={{ margin: 0 }}>Notas del Día</label>
                     {existingLogId && (
                       <button onClick={handleDeleteLog} style={{ color: '#e53e3e', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.85rem' }}>
-                        <FaTrash /> Eliminar Registro
+                        <Trash2 size={14} /> Eliminar Registro
                       </button>
                     )}
                   </div>
@@ -3063,11 +3009,11 @@ const CropDetail: React.FC = () => {
                   <FileUploadBox onClick={() => document.getElementById('harvest-photo-upload')?.click()}>
                     {harvestPhoto ? (
                       <div style={{ color: 'green', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
-                        <FaCheckCircle /> {harvestPhoto.name}
+                        <CheckCircle2 size={18} /> {harvestPhoto.name}
                       </div>
                     ) : (
                       <div style={{ color: '#718096' }}>
-                        <FaFileUpload size={24} style={{ marginBottom: '0.5rem' }} />
+                        <Upload size={24} style={{ marginBottom: '0.5rem' }} />
                         <p>Hacé click para subir foto</p>
                       </div>
                     )}
@@ -3267,7 +3213,7 @@ const CropDetail: React.FC = () => {
             <Modal>
               <ModalHeader>
                 <h3>Asignar Lote a {assignRoom.name}</h3>
-                <CloseButton onClick={() => setIsAssignModalOpen(false)}><FaTimes /></CloseButton>
+                <CloseButton onClick={() => setIsAssignModalOpen(false)}><X size={18} /></CloseButton>
               </ModalHeader>
               <p style={{ color: '#718096', marginBottom: '1.5rem' }}>Selecciona un lote de esquejes disponible para mover a esta sala.</p>
 
@@ -3326,8 +3272,8 @@ const CropDetail: React.FC = () => {
         isSuccessModalOpen && (
           <ModalOverlay onClick={() => setIsSuccessModalOpen(false)}>
             <Modal style={{ maxWidth: '400px', textAlign: 'center', padding: '2rem' }}>
-              <div style={{ color: '#48bb78', fontSize: '3rem', marginBottom: '1rem' }}>
-                <FaCheckCircle />
+              <div style={{ color: '#48bb78', fontSize: '3rem', marginBottom: '1rem', display: 'flex', justifyContent: 'center' }}>
+                <CheckCircle2 size={48} />
               </div>
               <h3 style={{ fontSize: '1.25rem', color: '#2d3748', marginBottom: '0.5rem' }}>¡Éxito!</h3>
               <p style={{ color: '#718096', marginBottom: '1.5rem' }}>
@@ -3346,8 +3292,8 @@ const CropDetail: React.FC = () => {
         isErrorModalOpen && (
           <ModalOverlay onClick={() => setIsErrorModalOpen(false)}>
             <Modal style={{ maxWidth: '400px', textAlign: 'center', padding: '2rem' }}>
-              <div style={{ color: '#e53e3e', fontSize: '3rem', marginBottom: '1rem' }}>
-                <FaTimes />
+              <div style={{ color: '#e53e3e', fontSize: '3rem', marginBottom: '1rem', display: 'flex', justifyContent: 'center' }}>
+                <X size={48} />
               </div>
               <h3 style={{ fontSize: '1.25rem', color: '#2d3748', marginBottom: '0.5rem' }}>Error</h3>
               <p style={{ color: '#718096', marginBottom: '1.5rem' }}>

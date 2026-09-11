@@ -6,51 +6,6 @@ import Swal from 'sweetalert2';
 import styled, { keyframes } from 'styled-components';
 import { useAuth } from '../context/AuthContext';
 import {
-    FaArrowLeft, FaThermometerHalf, FaPlus, FaCalendarAlt, FaSeedling, FaMapMarkedAlt, FaExchangeAlt, FaExpandArrowsAlt, FaWater,
-    FaBolt,
-    FaSpa,
-    FaLeaf,
-    FaListUl,
-    FaCalendarCheck,
-    FaPrint,
-    FaTemperatureLow,
-    FaStickyNote,
-    FaEye,
-    FaEllipsisV,
-    FaLayerGroup,
-    FaArrowsAlt,
-    FaArrowsAltV,
-    FaRulerVertical,
-    FaBoxOpen,
-    FaFileInvoice,
-    FaBoxes,
-    FaLink,
-    FaCompressArrowsAlt,
-    FaWarehouse,
-    FaSpinner,
-    FaPen,
-    FaTrash,
-    FaCircleNotch,
-    FaCheck,
-    FaHistory,
-    FaExclamationTriangle,
-    FaChevronDown,
-    FaChevronLeft,
-    FaChevronRight,
-    FaLock,
-    FaCut,
-    FaTasks,
-    FaTimes,
-    FaEdit,
-    FaDna,
-    FaClock,
-    FaHeartbeat,
-    FaWifi,
-    FaMicrochip,
-    FaTint
-} from 'react-icons/fa';
-// FaExclamationTriangle, FaTint, FaCut, FaSkull, FaLeaf, FaFlask, FaBroom
-import {
     format, startOfWeek, endOfWeek, startOfMonth, endOfMonth,
     eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths,
     addDays, addWeeks, differenceInDays
@@ -124,7 +79,23 @@ import {
   AlertTriangle as LucideAlertTriangle,
   Leaf as LucideLeaf,
   Flower2 as LucideFlower2,
-  Warehouse as LucideWarehouse
+  Warehouse as LucideWarehouse,
+  ArrowLeft,
+  ArrowLeftRight,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  Dna,
+  Droplets,
+  Loader2,
+  Map as LucideMap,
+  Move,
+  Pencil,
+  Printer,
+  Sprout,
+  Thermometer,
+  Wifi
 } from 'lucide-react';
 
 import { createGlobalStyle } from 'styled-components';
@@ -414,7 +385,7 @@ const rotate = keyframes`
   to { transform: rotate(360deg); }
 `;
 
-const SpinningIcon = styled(FaSpinner)`
+const SpinningIcon = styled(Loader2)`
   animation: ${rotate} 1s linear infinite;
 `;
 
@@ -941,7 +912,7 @@ const CreateMapDropZone = ({ children }: { children: React.ReactNode }) => {
                     pointerEvents: 'none', borderRadius: '0.5rem'
                 }}>
                     <div style={{ color: '#4ade80', fontWeight: 'bold', fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <FaPlus /> Soltar para crear Mesa
+                        <LucidePlus /> Soltar para crear Mesa
                     </div>
                 </div>
             )}
@@ -1280,7 +1251,7 @@ const DraggableGenetic = ({ genetic }: { genetic: Genetic }) => {
                 background: 'rgba(56, 189, 248, 0.1)', color: '#38bdf8', fontWeight: 'bold',
                 padding: '0.25rem 0.5rem', borderRadius: '999px', fontSize: '0.8rem'
             }}>
-                <FaDna />
+                <Dna />
             </div>
         </div>
     );
@@ -4556,7 +4527,7 @@ const RoomDetail: React.FC = () => {
                                             onMouseEnter={e => e.currentTarget.style.opacity = '1'}
                                             onMouseLeave={e => e.currentTarget.style.opacity = '0.8'}
                                         >
-                                            <FaTrash size={12} />
+                                            <LucideTrash2 size={12} />
                                         </button>
                                     </div>
                                 </div>
@@ -4593,7 +4564,7 @@ const RoomDetail: React.FC = () => {
                                     e.currentTarget.style.background = 'rgba(15, 23, 42, 0.4)';
                                 }}
                             >
-                                <FaPlus size={24} style={{ marginBottom: '0.5rem' }} />
+                                <LucidePlus size={24} style={{ marginBottom: '0.5rem' }} />
                                 <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>Click aqui + para agregar nota</span>
                             </div>
                         </div>
@@ -4607,7 +4578,7 @@ const RoomDetail: React.FC = () => {
                             }}
                         >
                             <DashedStickyCircle>
-                                <FaPlus />
+                                <LucidePlus />
                             </DashedStickyCircle>
                             <div style={{ textAlign: 'left' }}>
                                 <p style={{ fontSize: '1rem', fontWeight: 600, color: 'inherit', margin: 0 }}>No hay notas fijadas.</p>
@@ -4754,7 +4725,7 @@ const RoomDetail: React.FC = () => {
                                                     e.currentTarget.style.color = '#cbd5e1';
                                                 }}
                                             >
-                                                <FaPrint /> Imprimir
+                                                <Printer /> Imprimir
                                             </button>
 
                                             <button
@@ -4774,7 +4745,7 @@ const RoomDetail: React.FC = () => {
                                                 onMouseEnter={e => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'}
                                                 onMouseLeave={e => e.currentTarget.style.background = 'rgba(15, 23, 42, 0.4)'}
                                             >
-                                                <FaArrowLeft /> Volver
+                                                <ArrowLeft /> Volver
                                             </button>
 
                                             {/* 1. SELECTION ACTIONS */}
@@ -4804,7 +4775,7 @@ const RoomDetail: React.FC = () => {
                                                                 e.currentTarget.style.background = 'rgba(74, 222, 128, 0.2)';
                                                             }}
                                                         >
-                                                            Acciones <FaChevronDown size={10} />
+                                                            Acciones <ChevronDown size={10} />
                                                         </button>
 
                                                         {isBulkActionsOpen && (
@@ -4849,7 +4820,7 @@ const RoomDetail: React.FC = () => {
                                                                     onMouseEnter={e => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'}
                                                                     onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                                                                 >
-                                                                    <FaPrint color="#94a3b8" /> Imprimir Etiquetas
+                                                                    <Printer color="#94a3b8" /> Imprimir Etiquetas
                                                                 </button>
 
                                                                 {/* 2. EDITAR */}
@@ -4870,7 +4841,7 @@ const RoomDetail: React.FC = () => {
                                                                     onMouseEnter={e => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'}
                                                                     onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                                                                 >
-                                                                    <div style={{ background: 'rgba(74, 222, 128, 0.1)', padding: '0.4rem', borderRadius: '0.375rem', color: '#4ade80', display: 'flex' }}><FaEdit size={12} /></div>
+                                                                    <div style={{ background: 'rgba(74, 222, 128, 0.1)', padding: '0.4rem', borderRadius: '0.375rem', color: '#4ade80', display: 'flex' }}><Pencil size={12} /></div>
                                                                     <span>Editar</span>
                                                                 </button>
 
@@ -4897,7 +4868,7 @@ const RoomDetail: React.FC = () => {
                                                                         onMouseEnter={e => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'}
                                                                         onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                                                                     >
-                                                                        <div style={{ background: 'rgba(74, 222, 128, 0.1)', padding: '0.4rem', borderRadius: '0.375rem', color: '#4ade80', display: 'flex' }}><FaLeaf size={12} /></div>
+                                                                        <div style={{ background: 'rgba(74, 222, 128, 0.1)', padding: '0.4rem', borderRadius: '0.375rem', color: '#4ade80', display: 'flex' }}><LucideLeaf size={12} /></div>
                                                                         <span>Cambiar Fase de Cultivo</span>
                                                                     </button>
                                                                 )}
@@ -4915,7 +4886,7 @@ const RoomDetail: React.FC = () => {
                                                                     onMouseEnter={e => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'}
                                                                     onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                                                                 >
-                                                                    <div style={{ background: 'rgba(56, 189, 248, 0.1)', padding: '0.4rem', borderRadius: '0.375rem', color: '#38bdf8', display: 'flex' }}><FaExchangeAlt size={12} /></div>
+                                                                    <div style={{ background: 'rgba(56, 189, 248, 0.1)', padding: '0.4rem', borderRadius: '0.375rem', color: '#38bdf8', display: 'flex' }}><ArrowLeftRight size={12} /></div>
                                                                     <span>Reubicar en Mapa</span>
                                                                 </button>
 
@@ -4931,7 +4902,7 @@ const RoomDetail: React.FC = () => {
                                                                     onMouseEnter={e => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'}
                                                                     onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                                                                 >
-                                                                    <div style={{ background: 'rgba(236, 201, 75, 0.1)', padding: '0.4rem', borderRadius: '0.375rem', color: '#facc15', display: 'flex' }}><FaExclamationTriangle size={12} /></div>
+                                                                    <div style={{ background: 'rgba(236, 201, 75, 0.1)', padding: '0.4rem', borderRadius: '0.375rem', color: '#facc15', display: 'flex' }}><LucideAlertTriangle size={12} /></div>
                                                                     <span>Observación</span>
                                                                 </button>
 
@@ -4944,7 +4915,7 @@ const RoomDetail: React.FC = () => {
                                                                     onMouseEnter={e => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'}
                                                                     onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                                                                 >
-                                                                    <div style={{ background: 'rgba(239, 68, 68, 0.1)', padding: '0.4rem', borderRadius: '0.375rem', color: '#f87171', display: 'flex' }}><FaTrash size={12} /></div>
+                                                                    <div style={{ background: 'rgba(239, 68, 68, 0.1)', padding: '0.4rem', borderRadius: '0.375rem', color: '#f87171', display: 'flex' }}><LucideTrash2 size={12} /></div>
                                                                     <span>Eliminar Selección</span>
                                                                 </button>
                                                             </div>
@@ -4983,7 +4954,7 @@ const RoomDetail: React.FC = () => {
                                                             whiteSpace: 'nowrap'
                                                         }}
                                                     >
-                                                        <FaTimes /> Deseleccionar ({selectedBatchIds.size})
+                                                        <LucideX /> Deseleccionar ({selectedBatchIds.size})
                                                     </button>
                                                 )}
 
@@ -5050,14 +5021,14 @@ const RoomDetail: React.FC = () => {
                                                                                                 onClick={(e) => { e.stopPropagation(); handleEditMapClick(e, map); }}
                                                                                                 style={{ background: 'transparent', border: 'none', color: '#718096', cursor: 'pointer' }}
                                                                                             >
-                                                                                                <FaEdit />
+                                                                                                <Pencil />
                                                                                             </button>
                                                                                         )}
                                                                                         <button
                                                                                             onClick={(e) => { e.stopPropagation(); setMapIdToDelete(map.id); setIsDeleteMapModalOpen(true); }}
                                                                                             style={{ background: 'transparent', border: 'none', color: '#e53e3e', cursor: 'pointer' }}
                                                                                         >
-                                                                                            <FaTrash />
+                                                                                            <LucideTrash2 />
                                                                                         </button>
                                                                                     </div>
                                                                                 </div>
@@ -5094,13 +5065,13 @@ const RoomDetail: React.FC = () => {
                                                                                                 <>
                                                                                                     <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
                                                                                                         <span style={{ color: linkedDev.device_type === 'sense_7in' ? '#38bdf8' : '#00E080', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                                                                                                            {linkedDev.device_type === 'sense_7in' ? '🖥️' : <FaWifi size={12} />} {linkedDev.alias || linkedDev.device_id}
+                                                                                                            {linkedDev.device_type === 'sense_7in' ? '🖥️' : <Wifi size={12} />} {linkedDev.alias || linkedDev.device_id}
                                                                                                         </span>
                                                                                                         <span style={{ color: '#ef4444', fontWeight: 600 }}>
-                                                                                                            <FaThermometerHalf size={11} /> {linkedDev.last_reading?.sensors?.temp_c !== undefined ? `${linkedDev.last_reading.sensors.temp_c.toFixed(1)}°C` : '--'}
+                                                                                                            <Thermometer size={11} /> {linkedDev.last_reading?.sensors?.temp_c !== undefined ? `${linkedDev.last_reading.sensors.temp_c.toFixed(1)}°C` : '--'}
                                                                                                         </span>
                                                                                                         <span style={{ color: '#3b82f6', fontWeight: 600 }}>
-                                                                                                            <FaTint size={11} /> {linkedDev.last_reading?.sensors?.hum_pct !== undefined ? `${linkedDev.last_reading.sensors.hum_pct.toFixed(1)}%` : '--'}
+                                                                                                            <Droplets size={11} /> {linkedDev.last_reading?.sensors?.hum_pct !== undefined ? `${linkedDev.last_reading.sensors.hum_pct.toFixed(1)}%` : '--'}
                                                                                                         </span>
                                                                                                     </div>
                                                                                                     <button
@@ -5132,7 +5103,7 @@ const RoomDetail: React.FC = () => {
                                                                                                     }}
                                                                                                     style={{ background: 'rgba(16, 185, 129, 0.15)', border: '1px dashed rgba(16, 185, 129, 0.4)', color: '#34d399', padding: '0.35rem 0.75rem', borderRadius: '0.375rem', fontSize: '0.75rem', cursor: 'pointer', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', fontWeight: 600 }}
                                                                                                 >
-                                                                                                    <FaPlus size={10} /> Vincular Monitor / Sensor a {map.name}
+                                                                                                    <LucidePlus size={10} /> Vincular Monitor / Sensor a {map.name}
                                                                                                 </button>
                                                                                             )}
                                                                                         </div>
@@ -5140,7 +5111,7 @@ const RoomDetail: React.FC = () => {
                                                                                 })()}
 
                                                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.75rem', color: '#64748b', fontSize: '0.75rem' }}>
-                                                                                    <FaCalendarAlt size={10} />
+                                                                                    <LucideCalendar size={10} />
                                                                                     <span>Creada: {map.created_at ? format(new Date(map.created_at), "d 'de' MMM yyyy", { locale: es }) : '-'}</span>
                                                                                 </div>
                                                                             </div>
@@ -5183,7 +5154,7 @@ const RoomDetail: React.FC = () => {
                                                         style={{ ...(cloneMaps.length > 0 ? { minHeight: '160px' } : {}) }}
                                                     >
                                                         <DashedCircle className="dashed-circle-icon">
-                                                            <FaPlus />
+                                                            <LucidePlus />
                                                         </DashedCircle>
                                                         {cloneMaps.length === 0 ? (
                                                             <p style={{ fontWeight: 600, fontSize: '1.1rem', margin: 0 }}>
@@ -5242,7 +5213,7 @@ const RoomDetail: React.FC = () => {
                                                             }
                                                         `}</style>
                                                         <div className="dropzone-content">
-                                                            <FaMapMarkedAlt className="dropzone-icon" />
+                                                            <LucideMap className="dropzone-icon" />
                                                             <p className="dropzone-text">{room?.type === 'living_soil' ? 'Crea una nueva cama/cultivo para sembrar o transplantar' : 'Arrastra lote aquí para crear nuevo mapa'}</p>
                                                         </div>
                                                     </CreateMapDropZone>
@@ -5275,7 +5246,7 @@ const RoomDetail: React.FC = () => {
                                                                 boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.2)'
                                                             }}
                                                         >
-                                                            <FaArrowLeft /> Volver a la Lista
+                                                            <ArrowLeft /> Volver a la Lista
                                                         </button>
                                                     </div>
                                                 );
@@ -5331,7 +5302,7 @@ const RoomDetail: React.FC = () => {
                                                                         e.currentTarget.style.background = 'rgba(15, 23, 42, 0.4)';
                                                                     }}
                                                                 >
-                                                                    <FaPrint /> Imprimir
+                                                                    <Printer /> Imprimir
                                                                 </button>
 
                                                                 <button
@@ -5351,7 +5322,7 @@ const RoomDetail: React.FC = () => {
                                                                     onMouseEnter={e => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'}
                                                                     onMouseLeave={e => e.currentTarget.style.background = 'rgba(15, 23, 42, 0.4)'}
                                                                 >
-                                                                    <FaArrowLeft /> Volver
+                                                                    <ArrowLeft /> Volver
                                                                 </button>
                                                             </div>
                                                         </div>
@@ -5385,7 +5356,7 @@ const RoomDetail: React.FC = () => {
                                                                     gap: '1rem',
                                                                     boxShadow: '0 4px 6px rgba(0,0,0,0.3)'
                                                                 }}>
-                                                                    <FaExchangeAlt />
+                                                                    <ArrowLeftRight />
                                                                     <span>MODO REUBICACIÓN: Selecciona la nueva posición (celda vacía) para los {selectedBatchIds.size} lotes seleccionados.</span>
                                                                     <button
                                                                         onClick={() => setIsRelocatingSelection(false)}
@@ -5446,7 +5417,7 @@ const RoomDetail: React.FC = () => {
                                                                 <PortalModalOverlay>
                                                                     <ModalContent>
                                                                         <h2 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                                                            <FaSeedling color="#48bb78" /> Nueva Siembra ({sowingPosition})
+                                                                            <Sprout color="#48bb78" /> Nueva Siembra ({sowingPosition})
                                                                         </h2>
 
                                                                         <FormGroup>
@@ -5545,7 +5516,7 @@ const RoomDetail: React.FC = () => {
                                                 });
                                                 setIsCreateBatchModalOpen(true);
                                             }} $variant="success" style={{ width: '100%', marginBottom: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
-                                                <FaPlus /> Nuevo Lote
+                                                <LucidePlus /> Nuevo Lote
                                             </ActionButton>
                                         </div>
                                         <div style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
@@ -5562,8 +5533,8 @@ const RoomDetail: React.FC = () => {
                                                         onBatchGroupClick={handleBatchClick}
                                                         renderHeaderActions={(b) => (
                                                             <>
-                                                                <BatchActionButton onClick={(e) => { e.stopPropagation(); handleEditBatchClick(e, b); }} title="Editar Lote"><FaPen size={12} /></BatchActionButton>
-                                                                <BatchActionButton $variant="delete" onClick={(e) => { e.stopPropagation(); handleDeleteBatchClick(e, b); }} title="Eliminar Lote"><FaTrash size={12} /></BatchActionButton>
+                                                                <BatchActionButton onClick={(e) => { e.stopPropagation(); handleEditBatchClick(e, b); }} title="Editar Lote"><Pencil size={12} /></BatchActionButton>
+                                                                <BatchActionButton $variant="delete" onClick={(e) => { e.stopPropagation(); handleDeleteBatchClick(e, b); }} title="Eliminar Lote"><LucideTrash2 size={12} /></BatchActionButton>
                                                             </>
                                                         )}
                                                         childrenRender={(b) => (
@@ -5582,8 +5553,8 @@ const RoomDetail: React.FC = () => {
                                                                     <DraggableStockBatch batch={b} onClick={() => handleBatchClick(b)} />
                                                                 </div>
                                                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginLeft: '0.5rem' }}>
-                                                                    <BatchActionButton onClick={(e) => { e.stopPropagation(); handleEditBatchClick(e, b); }} title="Editar Lote"><FaPen size={12} /></BatchActionButton>
-                                                                    <BatchActionButton $variant="delete" onClick={(e) => { e.stopPropagation(); handleDeleteBatchClick(e, b); }} title="Eliminar Lote"><FaTrash size={12} /></BatchActionButton>
+                                                                    <BatchActionButton onClick={(e) => { e.stopPropagation(); handleEditBatchClick(e, b); }} title="Editar Lote"><Pencil size={12} /></BatchActionButton>
+                                                                    <BatchActionButton $variant="delete" onClick={(e) => { e.stopPropagation(); handleDeleteBatchClick(e, b); }} title="Eliminar Lote"><LucideTrash2 size={12} /></BatchActionButton>
                                                                 </div>
                                                             </div>
                                                         )}
@@ -5752,7 +5723,7 @@ const RoomDetail: React.FC = () => {
 
                                 {(!room?.batches || room.batches.length === 0) && (
                                     <div style={{ textAlign: 'center', padding: '3rem', color: '#a0aec0', border: '2px dashed #cbd5e0', borderRadius: '1rem' }}>
-                                        <FaThermometerHalf style={{ fontSize: '3rem', marginBottom: '1rem', opacity: 0.5 }} />
+                                        <Thermometer style={{ fontSize: '3rem', marginBottom: '1rem', opacity: 0.5 }} />
                                         <p>La sala de secado está vacía.</p>
                                         <p style={{ fontSize: '0.9rem' }}>Realiza una cosecha desde Floración para enviar plantas aquí.</p>
                                     </div>
@@ -5771,18 +5742,18 @@ const RoomDetail: React.FC = () => {
                             {/* Calendar Header */}
                             <CalendarHeader>
                                 <StyledActionButton onClick={() => setCurrentDate(subMonths(currentDate, 1))} $variant="secondary" style={{ padding: '0.5rem 1rem' }}>
-                                    <FaChevronLeft /> Anterior
+                                    <ChevronLeft /> Anterior
                                 </StyledActionButton>
                                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
                                     <h2 style={{ fontSize: '1.5rem', color: '#f8fafc', textTransform: 'capitalize', margin: 0 }}>
                                         {format(currentDate, 'MMMM yyyy', { locale: es })}
                                     </h2>
                                     <StyledActionButton onClick={handlePrintCalendar} $variant="primary" style={{ fontSize: '0.8rem', padding: '0.4rem 0.8rem' }}>
-                                        <FaPrint /> Imprimir Mes Horizontal
+                                        <Printer /> Imprimir Mes Horizontal
                                     </StyledActionButton>
                                 </div>
                                 <StyledActionButton onClick={() => setCurrentDate(addMonths(currentDate, 1))} $variant="secondary" style={{ padding: '0.5rem 1rem' }}>
-                                    Siguiente <FaChevronRight />
+                                    Siguiente <ChevronRight />
                                 </StyledActionButton>
                             </CalendarHeader>
 
@@ -5916,7 +5887,7 @@ const RoomDetail: React.FC = () => {
                                                                     title="Agregar Tarea"
                                                                     onClick={(e) => { e.stopPropagation(); handleAddTask(dayItem); }}
                                                                 >
-                                                                    <FaPlus />
+                                                                    <LucidePlus />
                                                                 </span>
                                                             </div>
                                                         )}
@@ -6328,7 +6299,7 @@ const RoomDetail: React.FC = () => {
                                                 onClick={handleSaveTask}
                                                 disabled={isSavingTask}
                                             >
-                                                {isSavingTask ? <FaCircleNotch className="spin" /> : <LucideCheck size={16} />}
+                                                {isSavingTask ? <Loader2 className="spin" /> : <LucideCheck size={16} />}
                                                 {selectedTask ? 'Guardar Cambios' : 'Crear Tarea'}
                                             </ShadcnButton>
                                         </div>
@@ -6453,7 +6424,7 @@ const RoomDetail: React.FC = () => {
                                             disabled={isSavingTask}
                                             style={{ width: '100%' }}
                                         >
-                                            {isSavingTask ? <FaCircleNotch className="spin" /> : <LucideCheck size={16} />}
+                                            {isSavingTask ? <Loader2 className="spin" /> : <LucideCheck size={16} />}
                                             {selectedTask?.status === 'done' ? 'Marcar como Pendiente' : 'Completar y Guardar Tarea'}
                                         </ShadcnButton>
                                     </div>
@@ -6522,7 +6493,7 @@ const RoomDetail: React.FC = () => {
                                                                 minWidth: '32px'
                                                             }}
                                                         >
-                                                            <FaCheck />
+                                                            <LucideCheck />
                                                         </button>
                                                         <button
                                                             onClick={() => {
@@ -6566,7 +6537,7 @@ const RoomDetail: React.FC = () => {
                                         border: '2px dashed rgba(255, 255, 255, 0.1)', borderRadius: '0.5rem', padding: '2rem',
                                         textAlign: 'center', color: '#94a3b8'
                                     }}>
-                                        <FaCalendarAlt style={{ fontSize: '2rem', marginBottom: '0.5rem', opacity: 0.5 }} />
+                                        <LucideCalendar style={{ fontSize: '2rem', marginBottom: '0.5rem', opacity: 0.5 }} />
                                         <p>No se cargaron fotos ni reportes diarios.</p>
                                     </div>
                                 </div>
@@ -6588,7 +6559,7 @@ const RoomDetail: React.FC = () => {
                                     }`
                             }}>
                                 <h3 style={{ color: '#f8fafc', marginBottom: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
-                                    <FaStickyNote color={
+                                    <LucideStickyNote color={
                                         stickyColor === 'yellow' ? '#facc15' :
                                             stickyColor === 'blue' ? '#38bdf8' :
                                                 stickyColor === 'pink' ? '#f472b6' :
@@ -6665,7 +6636,7 @@ const RoomDetail: React.FC = () => {
                         <PortalModalOverlay isClosing={isStickyDeleteModalClosing}>
                             <ModalContent isClosing={isStickyDeleteModalClosing} style={{ maxWidth: '400px', textAlign: 'center' }}>
                                 <div style={{ color: '#e53e3e', fontSize: '3rem', marginBottom: '1rem' }}>
-                                    <FaExclamationTriangle />
+                                    <LucideAlertTriangle />
                                 </div>
                                 <h3 style={{ fontSize: '1.25rem', color: '#2d3748', marginBottom: '0.5rem' }}>¿Eliminar esta nota?</h3>
                                 <p style={{ color: '#718096', marginBottom: '1.5rem' }}>
@@ -6695,7 +6666,7 @@ const RoomDetail: React.FC = () => {
                         <PortalModalOverlay>
                             <ModalContent style={{ maxWidth: '400px', textAlign: 'center' }}>
                                 <div style={{ color: '#3182ce', fontSize: '3rem', marginBottom: '1rem' }}>
-                                    <FaClock />
+                                    <Clock />
                                 </div>
                                 <h3 style={{ fontSize: '1.25rem', color: '#2d3748', marginBottom: '0.5rem' }}>Tarea Proyectada</h3>
                                 <p style={{ color: '#718096', marginBottom: '1.5rem', lineHeight: '1.5' }}>
@@ -6715,7 +6686,7 @@ const RoomDetail: React.FC = () => {
                         <PortalModalOverlay>
                             <ModalContent style={{ maxWidth: '400px', textAlign: 'center' }}>
                                 <div style={{ color: '#e53e3e', fontSize: '3rem', marginBottom: '1rem' }}>
-                                    <FaExclamationTriangle />
+                                    <LucideAlertTriangle />
                                 </div>
                                 <h3 style={{ fontSize: '1.25rem', color: '#2d3748', marginBottom: '0.5rem' }}>¿Eliminar esta tarea?</h3>
                                 <p style={{ color: '#718096', marginBottom: '1.5rem' }}>
@@ -6740,7 +6711,7 @@ const RoomDetail: React.FC = () => {
                         <PortalModalOverlay>
                             <ModalContent style={{ maxWidth: '600px' }}>
                                 <h3 style={{ fontSize: '1.25rem', color: '#2d3748', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                    <FaDna style={{ color: '#2b6cb0' }} /> Todas las Genéticas en Sala
+                                    <Dna style={{ color: '#2b6cb0' }} /> Todas las Genéticas en Sala
                                 </h3>
 
                                 <div style={{ maxHeight: '60vh', overflowY: 'auto' }}>
@@ -6928,7 +6899,7 @@ const RoomDetail: React.FC = () => {
                                         onClick={handleCreateMap}
                                         disabled={isCreatingMap}
                                     >
-                                        {isCreatingMap ? <FaCircleNotch className="spin" /> : <LucidePlus size={16} />}
+                                        {isCreatingMap ? <Loader2 className="spin" /> : <LucidePlus size={16} />}
                                         {isCreatingMap ? 'Creando...' : 'Crear Mapa'}
                                     </ShadcnButton>
                                 </div>
@@ -7071,7 +7042,7 @@ const RoomDetail: React.FC = () => {
                                         onClick={handleUpdateMap}
                                         disabled={isUpdatingMap}
                                     >
-                                        {isUpdatingMap ? <FaCircleNotch className="spin" /> : <LucideCheck size={16} />}
+                                        {isUpdatingMap ? <Loader2 className="spin" /> : <LucideCheck size={16} />}
                                         {isUpdatingMap ? 'Guardando...' : 'Guardar Cambios'}
                                     </ShadcnButton>
                                 </div>
@@ -7168,7 +7139,7 @@ const RoomDetail: React.FC = () => {
                                     >
                                         {isAutoAssigning ? (
                                             <>
-                                                <FaSpinner className="icon-spin" /> Asignando...
+                                                <Loader2 className="icon-spin" /> Asignando...
                                             </>
                                         ) : (
                                             'Asignar Automáticamente'
@@ -7202,7 +7173,7 @@ const RoomDetail: React.FC = () => {
                                 <ModalContent style={{ maxWidth: '500px' }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '1rem' }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                            <FaSeedling size={24} color="#48bb78" />
+                                            <Sprout size={24} color="#48bb78" />
                                             <div>
                                                 <h3 style={{ margin: 0, color: '#f8fafc' }}>{plantDetailModal.batch.tracking_code || 'Lote de Stock'}</h3>
                                                 <span style={{ fontSize: '0.9rem', color: '#94a3b8' }}>
@@ -7274,7 +7245,7 @@ const RoomDetail: React.FC = () => {
                                                 onMouseEnter={e => e.currentTarget.style.background = 'rgba(56, 189, 248, 0.2)'}
                                                 onMouseLeave={e => e.currentTarget.style.background = 'rgba(56, 189, 248, 0.1)'}
                                             >
-                                                <FaExpandArrowsAlt /> Reubicar en otro lugar
+                                                <Move /> Reubicar en otro lugar
                                             </button>
                                         ) : (
                                             /* Stock Batch specific actions */
@@ -7292,7 +7263,7 @@ const RoomDetail: React.FC = () => {
                                                 onMouseEnter={e => e.currentTarget.style.background = 'rgba(56, 189, 248, 0.2)'}
                                                 onMouseLeave={e => e.currentTarget.style.background = 'rgba(56, 189, 248, 0.1)'}
                                             >
-                                                <FaArrowLeft /> Asignar al Mapa
+                                                <ArrowLeft /> Asignar al Mapa
                                             </button>
                                         )}
 
@@ -7309,7 +7280,7 @@ const RoomDetail: React.FC = () => {
                                             onMouseEnter={e => e.currentTarget.style.background = 'rgba(253, 224, 71, 0.2)'}
                                             onMouseLeave={e => e.currentTarget.style.background = 'rgba(253, 224, 71, 0.1)'}
                                         >
-                                            <FaStickyNote /> Observación
+                                            <LucideStickyNote /> Observación
                                         </button>
 
                                         <div style={{ display: 'flex', gap: '0.5rem' }}>
@@ -7331,7 +7302,7 @@ const RoomDetail: React.FC = () => {
                                                     e.currentTarget.style.color = '#cbd5e1';
                                                 }}
                                             >
-                                                <FaPen /> Editar
+                                                <Pencil /> Editar
                                             </button>
 
                                             <button
@@ -7347,7 +7318,7 @@ const RoomDetail: React.FC = () => {
                                                 onMouseEnter={e => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.2)'}
                                                 onMouseLeave={e => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)'}
                                             >
-                                                <FaTrash /> Eliminar
+                                                <LucideTrash2 /> Eliminar
                                             </button>
                                         </div>
                                     </div>
@@ -7371,7 +7342,7 @@ const RoomDetail: React.FC = () => {
                         <PortalModalOverlay>
                             <ModalContent style={{ maxWidth: '400px', textAlign: 'center' }}>
                                 <div style={{ color: '#3182ce', fontSize: '3rem', marginBottom: '1rem' }}>
-                                    <FaExpandArrowsAlt />
+                                    <Move />
                                 </div>
                                 <h3 style={{ fontSize: '1.25rem', color: '#2d3748', marginBottom: '0.5rem' }}>Confirmar Movimiento</h3>
                                 <p style={{ color: '#718096', marginBottom: '1.5rem' }}>
@@ -7573,7 +7544,7 @@ const RoomDetail: React.FC = () => {
                                         onClick={handleUpdateBatch}
                                         disabled={isUpdatingBatch || !editBatchForm.quantity || Number(editBatchForm.quantity) <= 0}
                                     >
-                                        {isUpdatingBatch ? <FaCircleNotch className="spin" /> : <LucideCheck size={16} />}
+                                        {isUpdatingBatch ? <Loader2 className="spin" /> : <LucideCheck size={16} />}
                                         {isUpdatingBatch ? 'Guardando...' : 'Guardar Cambios'}
                                     </ShadcnButton>
                                 </div>
@@ -7637,7 +7608,7 @@ const RoomDetail: React.FC = () => {
                                         disabled={isDeletingAvailable}
                                         style={{ flex: 1 }}
                                     >
-                                        {isDeletingAvailable ? <FaCircleNotch className="spin" /> : <LucideTrash2 size={16} />}
+                                        {isDeletingAvailable ? <Loader2 className="spin" /> : <LucideTrash2 size={16} />}
                                         {isDeletingAvailable ? 'Eliminando...' : 'Sí, eliminar'}
                                     </ShadcnButton>
                                 </div>
@@ -7804,10 +7775,10 @@ const RoomDetail: React.FC = () => {
                                     <label style={{ display: 'block', marginBottom: '0.75rem', fontWeight: 600, color: '#4a5568' }}>Etapa Actual</label>
                                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '0.75rem' }}>
                                         {[
-                                            { id: 'seedling', label: 'Plántula', icon: <FaSeedling /> },
-                                            { id: 'vegetation', label: 'Vege', icon: <FaLeaf /> }, // Leaf/Cannabis
-                                            { id: 'flowering', label: 'Flora', icon: <FaSpa /> }, // Flower
-                                            { id: 'completed', label: 'Corte', icon: <FaCheck /> }
+                                            { id: 'seedling', label: 'Plántula', icon: <Sprout /> },
+                                            { id: 'vegetation', label: 'Vege', icon: <LucideLeaf /> }, // Leaf/Cannabis
+                                            { id: 'flowering', label: 'Flora', icon: <LucideFlower2 /> }, // Flower
+                                            { id: 'completed', label: 'Corte', icon: <LucideCheck /> }
                                         ].map(option => (
                                             <StageButton
                                                 key={option.id}
@@ -7854,7 +7825,7 @@ const RoomDetail: React.FC = () => {
                                             }
                                         }}
                                     >
-                                        <FaTrash size={12} /> Eliminar
+                                        <LucideTrash2 size={12} /> Eliminar
                                     </ModalActionButton>
 
                                     {/* Action Buttons (Right aligned) */}
@@ -7938,7 +7909,7 @@ const RoomDetail: React.FC = () => {
                                 <div style={{ maxHeight: '60vh', overflowY: 'auto' }}>
                                     {historyLoading ? (
                                         <div style={{ textAlign: 'center', padding: '3rem', color: '#94a3b8', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem' }}>
-                                            <FaCircleNotch className="spin" style={{ fontSize: '1.5rem', color: '#34d399' }} />
+                                            <Loader2 className="spin" style={{ fontSize: '1.5rem', color: '#34d399' }} />
                                             <p style={{ margin: 0, fontSize: '0.9rem' }}>Cargando registros históricos...</p>
                                         </div>
                                     ) : roomHistory.length === 0 ? (
@@ -8080,7 +8051,7 @@ const RoomDetail: React.FC = () => {
                         <PortalModalOverlay isClosing={isClosingCreateMapFromGroup}>
                             <ModalContent onClick={e => e.stopPropagation()} isClosing={isClosingCreateMapFromGroup}>
                                 <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#f8fafc', margin: 0, paddingBottom: '1rem' }}>
-                                    <FaMapMarkedAlt /> Crear Mapa desde Grupo
+                                    <LucideMap /> Crear Mapa desde Grupo
                                 </h2>
                                 {(() => {
                                     // PRIORITIZE VIRTUAL GROUP NAME
@@ -8114,7 +8085,7 @@ const RoomDetail: React.FC = () => {
 
                                 <div style={{ padding: '1rem', background: 'rgba(56, 189, 248, 0.1)', border: '1px solid rgba(56, 189, 248, 0.2)', borderRadius: '0.5rem', marginBottom: '2rem' }}>
                                     <p style={{ color: '#bae6fd', margin: 0, fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                        <FaCheck style={{ color: '#38bdf8' }} /> Se creará una mesa automática y se distribuirán todas las plantas individualmente.
+                                        <LucideCheck style={{ color: '#38bdf8' }} /> Se creará una mesa automática y se distribuirán todas las plantas individualmente.
                                     </p>
                                 </div>
 
@@ -8132,11 +8103,11 @@ const RoomDetail: React.FC = () => {
                                     >
                                         {isCreatingMapFromGroup ? (
                                             <>
-                                                <FaCircleNotch className="spin" /> Creando...
+                                                <Loader2 className="spin" /> Creando...
                                             </>
                                         ) : (
                                             <>
-                                                <FaPlus /> Crear Mapa
+                                                <LucidePlus /> Crear Mapa
                                             </>
                                         )}
                                     </ActionButton>
@@ -8368,7 +8339,7 @@ const RoomDetail: React.FC = () => {
                                         onClick={handleUpdateRoom}
                                         disabled={isUpdatingRoom}
                                     >
-                                        {isUpdatingRoom ? <FaCircleNotch className="spin" /> : <LucideCheck size={16} />}
+                                        {isUpdatingRoom ? <Loader2 className="spin" /> : <LucideCheck size={16} />}
                                         {isUpdatingRoom ? 'Guardando...' : 'Guardar Cambios'}
                                     </ShadcnButton>
                                 </div>
@@ -8442,7 +8413,7 @@ const RoomDetail: React.FC = () => {
                                         $variant="success"
                                         style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
                                     >
-                                        {isFinalizing && <FaCircleNotch className="spin" />}
+                                        {isFinalizing && <Loader2 className="spin" />}
                                         {isFinalizing ? 'Enviando...' : 'Confirmar y Enviar'}
                                     </ActionButton>
                                 </div>
@@ -8545,7 +8516,7 @@ const RoomDetail: React.FC = () => {
                         <PortalModalOverlay isClosing={isClosingObservation}>
                             <ModalContent isClosing={isClosingObservation} style={{ maxWidth: '400px' }}>
                                 <h3 style={{ marginTop: 0, color: '#f8fafc', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                    <FaExclamationTriangle style={{ color: '#fbbf24' }} /> Registrar Observación
+                                    <LucideAlertTriangle style={{ color: '#fbbf24' }} /> Registrar Observación
                                 </h3>
                                 <p style={{ color: '#cbd5e1', fontSize: '0.95rem', marginBottom: '1rem' }}>
                                     Esto agregará una nota y una alerta a los <strong style={{ color: '#4ade80' }}>{selectedBatchIds.size}</strong> lotes seleccionados.
@@ -8736,7 +8707,7 @@ const RoomDetail: React.FC = () => {
                                         onClick={handleCreateBatch}
                                         disabled={isCreatingBatch}
                                     >
-                                        {isCreatingBatch ? <FaCircleNotch className="spin" /> : <LucidePlus size={16} />}
+                                        {isCreatingBatch ? <Loader2 className="spin" /> : <LucidePlus size={16} />}
                                         {isCreatingBatch ? 'Creando...' : 'Crear Lote'}
                                     </ShadcnButton>
                                 </div>

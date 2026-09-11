@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { useParams, useNavigate } from 'react-router-dom';
-import { FaArrowLeft, FaDna, FaLeaf, FaClock, FaPercent, FaTint, FaInfoCircle } from 'react-icons/fa';
+import { ArrowLeft, Dna, Leaf, Clock, Percent, Droplets, Info } from 'lucide-react';
 import { geneticsService } from '../services/geneticsService';
 import { Genetic } from '../types/genetics';
 import { LoadingSpinner } from '../components/LoadingSpinner';
@@ -160,7 +160,7 @@ export const GeneticDetail: React.FC = () => {
         return (
             <Container>
                 <Header>
-                    <BackButton onClick={() => navigate('/genetics')}><FaArrowLeft /></BackButton>
+                    <BackButton onClick={() => navigate('/genetics')}><ArrowLeft size={18} /></BackButton>
                     <h1>Error</h1>
                 </Header>
                 <GlassCard style={{ textAlign: 'center', padding: '4rem 2rem' }}>
@@ -179,14 +179,14 @@ export const GeneticDetail: React.FC = () => {
     return (
         <Container>
             <Header>
-                <BackButton onClick={() => navigate('/genetics')} title="Volver"><FaArrowLeft /></BackButton>
-                <h1><FaDna style={{ color: '#4ade80' }} /> Ficha de Genética</h1>
+                <BackButton onClick={() => navigate('/genetics')} title="Volver"><ArrowLeft size={18} /></BackButton>
+                <h1><Dna style={{ color: '#4ade80' }} size={28} /> Ficha de Genética</h1>
             </Header>
 
             <GlassCard>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', marginBottom: '1rem' }}>
                     <div style={{ background: 'rgba(74, 222, 128, 0.1)', padding: '1.5rem', borderRadius: '1rem', border: '1px dashed rgba(74, 222, 128, 0.3)' }}>
-                        <FaLeaf size={50} style={{ color: '#4ade80' }} />
+                        <Leaf size={50} style={{ color: '#4ade80' }} />
                     </div>
                     <div>
                         <h2 style={{ fontSize: '2.5rem', margin: '0 0 0.5rem 0', color: '#f8fafc', letterSpacing: '1px' }}>
@@ -203,21 +203,21 @@ export const GeneticDetail: React.FC = () => {
 
                 <MetaGrid>
                     <MetaItem>
-                        <div className="icon-wrapper" style={{ background: 'rgba(250, 204, 21, 0.1)', color: '#facc15' }}><FaPercent /></div>
+                        <div className="icon-wrapper" style={{ background: 'rgba(250, 204, 21, 0.1)', color: '#facc15' }}><Percent size={18} /></div>
                         <div className="info">
                             <span className="label">THC / CBD %</span>
                             <span className="value">-- / --</span>
                         </div>
                     </MetaItem>
                     <MetaItem>
-                        <div className="icon-wrapper" style={{ background: 'rgba(244, 63, 94, 0.1)', color: '#f43f5e' }}><FaClock /></div>
+                        <div className="icon-wrapper" style={{ background: 'rgba(244, 63, 94, 0.1)', color: '#f43f5e' }}><Clock size={18} /></div>
                         <div className="info">
                             <span className="label">Floración Estimada</span>
                             <span className="value">-- Semanas</span>
                         </div>
                     </MetaItem>
                     <MetaItem>
-                        <div className="icon-wrapper"><FaTint /></div>
+                        <div className="icon-wrapper"><Droplets size={18} /></div>
                         <div className="info">
                             <span className="label">Perfil de Terpenos</span>
                             <span className="value">No asignado</span>
@@ -227,7 +227,7 @@ export const GeneticDetail: React.FC = () => {
 
                 <div style={{ marginTop: '2.5rem', paddingTop: '2.5rem', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
                     <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#f8fafc', fontSize: '1.25rem', marginBottom: '1rem' }}>
-                        <FaInfoCircle style={{ color: '#94a3b8' }} /> Información Detallada
+                        <Info style={{ color: '#94a3b8' }} size={20} /> Información Detallada
                     </h3>
                     <p style={{ color: '#94a3b8', lineHeight: '1.6', fontSize: '0.95rem' }}>
                         {genetic.description || 'No hay descripción detallada para esta genética en la base de datos central.'}
