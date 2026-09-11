@@ -9,24 +9,23 @@ import { stickiesService } from '../services/stickiesService';
 import styled, { keyframes, css } from 'styled-components';
 
 import {
-  FaSeedling,
-  FaExclamationTriangle,
-  FaCalendarCheck,
-  FaChartLine,
-  FaCheck,
-  FaCheckCircle,
-  FaStickyNote,
-  FaPlus,
-  FaTrash,
-  FaClock,
-  FaPrint,
-  FaBell,
-  FaDesktop,
-  FaSlidersH,
-  FaThermometerHalf,
-  FaTint,
-  FaLeaf
-} from 'react-icons/fa';
+  CalendarCheck,
+  LineChart,
+  Check,
+  CheckCircle2,
+  Clock,
+  Monitor,
+  AlertTriangle,
+  Leaf,
+  Plus,
+  Sprout,
+  Sliders,
+  StickyNote,
+  Thermometer,
+  Droplets,
+  Printer,
+  Trash2
+} from 'lucide-react';
 import { useReactToPrint } from 'react-to-print';
 import { PrintableTaskChecklist } from '../components/Tasks/PrintableTaskChecklist';
 import { WeatherWidget } from '../components/WeatherWidget';
@@ -42,7 +41,6 @@ import { TrazAppDeviceDetailModal } from '../components/TrazAppDeviceDetailModal
 import { DashboardKpiRibbon } from '../components/Dashboard/DashboardKpiRibbon';
 import { Badge } from '../components/ui/Badge';
 import { Button as ShadcnButton } from '../components/ui/Button';
-import { StickyNote, Printer, Sprout } from 'lucide-react';
 
 // --- Styled Components (Premium Eco-Tech Theme) ---
 
@@ -1124,10 +1122,10 @@ const Dashboard: React.FC = () => {
 
   const getIconForType = (type: string) => {
     switch (type) {
-      case 'warning': return <FaExclamationTriangle />;
-      case 'info': return <FaCalendarCheck />;
-      case 'danger': return <FaExclamationTriangle />;
-      default: return <FaCheckCircle />;
+      case 'warning': return <AlertTriangle />;
+      case 'info': return <CalendarCheck />;
+      case 'danger': return <AlertTriangle />;
+      default: return <CheckCircle2 />;
     }
   };
 
@@ -1478,7 +1476,7 @@ const Dashboard: React.FC = () => {
 
       {currentOrganization?.plan === 'demo' && (
         <DemoBanner>
-          <div className="demo-icon"><FaExclamationTriangle /></div>
+          <div className="demo-icon"><AlertTriangle /></div>
           <div className="demo-text">
             <h3>Versión Demo de TrazAPP</h3>
             <p>Estás utilizando una versión de prueba gratuita. Te quedan {Math.max(0, 15 - differenceInDays(new Date(), currentOrganization.created_at ? parseISO(currentOrganization.created_at) : new Date()))} días de prueba.</p>
@@ -1496,7 +1494,7 @@ const Dashboard: React.FC = () => {
         <EnvironmentalAlertBanner>
           <div className="banner-top">
             <div className="title-group">
-              <div className="icon-badge"><FaExclamationTriangle /></div>
+              <div className="icon-badge"><AlertTriangle /></div>
               <h3>
                 Alerta Ambiental: Parámetros Fuera de Rango
               </h3>
@@ -1510,7 +1508,7 @@ const Dashboard: React.FC = () => {
             {activeEnvironmentalAlerts.map((alert: EnvironmentalAlert) => (
               <div className="alert-item" key={alert.deviceId}>
                 <div className="item-info">
-                  <FaDesktop style={{ color: '#94a3b8' }} />
+                  <Monitor style={{ color: '#94a3b8' }} />
                   <span className="dev-name">{alert.deviceAlias}</span>
                   <span className="location-tag">{alert.roomName} • {alert.bunkerName}</span>
                 </div>
@@ -1518,10 +1516,10 @@ const Dashboard: React.FC = () => {
                 <div className="violation-chips">
                   {alert.violations.map((v: ViolationItem, i: number) => (
                     <span key={i} className={`violation-tag ${v.severity}`}>
-                      {v.metric === 'temp' && <FaThermometerHalf />}
-                      {v.metric === 'hum' && <FaTint />}
-                      {v.metric === 'soil' && <FaLeaf />}
-                      {v.metric === 'vpd' && <FaChartLine />}
+                      {v.metric === 'temp' && <Thermometer />}
+                      {v.metric === 'hum' && <Droplets />}
+                      {v.metric === 'soil' && <Leaf />}
+                      {v.metric === 'vpd' && <LineChart />}
                       {v.name}: {v.current}{v.unit} (Límite: {v.limitValue}{v.unit})
                     </span>
                   ))}
@@ -1531,7 +1529,7 @@ const Dashboard: React.FC = () => {
                   className="action-btn"
                   onClick={() => setSelectedDeviceForModal(alert.deviceObj)}
                 >
-                  <FaSlidersH /> Ajustar Umbrales
+                  <Sliders /> Ajustar Umbrales
                 </button>
               </div>
             ))}
@@ -1540,20 +1538,20 @@ const Dashboard: React.FC = () => {
       )}
 
       <StickyBoard>
-        <SectionTitle><FaStickyNote /> Tablero de Notas (Stick-it)</SectionTitle>
+        <SectionTitle><StickyNote /> Tablero de Notas (Stick-it)</SectionTitle>
         <StickyGrid>
           {stickies.map(note => (
             <StickyNoteCard key={note.id} color={note.color}>
               <div className="content">{note.content}</div>
               <div className="footer">
                 <span>{note.created_by || 'Anónimo'} • {new Date(note.created_at).toLocaleDateString()}</span>
-                <button className="delete-btn" onClick={(e) => handleDeleteSticky(note.id, e)}><FaTrash /></button>
+                <button className="delete-btn" onClick={(e) => handleDeleteSticky(note.id, e)}><Trash2 /></button>
               </div>
             </StickyNoteCard>
           ))}
           <AddStickyParams className="tour-stickies" onClick={() => setIsStickyModalOpen(true)}>
             <DashedCircle className="dashed-circle">
-              <FaPlus size={20} />
+              <Plus size={20} />
             </DashedCircle>
             <span style={{ marginTop: '1rem', fontWeight: 600 }}>Nueva Nota</span>
           </AddStickyParams>
@@ -1564,7 +1562,7 @@ const Dashboard: React.FC = () => {
       {isStickyModalOpen && (
         <ModalOverlay $isClosing={isClosingStickyModal} onClick={handleCloseStickyModal}>
           <ModalContent $isClosing={isClosingStickyModal} onClick={e => e.stopPropagation()}>
-            <h3><FaStickyNote style={{ color: '#4ade80' }} /> Nueva Nota Adhesiva</h3>
+            <h3><StickyNote style={{ color: '#4ade80' }} /> Nueva Nota Adhesiva</h3>
             <ColorPicker>
               {['yellow', 'blue', 'pink', 'green'].map(c => (
                 <ColorOption
@@ -1597,7 +1595,7 @@ const Dashboard: React.FC = () => {
       {/* Stage Countdowns */}
       {rooms.some(r => (r.type === 'vegetation' || r.type === 'flowering') && r.start_date) && currentRole !== 'admin' && (
         <StickyBoard className="tour-countdowns">
-          <SectionTitle><FaClock style={{ color: '#805ad5' }} /> Próximos Cambios de Etapa</SectionTitle>
+          <SectionTitle><Clock style={{ color: '#805ad5' }} /> Próximos Cambios de Etapa</SectionTitle>
           <CountdownGrid>
             {rooms
               .filter(r => (r.type === 'vegetation' || r.type === 'flowering') && r.start_date)
@@ -1643,7 +1641,7 @@ const Dashboard: React.FC = () => {
                         <div className="active-badges">
                           {alertLevel >= 1 && (
                             <span className="warning-badge">
-                              <FaExclamationTriangle /> Faltan {Math.max(0, daysRemaining)} días
+                              <AlertTriangle /> Faltan {Math.max(0, daysRemaining)} días
                             </span>
                           )}
                           <span className="stage-badge">{room.type === 'vegetation' ? 'Vegetativo' : 'Floración'}</span>
@@ -1691,14 +1689,14 @@ const Dashboard: React.FC = () => {
           <Link to="/crops" style={{ textDecoration: 'none', color: 'inherit' }}>
             <KPICard active>
               <div className="desktop-view">
-                <div className="icon-wrapper"><FaSeedling /></div>
+                <div className="icon-wrapper"><Sprout /></div>
                 <div className="label">Cultivos Activos</div>
                 <div className="value">{activeCrops.length} <span className="unit">variedades</span></div>
-                <div className="subtext"><FaChartLine /> En curso</div>
+                <div className="subtext"><LineChart /> En curso</div>
               </div>
               <div className="mobile-view">
                 <div className="m-left">
-                  <div className="m-icon"><FaSeedling /></div>
+                  <div className="m-icon"><Sprout /></div>
                   <div className="m-text-group">
                     <span className="m-label">Cultivos Activos</span>
                     <span className="m-subtext">En curso</span>
@@ -1717,13 +1715,13 @@ const Dashboard: React.FC = () => {
         {currentRole !== 'admin' && (
           <KPICard alert={alerts.length > 0}>
             <div className="desktop-view">
-              <div className="icon-wrapper"><FaExclamationTriangle /></div>
+              <div className="icon-wrapper"><AlertTriangle /></div>
               <div className="label">Alertas</div>
               <div className="value">{alerts.length} <span className="unit">pendientes</span></div>
             </div>
             <div className="mobile-view">
               <div className="m-left">
-                <div className="m-icon"><FaExclamationTriangle /></div>
+                <div className="m-icon"><AlertTriangle /></div>
                 <div className="m-text-group">
                   <span className="m-label">Alertas</span>
                   <span className="m-subtext">{alerts.length > 0 ? 'Requieren atención' : 'Todo al día'}</span>
@@ -1747,7 +1745,7 @@ const Dashboard: React.FC = () => {
         {currentRole !== 'admin' && (
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-              <SectionTitle style={{ marginBottom: 0 }}><FaExclamationTriangle /> Alertas & Tareas</SectionTitle>
+              <SectionTitle style={{ marginBottom: 0 }}><AlertTriangle /> Alertas & Tareas</SectionTitle>
               <ShadcnButton
                 variant="secondary"
                 size="sm"
@@ -1768,10 +1766,10 @@ const Dashboard: React.FC = () => {
                   </div>
                   <AlertActions>
                     <ActionButtonSmall type="success" onClick={() => handleAction(alert.id, 'done')} title="Marcar como realizado">
-                      <FaCheck />
+                      <Check />
                     </ActionButtonSmall>
                     <ActionButtonSmall type="danger" onClick={() => handleAction(alert.id, 'dismissed')} title="Descartar">
-                      <FaTrash />
+                      <Trash2 />
                     </ActionButtonSmall>
                   </AlertActions>
 
@@ -1780,7 +1778,7 @@ const Dashboard: React.FC = () => {
 
               {alerts.length === 0 && (
                 <EmptyStateCard>
-                  <FaCheckCircle className="icon" />
+                  <CheckCircle2 className="icon" />
                   <p>¡Todo al día!</p>
                 </EmptyStateCard>
               )}

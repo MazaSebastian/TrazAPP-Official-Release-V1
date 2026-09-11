@@ -2,19 +2,19 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';
 import {
-  FaSeedling,
-  FaCalendarCheck,
-  FaArrowUp,
-  FaBoxes,
-  FaUserInjured,
-  FaStickyNote,
-  FaChevronRight,
-  FaMagic,
-  FaCheck,
-  FaThermometerHalf,
-  FaTint,
-  FaWind
-} from 'react-icons/fa';
+  ArrowUp,
+  Package,
+  CalendarCheck,
+  Check,
+  ChevronRight,
+  Sparkles,
+  Sprout,
+  StickyNote,
+  Thermometer,
+  Droplets,
+  HeartPulse,
+  Wind
+} from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 // --- STITCH DESIGN SYSTEM ANIMATIONS & TOKENS ---
@@ -484,7 +484,7 @@ export const DashboardV2: React.FC = () => {
         </div>
         <div className="actions">
           <ApplyButton onClick={() => alert('¡Estética aprobada! Procederemos a aplicar este sistema a toda la plataforma.')}>
-            <FaMagic /> Aplicar como UI Oficial
+            <Sparkles /> Aplicar como UI Oficial
           </ApplyButton>
         </div>
       </BannerOfficialProposal>
@@ -499,7 +499,7 @@ export const DashboardV2: React.FC = () => {
         {/* TELEMETRY WIDGET */}
         <EnvironmentalTelemetryWidget>
           <div className="tele-item">
-            <FaThermometerHalf className="icon temp" />
+            <Thermometer className="icon temp" />
             <div className="info">
               <span className="val">24.5 °C</span>
               <span className="lbl">Temperatura</span>
@@ -507,7 +507,7 @@ export const DashboardV2: React.FC = () => {
           </div>
           <div className="divider" />
           <div className="tele-item">
-            <FaTint className="icon hum" />
+            <Droplets className="icon hum" />
             <div className="info">
               <span className="val">62 %</span>
               <span className="lbl">Humedad HR</span>
@@ -515,7 +515,7 @@ export const DashboardV2: React.FC = () => {
           </div>
           <div className="divider" />
           <div className="tele-item">
-            <FaWind className="icon vpd" />
+            <Wind className="icon vpd" />
             <div className="info">
               <span className="val">1.15 kPa</span>
               <span className="lbl">VPD Objetivo</span>
@@ -531,12 +531,12 @@ export const DashboardV2: React.FC = () => {
           <div className="kpi-top">
             <span className="label">PLANTAS EN CULTIVO</span>
             <div className="icon-box">
-              <FaSeedling />
+              <Sprout />
             </div>
           </div>
           <div className="value">1,420</div>
           <div className="subtext">
-            <span className="trend-badge"><FaArrowUp /> +12.4%</span> este mes
+            <span className="trend-badge"><ArrowUp /> +12.4%</span> este mes
           </div>
           <div className="progress-bar">
             <div className="fill" style={{ width: '78%' }} />
@@ -548,7 +548,7 @@ export const DashboardV2: React.FC = () => {
           <div className="kpi-top">
             <span className="label">TAREAS PENDIENTES</span>
             <div className="icon-box">
-              <FaCalendarCheck />
+              <CalendarCheck />
             </div>
           </div>
           <div className="value">8 Tareas</div>
@@ -563,7 +563,7 @@ export const DashboardV2: React.FC = () => {
           <div className="kpi-top">
             <span className="label">STOCK CRÍTICO</span>
             <div className="icon-box">
-              <FaBoxes />
+              <Package />
             </div>
           </div>
           <div className="value">3 Alertas</div>
@@ -578,7 +578,7 @@ export const DashboardV2: React.FC = () => {
           <div className="kpi-top">
             <span className="label">DISPENSACIONES MES</span>
             <div className="icon-box">
-              <FaUserInjured />
+              <HeartPulse />
             </div>
           </div>
           <div className="value">1,250 g</div>
@@ -595,7 +595,7 @@ export const DashboardV2: React.FC = () => {
         <MainCard>
           <div className="card-header">
             <h3>
-              <FaCalendarCheck style={{ color: '#34d399' }} /> Checklist Operativo de Hoy
+              <CalendarCheck style={{ color: '#34d399' }} /> Checklist Operativo de Hoy
             </h3>
             <span style={{ fontSize: '0.825rem', color: '#94a3b8', fontWeight: 600 }}>
               {taskState.filter(t => t.completed).length} de {taskState.length} completadas
@@ -606,7 +606,7 @@ export const DashboardV2: React.FC = () => {
             <TaskItem key={task.id} $completed={task.completed}>
               <div className="task-left">
                 <div className="check-box" onClick={() => toggleTask(task.id)}>
-                  {task.completed && <FaCheck />}
+                  {task.completed && <Check />}
                 </div>
                 <div className="task-content">
                   <div className="task-title">{task.title}</div>
@@ -624,36 +624,36 @@ export const DashboardV2: React.FC = () => {
         <div>
           <MainCard style={{ marginBottom: '1.5rem' }}>
             <div className="card-header">
-              <h3><FaMagic style={{ color: '#f59e0b' }} /> Accesos Rápidos</h3>
+              <h3><Sparkles style={{ color: '#f59e0b' }} /> Accesos Rápidos</h3>
             </div>
             <QuickActionButton to="/crops">
               <div className="left">
-                <FaSeedling className="icon" />
+                <Sprout className="icon" />
                 <span>Gestión de Cultivos y Lotes</span>
               </div>
-              <FaChevronRight style={{ fontSize: '0.8rem', color: '#64748b' }} />
+              <ChevronRight style={{ fontSize: '0.8rem', color: '#64748b' }} />
             </QuickActionButton>
 
             <QuickActionButton to="/patients">
               <div className="left">
-                <FaUserInjured className="icon" style={{ color: '#38bdf8' }} />
+                <HeartPulse className="icon" style={{ color: '#38bdf8' }} />
                 <span>Registrar Nuevo Paciente</span>
               </div>
-              <FaChevronRight style={{ fontSize: '0.8rem', color: '#64748b' }} />
+              <ChevronRight style={{ fontSize: '0.8rem', color: '#64748b' }} />
             </QuickActionButton>
 
             <QuickActionButton to="/insumos">
               <div className="left">
-                <FaBoxes className="icon" style={{ color: '#a855f7' }} />
+                <Package className="icon" style={{ color: '#a855f7' }} />
                 <span>Stock e Insumos</span>
               </div>
-              <FaChevronRight style={{ fontSize: '0.8rem', color: '#64748b' }} />
+              <ChevronRight style={{ fontSize: '0.8rem', color: '#64748b' }} />
             </QuickActionButton>
           </MainCard>
 
           <MainCard>
             <div className="card-header">
-              <h3><FaStickyNote style={{ color: '#fbbf24' }} /> Notas Rápidas</h3>
+              <h3><StickyNote style={{ color: '#fbbf24' }} /> Notas Rápidas</h3>
             </div>
             <StickyNoteCard>
               <div className="note-head">Recordatorio Sala 2 (Floración)</div>

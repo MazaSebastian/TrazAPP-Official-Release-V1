@@ -2,19 +2,18 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';
 import {
-  FaSeedling,
-  FaPlus,
-  FaCalendarAlt,
-  FaClock,
-  FaEdit,
-  FaTrash,
-  FaPalette,
-  FaBorderAll,
-  FaSearch,
-  FaArrowRight,
-  FaLeaf,
-  FaLayerGroup
-} from 'react-icons/fa';
+  ArrowRight,
+  LayoutGrid,
+  Clock,
+  Pencil,
+  Layers,
+  Leaf,
+  Palette,
+  Plus,
+  Search,
+  Sprout,
+  Trash2
+} from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useData } from '../context/DataContext';
 
@@ -499,7 +498,7 @@ export const CropsV2: React.FC = () => {
         </TitleBlock>
 
         <CreateCropButton onClick={() => alert('Abrir modal de creación de cultivo')}>
-          <FaPlus /> Crear Nuevo Cultivo
+          <Plus /> Crear Nuevo Cultivo
         </CreateCropButton>
       </HeaderRow>
 
@@ -507,7 +506,7 @@ export const CropsV2: React.FC = () => {
       <KPIGrid>
         <KPICard $glowColor="#10b981">
           <div className="kpi-header">
-            <FaSeedling className="icon" /> CULTIVOS ACTIVOS
+            <Sprout className="icon" /> CULTIVOS ACTIVOS
           </div>
           <div className="value">3 Cultivos</div>
           <div className="sub">100% Operativos y trazados</div>
@@ -515,7 +514,7 @@ export const CropsV2: React.FC = () => {
 
         <KPICard $glowColor="#38bdf8">
           <div className="kpi-header">
-            <FaBorderAll className="icon" /> SALAS HABILITADAS
+            <LayoutGrid className="icon" /> SALAS HABILITADAS
           </div>
           <div className="value">6 Salas</div>
           <div className="sub">1 Vege • 4 Flora • 1 Secado</div>
@@ -523,7 +522,7 @@ export const CropsV2: React.FC = () => {
 
         <KPICard $glowColor="#f59e0b">
           <div className="kpi-header">
-            <FaLeaf className="icon" /> PLANTAS TOTALES
+            <Leaf className="icon" /> PLANTAS TOTALES
           </div>
           <div className="value">1,420</div>
           <div className="sub">Etiquetadas en el sistema</div>
@@ -531,7 +530,7 @@ export const CropsV2: React.FC = () => {
 
         <KPICard $glowColor="#a855f7">
           <div className="kpi-header">
-            <FaClock className="icon" /> ÚLTIMA ACTIVIDAD
+            <Clock className="icon" /> ÚLTIMA ACTIVIDAD
           </div>
           <div className="value" style={{ fontSize: '1.6rem' }}>Hace 15 min</div>
           <div className="sub">Riego registrado en Casa de Mario</div>
@@ -541,7 +540,7 @@ export const CropsV2: React.FC = () => {
       {/* FILTER & SEARCH ROW */}
       <FilterRow>
         <div className="search-box">
-          <FaSearch />
+          <Search />
           <input
             type="text"
             placeholder="Buscar cultivo por nombre..."
@@ -568,29 +567,29 @@ export const CropsV2: React.FC = () => {
               <div className="crop-top">
                 <div className="crop-header-left">
                   <div className="icon-wrapper">
-                    <FaSeedling />
+                    <Sprout />
                   </div>
                   <div className="crop-name">{crop.name}</div>
                 </div>
 
                 <div className="crop-actions" onClick={(e) => e.stopPropagation()}>
-                  <div className="action-icon" title="Editar"><FaEdit /></div>
-                  <div className="action-icon" title="Color"><FaPalette /></div>
-                  <div className="action-icon delete" title="Eliminar"><FaTrash /></div>
+                  <div className="action-icon" title="Editar"><Pencil /></div>
+                  <div className="action-icon" title="Color"><Palette /></div>
+                  <div className="action-icon delete" title="Eliminar"><Trash2 /></div>
                 </div>
               </div>
 
               <div className="status-row">
                 <span className="active-badge">ACTIVE</span>
                 <span className="last-activity">
-                  <FaClock /> Última actividad: {crop.lastActivity}
+                  <Clock /> Última actividad: {crop.lastActivity}
                 </span>
               </div>
 
               <div className="rooms-badges">
                 {crop.rooms.map((r, idx) => (
                   <span key={idx} className={`room-chip ${r.type}`}>
-                    <FaLayerGroup /> {r.count} {r.type.toUpperCase()}
+                    <Layers /> {r.count} {r.type.toUpperCase()}
                   </span>
                 ))}
               </div>
@@ -599,7 +598,7 @@ export const CropsV2: React.FC = () => {
             <div className="card-footer">
               <span style={{ fontSize: '0.8rem', color: '#64748b' }}>Ver mapa y salas</span>
               <span className="enter-link">
-                Ingresar a Cultivo <FaArrowRight />
+                Ingresar a Cultivo <ArrowRight />
               </span>
             </div>
           </CropCard>
@@ -608,7 +607,7 @@ export const CropsV2: React.FC = () => {
         {/* CREATE NEW CROP CARD */}
         <CreateNewCard onClick={() => alert('Abrir modal de creación de cultivo')}>
           <div className="plus-circle">
-            <FaPlus />
+            <Plus />
           </div>
           <div className="create-text">Haz click aquí para crear un nuevo cultivo</div>
           <div className="create-sub">Asigná salas, mapas de esquejera y lotes</div>
