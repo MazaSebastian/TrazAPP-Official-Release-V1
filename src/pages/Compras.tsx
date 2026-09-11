@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import { FaPlus, FaEdit, FaTrash, FaShoppingCart, FaSearch, FaDownload, FaCheck } from 'react-icons/fa';
+import { ShoppingCart, Plus, Edit3, Trash2, Search, Download, Check, X } from 'lucide-react';
+import { Button } from '../components/ui';
 import { supabase } from '../services/supabaseClient';
 
 interface CompraItem {
@@ -13,15 +14,15 @@ interface CompraItem {
 }
 
 const PageContainer = styled.div`
-  padding: 1rem;
-  padding-top: 1.5rem;
-  max-width: 1200px;
+  padding: 1.5rem 2rem;
+  max-width: 1400px;
   margin: 0 auto;
   min-height: 100vh;
+  color: #f8fafc;
   
   @media (max-width: 768px) {
-    padding: 0.5rem;
-    padding-top: 4rem;
+    padding: 1rem;
+    padding-top: 2rem;
   }
 `;
 
@@ -31,22 +32,23 @@ const Header = styled.div`
   justify-content: space-between;
   margin-bottom: 2rem;
   flex-wrap: wrap;
-  gap: 1rem;
+  gap: 1.25rem;
   
   @media (max-width: 768px) {
     flex-direction: column;
     align-items: stretch;
-    gap: 0.75rem;
+    gap: 1rem;
   }
   
   h1 {
     font-size: 1.875rem;
     font-weight: 700;
-    color: #1e293b;
+    color: #f8fafc;
     margin: 0;
     display: flex;
     align-items: center;
     gap: 0.75rem;
+    letter-spacing: -0.02em;
     
     @media (max-width: 768px) {
       font-size: 1.5rem;
@@ -59,24 +61,41 @@ const SearchBar = styled.div`
   gap: 0.75rem;
   align-items: center;
   flex: 1;
-  max-width: 400px;
+  max-width: 420px;
+  position: relative;
   
   @media (max-width: 768px) {
     max-width: none;
     width: 100%;
   }
+
+  svg {
+    position: absolute;
+    left: 0.85rem;
+    color: #64748b;
+    pointer-events: none;
+  }
   
   .search-input {
-    flex: 1;
-    padding: 0.75rem 1rem;
-    border: 1px solid #d1d5db;
+    width: 100%;
+    padding: 0.65rem 1rem 0.65rem 2.5rem;
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 0.5rem;
-    font-size: 1rem;
+    font-size: 0.9rem;
+    color: #f8fafc;
+    transition: all 0.2s ease;
     
     &:focus {
       outline: none;
-      border-color: #3b82f6;
-      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+      border-color: rgba(16, 185, 129, 0.5);
+      background: rgba(15, 23, 42, 0.8);
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
+    }
+
+    &::placeholder {
+      color: #64748b;
     }
   }
 `;
@@ -89,45 +108,6 @@ const ActionButtons = styled.div`
   @media (max-width: 768px) {
     width: 100%;
     justify-content: space-between;
-  }
-`;
-
-const Button = styled.button<{ variant?: 'primary' | 'secondary' | 'danger' | 'success' }>`
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1rem;
-  border: none;
-  border-radius: 0.5rem;
-  font-size: 0.875rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  
-  background: ${props => {
-    switch (props.variant) {
-      case 'primary': return '#3b82f6';
-      case 'secondary': return '#6b7280';
-      case 'danger': return '#ef4444';
-      case 'success': return '#10b981';
-      default: return '#f3f4f6';
-    }
-  }};
-  
-  color: ${props => props.variant ? 'white' : '#374151'};
-  
-  &:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  }
-  
-  &:active {
-    transform: translateY(0);
-  }
-  
-  @media (max-width: 768px) {
-    padding: 0.5rem 0.75rem;
-    font-size: 0.75rem;
   }
 `;
 
@@ -144,21 +124,27 @@ const StatsGrid = styled.div`
 `;
 
 const StatCard = styled.div`
-  background: white;
-  border: 1px solid #e2e8f0;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 0.75rem;
-  padding: 1.5rem;
+  padding: 1.25rem;
   text-align: center;
+  transition: border-color 0.2s ease;
+
+  &:hover {
+    border-color: rgba(255, 255, 255, 0.15);
+  }
   
   @media (max-width: 768px) {
     padding: 1rem;
   }
   
   .stat-value {
-    font-size: 2rem;
+    font-size: 1.875rem;
     font-weight: 700;
-    color: #1e293b;
-    margin-bottom: 0.5rem;
+    color: #f8fafc;
+    margin-bottom: 0.25rem;
     
     @media (max-width: 768px) {
       font-size: 1.5rem;
@@ -166,16 +152,18 @@ const StatCard = styled.div`
   }
   
   .stat-label {
-    color: #64748b;
-    font-size: 0.875rem;
-    font-weight: 500;
+    color: #94a3b8;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
   }
 `;
 
 const FilterTabs = styled.div`
   display: flex;
   gap: 0.5rem;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
   flex-wrap: wrap;
   
   @media (max-width: 768px) {
@@ -185,49 +173,49 @@ const FilterTabs = styled.div`
 
 const FilterTab = styled.button<{ active: boolean }>`
   padding: 0.5rem 1rem;
-  border: 1px solid ${props => props.active ? '#3b82f6' : '#d1d5db'};
-  background: ${props => props.active ? '#3b82f6' : 'white'};
-  color: ${props => props.active ? 'white' : '#374151'};
+  border: 1px solid ${props => props.active ? '#10b981' : 'rgba(255, 255, 255, 0.08)'};
+  background: ${props => props.active ? 'rgba(16, 185, 129, 0.15)' : 'rgba(15, 23, 42, 0.6)'};
+  color: ${props => props.active ? '#34d399' : '#94a3b8'};
   border-radius: 0.5rem;
-  font-size: 0.875rem;
-  font-weight: 500;
+  font-size: 0.85rem;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
+  backdrop-filter: blur(12px);
   
   &:hover {
-    background: ${props => props.active ? '#2563eb' : '#f3f4f6'};
+    background: ${props => props.active ? 'rgba(16, 185, 129, 0.25)' : 'rgba(255, 255, 255, 0.05)'};
+    color: ${props => props.active ? '#34d399' : '#f8fafc'};
   }
 `;
 
 const ComprasList = styled.div`
   display: grid;
-  gap: 1rem;
-  
-  @media (max-width: 768px) {
-    gap: 0.75rem;
-  }
+  gap: 0.75rem;
 `;
 
 const CompraCard = styled.div<{ completed: boolean; priority: string }>`
-  background: white;
-  border: 1px solid #e2e8f0;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-left: 4px solid ${props => {
     if (props.completed) return '#10b981';
     switch (props.priority) {
       case 'ALTO': return '#ef4444';
       case 'MEDIO': return '#f59e0b';
-      case 'BAJO': return '#3b82f6';
-      default: return '#6b7280';
+      case 'BAJO': return '#38bdf8';
+      default: return '#64748b';
     }
   }};
   border-radius: 0.75rem;
-  padding: 1.5rem;
+  padding: 1.25rem 1.5rem;
   transition: all 0.2s ease;
   opacity: ${props => props.completed ? 0.6 : 1};
   
   &:hover {
-    border-color: #3b82f6;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border-color: rgba(255, 255, 255, 0.15);
+    background: rgba(15, 23, 42, 0.8);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
   }
   
   @media (max-width: 768px) {
@@ -239,7 +227,7 @@ const CompraHeader = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
   gap: 1rem;
   
   @media (max-width: 768px) {
@@ -252,7 +240,7 @@ const CompraHeader = styled.div`
 const CompraInfo = styled.div`
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.75rem;
   flex: 1;
   
   @media (max-width: 768px) {
@@ -262,39 +250,49 @@ const CompraInfo = styled.div`
 `;
 
 const CompraName = styled.h3<{ completed: boolean }>`
-  font-size: 1.125rem;
+  font-size: 1.05rem;
   font-weight: 600;
-  color: #1e293b;
+  color: ${props => props.completed ? '#64748b' : '#f8fafc'};
   margin: 0;
   text-decoration: ${props => props.completed ? 'line-through' : 'none'};
   
   @media (max-width: 768px) {
-    font-size: 1rem;
+    font-size: 0.95rem;
   }
 `;
 
 const PriorityBadge = styled.span<{ priority: string }>`
-  padding: 0.25rem 0.75rem;
+  padding: 0.2rem 0.6rem;
   border-radius: 9999px;
-  font-size: 0.75rem;
-  font-weight: 600;
+  font-size: 0.7rem;
+  font-weight: 700;
   text-transform: uppercase;
+  letter-spacing: 0.05em;
   
   background: ${props => {
     switch (props.priority) {
-      case 'ALTO': return '#fee2e2';
-      case 'MEDIO': return '#fef3c7';
-      case 'BAJO': return '#dbeafe';
-      default: return '#f3f4f6';
+      case 'ALTO': return 'rgba(239, 68, 68, 0.15)';
+      case 'MEDIO': return 'rgba(245, 158, 11, 0.15)';
+      case 'BAJO': return 'rgba(56, 189, 248, 0.15)';
+      default: return 'rgba(255, 255, 255, 0.05)';
     }
   }};
   
   color: ${props => {
     switch (props.priority) {
-      case 'ALTO': return '#dc2626';
-      case 'MEDIO': return '#d97706';
-      case 'BAJO': return '#2563eb';
-      default: return '#6b7280';
+      case 'ALTO': return '#f87171';
+      case 'MEDIO': return '#fbbf24';
+      case 'BAJO': return '#38bdf8';
+      default: return '#94a3b8';
+    }
+  }};
+
+  border: 1px solid ${props => {
+    switch (props.priority) {
+      case 'ALTO': return 'rgba(239, 68, 68, 0.3)';
+      case 'MEDIO': return 'rgba(245, 158, 11, 0.3)';
+      case 'BAJO': return 'rgba(56, 189, 248, 0.3)';
+      default: return 'rgba(255, 255, 255, 0.1)';
     }
   }};
 `;
@@ -309,9 +307,9 @@ const CompraMeta = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: 1rem;
-  padding-top: 1rem;
-  border-top: 1px solid #f1f5f9;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
   
   @media (max-width: 768px) {
     flex-direction: column;
@@ -322,14 +320,14 @@ const CompraMeta = styled.div`
 
 const CompraDate = styled.span`
   color: #64748b;
-  font-size: 0.875rem;
+  font-size: 0.8rem;
 `;
 
 const CompraNotes = styled.p`
-  color: #64748b;
-  font-size: 0.875rem;
+  color: #94a3b8;
+  font-size: 0.85rem;
   margin: 0.5rem 0 0 0;
-  font-style: italic;
+  line-height: 1.4;
 `;
 
 const Modal = styled.div<{ isOpen: boolean }>`
@@ -338,7 +336,8 @@ const Modal = styled.div<{ isOpen: boolean }>`
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(8px);
   display: ${props => props.isOpen ? 'flex' : 'none'};
   align-items: center;
   justify-content: center;
@@ -347,11 +346,14 @@ const Modal = styled.div<{ isOpen: boolean }>`
 `;
 
 const ModalContent = styled.div`
-  background: white;
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 0.75rem;
   padding: 2rem;
   width: 100%;
   max-width: 500px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
   
   @media (max-width: 768px) {
     padding: 1.5rem;
@@ -359,15 +361,15 @@ const ModalContent = styled.div`
   
   h2 {
     margin: 0 0 1.5rem 0;
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: #1e293b;
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: #f8fafc;
   }
 `;
 
 const Form = styled.form`
   display: grid;
-  gap: 1rem;
+  gap: 1.25rem;
 `;
 
 const FormGroup = styled.div`
@@ -375,21 +377,29 @@ const FormGroup = styled.div`
   gap: 0.5rem;
   
   label {
-    font-weight: 500;
-    color: #374151;
-    font-size: 0.875rem;
+    font-weight: 600;
+    color: #cbd5e1;
+    font-size: 0.85rem;
   }
   
   input, select, textarea {
     padding: 0.75rem;
-    border: 1px solid #d1d5db;
+    background: rgba(30, 41, 59, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 0.5rem;
-    font-size: 1rem;
+    font-size: 0.9rem;
+    color: #f8fafc;
+    transition: all 0.2s ease;
     
     &:focus {
       outline: none;
-      border-color: #3b82f6;
-      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+      border-color: rgba(16, 185, 129, 0.5);
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
+      background: rgba(30, 41, 59, 0.8);
+    }
+
+    &::placeholder {
+      color: #64748b;
     }
   }
   
@@ -412,24 +422,29 @@ const ModalActions = styled.div`
 
 const EmptyState = styled.div`
   text-align: center;
-  padding: 3rem 1rem;
+  padding: 4rem 1rem;
   color: #64748b;
+  background: rgba(15, 23, 42, 0.4);
+  border: 1px dashed rgba(255, 255, 255, 0.08);
+  border-radius: 0.75rem;
   
   .empty-icon {
     font-size: 3rem;
     margin-bottom: 1rem;
-    opacity: 0.5;
+    opacity: 0.6;
   }
   
   h3 {
-    font-size: 1.25rem;
+    font-size: 1.2rem;
     font-weight: 600;
     margin-bottom: 0.5rem;
-    color: #374151;
+    color: #e2e8f0;
   }
   
   p {
     margin-bottom: 1.5rem;
+    color: #94a3b8;
+    font-size: 0.9rem;
   }
 `;
 
@@ -626,9 +641,9 @@ const Compras: React.FC = () => {
     return (
       <PageContainer>
         <Header>
-          <h1><FaShoppingCart /> Compras</h1>
+          <h1><ShoppingCart size={28} style={{ color: '#10b981' }} /> Compras</h1>
         </Header>
-        <div style={{ textAlign: 'center', padding: '2rem' }}>
+        <div style={{ textAlign: 'center', padding: '3rem', color: '#94a3b8' }}>
           Cargando lista de compras...
         </div>
       </PageContainer>
@@ -638,9 +653,9 @@ const Compras: React.FC = () => {
   return (
     <PageContainer>
       <Header>
-        <h1><FaShoppingCart /> Compras</h1>
+        <h1><ShoppingCart size={28} style={{ color: '#10b981' }} /> Compras</h1>
         <SearchBar>
-          <FaSearch style={{ color: '#6b7280' }} />
+          <Search size={16} />
           <input
             type="text"
             className="search-input"
@@ -650,11 +665,11 @@ const Compras: React.FC = () => {
           />
         </SearchBar>
         <ActionButtons>
-          <Button onClick={() => setIsModalOpen(true)}>
-            <FaPlus /> Nuevo Ítem
+          <Button variant="default" onClick={() => setIsModalOpen(true)}>
+            <Plus size={16} /> Nuevo Ítem
           </Button>
           <Button variant="secondary" onClick={exportCSV}>
-            <FaDownload /> Exportar
+            <Download size={16} /> Exportar
           </Button>
         </ActionButtons>
       </Header>
@@ -665,15 +680,15 @@ const Compras: React.FC = () => {
           <div className="stat-label">Total Ítems</div>
         </StatCard>
         <StatCard>
-          <div className="stat-value">{stats.pending}</div>
+          <div className="stat-value" style={{ color: '#fbbf24' }}>{stats.pending}</div>
           <div className="stat-label">Pendientes</div>
         </StatCard>
         <StatCard>
-          <div className="stat-value">{stats.completed}</div>
+          <div className="stat-value" style={{ color: '#34d399' }}>{stats.completed}</div>
           <div className="stat-label">Completados</div>
         </StatCard>
         <StatCard>
-          <div className="stat-value">{stats.highPriority}</div>
+          <div className="stat-value" style={{ color: '#f87171' }}>{stats.highPriority}</div>
           <div className="stat-label">Alta Prioridad</div>
         </StatCard>
       </StatsGrid>
@@ -704,8 +719,8 @@ const Compras: React.FC = () => {
           <div className="empty-icon">🛒</div>
           <h3>No hay ítems en la lista</h3>
           <p>Comienza agregando tu primer ítem a la lista de compras</p>
-          <Button onClick={() => setIsModalOpen(true)}>
-            <FaPlus /> Agregar Ítem
+          <Button variant="default" onClick={() => setIsModalOpen(true)}>
+            <Plus size={16} /> Agregar Ítem
           </Button>
         </EmptyState>
       ) : (
@@ -720,22 +735,23 @@ const Compras: React.FC = () => {
                 <CompraActions>
                   {!item.completed && (
                     <Button
-                      variant="success"
+                      variant="secondary"
                       onClick={() => toggleComplete(item.id, item.completed)}
-                      style={{ padding: '0.5rem' }}
+                      style={{ padding: '0.4rem', height: 'auto' }}
                       title="Marcar como completada"
                     >
-                      <FaCheck />
+                      <Check size={16} style={{ color: '#34d399' }} />
                     </Button>
                   )}
                   {item.completed && (
                     <span style={{ 
-                      color: '#10b981', 
-                      fontSize: '0.875rem', 
-                      fontWeight: '600',
-                      padding: '0.5rem',
-                      background: '#d1fae5',
-                      borderRadius: '0.25rem'
+                      color: '#34d399', 
+                      fontSize: '0.75rem', 
+                      fontWeight: '700',
+                      padding: '0.35rem 0.65rem',
+                      background: 'rgba(16, 185, 129, 0.15)',
+                      border: '1px solid rgba(16, 185, 129, 0.3)',
+                      borderRadius: '0.375rem'
                     }}>
                       ✓ Completada
                     </span>
@@ -743,18 +759,18 @@ const Compras: React.FC = () => {
                   <Button
                     variant="secondary"
                     onClick={() => handleEdit(item)}
-                    style={{ padding: '0.5rem' }}
+                    style={{ padding: '0.4rem', height: 'auto' }}
                     title="Editar"
                   >
-                    <FaEdit />
+                    <Edit3 size={15} />
                   </Button>
                   <Button
-                    variant="danger"
+                    variant="destructive"
                     onClick={() => handleDelete(item.id)}
-                    style={{ padding: '0.5rem' }}
+                    style={{ padding: '0.4rem', height: 'auto' }}
                     title="Eliminar"
                   >
-                    <FaTrash />
+                    <Trash2 size={15} />
                   </Button>
                 </CompraActions>
               </CompraHeader>
@@ -789,7 +805,7 @@ const Compras: React.FC = () => {
                 type="text"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="Ej: Leche, Pan, Frutas..."
+                placeholder="Ej: Sustrato, Macetas, Tijeras..."
                 required
               />
             </FormGroup>
@@ -811,14 +827,14 @@ const Compras: React.FC = () => {
               <textarea
                 value={formData.notes}
                 onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                placeholder="Detalles adicionales, marca específica, etc."
+                placeholder="Detalles adicionales, proveedor específico, etc."
               />
             </FormGroup>
             
             <ModalActions>
               <Button
                 type="button"
-                variant="secondary"
+                variant="ghost"
                 onClick={() => {
                   setIsModalOpen(false);
                   setEditingItem(null);
@@ -827,7 +843,7 @@ const Compras: React.FC = () => {
               >
                 Cancelar
               </Button>
-              <Button type="submit" variant="primary">
+              <Button type="submit" variant="default">
                 {editingItem ? 'Actualizar' : 'Crear'}
               </Button>
             </ModalActions>

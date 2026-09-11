@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { useAuth } from '../context/AuthContext';
 import { useOrganization } from '../context/OrganizationContext';
-import { FaUserCircle, FaEnvelope, FaBuilding, FaUserShield, FaExclamationTriangle, FaIdCard } from 'react-icons/fa';
+import { UserCircle, Mail, Building2, Shield, AlertTriangle, CreditCard } from 'lucide-react';
 import { KYCForm } from '../components/KYCForm';
 import { ProfessionalSignature } from '../components/ProfessionalSignature';
 import { supabase } from '../services/supabaseClient';
@@ -236,7 +236,7 @@ const AccountInfo: React.FC = () => {
   return (
     <PageContainer>
       <Header>
-        <h1><FaUserCircle /> Información de Cuenta</h1>
+        <h1><UserCircle size={32} style={{ color: '#10b981' }} /> Información de Cuenta</h1>
       </Header>
 
       <ProfileCard>
@@ -247,14 +247,14 @@ const AccountInfo: React.FC = () => {
           <div>
             <UserName>{user?.name || 'Usuario'}</UserName>
             <UserEmail>
-              <FaEnvelope /> {user?.email}
+              <Mail size={14} /> {user?.email}
             </UserEmail>
           </div>
         </ProfileHeader>
 
         <InfoGrid>
           <InfoCard>
-            <h3><FaUserShield /> Permisos y Rol</h3>
+            <h3><Shield size={16} /> Permisos y Rol</h3>
             <InfoRow>
               <span className="label">Nivel de Acceso</span>
               <div style={{ marginTop: '0.25rem' }}>
@@ -272,7 +272,7 @@ const AccountInfo: React.FC = () => {
           </InfoCard>
 
           <InfoCard>
-            <h3><FaBuilding /> Organización Actual</h3>
+            <h3><Building2 size={16} /> Organización Actual</h3>
             {currentOrganization ? (
               <>
                 <InfoRow>
@@ -310,7 +310,7 @@ const AccountInfo: React.FC = () => {
               </>
             ) : (
               <div style={{ color: '#94a3b8', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <FaExclamationTriangle style={{ color: '#facc15' }} />
+                <AlertTriangle size={16} style={{ color: '#facc15' }} />
                 No estás asociado a ninguna organización activa.
               </div>
             )}
@@ -341,7 +341,7 @@ const AccountInfo: React.FC = () => {
       {currentRole === 'partner' && patientData && (
         <ProfileCard style={{ marginTop: '2rem' }}>
           <h2 style={{ color: '#f8fafc', margin: '0 0 1.5rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.25rem' }}>
-            <FaIdCard style={{ color: '#4ade80' }} /> Datos del Paciente / Reprocann
+            <CreditCard size={20} style={{ color: '#4ade80' }} /> Datos del Paciente / Reprocann
           </h2>
           <InfoGrid>
             <InfoCard>

@@ -20,7 +20,7 @@ import {
   NodeResizer
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { FaDna, FaSeedling, FaMars, FaVenus, FaGenderless, FaCompressArrowsAlt, FaTimes, FaMicroscope, FaRedo } from 'react-icons/fa';
+import { Dna, GitMerge, X, Microscope, RotateCw } from 'lucide-react';
 import * as Select from '@radix-ui/react-select'; // Import Radix UI Select
 import { geneticsService } from '../services/geneticsService';
 import { Genetic, PhenoHunt, Phenotype } from '../types/genetics';
@@ -552,12 +552,12 @@ const GeneticNode = ({ data, selected }: { data: any, selected?: boolean }) => (
     <StyledGeneticNode>
       <Handle type="target" position={Position.Top} className="handle-custom" />
       <div className="node-header">
-        <FaDna style={{ flexShrink: 0 }} /> <span className="text-truncate">{data.label}</span>
+        <Dna size={14} style={{ flexShrink: 0 }} /> <span className="text-truncate">{data.label}</span>
       </div>
       <div className="node-body">
         {data.type && (
           <span className="type-badge">
-            {data.type === 'Feminizada' ? <FaVenus color="#f472b6" style={{ flexShrink: 0 }} /> : data.type === 'Regular' ? <FaMars color="#60a5fa" style={{ flexShrink: 0 }} /> : <FaGenderless color="#94a3b8" style={{ flexShrink: 0 }} />}
+            {data.type === 'Feminizada' ? <span style={{ color: '#f472b6', fontWeight: 'bold', fontSize: '11px', lineHeight: 1 }}>♀</span> : data.type === 'Regular' ? <span style={{ color: '#60a5fa', fontWeight: 'bold', fontSize: '11px', lineHeight: 1 }}>♂</span> : <span style={{ color: '#94a3b8', fontWeight: 'bold', fontSize: '11px', lineHeight: 1 }}>⚲</span>}
             <span className="text-label">{data.type}</span>
           </span>
         )}
@@ -571,7 +571,7 @@ const GeneticNode = ({ data, selected }: { data: any, selected?: boolean }) => (
 const CrossNode = ({ data }: { data: any }) => (
   <StyledCrossNode>
     <Handle type="target" position={Position.Top} className="handle-custom" />
-    <FaCompressArrowsAlt />
+    <GitMerge size={16} />
     <div className="cross-name">{data.objective || 'Nuevo Cruce'}</div>
     <div className="cross-type">{data.crossType || 'F1'}</div>
     <Handle type="source" position={Position.Bottom} className="handle-custom" />
@@ -774,11 +774,11 @@ const InteractionCanvas = () => {
     <ContainerOuter>
       <PageHeader>
         <TitleContainer>
-          <h1><FaMicroscope /> Laboratorio I+D (Pheno Hunting)</h1>
+          <h1><Microscope size={26} /> Laboratorio I+D (Pheno Hunting)</h1>
           <p>Arrastra genéticas de tu inventario al lienzo para crear y trackear cruces, retrocruces (BX) y crías S1.</p>
         </TitleContainer>
         <button className="refresh-btn" onClick={refreshNodes} title="Recargar Canva" style={{ background: 'transparent', border: 'none', color: '#38bdf8', cursor: 'pointer', fontSize: '1.2rem', padding: '0.5rem' }}>
-            <FaRedo />
+            <RotateCw size={18} />
         </button>
       </PageHeader>
 
@@ -844,7 +844,7 @@ const InteractionCanvas = () => {
           {pendingConnection && (
              <GlassModalOverlay onClick={() => setPendingConnection(null)}>
                <GlassModalContent onClick={(e) => e.stopPropagation()}>
-                 <h3><FaCompressArrowsAlt /> Configurar Nuevo Cruce</h3>
+                 <h3><GitMerge size={18} /> Configurar Nuevo Cruce</h3>
                  <p style={{ color: '#94a3b8', fontSize: '0.85rem', marginBottom: '1.5rem' }}>
                    Estás documentando la combinación entre el Donante (Polen) y el Receptor (Madre).
                  </p>
@@ -900,7 +900,7 @@ const InteractionCanvas = () => {
             <GlassModalOverlay onClick={() => setSelectedCrossNode(null)}>
                <PhenoHuntContainer onClick={(e) => e.stopPropagation()}>
                  <div className="hunt-header">
-                     <h2><FaDna /> Pipeline de Pheno Hunting</h2>
+                     <h2><Dna size={20} /> Pipeline de Pheno Hunting</h2>
                      <button className="close-btn" onClick={() => setSelectedCrossNode(null)}>✕</button>
                  </div>
                  
@@ -972,7 +972,7 @@ const InteractionCanvas = () => {
             <GlassModalOverlay onClick={() => setSelectedGeneticNodeData(null)}>
                <GeneticModalContainer onClick={(e) => e.stopPropagation()}>
                  <div className="modal-header">
-                     <h2><FaDna /> Información Genética</h2>
+                     <h2><Dna size={20} /> Información Genética</h2>
                      <button className="close-btn" onClick={() => setSelectedGeneticNodeData(null)}>✕</button>
                  </div>
                  

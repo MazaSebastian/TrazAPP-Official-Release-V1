@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import styled from 'styled-components';
-import { FaFileAlt, FaSearch, FaLeaf, FaTruck, FaTasks, FaMoneyBillWave, FaTrashAlt, FaPrint, FaPills, FaCalendarAlt } from 'react-icons/fa';
+import {
+  FileText, Search, Leaf, Truck, CheckSquare, DollarSign,
+  Trash2, Printer, Pill, Calendar
+} from 'lucide-react';
 import { Batch } from '../types/rooms';
 import { reportsService, BatchTraceabilityReport } from '../services/reportsService';
 import { dispensaryService, DispensaryMovement } from '../services/dispensaryService';
@@ -435,12 +438,12 @@ const Informes = () => {
 
   const getEventIcon = (type: string) => {
     switch (type) {
-      case 'creation': return <FaLeaf size={10} color="#0f172a" />;
-      case 'movement': return <FaTruck size={10} color="#0f172a" />;
-      case 'task': return <FaTasks size={10} color="#0f172a" />;
-      case 'expense': return <FaMoneyBillWave size={10} color="#0f172a" />;
-      case 'discard': return <FaTrashAlt size={10} color="#0f172a" />;
-      default: return <FaLeaf size={10} color="#0f172a" />;
+      case 'creation': return <Leaf size={10} color="#0f172a" />;
+      case 'movement': return <Truck size={10} color="#0f172a" />;
+      case 'task': return <CheckSquare size={10} color="#0f172a" />;
+      case 'expense': return <DollarSign size={10} color="#0f172a" />;
+      case 'discard': return <Trash2 size={10} color="#0f172a" />;
+      default: return <Leaf size={10} color="#0f172a" />;
     }
   };
 
@@ -448,11 +451,11 @@ const Informes = () => {
     <PageContainer>
       <Header>
         <div>
-          <h1><FaFileAlt color="#3b82f6" /> Informes</h1>
+          <h1><FileText size={28} style={{ color: '#38bdf8' }} /> Informes</h1>
           <p>Auditoría completa de cultivos y dispensario.</p>
         </div>
         <PrintButton onClick={handlePrint} disabled={activeTab === 'trazabilidad' ? !report : filteredDispenseReports.length === 0}>
-          <FaPrint /> Imprimir PDF
+          <Printer size={16} /> Imprimir PDF
         </PrintButton>
       </Header>
 
@@ -461,13 +464,13 @@ const Informes = () => {
           $isActive={activeTab === 'trazabilidad'}
           onClick={() => setActiveTab('trazabilidad')}
         >
-          <FaLeaf /> Trazabilidad de Lotes
+          <Leaf size={16} /> Trazabilidad de Lotes
         </TabButton>
         <TabButton
           $isActive={activeTab === 'dispensario'}
           onClick={() => setActiveTab('dispensario')}
         >
-          <FaPills /> Salidas de Dispensario
+          <Pill size={16} /> Salidas de Dispensario
         </TabButton>
       </TabsContainer>
 
@@ -475,7 +478,7 @@ const Informes = () => {
         <>
           <SearchContainer>
             <div className="search-wrapper">
-              <FaSearch color="#64748b" size={20} />
+              <Search color="#64748b" size={20} />
               {loading ? (
                 <span style={{ color: '#94a3b8' }}>Cargando lotes...</span>
               ) : (
@@ -614,7 +617,7 @@ const Informes = () => {
             </ContentPanel>
           ) : (
             <ContentPanel style={{ textAlign: 'center', padding: '4rem 2rem' }}>
-              <FaFileAlt size={48} color="rgba(255, 255, 255, 0.1)" style={{ marginBottom: '1rem' }} />
+              <FileText size={48} color="rgba(255, 255, 255, 0.1)" style={{ marginBottom: '1rem' }} />
               <h3 style={{ margin: '0 0 0.5rem 0', color: '#94a3b8' }}>Ningún Lote Seleccionado</h3>
               <p style={{ margin: 0, color: '#64748b' }}>Utiliza el buscador de arriba para iniciar la auditoría de un lote.</p>
             </ContentPanel>
@@ -640,7 +643,7 @@ const Informes = () => {
                         alignItems: 'center',
                         gap: '0.75rem'
                       }}>
-                        <FaLeaf color="#10b981" />
+                        <Leaf size={16} color="#10b981" />
                         <span style={{ fontWeight: '600', color: '#f8fafc', minWidth: '80px' }}>
                           {unit.tracking_code ? `[${unit.tracking_code}] ` : ''}
                         </span>
@@ -662,7 +665,7 @@ const Informes = () => {
                 <label style={{ display: 'block', fontSize: '0.85rem', color: '#94a3b8', marginBottom: '0.5rem', fontWeight: 600 }}>Caja Buscador</label>
                 <div style={{ position: 'relative' }}>
                   <div style={{ position: 'absolute', top: '50%', left: '1rem', transform: 'translateY(-50%)', color: '#64748b', pointerEvents: 'none' }}>
-                    <FaSearch />
+                    <Search size={16} />
                   </div>
                   <input
                     type="text"
@@ -683,7 +686,7 @@ const Informes = () => {
                 </div>
               </div>
               <div>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.85rem', color: '#94a3b8', marginBottom: '0.5rem', fontWeight: 600 }}><FaCalendarAlt /> Desde</label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.85rem', color: '#94a3b8', marginBottom: '0.5rem', fontWeight: 600 }}><Calendar size={14} /> Desde</label>
                 <input
                   type="date"
                   value={dispensaryStartDate}
@@ -702,7 +705,7 @@ const Informes = () => {
                 />
               </div>
               <div>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.85rem', color: '#94a3b8', marginBottom: '0.5rem', fontWeight: 600 }}><FaCalendarAlt /> Hasta</label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.85rem', color: '#94a3b8', marginBottom: '0.5rem', fontWeight: 600 }}><Calendar size={14} /> Hasta</label>
                 <input
                   type="date"
                   value={dispensaryEndDate}
@@ -759,7 +762,7 @@ const Informes = () => {
             </style>
 
             <h2 style={{ marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <FaPills color="#3b82f6" />
+              <Pill size={24} style={{ color: '#38bdf8' }} />
               Auditoría de Salidas de Stock
               {dispensaryStartDate && dispensaryEndDate && (() => {
                 const s = new Date(`${dispensaryStartDate}T00:00:00`);
@@ -782,7 +785,7 @@ const Informes = () => {
               </div>
             ) : filteredDispenseReports.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '4rem 2rem' }}>
-                <FaSearch size={48} color="rgba(255, 255, 255, 0.1)" style={{ marginBottom: '1rem' }} />
+                <Search size={48} color="rgba(255, 255, 255, 0.1)" style={{ marginBottom: '1rem' }} />
                 <h3 style={{ margin: '0 0 0.5rem 0', color: '#94a3b8' }}>Sin Resultados</h3>
                 <p style={{ margin: 0, color: '#64748b' }}>No se encontraron salidas de stock para los filtros seleccionados.</p>
               </div>

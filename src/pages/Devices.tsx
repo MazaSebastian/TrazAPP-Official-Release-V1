@@ -2,10 +2,10 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';
 import {
-  FaMicrochip, FaPlus, FaTimes, FaWifi, FaSync, FaExclamationTriangle,
-  FaCheckCircle, FaTimesCircle, FaThermometerHalf, FaTint, FaLeaf,
-  FaTrash, FaInfoCircle
-} from 'react-icons/fa';
+  Cpu, Plus, X, Wifi, RotateCw,
+  XCircle, Thermometer, Droplets, Leaf,
+  Trash2, Info
+} from 'lucide-react';
 import { deviceService, TrazAppDevice, LinkDevicePayload } from '../services/deviceService';
 import { TrazAppDeviceDetailModal } from '../components/TrazAppDeviceDetailModal';
 import { supabase, getSelectedOrgId } from '../services/supabaseClient';
@@ -582,7 +582,7 @@ const Devices: React.FC = () => {
   return (
     <Container>
       <Header>
-        <h1><FaMicrochip /> Dispositivos TrazAPP</h1>
+        <h1><Cpu size={24} style={{ color: '#10b981' }} /> Dispositivos TrazAPP</h1>
         <HeaderActions>
           <RefreshButton 
             onClick={handleRefresh} 
@@ -590,10 +590,10 @@ const Devices: React.FC = () => {
             title="Actualizar lecturas"
             disabled={refreshing || loading}
           >
-            <FaSync />
+            <RotateCw size={16} />
           </RefreshButton>
           <AddButton onClick={() => setShowModal(true)}>
-            <FaPlus /> Vincular Dispositivo
+            <Plus size={16} /> Vincular Dispositivo
           </AddButton>
         </HeaderActions>
       </Header>
@@ -639,12 +639,12 @@ const Devices: React.FC = () => {
       <Grid>
         {loading ? (
           <EmptyState>
-            <div className="icon"><FaMicrochip /></div>
+            <div className="icon"><Cpu size={36} /></div>
             <h3>Cargando dispositivos...</h3>
           </EmptyState>
         ) : devices.length === 0 ? (
           <EmptyState>
-            <div className="icon"><FaMicrochip /></div>
+            <div className="icon"><Cpu size={36} /></div>
             <h3>Sin dispositivos vinculados</h3>
             <p>Presioná "Vincular Dispositivo" e ingresá el ID y PIN que aparecen en la pantalla del equipo.</p>
           </EmptyState>
@@ -689,10 +689,10 @@ const Devices: React.FC = () => {
               </CardHeader>
 
               <MetricsGrid $cols={s?.soil_pct !== undefined && s?.soil_pct !== null ? 3 : 2}>
-                <MetricValue value={s?.temp_c} unit="°C" label="Temperatura" icon={<FaThermometerHalf />} color={tempColor} />
-                <MetricValue value={s?.hum_pct} unit="%" label="Ambiente" icon={<FaTint />} color="#3b82f6" />
+                <MetricValue value={s?.temp_c} unit="°C" label="Temperatura" icon={<Thermometer size={16} />} color={tempColor} />
+                <MetricValue value={s?.hum_pct} unit="%" label="Ambiente" icon={<Droplets size={16} />} color="#3b82f6" />
                 {s?.soil_pct !== undefined && s?.soil_pct !== null && (
-                  <MetricValue value={s?.soil_pct} unit="%" label="Suelo" icon={<FaLeaf />} color="#14b8a6" />
+                  <MetricValue value={s?.soil_pct} unit="%" label="Suelo" icon={<Leaf size={16} />} color="#14b8a6" />
                 )}
               </MetricsGrid>
 
@@ -711,13 +711,13 @@ const Devices: React.FC = () => {
                 <span className="last-seen">
                   {online ? (
                     <>
-                      <FaWifi style={{ color: '#10b981', marginRight: 4 }} />
+                      <Wifi size={14} style={{ color: '#10b981', marginRight: 4 }} />
                       Activo
                       <DeviceCountdown lastSeenAt={device.last_seen_at} online={online} />
                     </>
                   ) : (
                     <>
-                      <FaTimesCircle style={{ marginRight: 4 }} />
+                      <XCircle size={14} style={{ marginRight: 4 }} />
                       {formatLastSeen(device.last_seen_at)}
                     </>
                   )}
@@ -725,7 +725,7 @@ const Devices: React.FC = () => {
                 </span>
                 <div className="actions">
                   <IconBtn title="Desvincular" $danger onClick={(e) => { e.stopPropagation(); handleUnlink(device.device_id); }}>
-                    <FaTrash />
+                    <Trash2 size={15} />
                   </IconBtn>
                 </div>
               </CardFooter>
@@ -737,11 +737,11 @@ const Devices: React.FC = () => {
       {showModal && (
         <Overlay onClick={() => setShowModal(false)}>
           <Modal onClick={e => e.stopPropagation()}>
-            <h2><FaMicrochip /> Vincular Dispositivo</h2>
+            <h2><Cpu size={22} style={{ color: '#10b981' }} /> Vincular Dispositivo</h2>
             <p className="subtitle">Ingresá los datos que aparecen en la pantalla del equipo físico.</p>
 
             <HintBox>
-              <FaInfoCircle />
+              <Info size={20} style={{ flexShrink: 0, color: '#38bdf8' }} />
               <div className="text">
                 <strong>¿Dónde encuentro estos datos?</strong>
                 En la pantalla del equipo, accedé a <strong>Configuración</strong>. Vas a ver:<br />
@@ -781,7 +781,7 @@ const Devices: React.FC = () => {
 
             <ModalActions>
               <button className="secondary" onClick={() => { setShowModal(false); setLinkError(null); }}>
-                <FaTimes style={{ marginRight: 6 }} /> Cancelar
+                <X size={16} style={{ marginRight: 6 }} /> Cancelar
               </button>
               <button
                 className="primary"

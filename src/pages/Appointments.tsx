@@ -2,10 +2,10 @@ import React, { useEffect, useState, useMemo } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { supabase, getSelectedOrgId } from '../services/supabaseClient';
 import {
-  FaCalendarAlt, FaCalendarPlus, FaCheck, FaTimes, FaClock, FaSpinner,
-  FaLeaf, FaStethoscope, FaClipboardList, FaFilter, FaUserMd, FaBan,
-  FaChevronLeft, FaChevronRight, FaList, FaThLarge
-} from 'react-icons/fa';
+  Calendar, Check, X, Clock, Loader2,
+  Leaf, Stethoscope, ClipboardList, Filter, Ban,
+  ChevronLeft, ChevronRight
+} from 'lucide-react';
 
 /* ============= STYLES ============= */
 const fadeIn = keyframes`from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); }`;
@@ -232,10 +232,10 @@ const Loader = styled.div`
 `;
 
 /* ============= CONSTANTS ============= */
-const TYPE_LABELS: Record<string, { label: string; icon: React.ComponentType }> = {
-  dispensa: { label: 'Dispensa', icon: FaLeaf },
-  consulta_medica: { label: 'Consulta Médica', icon: FaStethoscope },
-  tramite: { label: 'Trámite', icon: FaClipboardList },
+const TYPE_LABELS: Record<string, { label: string; icon: any }> = {
+  dispensa: { label: 'Dispensa', icon: Leaf },
+  consulta_medica: { label: 'Consulta Médica', icon: Stethoscope },
+  tramite: { label: 'Trámite', icon: ClipboardList },
 };
 
 const STATUS_LABELS: Record<string, string> = {
@@ -328,22 +328,22 @@ const Appointments: React.FC = () => {
     return d.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
   };
 
-  if (loading) return <Loader><FaSpinner /></Loader>;
+  if (loading) return <Loader><Loader2 className="animate-spin" size={28} /></Loader>;
 
   return (
     <PageContainer>
       <PageHeader>
         <div>
-          <h1><FaCalendarAlt /> Gestión de Turnos</h1>
+          <h1><Calendar size={28} style={{ color: '#4ade80' }} /> Gestión de Turnos</h1>
           <p>Administrá los turnos de socios del club.</p>
         </div>
       </PageHeader>
 
       {/* Date Navigation */}
       <DateNav style={{ marginBottom: '1.5rem' }}>
-        <button onClick={() => navigateDate(-1)}><FaChevronLeft /></button>
+        <button onClick={() => navigateDate(-1)}><ChevronLeft size={16} /></button>
         <span>{formatDate(selectedDate)}</span>
-        <button onClick={() => navigateDate(1)}><FaChevronRight /></button>
+        <button onClick={() => navigateDate(1)}><ChevronRight size={16} /></button>
         <input type="date" value={selectedDate} onChange={e => setSelectedDate(e.target.value)} />
       </DateNav>
 
@@ -369,7 +369,7 @@ const Appointments: React.FC = () => {
 
       {/* Filters */}
       <FilterBar>
-        <FaFilter style={{ color: '#64748b' }} />
+        <Filter size={16} style={{ color: '#64748b' }} />
         {['all', 'pending', 'confirmed', 'completed', 'cancelled'].map(s => (
           <FilterChip key={s} active={statusFilter === s} onClick={() => setStatusFilter(s)}>
             {s === 'all' ? 'Todos' : STATUS_LABELS[s]}
@@ -390,7 +390,7 @@ const Appointments: React.FC = () => {
 
         {filteredAppointments.length === 0 ? (
           <EmptyState>
-            <FaCalendarAlt />
+            <Calendar size={48} style={{ color: 'rgba(255, 255, 255, 0.1)', marginBottom: '1rem' }} />
             <h3>Sin turnos para esta fecha</h3>
             <p>No hay turnos {statusFilter !== 'all' ? `con estado "${STATUS_LABELS[statusFilter]}"` : ''} para el {formatDate(selectedDate)}.</p>
           </EmptyState>
@@ -424,20 +424,20 @@ const Appointments: React.FC = () => {
                   {apt.status === 'pending' && (
                     <>
                       <ActionBtn variant="confirm" onClick={() => updateStatus(apt.id, 'confirmed')} title="Confirmar">
-                        <FaCheck />
+                        <Check size={14} />
                       </ActionBtn>
                       <ActionBtn variant="cancel" onClick={() => updateStatus(apt.id, 'cancelled')} title="Cancelar">
-                        <FaTimes />
+                        <X size={14} />
                       </ActionBtn>
                     </>
                   )}
                   {apt.status === 'confirmed' && (
                     <>
                       <ActionBtn variant="complete" onClick={() => updateStatus(apt.id, 'completed')} title="Completar">
-                        <FaCheck /> Hecho
+                        <Check size={14} /> Hecho
                       </ActionBtn>
                       <ActionBtn variant="cancel" onClick={() => updateStatus(apt.id, 'no_show')} title="No asistió">
-                        <FaBan />
+                        <Ban size={14} />
                       </ActionBtn>
                     </>
                   )}
