@@ -3836,6 +3836,7 @@ const RoomDetail: React.FC = () => {
     // --- Devices State ---
     const [trazappDevices, setTrazappDevices] = useState<any[]>([]);
     const [selectedDeviceForModal, setSelectedDeviceForModal] = useState<any | null>(null);
+    const [deviceModalInitialView, setDeviceModalInitialView] = useState<'history' | 'config'>('history');
     const [isDeviceModalOpen, setIsDeviceModalOpen] = useState(false);
 
     const fetchTrazappDevices = async () => {
@@ -5085,6 +5086,7 @@ const RoomDetail: React.FC = () => {
                                                                                                         onClick={(e) => {
                                                                                                             e.stopPropagation();
                                                                                                             setSelectedDeviceForModal(linkedDev);
+                                                                                                            setDeviceModalInitialView('config');
                                                                                                             setIsDeviceModalOpen(true);
                                                                                                         }}
                                                                                                         style={{ background: 'rgba(59, 130, 246, 0.2)', border: '1px solid rgba(59, 130, 246, 0.4)', color: '#60a5fa', padding: '0.25rem 0.6rem', borderRadius: '0.375rem', fontSize: '0.75rem', cursor: 'pointer', fontWeight: 600 }}
@@ -5103,6 +5105,7 @@ const RoomDetail: React.FC = () => {
                                                                                                                 room_id: room?.id,
                                                                                                                 bunker_name: map.name
                                                                                                             });
+                                                                                                            setDeviceModalInitialView('config');
                                                                                                             setIsDeviceModalOpen(true);
                                                                                                         } else {
                                                                                                             Swal.fire('Sin Dispositivos', 'No hay dispositivos TrazApp registrados para vincular.', 'info');
@@ -8484,12 +8487,14 @@ const RoomDetail: React.FC = () => {
                 {isDeviceModalOpen && selectedDeviceForModal && (
                     <TrazAppDeviceDetailModal
                         device={selectedDeviceForModal}
+                        initialView={deviceModalInitialView}
                         onClose={() => {
                             setIsDeviceModalOpen(false);
                             setSelectedDeviceForModal(null);
                         }}
                         onUpdate={() => {
                             fetchTrazappDevices();
+                            if (id) loadData(id, false, false);
                         }}
                     />
                 )}

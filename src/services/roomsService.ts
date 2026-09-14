@@ -45,6 +45,7 @@ export const roomsService = {
             const { data: devices } = await getClient()
                 .from('trazapp_devices')
                 .select('*')
+                .eq('organization_id', targetOrgId)
                 .eq('is_active', true);
 
             data.forEach((room) => {
@@ -59,14 +60,11 @@ export const roomsService = {
                     return null;
                 };
 
-                // Match devices explicitly linked to this room
+                // Match devices explicitly linked to this specific room ONLY
                 const roomDevs = (devices || []).filter(d => {
                     if (!getSensors(d)) return false;
-                    // Exact match: device linked to this room
-                    if (d.room_id === room.id) return true;
-                    // Fallback: device has no room_id assigned — include for all rooms in same org
-                    if (!d.room_id) return true;
-                    return false;
+                    // Exact match: device linked to this specific room
+                    return d.room_id === room.id;
                 });
 
                 if (roomDevs.length > 0) {
@@ -104,9 +102,10 @@ export const roomsService = {
             const { data: devices } = await getClient()
                 .from('trazapp_devices')
                 .select('*')
+                .eq('organization_id', data.organization_id || getSelectedOrgId())
                 .eq('is_active', true);
 
-            const roomDevs = (devices || []).filter(d => (d.room_id === id || !d.room_id) && d.last_reading?.sensors);
+            const roomDevs = (devices || []).filter(d => d.room_id === id && d.last_reading?.sensors);
             if (roomDevs.length > 0) {
                 const avgT = roomDevs.reduce((acc, d) => acc + (d.last_reading.sensors.temp_c || 0), 0) / roomDevs.length;
                 const avgH = roomDevs.reduce((acc, d) => acc + (d.last_reading.sensors.hum_pct || 0), 0) / roomDevs.length;

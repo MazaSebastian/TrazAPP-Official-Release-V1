@@ -532,12 +532,13 @@ interface TrazAppDeviceDetailModalProps {
   device: TrazAppDevice;
   onClose: () => void;
   onUpdate: () => void;
+  initialView?: 'history' | 'config';
 }
 
 type SelectedMetric = 'temp' | 'hum' | 'soil' | 'vpd';
 
-export const TrazAppDeviceDetailModal: React.FC<TrazAppDeviceDetailModalProps> = ({ device, onClose, onUpdate }) => {
-  const [view, setView] = useState<'history' | 'config'>('history');
+export const TrazAppDeviceDetailModal: React.FC<TrazAppDeviceDetailModalProps> = ({ device, onClose, onUpdate, initialView = 'history' }) => {
+  const [view, setView] = useState<'history' | 'config'>(initialView);
   const [timeRange, setTimeRange] = useState<'24h' | '7d' | '30d'>('24h');
   const [activeMetric, setActiveMetric] = useState<SelectedMetric>('temp');
   const [logs, setLogs] = useState<any[]>([]);
@@ -565,6 +566,36 @@ export const TrazAppDeviceDetailModal: React.FC<TrazAppDeviceDetailModalProps> =
   const [notifyScreen, setNotifyScreen] = useState<boolean>(alertSettings?.notify_screen ?? true);
   const [notifyWeb, setNotifyWeb] = useState<boolean>(alertSettings?.notify_web ?? true);
   const [notifyPush, setNotifyPush] = useState<boolean>(alertSettings?.notify_push ?? true);
+
+  // Re-sync state when device changes or initialView updates
+  useEffect(() => {
+    if (device) {
+      setAlias(device.alias || '');
+      setRoomId(device.room_id || '');
+      setBunkerName(device.bunker_name || '');
+      setDeviceType(device.device_type || 'sensor');
+      if (device.alert_settings) {
+        setAlertsEnabled(device.alert_settings.alerts_enabled ?? true);
+        setTempMin(device.alert_settings.temp_min ?? 18);
+        setTempMax(device.alert_settings.temp_max ?? 28);
+        setHumMin(device.alert_settings.hum_min ?? 50);
+        setHumMax(device.alert_settings.hum_max ?? 75);
+        setSoilMin(device.alert_settings.soil_min ?? 40);
+        setSoilMax(device.alert_settings.soil_max ?? 80);
+        setVpdMin(device.alert_settings.vpd_min ?? 0.8);
+        setVpdMax(device.alert_settings.vpd_max ?? 1.4);
+        setNotifyScreen(device.alert_settings.notify_screen ?? true);
+        setNotifyWeb(device.alert_settings.notify_web ?? true);
+        setNotifyPush(device.alert_settings.notify_push ?? true);
+      }
+    }
+  }, [device]);
+
+  useEffect(() => {
+    if (initialView) {
+      setView(initialView);
+    }
+  }, [initialView]);
 
   // Toast State
   const [toast, setToast] = useState<{ open: boolean; message: string; type: 'success' | 'error' | 'info' }>({
