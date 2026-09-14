@@ -175,10 +175,10 @@ const Button = styled.button<{ variant?: 'primary' | 'secondary' | 'danger' | 's
         `;
       default:
         return `
-          background: rgba(var(--primary-color-rgb, 168, 85, 247), 0.2);
-          color: #d8b4fe;
-          border: 1px solid rgba(var(--primary-color-rgb, 168, 85, 247), 0.5);
-          &:hover { background: rgba(var(--primary-color-rgb, 168, 85, 247), 0.3); box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
+          background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+          color: #ffffff;
+          border: 1px solid rgba(16, 185, 129, 0.4);
+          &:hover { background: linear-gradient(135deg, #059669 0%, #047857 100%); box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4); }
         `;
     }
   }}
@@ -202,27 +202,27 @@ const SearchInput = styled.input`
 
   &:focus {
     outline: none;
-    border-color: rgba(var(--primary-color-rgb, 168, 85, 247), 0.5);
-    box-shadow: 0 0 0 3px rgba(var(--primary-color-rgb, 168, 85, 247), 0.1);
+    border-color: #10b981;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.18);
   }
 `;
 
 const TabsContainer = styled.div`
   display: flex;
-  gap: 1rem;
+  gap: 0.75rem;
   margin-bottom: 2rem;
   overflow-x: auto;
   padding-bottom: 0.5rem;
-  &::-webkit-scrollbar { height: 4px; }
-  &::-webkit-scrollbar-thumb { background: rgba(var(--primary-color-rgb, 168, 85, 247), 0.5); border-radius: 4px; }
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
 `;
 
 const TabButton = styled.button<{ $isActive: boolean }>`
-  background: ${props => props.$isActive ? 'rgba(var(--primary-color-rgb, 168, 85, 247), 0.2)' : 'rgba(30, 41, 59, 0.6)'};
-  color: ${props => props.$isActive ? '#d8b4fe' : '#94a3b8'};
-  border: 1px solid ${props => props.$isActive ? 'rgba(var(--primary-color-rgb, 168, 85, 247), 0.5)' : 'rgba(255, 255, 255, 0.1)'};
-  padding: 0.75rem 1.5rem;
-  border-radius: 0.5rem;
+  background: ${props => props.$isActive ? 'rgba(16, 185, 129, 0.15)' : 'rgba(30, 41, 59, 0.6)'};
+  color: ${props => props.$isActive ? '#34d399' : '#94a3b8'};
+  border: 1px solid ${props => props.$isActive ? 'rgba(16, 185, 129, 0.35)' : 'rgba(255, 255, 255, 0.1)'};
+  padding: 0.65rem 1.25rem;
+  border-radius: 0.75rem;
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
@@ -230,8 +230,8 @@ const TabButton = styled.button<{ $isActive: boolean }>`
   backdrop-filter: blur(8px);
 
   &:hover {
-    background: ${props => props.$isActive ? 'rgba(var(--primary-color-rgb, 168, 85, 247), 0.3)' : 'rgba(255, 255, 255, 0.1)'};
-    color: ${props => props.$isActive ? '#d8b4fe' : '#f8fafc'};
+    background: ${props => props.$isActive ? 'rgba(16, 185, 129, 0.22)' : 'rgba(255, 255, 255, 0.1)'};
+    color: ${props => props.$isActive ? '#34d399' : '#f8fafc'};
   }
 `;
 
@@ -423,8 +423,8 @@ const FormGroup = styled.div`
 
     &:focus {
       outline: none;
-      border-color: rgba(var(--primary-color-rgb, 168, 85, 247), 0.5);
-      box-shadow: 0 0 0 3px rgba(var(--primary-color-rgb, 168, 85, 247), 0.1);
+      border-color: #10b981;
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.18);
     }
     
     &::placeholder {
@@ -1098,8 +1098,8 @@ const Insumos: React.FC = () => {
                 </FormGroup>
               </FormRow>
 
-              <div style={{ padding: '1.5rem', background: 'rgba(var(--primary-color-rgb, 168, 85, 247), 0.05)', borderRadius: '0.75rem', border: '1px solid rgba(var(--primary-color-rgb, 168, 85, 247), 0.2)' }}>
-                <h4 style={{ color: '#d8b4fe', margin: '0 0 1rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <div style={{ padding: '1.5rem', background: 'rgba(16, 185, 129, 0.06)', borderRadius: '0.75rem', border: '1px solid rgba(16, 185, 129, 0.25)' }}>
+                <h4 style={{ color: '#34d399', margin: '0 0 1rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <span role="img" aria-label="robot">🤖</span> Growy AI: Control Volumétrico (Opcional)
                 </h4>
                 <p style={{ fontSize: '0.85rem', color: '#cbd5e1', marginBottom: '1.5rem', lineHeight: '1.4' }}>
@@ -1208,7 +1208,7 @@ const Insumos: React.FC = () => {
                   <Paperclip size={16} /> Comprobante (Ticket/Factura)
                 </label>
                 <div style={{
-                  border: '1px dashed rgba(var(--primary-color-rgb, 168, 85, 247), 0.5)',
+                  border: '1px dashed rgba(16, 185, 129, 0.4)',
                   background: 'rgba(30, 41, 59, 0.4)',
                   padding: '1rem',
                   borderRadius: '0.5rem',

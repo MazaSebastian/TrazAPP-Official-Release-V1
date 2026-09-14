@@ -98,13 +98,15 @@ const MobileHeader = styled.header`
   top: 0;
   left: 0;
   right: 0;
-  height: calc(64px + env(safe-area-inset-top));
+  height: calc(58px + env(safe-area-inset-top));
   padding-top: env(safe-area-inset-top);
-  padding-left: 1rem;
-  padding-right: 1rem;
-  background: rgba(3, 7, 18, 0.9);
-  backdrop-filter: blur(16px);
+  padding-left: 0.85rem;
+  padding-right: 0.85rem;
+  background: rgba(3, 7, 18, 0.88);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
   z-index: 900;
   align-items: center;
   justify-content: space-between;
@@ -113,32 +115,84 @@ const MobileHeader = styled.header`
     display: flex;
   }
 
-  .brand-mobile {
+  .header-left-group {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    
-    img {
-      height: 24px;
-      object-fit: contain;
-    }
+    gap: 0.6rem;
   }
 
-  button {
-    background: transparent;
-    border: none;
-    color: #94a3b8;
-    padding: 0.5rem;
+  .menu-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: #cbd5e1;
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 0.5rem;
-    transition: background 0.15s;
+    transition: all 0.15s ease;
 
-    &:hover {
-      background: rgba(255, 255, 255, 0.05);
-      color: #f8fafc;
+    &:active {
+      transform: scale(0.92);
+      background: rgba(255, 255, 255, 0.1);
+    }
+  }
+
+  .brand-mobile {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    
+    img {
+      height: 22px;
+      max-width: 110px;
+      object-fit: contain;
+    }
+
+    .org-badge {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 8px;
+      border-radius: 9999px;
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: #34d399;
+      letter-spacing: 0.02em;
+
+      .live-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #10b981;
+        box-shadow: 0 0 6px #10b981;
+        animation: ${pulse} 2s infinite ease-in-out;
+      }
+    }
+  }
+
+  .header-right-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    .mobile-avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #10b981 0%, #06b6d4 100%);
+      color: #ffffff;
+      font-size: 0.8rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1.5px solid rgba(255, 255, 255, 0.2);
+      box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
     }
   }
 `;
@@ -590,18 +644,28 @@ export const AppSidebar: React.FC = () => {
     <>
       {/* Mobile Top Navigation */}
       <MobileHeader>
-        <button onClick={() => setIsMobileOpen(!isMobileOpen)} aria-label="Abrir menú">
-          {isMobileOpen ? <X size={20} /> : <Menu size={20} />}
-        </button>
+        <div className="header-left-group">
+          <button className="menu-btn" onClick={() => setIsMobileOpen(!isMobileOpen)} aria-label="Abrir menú">
+            {isMobileOpen ? <X size={19} /> : <Menu size={19} />}
+          </button>
 
-        <div className="brand-mobile">
-          <img
-            src={currentOrganization?.logo_url || "/trazappletras.png"}
-            alt={currentOrganization?.name || "TrazApp"}
-          />
+          <div className="brand-mobile">
+            <img
+              src={currentOrganization?.logo_url || "/trazappletras.png"}
+              alt={currentOrganization?.name || "TrazApp"}
+            />
+            <div className="org-badge">
+              <div className="live-dot" />
+              <span>{currentOrganization?.name || 'TrazAPP'}</span>
+            </div>
+          </div>
         </div>
 
-        <div style={{ width: 36 }} />
+        <div className="header-right-group">
+          <div className="mobile-avatar">
+            {(user?.email || 'U')[0].toUpperCase()}
+          </div>
+        </div>
       </MobileHeader>
 
       {/* Mobile Overlay */}

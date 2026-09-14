@@ -17,7 +17,8 @@ const StyledMain = styled.main<StyledMainProps>`
   @media (max-width: 768px) {
     margin-left: 0;
     padding: 1rem;
-    padding-top: calc(5rem + env(safe-area-inset-top)); /* Space for MobileHeader */
+    padding-top: calc(4.75rem + env(safe-area-inset-top)); /* Space for MobileHeader */
+    padding-bottom: calc(5.25rem + env(safe-area-inset-bottom)); /* Space for MobileBottomBar */
   }
 `;
 

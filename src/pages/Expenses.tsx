@@ -35,8 +35,8 @@ const ToastContainer = styled.div<{ $isClosing: boolean }>`
   left: 50%;
   transform: translateX(-50%);
   background: rgba(15, 23, 42, 0.95);
-  border: 1px solid rgba(var(--primary-color-rgb, 168, 85, 247), 0.5);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5), 0 0 15px rgba(var(--primary-color-rgb, 168, 85, 247), 0.2);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5), 0 0 15px rgba(16, 185, 129, 0.2);
   border-radius: 0.75rem;
   padding: 1rem 1.5rem;
   display: flex;
@@ -45,7 +45,6 @@ const ToastContainer = styled.div<{ $isClosing: boolean }>`
   z-index: 10000;
   color: #f8fafc;
   font-weight: 500;
-  backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
   animation: ${props => props.$isClosing ? fadeOutToast : fadeIn} 0.3s forwards;
 `;
@@ -175,8 +174,8 @@ const Form = styled.div`
 
     &:focus {
       outline: none;
-      border-color: rgba(var(--primary-color-rgb, 168, 85, 247), 0.5);
-      box-shadow: 0 0 0 3px rgba(var(--primary-color-rgb, 168, 85, 247), 0.1);
+      border-color: #10b981;
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.18);
     }
     
     &::placeholder {
@@ -185,9 +184,9 @@ const Form = styled.div`
   }
 
   button {
-    background: rgba(var(--primary-color-rgb, 168, 85, 247), 0.2);
-    color: #d8b4fe;
-    border: 1px solid rgba(var(--primary-color-rgb, 168, 85, 247), 0.5);
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: #ffffff;
+    border: 1px solid rgba(16, 185, 129, 0.35);
     padding: 0.75rem;
     border-radius: 0.5rem;
     font-weight: 600;
@@ -196,8 +195,8 @@ const Form = styled.div`
     backdrop-filter: blur(8px);
 
     &:hover { 
-      background: rgba(var(--primary-color-rgb, 168, 85, 247), 0.3); 
-      box-shadow: 0 4px 6px rgba(0,0,0,0.2); 
+      background: linear-gradient(135deg, #059669 0%, #047857 100%);
+      box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35); 
     }
   }
 `;
@@ -361,7 +360,7 @@ const FilterContainer = styled.div`
     font-size: 0.85rem;
     color-scheme: dark;
     height: 38px;
-    &:focus { outline: none; border-color: rgba(var(--primary-color-rgb, 168, 85, 247), 0.5); }
+    &:focus { outline: none; border-color: #10b981; box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2); }
   }
 
   .date-mode-toggle {
@@ -377,9 +376,9 @@ const FilterContainer = styled.div`
       font-size: 0.75rem;
       cursor: pointer;
       &.active {
-        background: rgba(var(--primary-color-rgb, 168, 85, 247), 0.2);
-        color: #d8b4fe;
-        border-color: rgba(var(--primary-color-rgb, 168, 85, 247), 0.5);
+        background: rgba(16, 185, 129, 0.15);
+        color: #34d399;
+        border-color: rgba(16, 185, 129, 0.4);
       }
     }
   }

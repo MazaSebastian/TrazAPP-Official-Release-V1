@@ -29,13 +29,13 @@ export function useTenantResolver(slugFromUrl?: string) {
                         return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : null;
                     };
 
-                    const primary = org.primary_color || '#a855f7';
-                    const secondary = org.secondary_color || '#7c3aed';
+                    const primary = org.primary_color || '#10b981';
+                    const secondary = org.secondary_color || '#059669';
 
                     root.style.setProperty('--primary-color', primary);
                     root.style.setProperty('--secondary-color', secondary);
-                    root.style.setProperty('--primary-color-rgb', hexToRgb(primary) || '168, 85, 247');
-                    root.style.setProperty('--secondary-color-rgb', hexToRgb(secondary) || '124, 58, 237');
+                    root.style.setProperty('--primary-color-rgb', hexToRgb(primary) || '16, 185, 129');
+                    root.style.setProperty('--secondary-color-rgb', hexToRgb(secondary) || '5, 150, 105');
                 }
             } catch (err) {
                 console.error('Error resolving tenant:', err);

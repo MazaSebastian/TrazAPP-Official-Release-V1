@@ -692,8 +692,14 @@ const getStageBadge = (roomType?: string) => {
                     <Sun size={12} /> Floración
                 </ShadcnBadge>
             );
+        case 'living_soil':
+            return (
+                <ShadcnBadge variant="emerald" className="gap-1 text-[11px] py-0.5">
+                    <Leaf size={12} /> Living Soil
+                </ShadcnBadge>
+            );
         default:
-            return null; // Return nothing if unknown
+            return null;
     }
 };
 
@@ -1092,16 +1098,24 @@ const Clones: React.FC = () => {
         const cloneRoomTypes = ['clones', 'esquejes', 'esquejera'];
         const allCloneRoomIds = allRooms.filter(r => cloneRoomTypes.includes(r.type?.toLowerCase() || '')).map(r => r.id);
 
-        const allClones = batches.filter(b =>
-            (b.room && cloneRoomTypes.includes(b.room.type?.toLowerCase() || '')) || // Explicitly include batches in clone rooms
-            (b.current_room_id && allCloneRoomIds.includes(b.current_room_id)) || // Fallback explicitly by Room ID
-            b.parent_batch_id ||
-            (b.name && b.name.startsWith('CL-')) ||
-            (b.stage === 'seedling') || // New batches are seedlings
-            b.clone_map_id !== null || // Explicitly include if they are in a clone map
-            /^[A-Z]+-\d+$/.test(b.name) || // Match new sequential format
-            /^[A-Z]+ - .+$/.test(b.name) // Match things like PRUEBA - 20/02/2026
-        );
+        const allClones = batches.filter(b => {
+            // Explicitly exclude batches that have progressed to later flowering or harvest stages
+            if (b.stage === 'flowering' || b.stage === 'curing' || b.stage === 'drying' || b.stage === 'completed') {
+                return false;
+            }
+
+            const inCloneRoom = (b.room && cloneRoomTypes.includes(b.room.type?.toLowerCase() || '')) ||
+                                (b.current_room_id && allCloneRoomIds.includes(b.current_room_id));
+            const isCloneStage = b.stage === 'clones' || b.stage === 'seedling';
+            const hasCloneMap = b.clone_map_id !== null;
+
+            // If it is in vegetation stage, only include it if it's still located in a clone room
+            if (b.stage === 'vegetation' && !inCloneRoom) {
+                return false;
+            }
+
+            return inCloneRoom || isCloneStage || hasCloneMap || (b.name && b.name.startsWith('CL-'));
+        });
 
         // Calculate Stats
         let totalQty = 0;

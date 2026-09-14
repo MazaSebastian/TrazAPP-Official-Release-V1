@@ -167,19 +167,26 @@ const TabButton = styled.button<{ $active?: boolean }>`
 
 const CardGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 1.75rem;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 310px), 1fr));
+  gap: 1.5rem;
+
+  @media (max-width: 768px) {
+    gap: 1rem;
+  }
 `;
 
 const PatientCard = styled.div`
-  background: rgba(17, 24, 39, 0.7);
+  background: rgba(17, 24, 39, 0.75);
   backdrop-filter: blur(16px);
-  border-radius: 1.5rem;
+  border-radius: 1.25rem;
   border: 1px solid rgba(255, 255, 255, 0.08);
-  padding: 1.75rem;
+  padding: 1.5rem;
   box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.35);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 
   &:hover {
     transform: translateY(-4px);
@@ -187,43 +194,13 @@ const PatientCard = styled.div`
     border-color: rgba(16, 185, 129, 0.4);
   }
 
-  .desktop-content {
-    display: block;
-    @media (max-width: 768px) {
-      display: none;
-    }
-  }
-
-  .mobile-content {
-    display: none;
-    @media (max-width: 768px) {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 0.5rem;
-    }
-    
-    .m-info {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      flex-wrap: wrap;
-      font-size: 0.9rem;
-    }
-
-    .m-name {
-      font-weight: 700;
-      color: #f8fafc;
-    }
-    
-    .m-dni {
-      color: #94a3b8;
-    }
+  &:active {
+    transform: scale(0.98);
   }
 
   @media (max-width: 768px) {
-    padding: 1rem;
-    border-radius: 1rem;
+    padding: 1.15rem;
+    border-radius: 1.15rem;
   }
 `;
 
@@ -250,8 +227,8 @@ const StatusBadge = styled.span<{ status: string }>`
 
 const SearchInput = styled.input`
   width: 100%;
-  padding: 0.75rem;
-  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
   border: 1px solid rgba(255, 255, 255, 0.1);
   margin-bottom: 1.5rem;
   background: rgba(30, 41, 59, 0.5);
@@ -261,8 +238,8 @@ const SearchInput = styled.input`
 
   &:focus {
     outline: none;
-    border-color: rgba(var(--primary-color-rgb, 168, 85, 247), 0.5);
-    box-shadow: 0 0 0 3px rgba(var(--primary-color-rgb, 168, 85, 247), 0.1);
+    border-color: #10b981;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.18);
   }
 
   &::placeholder {
@@ -338,8 +315,8 @@ const FormGroup = styled.div`
 
     &:focus {
       outline: none;
-      border-color: rgba(var(--primary-color-rgb, 168, 85, 247), 0.5);
-      box-shadow: 0 0 0 3px rgba(var(--primary-color-rgb, 168, 85, 247), 0.1);
+      border-color: #10b981;
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.18);
     }
     
     &::placeholder {
@@ -388,8 +365,8 @@ const FileUploadBox = styled.div`
     background: rgba(30, 41, 59, 0.5);
 
     &:hover {
-        border-color: rgba(var(--primary-color-rgb, 168, 85, 247), 0.5);
-        background: rgba(var(--primary-color-rgb, 168, 85, 247), 0.1);
+        border-color: rgba(16, 185, 129, 0.5);
+        background: rgba(16, 185, 129, 0.1);
     }
 
     input {
@@ -877,10 +854,9 @@ const Patients: React.FC = () => {
                     <CardGrid>
                         {(activeTab === 'active' ? activePatients : waitingPatients).map(patient => (
                             <PatientCard key={patient.id} onClick={() => openEdit(patient)}>
-                                {/* Desktop View */}
-                                <div className="desktop-content">
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', alignItems: 'center' }}>
-                                        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                                <div>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.65rem', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+                                        <div style={{ display: 'flex', gap: '0.45rem', alignItems: 'center', flexWrap: 'wrap' }}>
                                             <StatusBadge status={patient.is_approved_by_org === false ? 'pending' : patient.reprocann_status}>
                                                 {patient.is_approved_by_org === false ? 'EN ESPERA' :
                                                     patient.reprocann_status === 'active' ? 'Activo' :
@@ -890,73 +866,69 @@ const Patients: React.FC = () => {
                                                 fontSize: '0.75rem', 
                                                 padding: '0.2rem 0.6rem', 
                                                 borderRadius: '12px', 
-                                                background: patient.follows_treatment !== false ? 'rgba(59, 130, 246, 0.15)' : 'rgba(148, 163, 184, 0.15)',
-                                                color: patient.follows_treatment !== false ? '#60a5fa' : '#cbd5e1',
-                                                border: patient.follows_treatment !== false ? '1px solid rgba(59, 130, 246, 0.3)' : '1px solid rgba(148, 163, 184, 0.3)'
+                                                background: patient.follows_treatment !== false ? 'rgba(16, 185, 129, 0.12)' : 'rgba(148, 163, 184, 0.15)',
+                                                color: patient.follows_treatment !== false ? '#34d399' : '#cbd5e1',
+                                                border: patient.follows_treatment !== false ? '1px solid rgba(16, 185, 129, 0.25)' : '1px solid rgba(148, 163, 184, 0.25)',
+                                                fontWeight: 600
                                             }}>
                                                 {patient.follows_treatment !== false ? 'Tratamiento' : 'Solo Dispensa'}
                                             </span>
                                         </div>
-                                        <span style={{ fontSize: '0.8rem', color: '#718096' }}>Límite Mensual: {patient.monthly_limit}g</span>
+                                        <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 500 }}>Cupo: <strong style={{ color: '#f8fafc' }}>{patient.monthly_limit}g</strong></span>
                                     </div>
-                                    <h3 style={{ margin: '0 0 0.25rem 0' }}>{patient.profile?.full_name || 'Sin Nombre'}</h3>
-                                    <p style={{ color: '#718096', fontSize: '0.9rem', margin: 0 }}>
-                                        {patient.reprocann_number || 'Sin Reprocann'}
-                                    </p>
-                                    {/* Show extra info if available */}
-                                    {patient.document_number && <p style={{ fontSize: '0.8rem', color: '#94a3b8' }}>DNI: {patient.document_number}</p>}
-                                    {(patient as any).expiration_date && (
-                                        <small style={{ color: new Date((patient as any).expiration_date!) < new Date() ? '#f87171' : '#4ade80', display: 'block', marginTop: '0.5rem' }}>
-                                            Vence: {(patient as any).expiration_date}
-                                        </small>
-                                    )}
 
-                                    <div style={{ marginTop: '1rem', borderTop: '1px solid rgba(255, 255, 255, 0.1)', paddingTop: '1rem', display: 'flex', gap: '0.5rem' }}>
-                                        <ActionButton
-                                            type="button"
-                                            style={{ flex: 1, justifyContent: 'center', padding: '0.75rem 0.5rem', fontSize: '0.9rem' }}
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                navigate(`/patients/${patient.id || patient.profile_id}`);
-                                            }}
-                                        >
-                                            <FileText size={14} /> H. Clínica
-                                        </ActionButton>
-                                        <ActionButton
-                                            type="button"
-                                            style={{ flex: 1, justifyContent: 'center', padding: '0.75rem 0.5rem', fontSize: '0.9rem', background: 'rgba(59, 130, 246, 0.15)', color: '#60a5fa', border: '1px solid rgba(59, 130, 246, 0.3)', boxShadow: 'none' }}
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                navigate(`/patients/${patient.id || patient.profile_id}?action=new_followup`);
-                                            }}
-                                        >
-                                            <ClipboardList size={14} /> Seguimiento
-                                        </ActionButton>
+                                    <h3 style={{ margin: '0 0 0.35rem 0', fontSize: '1.15rem', color: '#f8fafc', fontWeight: 700 }}>
+                                        {patient.profile?.full_name || 'Sin Nombre'}
+                                    </h3>
+                                    
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap', fontSize: '0.85rem', color: '#94a3b8', marginBottom: '0.35rem' }}>
+                                        <span>REPROCANN: <strong style={{ color: '#e2e8f0', fontFamily: 'monospace' }}>{patient.reprocann_number || 'S/N'}</strong></span>
+                                        {patient.document_number && (
+                                            <>
+                                                <span style={{ color: '#475569' }}>•</span>
+                                                <span>DNI: <strong style={{ color: '#e2e8f0' }}>{patient.document_number}</strong></span>
+                                            </>
+                                        )}
                                     </div>
+
+                                    {(patient as any).expiration_date && (
+                                        <div style={{
+                                            fontSize: '0.8rem',
+                                            color: new Date((patient as any).expiration_date!) < new Date() ? '#f87171' : '#4ade80',
+                                            display: 'inline-flex',
+                                            alignItems: 'center',
+                                            gap: '0.3rem',
+                                            marginTop: '0.25rem',
+                                            padding: '0.15rem 0.5rem',
+                                            borderRadius: '6px',
+                                            background: new Date((patient as any).expiration_date!) < new Date() ? 'rgba(239, 68, 68, 0.1)' : 'rgba(74, 222, 128, 0.1)'
+                                        }}>
+                                            Vence: {(patient as any).expiration_date}
+                                        </div>
+                                    )}
                                 </div>
 
-                                {/* Mobile View (Compact Single Line) */}
-                                <div className="mobile-content">
-                                    <div className="m-info">
-                                         <span className="m-name">{patient.profile?.full_name || 'Sin Nombre'}</span>
-                                         <span style={{ color: '#475569' }}>-</span>
-                                         <span className="m-dni">{patient.document_number || 'Sin DNI'}</span>
-                                         <span style={{ 
-                                             marginLeft: '0.5rem',
-                                             fontSize: '0.65rem', 
-                                             padding: '0.1rem 0.4rem', 
-                                             borderRadius: '8px', 
-                                             background: patient.follows_treatment !== false ? 'rgba(59, 130, 246, 0.15)' : 'rgba(148, 163, 184, 0.15)',
-                                             color: patient.follows_treatment !== false ? '#60a5fa' : '#cbd5e1'
-                                         }}>
-                                             {patient.follows_treatment !== false ? 'Tratamiento' : 'Dispensa'}
-                                         </span>
-                                    </div>
-                                    <StatusBadge status={patient.is_approved_by_org === false ? 'pending' : patient.reprocann_status} style={{ fontSize: '0.65rem', padding: '0.15rem 0.4rem' }}>
-                                        {patient.is_approved_by_org === false ? 'EN ESPERA' :
-                                            patient.reprocann_status === 'active' ? 'Activo' :
-                                                patient.reprocann_status === 'expired' ? 'Vencido' : 'Pendiente'}
-                                    </StatusBadge>
+                                <div style={{ marginTop: '1.25rem', borderTop: '1px solid rgba(255, 255, 255, 0.08)', paddingTop: '0.85rem', display: 'flex', gap: '0.5rem' }}>
+                                    <ActionButton
+                                        type="button"
+                                        style={{ flex: 1, justifyContent: 'center', minHeight: '40px', padding: '0.6rem 0.5rem', fontSize: '0.85rem' }}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            navigate(`/patients/${patient.id || patient.profile_id}`);
+                                        }}
+                                    >
+                                        <FileText size={14} /> H. Clínica
+                                    </ActionButton>
+                                    <ActionButton
+                                        type="button"
+                                        style={{ flex: 1, justifyContent: 'center', minHeight: '40px', padding: '0.6rem 0.5rem', fontSize: '0.85rem', background: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', border: '1px solid rgba(56, 189, 248, 0.3)', boxShadow: 'none' }}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            navigate(`/patients/${patient.id || patient.profile_id}?action=new_followup`);
+                                        }}
+                                    >
+                                        <ClipboardList size={14} /> Seguimiento
+                                    </ActionButton>
                                 </div>
                             </PatientCard>
                         ))}

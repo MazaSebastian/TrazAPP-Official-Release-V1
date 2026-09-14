@@ -23,7 +23,7 @@ export const roomsService = {
     async getRooms(spotId?: string): Promise<Room[]> {
         let query = getClient()
             .from('rooms')
-            .select('*, batches:batches!current_room_id(*, genetic:genetics(*), parent_batch:batches!parent_batch_id(name)), spot:chakra_crops(name), clone_maps(*)')
+            .select('*, batches:batches!current_room_id(*, genetic:genetics(*)), spot:chakra_crops(name), clone_maps(*)')
             .eq('organization_id', getSelectedOrgId())
             .order('order_index', { ascending: true })
             .order('name', { ascending: true });

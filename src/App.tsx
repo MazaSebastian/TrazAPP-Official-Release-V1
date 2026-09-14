@@ -59,6 +59,7 @@ import { OrganizationProvider, useOrganization } from './context/OrganizationCon
 import './App.css';
 
 import Sidebar, { SidebarProvider } from './components/Sidebar';
+import { MobileBottomBar } from './components/Navigation/MobileBottomBar';
 import ClickSpark from './components/ClickSpark';
 import { GuidedTour } from './components/GuidedTour';
 
@@ -235,6 +236,9 @@ const AppContent: React.FC<AppContentProps> = ({
       {/* {!hideAdminChrome && <ChatWidget />} */}
       {/* New Growy Assistant */}
       {!hideAdminChrome && <GrowyOrb />}
+
+      {/* New Mobile High-End Glass Bottom Navigation */}
+      {!hideAdminChrome && <MobileBottomBar />}
 
       <SystemBroadcastBanner />
 

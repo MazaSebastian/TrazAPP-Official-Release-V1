@@ -43,6 +43,11 @@ const OrbContainer = styled.div`
   display: flex;
   flex-direction: column;
   align-items: flex-end;
+
+  @media (max-width: 768px) {
+    bottom: calc(76px + env(safe-area-inset-bottom));
+    right: 16px;
+  }
 `;
 
 const OrbButton = styled.button<{ $gState: GrowyState }>`

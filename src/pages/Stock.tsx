@@ -87,6 +87,26 @@ const Header = styled.div`
     align-items: center;
     gap: 0.85rem;
   }
+
+  @media (max-width: 768px) {
+    margin-bottom: 1.5rem;
+    gap: 1rem;
+    
+    & > div:last-child {
+      width: 100%;
+      display: grid !important;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.6rem;
+
+      button {
+        width: 100%;
+        justify-content: center;
+        padding: 0.65rem 0.5rem;
+        font-size: 0.85rem;
+        border-radius: 0.75rem;
+      }
+    }
+  }
 `;
 
 const ActionButton = styled.button<{ variant?: 'primary' | 'danger' | 'secondary' | 'ghost' | 'info' }>`
@@ -141,7 +161,7 @@ const IconButton = styled.button<{ color: string }>`
     switch (props.color) {
       case '#38a169': return '#4ade80'; // Neon Green
       case '#3182ce': return '#38bdf8'; // Light Blue
-      case '#805ad5': return 'var(--primary-color, #a855f7)'; // Purple
+      case '#805ad5': return '#10b981'; // Emerald
       case '#e53e3e': return '#f87171'; // Red
       default: return props.color;
     }
@@ -177,6 +197,26 @@ const StatsGrid = styled.div`
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 1.5rem;
   margin-bottom: 2rem;
+
+  @media (max-width: 768px) {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    gap: 0.75rem;
+    padding-bottom: 0.5rem;
+    margin-bottom: 1.25rem;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    &::-webkit-scrollbar {
+      display: none;
+    }
+    
+    & > * {
+      flex: 0 0 75%;
+      min-width: 220px;
+      scroll-snap-align: start;
+    }
+  }
 `;
 
 const StatCard = styled.div`
@@ -211,6 +251,52 @@ const StatCard = styled.div`
     text-transform: uppercase;
     letter-spacing: 0.05em;
   }
+
+  @media (max-width: 768px) {
+    padding: 1rem 1.25rem;
+    border-radius: 0.875rem;
+
+    .stat-value {
+      font-size: 1.65rem;
+    }
+  }
+`;
+
+const DesktopTableWrapper = styled.div`
+  display: block;
+  @media (max-width: 768px) {
+    display: none;
+  }
+`;
+
+const MobileStockCardsWrapper = styled.div`
+  display: none;
+  @media (max-width: 768px) {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+  }
+`;
+
+const MobileStockCard = styled.div<{ $isExpanded?: boolean }>`
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid ${p => p.$isExpanded ? 'rgba(16, 185, 129, 0.4)' : 'rgba(255, 255, 255, 0.08)'};
+  border-radius: 1rem;
+  padding: 1rem;
+  backdrop-filter: blur(16px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  transition: all 0.2s ease;
+`;
+
+const MobileSubGroupCard = styled.div`
+  background: rgba(30, 41, 59, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 0.75rem;
+  padding: 0.85rem;
+  margin-top: 0.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 `;
 
 const TableContainer = styled.div`
@@ -1046,137 +1132,269 @@ const Stock: React.FC = () => {
       {isLoading ? (
         <LoadingSpinner />
       ) : (
-        <TableContainer>
-          <MainTable>
-            <thead>
-              <tr>
-                <th style={{ width: '40px' }}></th>
-                <th>GENÉTICA</th>
-                <th style={{ textAlign: 'right' }}>PESO TOTAL</th>
-                <th style={{ textAlign: 'right' }}>UNIDADES</th>
-                <th style={{ textAlign: 'center' }}>% TOTAL</th>
-                <th style={{ width: '120px', textAlign: 'right' }}>ACCIONES</th>
-              </tr>
-            </thead>
-            <tbody>
-              {visibleStock.map((item) => {
-                const percent = item.totalInitialWeight > 0 ? (item.totalWeight / item.totalInitialWeight * 100).toFixed(1) : '0';
-                const isExpanded = expandedRows.has(item.strain);
+        <>
+          <DesktopTableWrapper>
+            <TableContainer>
+              <MainTable>
+                <thead>
+                  <tr>
+                    <th style={{ width: '40px' }}></th>
+                    <th>GENÉTICA</th>
+                    <th style={{ textAlign: 'right' }}>PESO TOTAL</th>
+                    <th style={{ textAlign: 'right' }}>UNIDADES</th>
+                    <th style={{ textAlign: 'center' }}>% TOTAL</th>
+                    <th style={{ width: '120px', textAlign: 'right' }}>ACCIONES</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {visibleStock.map((item) => {
+                    const percent = item.totalInitialWeight > 0 ? (item.totalWeight / item.totalInitialWeight * 100).toFixed(1) : '0';
+                    const isExpanded = expandedRows.has(item.strain);
 
-                return (
-                  <React.Fragment key={item.strain}>
-                    <tr
-                      style={{ background: isExpanded ? 'rgba(30, 41, 59, 0.4)' : 'transparent', transition: 'background 0.2s', cursor: 'pointer' }}
-                      onClick={() => toggleRow(item.strain)}
-                    >
-                      <td style={{ textAlign: 'center', color: '#94a3b8' }}>
-                        <ChevronDown size={16} style={{
-                          opacity: 0.5,
-                          transform: isExpanded ? 'rotate(180deg)' : 'rotate(-90deg)',
-                          transition: 'transform 0.2s ease'
-                        }} />
-                      </td>
-                      <td style={{ fontWeight: 'bold' }}>{item.strain}</td>
-                      <td style={{ textAlign: 'right', fontWeight: 'bold', color: '#f8fafc' }}>{item.totalWeight.toFixed(1)}g</td>
-                      <td style={{ textAlign: 'right' }}>
-                        <span style={{ background: 'rgba(255, 255, 255, 0.1)', padding: '2px 8px', borderRadius: '12px', fontSize: '0.8rem', fontWeight: 'bold' }}>
-                          {item.batchesCount}
+                    return (
+                      <React.Fragment key={item.strain}>
+                        <tr
+                          style={{ background: isExpanded ? 'rgba(30, 41, 59, 0.4)' : 'transparent', transition: 'background 0.2s', cursor: 'pointer' }}
+                          onClick={() => toggleRow(item.strain)}
+                        >
+                          <td style={{ textAlign: 'center', color: '#94a3b8' }}>
+                            <ChevronDown size={16} style={{
+                              opacity: 0.5,
+                              transform: isExpanded ? 'rotate(180deg)' : 'rotate(-90deg)',
+                              transition: 'transform 0.2s ease'
+                            }} />
+                          </td>
+                          <td style={{ fontWeight: 'bold' }}>{item.strain}</td>
+                          <td style={{ textAlign: 'right', fontWeight: 'bold', color: '#f8fafc' }}>{item.totalWeight.toFixed(1)}g</td>
+                          <td style={{ textAlign: 'right' }}>
+                            <span style={{ background: 'rgba(255, 255, 255, 0.1)', padding: '2px 8px', borderRadius: '12px', fontSize: '0.8rem', fontWeight: 'bold' }}>
+                              {item.batchesCount}
+                            </span>
+                          </td>
+                          <td style={{ textAlign: 'center', fontSize: '0.85rem', color: '#cbd5e1' }}>{percent}%</td>
+                          <td style={{ textAlign: 'right' }}>
+                            <ActionMenuContainer onClick={(e) => e.stopPropagation()}>
+                              <ActionMenuToggle onClick={() => setOpenActionMenuId(openActionMenuId === item.strain ? null : item.strain)} title="Opciones">
+                                <span style={{ fontSize: '1.2rem', lineHeight: 0, paddingBottom: '4px' }}>...</span>
+                              </ActionMenuToggle>
+                              <ActionMenuDropdown $isOpen={openActionMenuId === item.strain}>
+                                <ActionMenuItem $color="#4ade80" onClick={() => {
+                                  setOpenActionMenuId(null);
+                                  handleGroupDispense(item.strain);
+                                }}>
+                                  <PackageCheck size={15} /> Dispensar
+                                </ActionMenuItem>
+                                <ActionMenuItem $color="#38bdf8" onClick={() => {
+                                  setOpenActionMenuId(null);
+                                  showToast("Edición masiva de genética próximamente.", 'info');
+                                }}>
+                                  <Edit3 size={15} /> Editar Genética
+                                </ActionMenuItem>
+                                <ActionMenuItem $color="#10b981" onClick={() => {
+                                  setOpenActionMenuId(null);
+                                  openGroupLabTransfer(item.strain);
+                                }}>
+                                  <FlaskConical size={15} /> Enviar a Laboratorio
+                                </ActionMenuItem>
+                                <ActionMenuItem $color="#f87171" onClick={() => {
+                                  setOpenActionMenuId(null);
+                                  setDeleteData({ batch: { strain_name: item.strain }, reason: '', isBulk: true });
+                                  setIsDeleteOpen(true);
+                                }}>
+                                  <Trash2 size={15} /> Eliminar Todos
+                                </ActionMenuItem>
+                              </ActionMenuDropdown>
+                            </ActionMenuContainer>
+                          </td>
+                        </tr>
+
+                        {/* Sub-batches Accordion (Level 2: Origin Batches) */}
+                        <ExpandedRow $expanded={isExpanded}>
+                          <td colSpan={6}>
+                            <CollapsibleWrapper isOpen={isExpanded}>
+                              <div style={{ padding: '1rem', background: 'rgba(15, 23, 42, 0.4)', borderTop: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                                <DetailTable>
+                                  <thead>
+                                    <tr>
+                                      <th style={{ color: '#94a3b8', padding: '0.5rem', textAlign: 'left', fontWeight: 600 }}>LOTE ORIGEN / AGRUPACIÓN</th>
+                                      <th style={{ color: '#94a3b8', padding: '0.5rem', textAlign: 'left', fontWeight: 600 }}>INGRESO</th>
+                                      <th style={{ color: '#94a3b8', padding: '0.5rem', textAlign: 'right', fontWeight: 600 }}>PESO ACTUAL / INICIAL</th>
+                                      <th style={{ color: '#94a3b8', padding: '0.5rem', textAlign: 'right', fontWeight: 600 }}>CANT. UNIDADES</th>
+                                      <th style={{ color: '#94a3b8', padding: '0.5rem', textAlign: 'right', fontWeight: 600 }}>ACCIONES</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {item.subGroups.map((subGroup, idx) => (
+                                      <tr key={idx}>
+                                        <td style={{ fontWeight: 600, color: '#38bdf8' }}>{subGroup.groupName}</td>
+                                        <td style={{ color: '#cbd5e1' }}>{new Date(subGroup.batches[0]?.created_at || Date.now()).toLocaleDateString()}</td>
+                                        <td style={{ textAlign: 'right', fontWeight: 600 }}>
+                                          {subGroup.totalWeight.toFixed(1)}g <span style={{ color: '#64748b', fontWeight: 'normal' }}>/ {subGroup.totalInitialWeight.toFixed(1)}g</span>
+                                        </td>
+                                        <td style={{ textAlign: 'right', color: '#cbd5e1' }}>{subGroup.batchesCount} u.</td>
+                                        <td style={{ textAlign: 'right' }}>
+                                          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
+                                            <ActionButton variant="info" style={{ padding: '0.25rem 0.75rem', fontSize: '0.8rem' }} onClick={(e) => {
+                                              e.stopPropagation();
+                                              setModalUnitsData({
+                                                isOpen: true,
+                                                originName: subGroup.groupName,
+                                                batches: subGroup.batches
+                                              });
+                                            }}>
+                                              <Boxes size={14} /> Ver Unidades
+                                            </ActionButton>
+                                          </div>
+                                        </td>
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </DetailTable>
+                              </div>
+                            </CollapsibleWrapper>
+                          </td>
+                        </ExpandedRow>
+                      </React.Fragment>
+                    );
+                  })}
+                  {visibleStock.length === 0 && (
+                    <tr><td colSpan={6} style={{ padding: '3rem', textAlign: 'center', color: '#94a3b8' }}>No hay stock disponible.</td></tr>
+                  )}
+                </tbody>
+              </MainTable>
+            </TableContainer>
+          </DesktopTableWrapper>
+
+          {/* MOBILE DATA CARDS */}
+          <MobileStockCardsWrapper>
+            {visibleStock.map((item) => {
+              const percent = item.totalInitialWeight > 0 ? (item.totalWeight / item.totalInitialWeight * 100).toFixed(1) : '0';
+              const isExpanded = expandedRows.has(item.strain);
+
+              return (
+                <MobileStockCard key={item.strain} $isExpanded={isExpanded}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.75rem' }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                        <span style={{ fontWeight: 800, fontSize: '1.05rem', color: '#f8fafc' }}>{item.strain}</span>
+                        <span style={{ background: 'rgba(16, 185, 129, 0.15)', color: '#34d399', padding: '1px 7px', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 700 }}>
+                          {percent}% rinde
                         </span>
-                      </td>
-                      <td style={{ textAlign: 'center', fontSize: '0.85rem', color: '#cbd5e1' }}>{percent}%</td>
-                      <td style={{ textAlign: 'right' }}>
-                        <ActionMenuContainer onClick={(e) => e.stopPropagation()}>
-                          <ActionMenuToggle onClick={() => setOpenActionMenuId(openActionMenuId === item.strain ? null : item.strain)} title="Opciones">
-                            <span style={{ fontSize: '1.2rem', lineHeight: 0, paddingBottom: '4px' }}>...</span>
-                          </ActionMenuToggle>
-                          <ActionMenuDropdown $isOpen={openActionMenuId === item.strain}>
-                            <ActionMenuItem $color="#4ade80" onClick={() => {
-                              setOpenActionMenuId(null);
-                              handleGroupDispense(item.strain);
-                            }}>
-                              <PackageCheck size={15} /> Dispensar
-                            </ActionMenuItem>
-                            <ActionMenuItem $color="#38bdf8" onClick={() => {
-                              setOpenActionMenuId(null);
-                              showToast("Edición masiva de genética próximamente.", 'info');
-                            }}>
-                              <Edit3 size={15} /> Editar Genética
-                            </ActionMenuItem>
-                            <ActionMenuItem $color="var(--primary-color, #a855f7)" onClick={() => {
-                              setOpenActionMenuId(null);
-                              openGroupLabTransfer(item.strain);
-                            }}>
-                              <FlaskConical size={15} /> Enviar a Laboratorio
-                            </ActionMenuItem>
-                            <ActionMenuItem $color="#f87171" onClick={() => {
-                              setOpenActionMenuId(null);
-                              setDeleteData({ batch: { strain_name: item.strain }, reason: '', isBulk: true });
-                              setIsDeleteOpen(true);
-                            }}>
-                              <Trash2 size={15} /> Eliminar Todos
-                            </ActionMenuItem>
-                          </ActionMenuDropdown>
-                        </ActionMenuContainer>
-                      </td>
-                    </tr>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem', marginTop: '0.4rem' }}>
+                        <span style={{ fontSize: '1.35rem', fontWeight: 800, color: '#10b981' }}>{item.totalWeight.toFixed(1)}g</span>
+                        <span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>({item.batchesCount} u.)</span>
+                      </div>
+                    </div>
 
-                    {/* Sub-batches Accordion (Level 2: Origin Batches) */}
-                    <ExpandedRow $expanded={isExpanded}>
-                      <td colSpan={6}>
-                        <CollapsibleWrapper isOpen={isExpanded}>
-                          <div style={{ padding: '1rem', background: 'rgba(15, 23, 42, 0.4)', borderTop: '1px solid rgba(255, 255, 255, 0.05)' }}>
-                            <DetailTable>
-                              <thead>
-                                <tr>
-                                  <th style={{ color: '#94a3b8', padding: '0.5rem', textAlign: 'left', fontWeight: 600 }}>LOTE ORIGEN / AGRUPACIÓN</th>
-                                  <th style={{ color: '#94a3b8', padding: '0.5rem', textAlign: 'left', fontWeight: 600 }}>INGRESO</th>
-                                  <th style={{ color: '#94a3b8', padding: '0.5rem', textAlign: 'right', fontWeight: 600 }}>PESO ACTUAL / INICIAL</th>
-                                  <th style={{ color: '#94a3b8', padding: '0.5rem', textAlign: 'right', fontWeight: 600 }}>CANT. UNIDADES</th>
-                                  <th style={{ color: '#94a3b8', padding: '0.5rem', textAlign: 'right', fontWeight: 600 }}>ACCIONES</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {item.subGroups.map((subGroup, idx) => (
-                                  <tr key={idx}>
-                                    <td style={{ fontWeight: 600, color: '#38bdf8' }}>{subGroup.groupName}</td>
-                                    <td style={{ color: '#cbd5e1' }}>{new Date(subGroup.batches[0]?.created_at || Date.now()).toLocaleDateString()}</td>
-                                    <td style={{ textAlign: 'right', fontWeight: 600 }}>
-                                      {subGroup.totalWeight.toFixed(1)}g <span style={{ color: '#64748b', fontWeight: 'normal' }}>/ {subGroup.totalInitialWeight.toFixed(1)}g</span>
-                                    </td>
-                                    <td style={{ textAlign: 'right', color: '#cbd5e1' }}>{subGroup.batchesCount} u.</td>
-                                    <td style={{ textAlign: 'right' }}>
-                                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
-                                        <ActionButton variant="info" style={{ padding: '0.25rem 0.75rem', fontSize: '0.8rem' }} onClick={(e) => {
-                                          e.stopPropagation();
-                                          setModalUnitsData({
-                                            isOpen: true,
-                                            originName: subGroup.groupName,
-                                            batches: subGroup.batches
-                                          });
-                                        }}>
-                                          <Boxes size={14} /> Ver Unidades
-                                        </ActionButton>
-                                      </div>
-                                    </td>
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </DetailTable>
+                    <ActionMenuContainer onClick={(e) => e.stopPropagation()}>
+                      <ActionMenuToggle onClick={() => setOpenActionMenuId(openActionMenuId === item.strain ? null : item.strain)} title="Opciones">
+                        <span style={{ fontSize: '1.2rem', lineHeight: 0, paddingBottom: '4px' }}>...</span>
+                      </ActionMenuToggle>
+                      <ActionMenuDropdown $isOpen={openActionMenuId === item.strain}>
+                        <ActionMenuItem $color="#4ade80" onClick={() => {
+                          setOpenActionMenuId(null);
+                          handleGroupDispense(item.strain);
+                        }}>
+                          <PackageCheck size={15} /> Dispensar
+                        </ActionMenuItem>
+                        <ActionMenuItem $color="#38bdf8" onClick={() => {
+                          setOpenActionMenuId(null);
+                          showToast("Edición masiva de genética próximamente.", 'info');
+                        }}>
+                          <Edit3 size={15} /> Editar Genética
+                        </ActionMenuItem>
+                        <ActionMenuItem $color="#10b981" onClick={() => {
+                          setOpenActionMenuId(null);
+                          openGroupLabTransfer(item.strain);
+                        }}>
+                          <FlaskConical size={15} /> Enviar a Laboratorio
+                        </ActionMenuItem>
+                        <ActionMenuItem $color="#f87171" onClick={() => {
+                          setOpenActionMenuId(null);
+                          setDeleteData({ batch: { strain_name: item.strain }, reason: '', isBulk: true });
+                          setIsDeleteOpen(true);
+                        }}>
+                          <Trash2 size={15} /> Eliminar Todos
+                        </ActionMenuItem>
+                      </ActionMenuDropdown>
+                    </ActionMenuContainer>
+                  </div>
+
+                  {/* Toggle sub-groups button */}
+                  <button
+                    onClick={() => toggleRow(item.strain)}
+                    style={{
+                      width: '100%',
+                      marginTop: '0.75rem',
+                      padding: '0.5rem 0.75rem',
+                      background: isExpanded ? 'rgba(16, 185, 129, 0.1)' : 'rgba(255, 255, 255, 0.04)',
+                      border: '1px solid rgba(255, 255, 255, 0.06)',
+                      borderRadius: '0.5rem',
+                      color: isExpanded ? '#34d399' : '#94a3b8',
+                      fontSize: '0.8rem',
+                      fontWeight: 600,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    <span>{item.subGroups.length} lotes de origen</span>
+                    <ChevronDown size={14} style={{
+                      transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+                      transition: 'transform 0.2s ease'
+                    }} />
+                  </button>
+
+                  <CollapsibleWrapper isOpen={isExpanded}>
+                    <div style={{ marginTop: '0.5rem' }}>
+                      {item.subGroups.map((subGroup, idx) => (
+                        <MobileSubGroupCard key={idx}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span style={{ fontWeight: 700, color: '#38bdf8', fontSize: '0.85rem' }}>{subGroup.groupName}</span>
+                            <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
+                              {new Date(subGroup.batches[0]?.created_at || Date.now()).toLocaleDateString()}
+                            </span>
                           </div>
-                        </CollapsibleWrapper>
-                      </td>
-                    </ExpandedRow>
-                  </React.Fragment>
-                );
-              })}
-              {visibleStock.length === 0 && (
-                <tr><td colSpan={6} style={{ padding: '3rem', textAlign: 'center', color: '#94a3b8' }}>No hay stock disponible.</td></tr>
-              )}
-            </tbody>
-          </MainTable>
-        </TableContainer>
-      )
-      }
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span style={{ fontSize: '0.8rem', color: '#cbd5e1' }}>
+                              <strong style={{ color: '#f8fafc' }}>{subGroup.totalWeight.toFixed(1)}g</strong> / {subGroup.totalInitialWeight.toFixed(1)}g
+                            </span>
+                            <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>{subGroup.batchesCount} u.</span>
+                          </div>
+                          <div style={{ marginTop: '0.25rem' }}>
+                            <ActionButton
+                              variant="info"
+                              style={{ width: '100%', padding: '0.4rem 0.6rem', fontSize: '0.75rem', justifyContent: 'center' }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setModalUnitsData({
+                                  isOpen: true,
+                                  originName: subGroup.groupName,
+                                  batches: subGroup.batches
+                                });
+                              }}
+                            >
+                              <Boxes size={13} /> Ver Unidades
+                            </ActionButton>
+                          </div>
+                        </MobileSubGroupCard>
+                      ))}
+                    </div>
+                  </CollapsibleWrapper>
+                </MobileStockCard>
+              );
+            })}
+            {visibleStock.length === 0 && (
+              <div style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8', background: 'rgba(15, 23, 42, 0.6)', borderRadius: '1rem' }}>
+                No hay stock disponible.
+              </div>
+            )}
+          </MobileStockCardsWrapper>
+        </>
+      )}
 
       {/* CREATE MODAL */}
       <AnimatedModal isOpen={isCreateOpen} onClose={() => setIsCreateOpen(false)}>
@@ -1469,13 +1687,13 @@ const Stock: React.FC = () => {
           return (
             <>
               <CloseIcon onClick={() => setIsGroupLabOpen(false)}><X size={18} /></CloseIcon>
-              <h2 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--primary-color, #a855f7)' }}>
+              <h2 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#10b981' }}>
                 <FlaskConical size={20} /> Enviar a Laboratorio: {groupLabStrain}
               </h2>
 
               <div style={{ marginBottom: '1.5rem', background: 'rgba(30, 41, 59, 0.6)', padding: '1rem', borderRadius: '0.5rem', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
                 <p style={{ margin: 0, fontSize: '0.9rem', color: '#cbd5e1' }}>Stock Total Disponible en todas las plantas:</p>
-                <p style={{ margin: '0.25rem 0 0 0', fontWeight: 'bold', color: 'var(--primary-color, #a855f7)', fontSize: '1.25rem' }}>{maxAvailable.toFixed(2)}g</p>
+                <p style={{ margin: '0.25rem 0 0 0', fontWeight: 'bold', color: '#10b981', fontSize: '1.25rem' }}>{maxAvailable.toFixed(2)}g</p>
                 <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.8rem', color: '#94a3b8' }}>Se enviará al laboratorio descontando automáticamente desde los lotes más antiguos hasta alcanzar la cantidad total.</p>
               </div>
 
@@ -1493,7 +1711,7 @@ const Stock: React.FC = () => {
 
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '2rem' }}>
                 <ActionButton variant="secondary" onClick={() => setIsGroupLabOpen(false)}>Cancelar</ActionButton>
-                <ActionButton variant="primary" style={{ background: 'var(--primary-color, #a855f7)', borderColor: 'var(--primary-color, #a855f7)' }} onClick={confirmGroupLabTransfer}>Confirmar Envío</ActionButton>
+                <ActionButton variant="primary" style={{ background: '#10b981', borderColor: '#10b981' }} onClick={confirmGroupLabTransfer}>Confirmar Envío</ActionButton>
               </div>
             </>
           );

@@ -128,6 +128,17 @@ const KPIGrid = styled.div`
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr));
   gap: 1.5rem;
   margin-bottom: 2.25rem;
+
+  @media (max-width: 768px) {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    gap: 0.85rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 4px;
+    scrollbar-width: none;
+    &::-webkit-scrollbar { display: none; }
+  }
 `;
 
 const KPICard = styled.div<{ $glowColor?: string }>`
@@ -139,10 +150,22 @@ const KPICard = styled.div<{ $glowColor?: string }>`
   box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.35);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
+  @media (max-width: 768px) {
+    min-width: 210px;
+    flex-shrink: 0;
+    scroll-snap-align: start;
+    padding: 1.15rem;
+    border-radius: 1rem;
+  }
+
   &:hover {
     transform: translateY(-4px);
     border-color: ${props => props.$glowColor || 'rgba(16, 185, 129, 0.4)'};
     box-shadow: 0 20px 35px -5px rgba(0, 0, 0, 0.5);
+  }
+
+  &:active {
+    transform: scale(0.97);
   }
 
   .kpi-header {
@@ -167,6 +190,10 @@ const KPICard = styled.div<{ $glowColor?: string }>`
     font-weight: 800;
     color: #ffffff;
     margin-bottom: 0.3rem;
+
+    @media (max-width: 768px) {
+      font-size: 1.65rem;
+    }
   }
 
   .sub {
@@ -184,6 +211,12 @@ const FilterRow = styled.div`
   gap: 1rem;
   flex-wrap: wrap;
 
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.85rem;
+  }
+
   .search-box {
     background: rgba(17, 24, 39, 0.6);
     border: 1px solid rgba(255, 255, 255, 0.08);
@@ -194,6 +227,10 @@ const FilterRow = styled.div`
     gap: 0.65rem;
     width: 320px;
     backdrop-filter: blur(12px);
+
+    @media (max-width: 768px) {
+      width: 100%;
+    }
 
     input {
       background: transparent;
@@ -216,6 +253,13 @@ const FilterRow = styled.div`
   .filter-chips {
     display: flex;
     gap: 0.5rem;
+
+    @media (max-width: 768px) {
+      overflow-x: auto;
+      padding-bottom: 4px;
+      scrollbar-width: none;
+      &::-webkit-scrollbar { display: none; }
+    }
   }
 `;
 
@@ -229,17 +273,26 @@ const FilterChip = styled.button<{ $active?: boolean }>`
   border-radius: 9999px;
   cursor: pointer;
   transition: all 0.2s ease;
+  white-space: nowrap;
 
   &:hover {
     color: #f1f5f9;
     border-color: rgba(16, 185, 129, 0.3);
   }
+
+  &:active {
+    transform: scale(0.95);
+  }
 `;
 
 const CropsGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
   gap: 1.75rem;
+
+  @media (max-width: 768px) {
+    gap: 1rem;
+  }
 `;
 
 const CropCard = styled.div<{ $color?: string }>`
@@ -258,10 +311,21 @@ const CropCard = styled.div<{ $color?: string }>`
   min-height: 240px;
   cursor: pointer;
 
+  @media (max-width: 768px) {
+    padding: 1.25rem;
+    border-radius: 1.25rem;
+    min-height: 200px;
+  }
+
   &:hover {
     transform: translateY(-5px);
     border-color: ${props => props.$color || 'rgba(16, 185, 129, 0.4)'};
     box-shadow: 0 20px 40px -5px rgba(0, 0, 0, 0.5);
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
 
     .enter-link {
       gap: 0.6rem;

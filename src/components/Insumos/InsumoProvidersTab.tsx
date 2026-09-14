@@ -58,10 +58,10 @@ const Button = styled.button<{ variant?: 'primary' | 'secondary' | 'danger' }>`
         `;
       default:
         return `
-          background: rgba(var(--primary-color-rgb, 168, 85, 247), 0.2);
-          color: #d8b4fe;
-          border: 1px solid rgba(var(--primary-color-rgb, 168, 85, 247), 0.5);
-          &:hover { background: rgba(var(--primary-color-rgb, 168, 85, 247), 0.3); box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
+          background: rgba(16, 185, 129, 0.2);
+          color: #6ee7b7;
+          border: 1px solid rgba(16, 185, 129, 0.4);
+          &:hover { background: rgba(16, 185, 129, 0.3); box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
         `;
     }
   }}
@@ -175,8 +175,8 @@ const FormGroup = styled.div`
 
     &:focus {
       outline: none;
-      border-color: rgba(var(--primary-color-rgb, 168, 85, 247), 0.5);
-      box-shadow: 0 0 0 3px rgba(var(--primary-color-rgb, 168, 85, 247), 0.1);
+      border-color: rgba(16, 185, 129, 0.5);
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
     }
   }
 `;

@@ -27,9 +27,12 @@ const TabsContainer = styled.div`
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   padding-bottom: 0.75rem;
   overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
   
   &::-webkit-scrollbar {
-    height: 4px;
+    display: none;
   }
 `;
 
@@ -126,47 +129,64 @@ border-radius: 1rem;
 `;
 
 const Modal = styled.div<{ isOpen: boolean }>`
-position: fixed;
-top: 0;
-left: 0;
-right: 0;
-bottom: 0;
-background: rgba(15, 23, 42, 0.8);
-backdrop-filter: blur(8px);
-display: ${props => props.isOpen ? 'flex' : 'none'};
-align-items: center;
-justify-content: center;
-z-index: 2000;
-padding: 1rem;
-opacity: ${props => props.isOpen ? 1 : 0};
-transition: opacity 0.3s ease;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(15, 23, 42, 0.82);
+  backdrop-filter: blur(12px);
+  display: ${props => props.isOpen ? 'flex' : 'none'};
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: 1rem;
+  opacity: ${props => props.isOpen ? 1 : 0};
+  transition: opacity 0.25s ease;
+
+  @media (max-width: 768px) {
+    align-items: flex-end;
+    padding: 0;
+  }
 `;
 
 const ModalContent = styled.div`
-background: rgba(30, 41, 59, 0.95);
-backdrop-filter: blur(16px);
-border: 1px solid rgba(255, 255, 255, 0.1);
-border-radius: 1rem;
-padding: 2.5rem;
-width: 100%;
-max-width: 500px;
-box-shadow: 0 25px 50px - 12px rgba(0, 0, 0, 0.5);
-transform: translateY(0);
-transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: rgba(15, 23, 42, 0.96);
+  backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 1.25rem;
+  padding: 2.25rem;
+  width: 100%;
+  max-width: 520px;
+  max-height: 88vh;
+  overflow-y: auto;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
 
-@media(max-width: 768px) {
-    padding: 1.5rem;
-}
+  @media (max-width: 768px) {
+    border-radius: 1.5rem 1.5rem 0 0;
+    max-height: 90dvh;
+    padding: 1.5rem 1.25rem calc(1.5rem + env(safe-area-inset-bottom));
+  }
   
   h2 {
     margin: 0 0 1.5rem 0;
-    font-size: 1.5rem;
+    font-size: 1.35rem;
     font-weight: 700;
     color: #f8fafc;
     display: flex;
     align-items: center;
     gap: 0.75rem;
-}
+  }
+`;
+
+const ProductsGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+  gap: 1.5rem;
+
+  @media (max-width: 768px) {
+    gap: 1rem;
+  }
 `;
 
 const FormGroup = styled.div`
@@ -403,7 +423,7 @@ const Dispensary: React.FC = () => {
                     <p>No hay productos de esta categoría disponibles en stock.</p>
                 </EmptyState>
             ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.5rem' }}>
+                <ProductsGrid>
                     {filteredBatches.map(batch => (
                         <div key={batch.id} style={{
                             background: 'rgba(15, 23, 42, 0.75)',
@@ -524,7 +544,7 @@ const Dispensary: React.FC = () => {
                             </div>
                         </div>
                     ))}
-                </div>
+                </ProductsGrid>
             )}
 
             {/* Dispense Modal */}

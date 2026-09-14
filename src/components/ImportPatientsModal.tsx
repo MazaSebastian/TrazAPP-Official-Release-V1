@@ -132,18 +132,18 @@ const Body = styled.div`
 `;
 
 const DropZone = styled.div<{ $isDragActive: boolean }>`
-  border: 2px dashed ${props => props.$isDragActive ? 'var(--primary-color, #a855f7)' : 'rgba(255, 255, 255, 0.2)'};
+  border: 2px dashed ${props => props.$isDragActive ? '#10b981' : 'rgba(255, 255, 255, 0.2)'};
   border-radius: 0.5rem;
   padding: 3rem 2rem;
   text-align: center;
-  background: ${props => props.$isDragActive ? 'rgba(var(--primary-color-rgb, 168, 85, 247), 0.1)' : 'rgba(30, 41, 59, 0.5)'};
+  background: ${props => props.$isDragActive ? 'rgba(16, 185, 129, 0.1)' : 'rgba(30, 41, 59, 0.5)'};
   cursor: pointer;
   transition: all 0.2s;
   margin-bottom: 1.5rem;
 
   &:hover {
-    border-color: rgba(var(--primary-color-rgb, 168, 85, 247), 0.5);
-    background: rgba(var(--primary-color-rgb, 168, 85, 247), 0.05);
+    border-color: rgba(16, 185, 129, 0.5);
+    background: rgba(16, 185, 129, 0.05);
   }
 `;
 
