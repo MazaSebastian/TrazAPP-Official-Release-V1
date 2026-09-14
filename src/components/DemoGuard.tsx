@@ -93,8 +93,14 @@ const LockBox = styled.div`
 export const DemoGuard: React.FC<{ children: React.ReactElement }> = ({ children }) => {
   const { currentOrganization, isLoading: orgLoading } = useOrganization();
   const { logout, isLoading: authLoading } = useAuth();
+  const [safetyPassed, setSafetyPassed] = React.useState(false);
 
-  if (authLoading || orgLoading) {
+  useEffect(() => {
+    const timer = setTimeout(() => setSafetyPassed(true), 3500);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if ((authLoading || orgLoading) && !safetyPassed) {
     return <LoadingSpinner fullScreen duration={3000} />;
   }
 

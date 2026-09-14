@@ -188,8 +188,8 @@ function App() {
   const hideAdminChrome = isPublicRoute || isPatientPortal;
 
   return (
-    <DataProvider>
-      <OrganizationProvider>
+    <OrganizationProvider>
+      <DataProvider>
         <SidebarProvider>
           <AppContent
             isPublicRoute={isPublicRoute}
@@ -198,8 +198,8 @@ function App() {
             isCustomDomain={isCustomDomain}
           />
         </SidebarProvider>
-      </OrganizationProvider>
-    </DataProvider>
+      </DataProvider>
+    </OrganizationProvider>
   );
 }
 

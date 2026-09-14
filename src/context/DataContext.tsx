@@ -6,6 +6,7 @@ import { cropsService } from '../services/cropsService';
 import { roomsService } from '../services/roomsService';
 import { stickiesService } from '../services/stickiesService';
 import { useAuth } from './AuthContext';
+import { useOrganization } from './OrganizationContext';
 
 interface DataContextType {
     crops: Crop[];
@@ -36,6 +37,7 @@ interface DataProviderProps {
 
 export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
     const { user } = useAuth();
+    const { currentOrganization } = useOrganization();
     const [crops, setCrops] = useState<Crop[]>([]);
     const [rooms, setRooms] = useState<Room[]>([]);
     const [tasks, setTasks] = useState<Task[]>([]);
@@ -79,9 +81,9 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
     }, []);
 
     const refreshData = useCallback(async (isInitial = false) => {
-        // If initial load, ensure minimum time for branding animation (3s)
+        // If initial load, ensure minimum time for branding animation (2.5s)
         const minTimePromise = isInitial
-            ? new Promise(resolve => setTimeout(resolve, 3000))
+            ? new Promise(resolve => setTimeout(resolve, 2500))
             : Promise.resolve();
 
         await Promise.all([
@@ -93,16 +95,24 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
         ]);
     }, [fetchCrops, fetchRooms, fetchTasks, fetchStickies]);
 
-    // Initial Load
+    // Initial Load and on Org Change
     useEffect(() => {
         if (user?.id) {
             setIsLoading(true);
-            refreshData(true).finally(() => setIsLoading(false));
+            const safetyTimer = setTimeout(() => {
+                console.warn('[DataContext] Safety timer reached, forcing isLoading=false');
+                setIsLoading(false);
+            }, 3500);
+
+            refreshData(true).finally(() => {
+                clearTimeout(safetyTimer);
+                setIsLoading(false);
+            });
         } else {
-            // If no user, maybe clear data or keep loading false
+            // If no user, keep loading false
             setIsLoading(false);
         }
-    }, [user?.id, refreshData]);
+    }, [user?.id, currentOrganization?.id, refreshData]);
 
     const value: DataContextType = {
         crops,

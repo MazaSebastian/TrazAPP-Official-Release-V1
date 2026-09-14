@@ -18,21 +18,36 @@ const OrganizationContext = createContext<OrganizationContextType | undefined>(u
 export const OrganizationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const { user, isLoading: authIsLoading } = useAuth();
 
-    // Derived local state for the UI
-    const [currentOrganization, setCurrentOrganization] = useState<Organization | null>(null);
-    const [currentRole, setCurrentRole] = useState<string | null>(null);
+    // Derived local state for the UI with cache fallback
+    const [currentOrganization, setCurrentOrganization] = useState<Organization | null>(() => {
+        try {
+            const cached = localStorage.getItem('cached_current_organization');
+            return cached ? JSON.parse(cached) : null;
+        } catch {
+            return null;
+        }
+    });
+    const [currentRole, setCurrentRole] = useState<string | null>(() => {
+        return localStorage.getItem('userRole') || null;
+    });
     const [organizations, setOrganizations] = useState<Organization[]>([]);
+    const [safetyTimeoutTriggered, setSafetyTimeoutTriggered] = useState(false);
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setSafetyTimeoutTriggered(true);
+        }, 3500);
+        return () => clearTimeout(timer);
+    }, []);
 
     // React Query declarative fetch: Only runs when auth is definitely finished and user exists
     const { data: memberData, isLoading: queryIsLoading } = useQuery({
-        queryKey: ['userOrganizations', user?.id],
+        queryKey: ['userOrganizations', user?.id, user?.email],
         queryFn: async () => {
-            console.log('[OrgContext] React Query fetching for user:', user?.id);
-            // Just in case, force Supabase to ensure its local session headers are synced
-            await supabase.auth.getSession();
-            await new Promise(resolve => setTimeout(resolve, 200));
+            console.log('[OrgContext] React Query fetching for user:', user?.id, user?.email);
 
-            const { data, error } = await supabase
+            // 1. Fetch memberships from organization_members
+            const membersPromise = supabase
                 .from('organization_members')
                 .select(`
                     role,
@@ -41,19 +56,49 @@ export const OrganizationProvider: React.FC<{ children: React.ReactNode }> = ({ 
                 `)
                 .eq('user_id', user?.id);
 
-            if (error) {
-                console.error('[OrgContext] Fetch error:', error);
-                throw error;
+            // 2. Fetch organizations where user is owner by email
+            const ownedPromise = user?.email
+                ? supabase
+                    .from('organizations')
+                    .select('*')
+                    .ilike('owner_email', user.email)
+                : Promise.resolve({ data: [] as any[], error: null });
+
+            const [membersRes, ownedRes] = await Promise.all([membersPromise, ownedPromise]);
+
+            if (membersRes.error) {
+                console.warn('[OrgContext] Fetch members error:', membersRes.error);
             }
-            return data || [];
+            if (ownedRes.error) {
+                console.warn('[OrgContext] Fetch owned orgs error:', ownedRes.error);
+            }
+
+            const members = (membersRes.data || []) as any[];
+            const ownedOrgs = (ownedRes.data || []) as any[];
+
+            // Merge owned orgs if not already present in members
+            const existingOrgIds = new Set(members.map((m: any) => m.organization_id || m.organization?.id));
+
+            for (const org of ownedOrgs) {
+                if (org?.id && !existingOrgIds.has(org.id)) {
+                    members.push({
+                        role: 'owner',
+                        organization_id: org.id,
+                        organization: org
+                    });
+                    existingOrgIds.add(org.id);
+                }
+            }
+
+            return members;
         },
         enabled: !authIsLoading && !!user?.id,
         staleTime: 1000 * 60 * 5, // Cache for 5 minutes to prevent flickering
-        retry: 2 // Try twice if it fails (e.g., if RLS blocks it momentarily)
+        retry: 2
     });
 
-    // We are loading if Auth is loading, OR if the Query is loading (and we expect it to load because there is a user)
-    const isLoading = authIsLoading || (queryIsLoading && !!user?.id);
+    // We are loading only if Auth is loading, OR if the Query is running and we don't even have a cached organization yet
+    const isLoading = !safetyTimeoutTriggered && (authIsLoading || (queryIsLoading && !!user?.id && !currentOrganization));
 
     // Sync derived state when Query data changes
     useEffect(() => {
@@ -61,6 +106,7 @@ export const OrganizationProvider: React.FC<{ children: React.ReactNode }> = ({ 
             setOrganizations([]);
             setCurrentOrganization(null);
             setCurrentRole(null);
+            localStorage.removeItem('cached_current_organization');
             return;
         }
 
@@ -83,6 +129,7 @@ export const OrganizationProvider: React.FC<{ children: React.ReactNode }> = ({ 
             if (selectedOrg) {
                 setCurrentOrganization(selectedOrg);
                 localStorage.setItem('selectedOrganizationId', selectedOrg.id);
+                localStorage.setItem('cached_current_organization', JSON.stringify(selectedOrg));
                 const mem = memberData.find((m: any) => m.organization_id === selectedOrg?.id);
                 if (mem) {
                     setCurrentRole(mem.role);
@@ -146,6 +193,7 @@ export const OrganizationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         if (org) {
             setCurrentOrganization(org);
             localStorage.setItem('selectedOrganizationId', org.id);
+            localStorage.setItem('cached_current_organization', JSON.stringify(org));
 
             // Re-fetch role for new context instantly from cached query data
             const mem = memberData?.find((m: any) => m.organization_id === org.id);
