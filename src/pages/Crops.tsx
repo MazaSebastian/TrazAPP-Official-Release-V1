@@ -142,8 +142,7 @@ const KPIGrid = styled.div`
 `;
 
 const KPICard = styled.div<{ $glowColor?: string }>`
-  background: rgba(17, 24, 39, 0.7);
-  backdrop-filter: blur(16px);
+  background: #0f172a;
   border-radius: 1.25rem;
   padding: 1.5rem;
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -218,7 +217,7 @@ const FilterRow = styled.div`
   }
 
   .search-box {
-    background: rgba(17, 24, 39, 0.6);
+    background: #111827;
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 0.875rem;
     padding: 0.6rem 1rem;
@@ -226,7 +225,6 @@ const FilterRow = styled.div`
     align-items: center;
     gap: 0.65rem;
     width: 320px;
-    backdrop-filter: blur(12px);
 
     @media (max-width: 768px) {
       width: 100%;
@@ -296,8 +294,7 @@ const CropsGrid = styled.div`
 `;
 
 const CropCard = styled.div<{ $color?: string }>`
-  background: rgba(17, 24, 39, 0.7);
-  backdrop-filter: blur(16px);
+  background: #111827;
   border-radius: 1.5rem;
   padding: 1.75rem;
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -321,11 +318,6 @@ const CropCard = styled.div<{ $color?: string }>`
     transform: translateY(-5px);
     border-color: ${props => props.$color || 'rgba(16, 185, 129, 0.4)'};
     box-shadow: 0 20px 40px -5px rgba(0, 0, 0, 0.5);
-  }
-
-  &:active {
-    transform: scale(0.98);
-  }
 
     .enter-link {
       gap: 0.6rem;
@@ -335,6 +327,10 @@ const CropCard = styled.div<{ $color?: string }>`
         transform: translateX(4px);
       }
     }
+  }
+
+  &:active {
+    transform: scale(0.98);
   }
 
   &::before {
@@ -500,9 +496,8 @@ const CropCard = styled.div<{ $color?: string }>`
 `;
 
 const CreateNewCard = styled.div`
-  background: rgba(17, 24, 39, 0.4);
+  background: #0f172a;
   border: 2px dashed rgba(16, 185, 129, 0.35);
-  backdrop-filter: blur(12px);
   border-radius: 1.5rem;
   padding: 2rem;
   display: flex;
