@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useOrganization } from '../context/OrganizationContext';
+import { getSelectedOrgId } from '../services/supabaseClient';
 import styled, { keyframes } from 'styled-components';
 import {
   Sprout,
@@ -651,6 +653,7 @@ const ModalActions = styled.div`
 export const Crops: React.FC = () => {
   const navigate = useNavigate();
   const { tourStepIndex, setTourStepIndex } = useAuth();
+  const { currentOrganization } = useOrganization();
   const [crops, setCrops] = useState<Crop[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -713,16 +716,18 @@ export const Crops: React.FC = () => {
   }, []);
 
   const loadCrops = React.useCallback(async (isInitial = false, silent = false) => {
+    const orgId = currentOrganization?.id || getSelectedOrgId();
+    if (!orgId) return;
     if (!silent) setLoading(true);
-    const data = await cropsService.getCrops();
+    const data = await cropsService.getCrops(orgId);
     await loadLastActivities(data);
     setCrops(data);
     if (!silent) setLoading(false);
-  }, [loadLastActivities]);
+  }, [loadLastActivities, currentOrganization?.id]);
 
   React.useEffect(() => {
     loadCrops(true);
-  }, [loadCrops]);
+  }, [loadCrops, currentOrganization?.id]);
 
   // Handle Create Crop
   const handleCreate = async () => {

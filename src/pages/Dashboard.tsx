@@ -1330,12 +1330,27 @@ const Dashboard: React.FC = () => {
   // Dynamic live KPIs for DashboardKpiRibbon
   const totalPlants = useMemo(() => {
     return rooms.reduce((acc, r) => {
-      return acc + (r.batches || []).reduce((bAcc, b) => bAcc + (b.quantity || (b as any).total_plants || 0), 0);
+      const activeBatches = (r.batches || []).filter(b =>
+        !b.discarded_at &&
+        b.stage !== 'completed' &&
+        ((b.quantity || (b as any).total_plants || 0) > 0)
+      );
+      return acc + activeBatches.reduce((bAcc, b) => bAcc + (b.quantity || (b as any).total_plants || 0), 0);
     }, 0);
   }, [rooms]);
 
   const activeBatchesCount = useMemo(() => {
-    return rooms.reduce((acc, r) => acc + (r.batches || []).length, 0);
+    const uniqueBatches = new Set<string>();
+    rooms.forEach(r => {
+      (r.batches || []).forEach(b => {
+        if (!b.discarded_at && b.stage !== 'completed' && ((b.quantity || (b as any).total_plants || 0) > 0)) {
+          const date = b.created_at ? new Date(b.created_at).toISOString().slice(0, 16) : 'unknown';
+          const key = b.group_name || b.parent_batch_id || `${b.genetic_id || b.name}-${date}`;
+          uniqueBatches.add(key);
+        }
+      });
+    });
+    return uniqueBatches.size;
   }, [rooms]);
 
   const { avgTemperature, avgHumidity, isClimateOptimal } = useMemo(() => {

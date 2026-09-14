@@ -20,11 +20,14 @@ const getRowLabel = (n: number) => {
 export const roomsService = {
 
     // --- ROOMS ---
-    async getRooms(spotId?: string): Promise<Room[]> {
+    async getRooms(spotId?: string, orgId?: string): Promise<Room[]> {
+        const targetOrgId = orgId || getSelectedOrgId();
+        if (!targetOrgId) return [];
+
         let query = getClient()
             .from('rooms')
             .select('*, batches:batches!current_room_id(*, genetic:genetics(*)), spot:chakra_crops(name), clone_maps(*)')
-            .eq('organization_id', getSelectedOrgId())
+            .eq('organization_id', targetOrgId)
             .order('order_index', { ascending: true })
             .order('name', { ascending: true });
 

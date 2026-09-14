@@ -2,13 +2,16 @@ import { supabase, getSelectedOrgId } from './supabaseClient';
 import { StickyNote } from '../types';
 
 export const stickiesService = {
-    async getStickies(roomId?: string): Promise<StickyNote[]> {
+    async getStickies(roomId?: string, orgId?: string): Promise<StickyNote[]> {
         if (!supabase) return [];
+
+        const targetOrgId = orgId || getSelectedOrgId();
+        if (!targetOrgId) return [];
 
         let query = supabase
             .from('chakra_stickies')
             .select('*')
-            .eq('organization_id', getSelectedOrgId())
+            .eq('organization_id', targetOrgId)
             .order('created_at', { ascending: false });
 
         if (roomId) {

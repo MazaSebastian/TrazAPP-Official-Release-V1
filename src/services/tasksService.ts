@@ -4,13 +4,16 @@ import { notificationService } from './notificationService';
 import { addDays, addWeeks, addMonths, parseISO, format } from 'date-fns';
 
 export const tasksService = {
-    async getPendingTasks(): Promise<Task[]> {
+    async getPendingTasks(orgId?: string): Promise<Task[]> {
         if (!supabase) return [];
+
+        const targetOrgId = orgId || getSelectedOrgId();
+        if (!targetOrgId) return [];
 
         const { data, error } = await supabase
             .from('chakra_tasks')
             .select('*')
-            .eq('organization_id', getSelectedOrgId())
+            .eq('organization_id', targetOrgId)
             .neq('status', 'dismissed')
             .neq('status', 'done')
             .order('created_at', { ascending: false });

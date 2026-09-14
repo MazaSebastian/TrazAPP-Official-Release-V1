@@ -4,13 +4,16 @@ import { roomsService } from './roomsService';
 import { notificationService } from './notificationService';
 
 export const cropsService = {
-    async getCrops(): Promise<Crop[]> {
+    async getCrops(orgId?: string): Promise<Crop[]> {
         if (!supabase) return [];
+
+        const targetOrgId = orgId || getSelectedOrgId();
+        if (!targetOrgId) return [];
 
         const { data, error } = await supabase
             .from('chakra_crops')
             .select('*, rooms(*)')
-            .eq('organization_id', getSelectedOrgId())
+            .eq('organization_id', targetOrgId)
             .order('start_date', { ascending: false });
 
         if (error) {
