@@ -34,13 +34,17 @@ const BarContainer = styled.nav`
   left: 0;
   right: 0;
   z-index: 920;
-  background: rgba(3, 7, 18, 0.88);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
+  background: rgba(3, 7, 18, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border-top: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: 0 -10px 35px -5px rgba(0, 0, 0, 0.6);
   padding-bottom: env(safe-area-inset-bottom);
   user-select: none;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
 
   @media (max-width: 768px) {
     display: flex;
@@ -60,9 +64,15 @@ const NavItem = styled(NavLink)`
   height: 64px;
   color: #64748b;
   text-decoration: none;
+  border: none !important;
+  outline: none !important;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   -webkit-tap-highlight-color: transparent;
+
+  &:visited {
+    color: #64748b;
+  }
 
   /* Haptic Touch feedback */
   &:active {

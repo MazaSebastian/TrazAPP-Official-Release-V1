@@ -138,9 +138,12 @@ export const GlobalStyles = createGlobalStyle`
     outline: none;
   }
 
-  a {
+  a, a:visited {
     text-decoration: none;
     color: inherit;
+    border: none;
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
   }
 
   ul, ol {

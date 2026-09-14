@@ -72,7 +72,13 @@ const SidebarContainer = styled.aside<{ $isCollapsed: boolean; $isMobileOpen: bo
 
   @media (max-width: 768px) {
     width: 270px;
-    transform: ${props => props.$isMobileOpen ? 'translateX(0)' : 'translateX(-100%)'};
+    background: #030712;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    box-shadow: ${props => props.$isMobileOpen ? '10px 0 40px rgba(0, 0, 0, 0.85)' : 'none'};
+    transform: ${props => props.$isMobileOpen ? 'translate3d(0, 0, 0)' : 'translate3d(-100%, 0, 0)'};
+    will-change: transform;
+    -webkit-transform: ${props => props.$isMobileOpen ? 'translate3d(0, 0, 0)' : 'translate3d(-100%, 0, 0)'};
   }
 `;
 
@@ -80,15 +86,15 @@ const Overlay = styled.div<{ $isOpen: boolean }>`
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.65);
-  backdrop-filter: blur(4px);
+  background: rgba(0, 0, 0, 0.7);
   z-index: 950;
   opacity: ${props => props.$isOpen ? 1 : 0};
+  visibility: ${props => props.$isOpen ? 'visible' : 'hidden'};
   pointer-events: ${props => props.$isOpen ? 'auto' : 'none'};
-  transition: opacity 0.25s ease-in-out;
+  transition: opacity 0.25s ease-in-out, visibility 0.25s ease-in-out;
 
   @media (max-width: 768px) {
-    display: block;
+    display: ${props => props.$isOpen ? 'block' : 'none'};
   }
 `;
 
@@ -354,6 +360,8 @@ const GroupHeader = styled.div<{ $isCollapsed: boolean }>`
   display: ${props => props.$isCollapsed ? 'none' : 'flex'};
   align-items: center;
   justify-content: space-between;
+  border: none !important;
+  outline: none !important;
 `;
 
 // ─── NavItem & Floating Tooltip ──────────────────────────────────────────────
@@ -361,6 +369,9 @@ const NavItemContainer = styled.div`
   position: relative;
   display: flex;
   width: 100%;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
 `;
 
 const FloatingTooltip = styled.div`
@@ -419,6 +430,13 @@ const StyledNavLink = styled(NavLink)<{ $isCollapsed: boolean; $isLocked?: boole
   transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   opacity: ${props => props.$isLocked ? 0.6 : 1};
+  border: 1px solid transparent;
+  outline: none;
+  box-shadow: none;
+
+  &:visited {
+    color: ${props => props.$isLocked ? '#475569' : '#94a3b8'};
+  }
 
   .icon {
     flex-shrink: 0;
@@ -454,6 +472,10 @@ const StyledNavLink = styled(NavLink)<{ $isCollapsed: boolean; $isLocked?: boole
     color: #34d399;
     font-weight: 600;
     border: 1px solid rgba(16, 185, 129, 0.25);
+
+    &:visited {
+      color: #34d399;
+    }
 
     .icon {
       color: #34d399;

@@ -97,6 +97,16 @@ const KPICard = styled.div<{ $glowColor?: string }>`
   border: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.35);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+
+  @media (max-width: 768px) {
+    background: #0f172a;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
 
   &:hover {
     transform: translateY(-3px);
