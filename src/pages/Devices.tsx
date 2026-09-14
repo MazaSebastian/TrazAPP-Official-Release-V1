@@ -120,8 +120,7 @@ const Grid = styled.div`
 `;
 
 const DeviceCard = styled.div<{ $online: boolean }>`
-  background: rgba(15, 23, 42, 0.75);
-  backdrop-filter: blur(12px);
+  background: #0f172a;
   border: 1px solid ${props => props.$online ? 'rgba(16, 185, 129, 0.3)' : 'rgba(255, 255, 255, 0.08)'};
   border-radius: 16px;
   padding: 1.25rem;
@@ -601,8 +600,7 @@ const Devices: React.FC = () => {
       {/* Clean Room Environmental Summary Bar */}
       {devices.length > 0 && (
         <div style={{
-          background: 'rgba(15, 23, 42, 0.6)',
-          backdropFilter: 'blur(10px)',
+          background: '#0f172a',
           border: '1px solid rgba(255, 255, 255, 0.08)',
           borderRadius: '12px',
           padding: '1rem 1.5rem',

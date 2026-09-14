@@ -90,8 +90,7 @@ const KPIGrid = styled.div`
 `;
 
 const KPICard = styled.div<{ $glowColor?: string }>`
-  background: rgba(15, 23, 42, 0.75);
-  backdrop-filter: blur(16px);
+  background: #0f172a;
   border-radius: 1.25rem;
   padding: 1.5rem;
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -101,12 +100,6 @@ const KPICard = styled.div<{ $glowColor?: string }>`
   transform: translateZ(0);
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
-
-  @media (max-width: 768px) {
-    background: #0f172a;
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-  }
 
   &:hover {
     transform: translateY(-3px);

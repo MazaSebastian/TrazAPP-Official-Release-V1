@@ -34,9 +34,7 @@ const BarContainer = styled.nav`
   left: 0;
   right: 0;
   z-index: 920;
-  background: rgba(3, 7, 18, 0.95);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: #030712;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: 0 -10px 35px -5px rgba(0, 0, 0, 0.6);
   padding-bottom: env(safe-area-inset-bottom);

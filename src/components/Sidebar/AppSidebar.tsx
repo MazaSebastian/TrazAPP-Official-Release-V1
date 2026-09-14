@@ -56,9 +56,7 @@ const SidebarContainer = styled.aside<{ $isCollapsed: boolean; $isMobileOpen: bo
   height: 100vh;
   height: 100dvh;
   width: ${props => props.$isCollapsed ? '72px' : '260px'};
-  background: rgba(3, 7, 18, 0.88);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: #030712;
   border-right: 1px solid rgba(255, 255, 255, 0.07);
   z-index: 1000;
   display: flex;
@@ -73,8 +71,6 @@ const SidebarContainer = styled.aside<{ $isCollapsed: boolean; $isMobileOpen: bo
   @media (max-width: 768px) {
     width: 270px;
     background: #030712;
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
     box-shadow: ${props => props.$isMobileOpen ? '10px 0 40px rgba(0, 0, 0, 0.85)' : 'none'};
     transform: ${props => props.$isMobileOpen ? 'translate3d(0, 0, 0)' : 'translate3d(-100%, 0, 0)'};
     will-change: transform;
@@ -108,9 +104,7 @@ const MobileHeader = styled.header`
   padding-top: env(safe-area-inset-top);
   padding-left: 0.85rem;
   padding-right: 0.85rem;
-  background: rgba(3, 7, 18, 0.88);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
+  background: #030712;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
   z-index: 900;
