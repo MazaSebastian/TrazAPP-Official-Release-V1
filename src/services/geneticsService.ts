@@ -50,6 +50,12 @@ export const geneticsService = {
     },
 
     async deleteGenetic(id: string): Promise<boolean> {
+        // Safe FK cleanup: unassign genetic_id from remaining batches so FK constraints don't block deletion
+        await getClient()
+            .from('batches')
+            .update({ genetic_id: null })
+            .eq('genetic_id', id);
+
         const { error } = await getClient()
             .from('genetics')
             .delete()
@@ -71,7 +77,8 @@ export const geneticsService = {
             .is('discarded_at', null) // Exclude soft-deleted batches
             // exclude 'completed' and 'discarded'
             .neq('stage', 'completed')
-            .neq('stage', 'discarded');
+            .neq('stage', 'discarded')
+            .gt('quantity', 0);
 
         if (error) {
             console.error('Error fetching active batches for genetic:', error);

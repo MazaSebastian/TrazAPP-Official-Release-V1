@@ -649,12 +649,12 @@ const Genetics: React.FC = () => {
         const activeBatches = await geneticsService.getActiveBatchesForGenetic(genetic.id);
 
         if (activeBatches && activeBatches.length > 0) {
-            // Filter out stages we know are "inactive" just to be safe, though service should handle it
-            const trulyActiveBatches = activeBatches.filter(b => b.stage !== 'completed' && b.stage !== 'discarded');
+            // Filter out stages we know are "inactive" and batches with 0 quantity
+            const trulyActiveBatches = activeBatches.filter(b => b.stage !== 'completed' && b.stage !== 'discarded' && (b.quantity || 0) > 0);
 
             if (trulyActiveBatches.length > 0) {
                 // Calculate total plants from truly active batches
-                const totalPlants = trulyActiveBatches.reduce((acc: number, b: any) => acc + (b.quantity || 1), 0);
+                const totalPlants = trulyActiveBatches.reduce((acc: number, b: any) => acc + (b.quantity || 0), 0);
 
                 // Group by location
                 const groupedLocations = trulyActiveBatches.reduce((acc: any, b: any) => {
@@ -671,7 +671,7 @@ const Genetics: React.FC = () => {
                             roomName: `Sala: ${roomName}`
                         };
                     }
-                    acc[key].qty += (b.quantity || 1);
+                    acc[key].qty += (b.quantity || 0);
 
                     return acc;
                 }, {});
