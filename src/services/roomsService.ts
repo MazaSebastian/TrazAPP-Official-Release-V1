@@ -173,12 +173,14 @@ export const roomsService = {
     },
 
     async deleteRoom(id: string): Promise<boolean> {
-        // 1. Check for active batches
+        // 1. Check for truly active batches (with live plants quantity > 0, not completed, not discarded)
         const { data: activeBatches, error: checkError } = await getClient()
             .from('batches')
-            .select('id')
+            .select('id, quantity')
             .eq('current_room_id', id)
             .is('discarded_at', null)
+            .neq('stage', 'completed')
+            .gt('quantity', 0)
             .limit(1);
 
         if (checkError) {
@@ -187,17 +189,17 @@ export const roomsService = {
         }
 
         if (activeBatches && activeBatches.length > 0) {
-            throw new Error("No se puede eliminar la sala porque contiene unidades (esquejes/plantas) activas. Por favor, elimine o mueva las unidades primero.");
+            throw new Error("No se puede eliminar la sala porque contiene unidades (esquejes/plantas) vivas. Por favor, elimine o mueva las plantas primero.");
         }
 
-        // 2. Unassign discarded Batches currently in this room (soft deleted ones)
+        // 2. Unassign all remaining batches currently referencing this room (empty batches, completed, or discarded)
         const { error: batchError } = await getClient()
             .from('batches')
             .update({ current_room_id: null })
             .eq('current_room_id', id);
 
         if (batchError) {
-            console.error('Error unassigning discarded batches:', batchError);
+            console.error('Error unassigning batches from room:', batchError);
         }
 
         // 2. Clear history references (Movements)

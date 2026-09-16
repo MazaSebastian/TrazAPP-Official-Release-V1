@@ -535,7 +535,7 @@ export const Rooms: React.FC = () => {
   const handleDeleteClick = (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
     const room = rooms.find(r => r.id === id);
-    const activeBatches = room?.batches?.filter(b => b.stage !== 'completed') || [];
+    const activeBatches = room?.batches?.filter(b => b.stage !== 'completed' && (b.quantity || 0) > 0) || [];
 
     if (activeBatches.length > 0) {
       setToastMessage(`No puedes eliminar esta sala porque contiene ${activeBatches.length} lote(s) con plantas vivas.`);
