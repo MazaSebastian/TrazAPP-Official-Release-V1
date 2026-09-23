@@ -278,20 +278,40 @@ export const patientsService = {
         // Note: The 'profiles' record is created automatically by the DB trigger 'handle_new_user'
 
         // Explicily sync the email and name to the profiles table
-        await supabase.from('profiles').update({
-            email: userData.email,
-            full_name: userData.fullName
-        }).eq('id', newUserId);
+        try {
+            if (authData.session) {
+                await tempClient.from('profiles').update({
+                    email: userData.email,
+                    full_name: userData.fullName
+                }).eq('id', newUserId);
+            } else {
+                await supabase.from('profiles').update({
+                    email: userData.email,
+                    full_name: userData.fullName
+                }).eq('id', newUserId);
+            }
+        } catch (profileErr) {
+            console.warn("Could not explicitly update profile details:", profileErr);
+        }
 
         const currentOrgId = getSelectedOrgId();
 
         // 4. Enroll the user into the organization with the 'partner' role
         if (currentOrgId) {
-            await supabase.from('organization_members').insert([{
-                organization_id: currentOrgId,
-                user_id: newUserId,
-                role: 'partner'
-            }]);
+            const { data: existingMember } = await supabase
+                .from('organization_members')
+                .select('id')
+                .eq('organization_id', currentOrgId)
+                .eq('user_id', newUserId)
+                .maybeSingle();
+
+            if (!existingMember) {
+                await supabase.from('organization_members').insert([{
+                    organization_id: currentOrgId,
+                    user_id: newUserId,
+                    role: 'partner'
+                }]);
+            }
         }
 
         const payload: any = {

@@ -516,17 +516,15 @@ export const MedicoDashboard: React.FC = () => {
         const admissions = admissionsRes.data || [];
         const evolutions = evolutionsRes.data || [];
 
-        const activePatientsList = patients.filter((p: any) => p.reprocann_status === 'active');
-        const activePatientsCount = activePatientsList.length > 0 ? activePatientsList.length : patients.length;
+        const activePatientsList = patients.filter((p: any) => p.is_approved_by_org !== false);
 
         let pendingAdmissionsList: any[] = [];
         let pendingFollowUpsList: any[] = [];
 
         const admissionPatientIds = new Set(admissions.map(a => a.patient_id));
 
-        const patientsToCount = activePatientsList.length > 0 ? activePatientsList : patients;
-
-        patientsToCount.forEach((p: any) => {
+        // Evaluate all organization patients for admissions and follow-ups
+        patients.forEach((p: any) => {
           if (!admissionPatientIds.has(p.id)) {
             pendingAdmissionsList.push(p);
           } else {

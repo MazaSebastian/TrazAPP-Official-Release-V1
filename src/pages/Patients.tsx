@@ -537,6 +537,7 @@ const Patients: React.FC = () => {
 
                 const userData = { email: finalEmail, fullName: regForm.fullName, password: regForm.password, documentNumber: regForm.documentNumber };
                 const initialPatientData: Partial<Patient> = {
+                    is_approved_by_org: true,
                     reprocann_number: regForm.reprocannNumber,
                     reprocann_status: 'pending',
                     expiration_date: regForm.expirationDate || undefined,
@@ -585,7 +586,9 @@ const Patients: React.FC = () => {
 
                 closeAddModal();
                 resetForm();
-                loadData();
+                setSearchTerm('');
+                setActiveTab('active');
+                await loadData();
                 showToast("Socio registrado exitosamente.", 'success');
             }
         } catch (error: any) {
@@ -683,8 +686,15 @@ const Patients: React.FC = () => {
     };
 
     const filteredPatients = patients.filter(p => {
-        const matchesSearch = p.profile?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                              p.reprocann_number?.includes(searchTerm);
+        const search = searchTerm.toLowerCase().trim();
+        const fullName = (p.profile?.full_name || '').toLowerCase();
+        const reprocann = (p.reprocann_number || '').toLowerCase();
+        const docNumber = (p.document_number || '').toLowerCase();
+
+        const matchesSearch = !search || 
+                              fullName.includes(search) ||
+                              reprocann.includes(search) ||
+                              docNumber.includes(search);
         
         const matchesTreatment = 
             treatmentFilter === 'all' ? true :
@@ -817,7 +827,7 @@ const Patients: React.FC = () => {
                 <FilterContainer>
                     <div style={{ flex: 1 }}>
                         <SearchInput
-                            placeholder="Buscar por nombre o reprocann..."
+                            placeholder="Buscar por nombre, DNI o REPROCANN..."
                             value={searchTerm}
                             onChange={e => setSearchTerm(e.target.value)}
                             style={{ marginBottom: 0 }}
@@ -850,6 +860,46 @@ const Patients: React.FC = () => {
 
                 {isLoading ? (
                     <LoadingSpinner />
+                ) : (activeTab === 'active' ? activePatients : waitingPatients).length === 0 ? (
+                    <div style={{
+                        textAlign: 'center',
+                        padding: '3.5rem 1.5rem',
+                        background: 'rgba(255, 255, 255, 0.02)',
+                        border: '1px dashed rgba(255, 255, 255, 0.12)',
+                        borderRadius: '1rem',
+                        marginTop: '1.5rem',
+                        color: '#94a3b8'
+                    }}>
+                        <Users size={44} style={{ margin: '0 auto 1rem auto', opacity: 0.35 }} />
+                        <h3 style={{ color: '#f8fafc', margin: '0 0 0.5rem 0', fontSize: '1.15rem', fontWeight: 600 }}>
+                            {activeTab === 'active' 
+                                ? (searchTerm || treatmentFilter !== 'all' ? 'No se encontraron socios con los filtros aplicados' : 'Aún no hay socios activos registrados')
+                                : 'No hay socios en sala de espera'}
+                        </h3>
+                        <p style={{ margin: '0 0 1rem 0', fontSize: '0.9rem', color: '#94a3b8' }}>
+                            {searchTerm || treatmentFilter !== 'all' 
+                                ? 'Prueba cambiando el término de búsqueda o restableciendo los filtros.'
+                                : 'Puedes registrar un nuevo socio haciendo clic en el botón superior "Nuevo Socio".'}
+                        </p>
+                        {(searchTerm || treatmentFilter !== 'all') && (
+                            <button
+                                type="button"
+                                onClick={() => { setSearchTerm(''); setTreatmentFilter('all'); }}
+                                style={{
+                                    background: 'rgba(56, 189, 248, 0.12)',
+                                    color: '#38bdf8',
+                                    border: '1px solid rgba(56, 189, 248, 0.3)',
+                                    padding: '0.5rem 1.25rem',
+                                    borderRadius: '0.6rem',
+                                    cursor: 'pointer',
+                                    fontSize: '0.85rem',
+                                    fontWeight: 600
+                                }}
+                            >
+                                Limpiar filtros de búsqueda
+                            </button>
+                        )}
+                    </div>
                 ) : (
                     <CardGrid>
                         {(activeTab === 'active' ? activePatients : waitingPatients).map(patient => (

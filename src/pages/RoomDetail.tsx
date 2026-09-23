@@ -925,7 +925,7 @@ const CreateMapDropZone = ({ children }: { children: React.ReactNode }) => {
 
 const DroppableMapCard = ({ map, children, onClick }: { map: CloneMap, children: React.ReactNode, onClick: () => void }) => {
     const { setNodeRef, isOver } = useDroppable({
-        id: `map - ${map.id} `,
+        id: `map-${map.id}`,
         data: { type: 'map', map }
     });
 
@@ -935,8 +935,8 @@ const DroppableMapCard = ({ map, children, onClick }: { map: CloneMap, children:
             onClick={onClick}
             style={{
                 border: isOver ? '2px solid rgba(56, 189, 248, 0.5)' : '1px solid rgba(255, 255, 255, 0.1)',
-                borderRadius: '0.5rem',
-                padding: '1.5rem',
+                borderRadius: '0.75rem',
+                padding: '1.25rem',
                 background: isOver ? 'rgba(56, 189, 248, 0.1)' : 'rgba(15, 23, 42, 0.4)',
                 backdropFilter: 'blur(12px)',
                 cursor: 'pointer',
@@ -4999,7 +4999,7 @@ const RoomDetail: React.FC = () => {
                                                             </div>
                                                         ) : (
                                                             <div style={{
-                                                                display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem', width: '100%'
+                                                                display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '1.25rem', width: '100%'
                                                             }}>
                                                                 {cloneMaps.map(map => {
                                                                     const mapBatches = room?.batches?.filter(b => b.clone_map_id === map.id && b.quantity > 0) || [];
@@ -5008,47 +5008,56 @@ const RoomDetail: React.FC = () => {
 
                                                                     return (
                                                                         <DroppableMapCard key={map.id} map={map} onClick={() => setActiveMapId(map.id)}>
-                                                                            <style>{`
-                                                                                @media (max-width: 768px) {
-                                                                                    .desktop-view-map-${map.id} { display: none !important; }
-                                                                                    .mobile-view-map-${map.id} { display: flex !important; }
-                                                                                }
-                                                                                @media (min-width: 769px) {
-                                                                                    .mobile-view-map-${map.id} { display: none !important; }
-                                                                                }
-                                                                            `}</style>
-
-                                                                            <div className={`desktop-view-map-${map.id}`}>
-                                                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
-                                                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                                                                                        <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#f8fafc' }}>{map.name}</h3>
+                                                                            <div style={{ width: '100%', display: 'flex', flexDirection: 'column' }}>
+                                                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.85rem' }}>
+                                                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                                                                        <div style={{
+                                                                                            width: '36px',
+                                                                                            height: '36px',
+                                                                                            borderRadius: '0.5rem',
+                                                                                            background: 'rgba(56, 189, 248, 0.15)',
+                                                                                            border: '1px solid rgba(56, 189, 248, 0.3)',
+                                                                                            display: 'flex',
+                                                                                            alignItems: 'center',
+                                                                                            justifyContent: 'center',
+                                                                                            color: '#38bdf8',
+                                                                                            flexShrink: 0
+                                                                                        }}>
+                                                                                            <LucideMap size={18} />
+                                                                                        </div>
+                                                                                        <div>
+                                                                                            <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#f8fafc', fontWeight: 600 }}>{map.name}</h3>
+                                                                                            <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>{map.grid_rows || 0} x {map.grid_columns || 0} celdas</span>
+                                                                                        </div>
                                                                                     </div>
-                                                                                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                                                                    <div style={{ display: 'flex', gap: '0.4rem' }}>
                                                                                         {!isSelectionMode && (
                                                                                             <button
                                                                                                 onClick={(e) => { e.stopPropagation(); handleEditMapClick(e, map); }}
-                                                                                                style={{ background: 'transparent', border: 'none', color: '#718096', cursor: 'pointer' }}
+                                                                                                title="Editar Mapa"
+                                                                                                style={{ background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', color: '#94a3b8', cursor: 'pointer', padding: '0.35rem', borderRadius: '0.375rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                                                                                             >
-                                                                                                <Pencil />
+                                                                                                <Pencil size={14} />
                                                                                             </button>
                                                                                         )}
                                                                                         <button
                                                                                             onClick={(e) => { e.stopPropagation(); setMapIdToDelete(map.id); setIsDeleteMapModalOpen(true); }}
-                                                                                            style={{ background: 'transparent', border: 'none', color: '#e53e3e', cursor: 'pointer' }}
+                                                                                            title="Eliminar Mapa"
+                                                                                            style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)', color: '#f87171', cursor: 'pointer', padding: '0.35rem', borderRadius: '0.375rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                                                                                         >
-                                                                                            <LucideTrash2 />
+                                                                                            <LucideTrash2 size={14} />
                                                                                         </button>
                                                                                     </div>
                                                                                 </div>
 
-                                                                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                                                                                    <div style={{ background: 'rgba(56, 189, 248, 0.1)', border: '1px solid rgba(56, 189, 248, 0.2)', padding: '0.5rem', borderRadius: '0.5rem', textAlign: 'center' }}>
-                                                                                        <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#38bdf8' }}>{totalPlants}</div>
-                                                                                        <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Plantas</div>
+                                                                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                                                                                    <div style={{ background: 'rgba(56, 189, 248, 0.1)', border: '1px solid rgba(56, 189, 248, 0.2)', padding: '0.6rem 0.5rem', borderRadius: '0.5rem', textAlign: 'center' }}>
+                                                                                        <div style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#38bdf8' }}>{totalPlants}</div>
+                                                                                        <div style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Plantas</div>
                                                                                     </div>
-                                                                                    <div style={{ background: 'rgba(74, 222, 128, 0.1)', border: '1px solid rgba(74, 222, 128, 0.2)', padding: '0.5rem', borderRadius: '0.5rem', textAlign: 'center' }}>
-                                                                                        <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#4ade80' }}>{uniqueGenetics}</div>
-                                                                                        <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Variedades</div>
+                                                                                    <div style={{ background: 'rgba(74, 222, 128, 0.1)', border: '1px solid rgba(74, 222, 128, 0.2)', padding: '0.6rem 0.5rem', borderRadius: '0.5rem', textAlign: 'center' }}>
+                                                                                        <div style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#4ade80' }}>{uniqueGenetics}</div>
+                                                                                        <div style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Variedades</div>
                                                                                     </div>
                                                                                 </div>
 
@@ -5120,12 +5129,32 @@ const RoomDetail: React.FC = () => {
                                                                                     );
                                                                                 })()}
 
-                                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.75rem', color: '#64748b', fontSize: '0.75rem' }}>
+                                                                                {/* Visual CTA button to enter map */}
+                                                                                <div style={{
+                                                                                    marginTop: '0.85rem',
+                                                                                    padding: '0.55rem 0.85rem',
+                                                                                    background: 'rgba(56, 189, 248, 0.12)',
+                                                                                    border: '1px solid rgba(56, 189, 248, 0.25)',
+                                                                                    borderRadius: '0.5rem',
+                                                                                    color: '#38bdf8',
+                                                                                    fontSize: '0.82rem',
+                                                                                    fontWeight: 600,
+                                                                                    display: 'flex',
+                                                                                    alignItems: 'center',
+                                                                                    justifyContent: 'space-between',
+                                                                                    transition: 'all 0.2s'
+                                                                                }}>
+                                                                                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                                                                                        <LucideGrid size={13} /> {room?.type === 'living_soil' ? 'Ver Cama de Cultivo' : 'Ver Mapa de Plantas'}
+                                                                                    </span>
+                                                                                    <ChevronRight size={15} />
+                                                                                </div>
+
+                                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.6rem', color: '#64748b', fontSize: '0.75rem' }}>
                                                                                     <LucideCalendar size={10} />
                                                                                     <span>Creada: {map.created_at ? format(new Date(map.created_at), "d 'de' MMM yyyy", { locale: es }) : '-'}</span>
                                                                                 </div>
                                                                             </div>
-
                                                                         </DroppableMapCard>
                                                                     );
                                                                 })}
