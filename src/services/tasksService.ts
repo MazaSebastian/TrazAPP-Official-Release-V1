@@ -26,6 +26,27 @@ export const tasksService = {
         return data as Task[];
     },
 
+    async getAllTasks(orgId?: string): Promise<Task[]> {
+        if (!supabase) return [];
+
+        const targetOrgId = orgId || getSelectedOrgId();
+        if (!targetOrgId) return [];
+
+        const { data, error } = await supabase
+            .from('chakra_tasks')
+            .select('*')
+            .eq('organization_id', targetOrgId)
+            .neq('status', 'dismissed')
+            .order('due_date', { ascending: true, nullsFirst: false });
+
+        if (error) {
+            console.error('Error fetching all tasks:', error);
+            return [];
+        }
+
+        return data as Task[];
+    },
+
     async createTask(task: CreateTaskInput): Promise<Task | null> {
         if (!supabase) return null;
 

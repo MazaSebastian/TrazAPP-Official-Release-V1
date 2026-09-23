@@ -175,7 +175,7 @@ export const DashboardKpiRibbon: React.FC<DashboardKpiRibbonProps> = ({
       </KpiCardWrapper>
 
       {/* KPI 3: TAREAS PENDIENTES */}
-      <KpiCardWrapper as={Link} to="/appointments" $interactive>
+      <KpiCardWrapper as={Link} to="/appointments?tab=tasks" $interactive>
         <div className="kpi-top">
           <span className="label">Tareas Operativas</span>
           <div className="icon-pill amber">

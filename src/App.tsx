@@ -654,7 +654,7 @@ const AppContent: React.FC<AppContentProps> = ({
 
         <Route path="/appointments" element={
           <RequireAuth>
-            <RoleGuard allowedRoles={['admin', 'medico']}>
+            <RoleGuard allowedRoles={['admin', 'medico', 'grower', 'staff', 'owner']}>
               <KYCGuard>
                 <MainContent>
                   <Appointments />

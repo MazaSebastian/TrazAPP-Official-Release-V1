@@ -13,6 +13,7 @@ import {
   Users,
   ClipboardList,
   Calendar,
+  CalendarCheck,
   ShoppingBag,
   FileSpreadsheet,
   Boxes,
@@ -768,6 +769,7 @@ export const AppSidebar: React.FC = () => {
                     1,
                     tourStepIndex === 4 && location.pathname !== '/crops' ? 'tour-crops-link tour-active-pulse' : 'tour-crops-link'
                   )}
+                  {renderItem('/appointments?tab=tasks', 'Cronograma', <CalendarCheck size={18} />)}
                   {renderItem('/clones', 'Esquejes', <Scissors size={18} />)}
                   {renderItem('/devices', 'Dispositivos', <Cpu size={18} />)}
                   {renderItem('/genetics', 'Madres', <Dna size={18} />, 2, '', true)}
